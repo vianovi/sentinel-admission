@@ -101,7 +101,7 @@ export default function Navbar({ auth }: NavbarProps) {
                         ) : (
                             <>
                                 <Link href="/login" className="text-sm font-bold text-gray-600 hover:text-navy px-4">Masuk</Link>
-                                <Link href="/register" className="px-6 py-2.5 rounded-full bg-gold text-white text-sm font-bold shadow-glow hover:bg-goldhover hover:-translate-y-0.5 transition flex items-center gap-2">
+                                <Link href="/daftar" className="px-6 py-2.5 rounded-full bg-gold text-white text-sm font-bold shadow-glow hover:bg-goldhover hover:-translate-y-0.5 transition flex items-center gap-2">
                                     <i className="fa-solid fa-file-pen"></i> Daftar Sekarang
                                 </Link>
                             </>

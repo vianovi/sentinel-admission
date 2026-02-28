@@ -60,7 +60,7 @@ export default function HeroSection({ activeWave, onOpenVideo }: HeroSectionProp
                             Dirancang untuk semua jenis sekolah — SMP, SMA, dan SMK.
                         </p>
                         <div className="hero-animate flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
-                            <Link href="/register" className="w-full sm:w-auto px-8 py-3.5 bg-navy text-white rounded-xl font-semibold shadow-xl hover:-translate-y-1 transition duration-300 text-center">
+                            <Link href="/daftar" className="w-full sm:w-auto px-8 py-3.5 bg-navy text-white rounded-xl font-semibold shadow-xl hover:-translate-y-1 transition duration-300 text-center">
                                 Daftar Gelombang Ini
                             </Link>
                             <button onClick={onOpenVideo} aria-label="Tonton video profil sekolah" className="w-full sm:w-auto px-6 py-3.5 border border-gray-200 text-gray-600 rounded-xl font-medium hover:bg-gray-50 transition flex items-center justify-center gap-2 group">

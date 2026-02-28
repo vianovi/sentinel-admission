@@ -71,7 +71,7 @@ export default function HowToRegisterSection() {
                             </div>
                             <h3 className="font-bold text-white text-lg mb-1">Sudah Siap?</h3>
                             <p className="text-xs text-gray-400 mb-4">Mulai langkah pertama Anda.</p>
-                            <Link href="/register" className="inline-block px-6 py-2.5 bg-gold hover:bg-white hover:text-navy text-white font-bold rounded-lg text-sm shadow-lg transition transform hover:scale-105">Daftar Sekarang</Link>
+                            <Link href="/daftar" className="inline-block px-6 py-2.5 bg-gold hover:bg-white hover:text-navy text-white font-bold rounded-lg text-sm shadow-lg transition transform hover:scale-105">Daftar Sekarang</Link>
                         </div>
                     </div>
                 </div>
