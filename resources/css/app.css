@@ -1,3 +1,87 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* =============================================
+   TAMBAHKAN ke resources/css/app.css
+   Form Wizard styles
+   ============================================= */
+
+.input-field {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    border: 1px solid #cbd5e1;
+    background-color: #f8fafc;
+    transition: all 0.18s ease;
+    font-size: 0.95rem;
+    color: #0f172a;
+}
+
+.input-field::placeholder {
+    color: #9ca3af;
+    font-size: 0.85rem;
+}
+
+.input-field:focus {
+    outline: none;
+    border-color: #d4a017;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(212, 160, 23, 0.15);
+}
+
+.input-error {
+    border-color: #e11d48 !important;
+    background-color: #fff1f2 !important;
+}
+
+.label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 0.35rem;
+}
+
+.error-text {
+    font-size: 0.75rem;
+    color: #e11d48;
+    margin-top: 4px;
+    display: block;
+}
+
+.hint {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 4px;
+}
+
+.radio-card {
+    border-radius: 0.85rem;
+    border: 1px solid #e2e8f0;
+    background: radial-gradient(circle at top left, rgba(248, 250, 252, 0.9), #f1f5f9);
+    padding: 0.8rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #0f172a;
+    transition: all 0.18s ease;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+.radio-card-active {
+    border-color: #d4a017;
+    background: radial-gradient(circle at top left, rgba(212, 160, 23, 0.2), #f9fafb);
+    box-shadow: 0 14px 35px rgba(15, 23, 42, 0.2);
+    color: #020617;
+}
+
+@keyframes glow-move {
+    0%   { transform: translate3d(-10px, 0, 0); }
+    50%  { transform: translate3d(10px, 10px, 0); }
+    100% { transform: translate3d(-10px, 0, 0); }
+}
