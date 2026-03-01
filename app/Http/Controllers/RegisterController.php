@@ -25,7 +25,7 @@ class RegisterController extends Controller
         /** @var RegistrationDraft $draft */
         $draft = $request->get('_draft');
 
-        return Inertia::render('Register', [
+        return Inertia::render('Admission/Register', [
             'draft' => [
                 'full_name'         => $draft->full_name,
                 'nisn'              => $draft->nisn,

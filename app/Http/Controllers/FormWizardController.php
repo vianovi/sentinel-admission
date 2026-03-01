@@ -20,7 +20,7 @@ class FormWizardController extends Controller
             ->withCount('candidates')
             ->first();
 
-        return Inertia::render('FormWizard', [
+        return Inertia::render('Admission/FormWizard', [
             'activeWave' => $activeWave ? [
                 'id'            => $activeWave->id,
                 'title'         => $activeWave->title,

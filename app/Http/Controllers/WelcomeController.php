@@ -20,7 +20,7 @@ class WelcomeController extends Controller
             ->withCount('candidates')  // quota_filled realtime via relasi
             ->first();
 
-        return Inertia::render('Welcome', [
+        return Inertia::render('Landing/Welcome', [
             'activeWave' => $activeWave ? [
                 'id'                   => $activeWave->id,
                 'title'                => $activeWave->title,
