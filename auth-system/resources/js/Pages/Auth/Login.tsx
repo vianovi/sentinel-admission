@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Head, Link, useForm } from '@inertiajs/react'
 import { animate, stagger } from 'animejs'
+import axios from 'axios'
 
 interface LoginProps {
     status?: string
@@ -14,15 +15,20 @@ export default function Login({ status }: LoginProps) {
     })
 
     const [showPassword, setShowPassword] = useState(false)
-    const leftRef = useRef<HTMLDivElement>(null)
+    const leftRef  = useRef<HTMLDivElement>(null)
+    const rightRef = useRef<HTMLDivElement>(null)
 
+    // ── Entrance animations ───────────────────────────────────────────────────
     useEffect(() => {
+        // Left panel — slide in dari kiri
         animate(leftRef.current!, {
             opacity:    [0, 1],
             translateX: [-40, 0],
             duration:   900,
             ease:       'outExpo',
         })
+
+        // Right panel fields — stagger dari atas
         animate('.login-field', {
             opacity:    [0, 1],
             translateY: [20, 0],
@@ -58,12 +64,13 @@ export default function Login({ status }: LoginProps) {
                     className="hidden md:flex md:w-[45%] lg:w-[40%] flex-col justify-between p-10 lg:p-14 relative overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 border-r border-white/5"
                     style={{ opacity: 0 }}
                 >
+                    {/* Glow */}
                     <div className="pointer-events-none absolute -top-20 -left-10 w-72 h-72 bg-gradient-to-br from-amber-400/30 via-rose-400/20 to-sky-400/20 rounded-full blur-3xl" />
                     <div className="pointer-events-none absolute -bottom-20 -right-10 w-80 h-80 bg-gradient-to-tr from-emerald-400/20 via-cyan-400/20 to-amber-300/20 rounded-full blur-3xl" />
 
-                    {/* Logo */}
+                    {/* Logo + nama */}
                     <div className="relative z-10">
-                        <Link href={route('home')} className="inline-flex items-center gap-3">
+                        <Link href={route('home')} className="inline-flex items-center gap-3 group">
                             <div className="w-10 h-10 rounded-xl bg-gold flex items-center justify-center shadow-lg shadow-amber-400/30">
                                 <i className="fa-solid fa-graduation-cap text-slate-900 text-base"></i>
                             </div>
@@ -73,7 +80,7 @@ export default function Login({ status }: LoginProps) {
                         </Link>
                     </div>
 
-                    {/* Center */}
+                    {/* Center content */}
                     <div className="relative z-10 space-y-6">
                         <div>
                             <p className="text-[11px] text-amber-300/70 uppercase tracking-[0.22em] mb-3">
@@ -89,6 +96,7 @@ export default function Login({ status }: LoginProps) {
                             </p>
                         </div>
 
+                        {/* Info cards */}
                         <div className="space-y-3">
                             {[
                                 { icon: 'fa-shield-halved', text: 'Sesi aman & terenkripsi' },
@@ -105,48 +113,39 @@ export default function Login({ status }: LoginProps) {
                         </div>
                     </div>
 
-                    {/* Footer left — portal staff */}
-                    <div className="relative z-10">
-                        <Link
-                            href="/staff/login"
-                            className="inline-flex items-center gap-2 text-[11px] text-slate-500 hover:text-amber-300/70 transition group"
-                        >
-                            <div className="w-5 h-5 rounded-md bg-white/5 border border-white/10 flex items-center justify-center">
-                                <i className="fa-solid fa-user-tie text-[9px] text-slate-400 group-hover:text-gold transition"></i>
-                            </div>
-                            Portal Staff & Tenaga Pendidik
-                            <i className="fa-solid fa-arrow-right text-[9px] group-hover:translate-x-0.5 transition-transform"></i>
+                    {/* Footer */}
+                    <div className="relative z-10 text-[11px] text-slate-600">
+                        Belum punya akun?{' '}
+                        <Link href={route('daftar')} className="text-amber-400/70 hover:text-gold transition">
+                            Daftar sekarang →
                         </Link>
                     </div>
                 </div>
 
                 {/* ── Right Panel ── */}
-                <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-10 bg-white relative">
+                <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-10 bg-slate-50 relative">
 
-                    {/* Kembali ke beranda */}
-                    <div className="absolute top-6 left-6">
-                        <Link
-                            href={route('home')}
-                            className="inline-flex items-center gap-2 text-xs font-medium text-slate-500 hover:text-slate-800 transition"
-                        >
+                    {/* Mobile: back to home */}
+                    <div className="md:hidden absolute top-5 left-5">
+                        <Link href={route('home')} className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-navy transition">
                             <i className="fa-solid fa-arrow-left text-[10px]"></i>
-                            Kembali ke Beranda
+                            Beranda
                         </Link>
                     </div>
 
                     <div className="w-full max-w-sm">
 
                         {/* Header */}
-                        <div className="login-field opacity-0 mb-7">
-                            <h2 className="text-2xl font-display font-bold text-slate-900">
+                        <div className="login-field opacity-0 mb-8">
+                            <h2 className="text-2xl sm:text-3xl font-display font-bold text-slate-900">
                                 Masuk ke Akun
                             </h2>
-                            <p className="text-sm text-slate-600 mt-1">
+                            <p className="text-sm text-slate-500 mt-1.5">
                                 Gunakan email dan password yang sudah terdaftar.
                             </p>
                         </div>
 
-                        {/* Status flash */}
+                        {/* Status flash (misal: password berhasil direset) */}
                         {status && (
                             <div className="login-field opacity-0 mb-5 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 text-sm text-emerald-700 flex items-center gap-2.5">
                                 <i className="fa-solid fa-circle-check text-emerald-500 flex-shrink-0"></i>
@@ -158,9 +157,7 @@ export default function Login({ status }: LoginProps) {
 
                             {/* Email */}
                             <div className="login-field opacity-0">
-                                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                                    Email <span className="text-red-500">*</span>
-                                </label>
+                                <label className="label">Email</label>
                                 <div className="relative">
                                     <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
                                         <i className="fa-solid fa-envelope"></i>
@@ -172,29 +169,20 @@ export default function Login({ status }: LoginProps) {
                                         autoFocus
                                         onChange={e => setData('email', e.target.value)}
                                         placeholder="nama@gmail.com"
-                                        className={[
-                                            'w-full border rounded-xl pl-10 pr-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 outline-none transition bg-white',
-                                            errors.email
-                                                ? 'border-red-400 focus:border-red-500'
-                                                : 'border-slate-300 focus:border-gold',
-                                        ].join(' ')}
+                                        className={`input-field pl-10 ${errors.email ? 'input-error' : ''}`}
                                     />
                                 </div>
-                                {errors.email && (
-                                    <span className="text-xs text-red-500 mt-1 flex items-center gap-1">
-                                        <i className="fa-solid fa-circle-exclamation text-[10px]"></i>
-                                        {errors.email}
-                                    </span>
-                                )}
+                                {errors.email && <span className="error-text">{errors.email}</span>}
                             </div>
 
                             {/* Password */}
                             <div className="login-field opacity-0">
                                 <div className="flex items-center justify-between mb-1.5">
-                                    <label className="block text-xs font-semibold text-slate-700">
-                                        Password <span className="text-red-500">*</span>
-                                    </label>
-                                    <Link href={route('password.request')} className="text-[11px] text-slate-500 hover:text-gold transition font-medium">
+                                    <label className="label mb-0">Password</label>
+                                    <Link
+                                        href={route('password.request')}
+                                        className="text-[11px] text-slate-500 hover:text-gold transition font-medium"
+                                    >
                                         Lupa password?
                                     </Link>
                                 </div>
@@ -208,36 +196,30 @@ export default function Login({ status }: LoginProps) {
                                         autoComplete="current-password"
                                         onChange={e => setData('password', e.target.value)}
                                         placeholder="••••••••"
-                                        className={[
-                                            'w-full border rounded-xl pl-10 pr-11 py-3 text-sm text-slate-800 placeholder:text-slate-400 outline-none transition bg-white',
-                                            errors.password
-                                                ? 'border-red-400 focus:border-red-500'
-                                                : 'border-slate-300 focus:border-gold',
-                                        ].join(' ')}
+                                        className={`input-field pl-10 pr-11 ${errors.password ? 'input-error' : ''}`}
                                     />
-                                    <button type="button" onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition text-sm">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition text-sm"
+                                    >
                                         <i className={`fa-solid ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
                                     </button>
                                 </div>
-                                {errors.password && (
-                                    <span className="text-xs text-red-500 mt-1 flex items-center gap-1">
-                                        <i className="fa-solid fa-circle-exclamation text-[10px]"></i>
-                                        {errors.password}
-                                    </span>
-                                )}
+                                {errors.password && <span className="error-text">{errors.password}</span>}
                             </div>
 
                             {/* Remember me */}
-                            <div className="login-field opacity-0">
-                                <label className="flex items-center gap-2 cursor-pointer select-none">
-                                    <input
-                                        type="checkbox"
-                                        checked={data.remember}
-                                        onChange={e => setData('remember', e.target.checked)}
-                                        className="w-4 h-4 rounded border-gray-300 accent-navy"
-                                    />
-                                    <span className="text-xs text-slate-600">Ingat saya selama 30 hari</span>
+                            <div className="login-field opacity-0 flex items-center gap-2.5">
+                                <input
+                                    type="checkbox"
+                                    id="remember"
+                                    checked={data.remember}
+                                    onChange={e => setData('remember', e.target.checked)}
+                                    className="w-4 h-4 rounded border-gray-300 accent-navy"
+                                />
+                                <label htmlFor="remember" className="text-sm text-slate-600 cursor-pointer select-none">
+                                    Ingat saya selama 30 hari
                                 </label>
                             </div>
 
@@ -246,7 +228,7 @@ export default function Login({ status }: LoginProps) {
                                 <button
                                     type="submit"
                                     disabled={processing}
-                                    className="login-btn w-full bg-navy hover:bg-navy/90 disabled:opacity-60 disabled:cursor-not-allowed text-white px-6 py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2.5 transition hover:-translate-y-0.5 active:scale-95"
+                                    className="login-btn w-full bg-navy hover:bg-navy/90 disabled:opacity-60 disabled:cursor-not-allowed text-white px-6 py-3.5 rounded-xl font-bold text-sm shadow-xl shadow-slate-900/20 flex items-center justify-center gap-2.5 transition hover:-translate-y-0.5 active:scale-95"
                                 >
                                     {processing
                                         ? <><i className="fa-solid fa-spinner fa-spin"></i> Memproses...</>
@@ -256,8 +238,8 @@ export default function Login({ status }: LoginProps) {
                             </div>
                         </form>
 
-                        {/* Daftar link */}
-                        <div className="login-field opacity-0 mt-5 text-center text-xs text-slate-600">
+                        {/* Mobile: daftar link */}
+                        <div className="login-field opacity-0 mt-6 text-center text-xs text-slate-500 md:hidden">
                             Belum punya akun?{' '}
                             <Link href={route('daftar')} className="text-gold font-semibold hover:underline">
                                 Daftar sekarang
@@ -265,8 +247,8 @@ export default function Login({ status }: LoginProps) {
                         </div>
 
                         {/* Security note */}
-                        <div className="login-field opacity-0 mt-5 flex items-center justify-center gap-2 text-[11px] text-slate-500">
-                            <i className="fa-solid fa-shield-halved text-slate-400"></i>
+                        <div className="login-field opacity-0 mt-8 flex items-center justify-center gap-2 text-[11px] text-slate-400">
+                            <i className="fa-solid fa-shield-halved"></i>
                             <span>Koneksi aman · Dilindungi enkripsi SSL</span>
                         </div>
                     </div>

@@ -17,7 +17,8 @@ use Inertia\Response;
 class RegisterController extends Controller
 {
     // =============================================
-    // GET /register → Tampilkan form buat akun
+    // GET /register
+    // Tampilkan form buat akun
     // Protected by ValidateDraftToken middleware
     // =============================================
     public function show(Request $request): Response
@@ -34,14 +35,12 @@ class RegisterController extends Controller
                 'registration_code' => $draft->registration_code,
                 'school_origin'     => $draft->school_origin,
             ],
-            'flash' => [
-                'registration_code' => session('registration_code'),
-            ],
         ]);
     }
 
     // =============================================
-    // POST /register → Buat akun + konversi draft
+    // POST /register
+    // Buat akun + konversi draft → candidate
     // =============================================
     public function store(Request $request)
     {
@@ -58,27 +57,30 @@ class RegisterController extends Controller
 
         // 1. Buat user baru
         $user = User::create([
-            'name'     => $draft->full_name,
-            'email'    => $draft->email,
-            'password' => Hash::make($request->password),
-            'role'     => 'candidate',
+            'name'             => $draft->full_name,
+            'email'            => $draft->email,
+            'password'         => Hash::make($request->password),
+            'role'             => 'candidate',
+            'whatsapp_number'  => $draft->whatsapp_number,
+            'is_active'        => true,
         ]);
 
         // 2. Konversi draft → candidate
         Candidate::createFromDraft($draft, $user->id);
 
-        // 3. Soft delete draft (sudah tidak diperlukan)
+        // 3. Soft delete draft
         $draft->delete();
 
         // 4. Hapus cookie draft_token
         $expiredCookie = Cookie::forget('draft_token');
 
-        // 5. Fire event registered (untuk email verification kalau aktif)
+        // 5. Fire event Registered → trigger email verifikasi
         event(new Registered($user));
 
         // 6. Login otomatis
         Auth::login($user);
 
+        // 7. Redirect ke dashboard candidate
         return redirect()->route('dashboard')
             ->withCookie($expiredCookie);
     }
