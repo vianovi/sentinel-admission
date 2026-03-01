@@ -3,23 +3,19 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use App\Models\Candidate;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // ---------------------------------------------------
-        // 0. MASTER DATA (Gelombang dulu sebelum yang lain)
-        // ---------------------------------------------------
+        // Gelombang aktif harus dibuat duluan
+        // karena candidates dan drafts butuh admission_wave_id
         $this->call([
             AdmissionWaveSeeder::class,
         ]);
 
-        // ---------------------------------------------------
-        // 1. Admin
-        // ---------------------------------------------------
+        // Admin — akses penuh ke seluruh sistem
         User::create([
             'name'            => 'Admin SPMB',
             'email'           => 'admin@spmb.com',
@@ -29,9 +25,7 @@ class DatabaseSeeder extends Seeder
             'is_active'       => true,
         ]);
 
-        // ---------------------------------------------------
-        // 2. Staff
-        // ---------------------------------------------------
+        // Staff — verifikasi berkas dan pembayaran
         User::create([
             'name'            => 'Staff Verifikasi',
             'email'           => 'staff@spmb.com',
@@ -41,28 +35,15 @@ class DatabaseSeeder extends Seeder
             'is_active'       => true,
         ]);
 
-        // ---------------------------------------------------
-        // 3. Akun Silvia (untuk testing & lab hacking)
-        // ---------------------------------------------------
-        $silvia = User::create([
-            'name'            => 'Silvia Hacker',
-            'email'           => 'silvia@spmb.com',
+        // Akun candidate untuk testing flow wizard
+        // Password: password
+        User::create([
+            'name'            => 'Test Candidate',
+            'email'           => 'candidate@spmb.com',
             'password'        => bcrypt('password'),
             'role'            => 'candidate',
             'whatsapp_number' => '6289876543210',
             'is_active'       => true,
         ]);
-
-        Candidate::factory()->create([
-            'user_id' => $silvia->id,
-            'status'  => 'draft',
-        ]);
-
-        // ---------------------------------------------------
-        // 4. 10 Dummy Candidates (Target Operasi Lab)
-        // ---------------------------------------------------
-        User::factory(10)->create()->each(function ($user) {
-            Candidate::factory()->create(['user_id' => $user->id]);
-        });
     }
 }

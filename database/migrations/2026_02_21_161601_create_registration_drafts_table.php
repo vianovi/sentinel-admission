@@ -26,15 +26,23 @@ return new class extends Migration
              * secret_token      → UUID v4, disimpan di HttpOnly Cookie
              *                     tidak pernah ditampilkan ke user
              * Keduanya harus match untuk bisa akses draft (Double Key Lock)
+             *
+             * nullable → belum di-generate sampai user klik "Lanjut Buat Akun" di step 3
              */
-            $table->string('registration_code')->unique();
-            $table->string('secret_token')->unique();
-            $table->timestamp('expires_at');               // created_at + 3 hari
+            $table->string('registration_code')->unique()->nullable();
+            $table->string('secret_token')->unique()->nullable();
+            $table->timestamp('expires_at')->nullable();   // Di-set saat step 3 finalisasi
+
+            // =========================
+            // PROGRESS TRACKING
+            // =========================
+            $table->tinyInteger('current_step')->default(1); // 1 = step1 done, 2 = step2 done, 3 = final
 
             // =========================
             // DATA IDENTITAS SISWA
             // =========================
             $table->string('nisn', 10)->nullable();
+            $table->string('nik', 16)->nullable();          // ← TAMBAH: NIK dari KTP/KK (16 digit)
             $table->string('full_name')->nullable();
             $table->enum('gender', ['L', 'P'])->nullable();
             $table->string('place_of_birth')->nullable();
@@ -43,15 +51,15 @@ return new class extends Migration
             // =========================
             // DATA KONTAK
             // =========================
-            $table->string('mother_name')->nullable();     // Source → tabel guardians
-            $table->string('whatsapp_number', 20)->nullable(); // Kontak orang tua
-            $table->string('phone_number', 20)->nullable();    // WA siswa (opsional)
-            $table->string('email')->nullable();           // Email untuk buat akun
+            $table->string('mother_name')->nullable();
+            $table->string('whatsapp_number', 20)->nullable();
+            $table->string('phone_number', 20)->nullable();
+            $table->string('email')->nullable();
 
             // =========================
             // DATA ALAMAT
             // =========================
-            $table->text('address_full')->nullable();      // Alamat lengkap gabungan
+            $table->text('address_full')->nullable();
             $table->json('address_detail')->nullable();    // {jalan, rt, rw, kelurahan,
                                                            //  kecamatan, kabupaten, provinsi}
 
@@ -69,7 +77,10 @@ return new class extends Migration
             // =========================
             $table->index('registration_code');
             $table->index('secret_token');
-            $table->index('expires_at');                   // Untuk query cleanup draft expired
+            $table->index('expires_at');
+            $table->index('nisn');                         // ← TAMBAH: untuk cek duplikat
+            $table->index('nik');                          // ← TAMBAH: untuk cek duplikat
+            $table->index('current_step');                 // ← TAMBAH: untuk filter progress
         });
     }
 

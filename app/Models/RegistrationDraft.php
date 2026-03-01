@@ -16,7 +16,9 @@ class RegistrationDraft extends Model
         'registration_code',
         'secret_token',
         'expires_at',
+        'current_step',
         'nisn',
+        'nik',
         'full_name',
         'gender',
         'place_of_birth',
@@ -31,24 +33,42 @@ class RegistrationDraft extends Model
     ];
 
     protected $casts = [
-        'date_of_birth' => 'date',
-        'expires_at'    => 'datetime',
+        'date_of_birth'  => 'date',
+        'expires_at'     => 'datetime',
         'address_detail' => 'array',
     ];
 
     // =============================================
-    // STATIC: Generate draft baru dari step 1+2+3
+    // STEP 1: Insert draft baru
+    // Dipanggil saat user klik "Lanjut ke Langkah 2"
     // =============================================
-    public static function createFromWizard(array $data, ?int $waveId = null): self
+    public static function createFromStep1(array $data, ?int $waveId = null): self
+    {
+        return self::create([
+            'admission_wave_id' => $waveId,
+            'current_step'      => 1,
+            'nisn'              => $data['nisn'],
+            'nik'               => $data['nik'],
+            'full_name'         => $data['full_name'],
+            'gender'            => $data['gender'],
+            'place_of_birth'    => $data['place_of_birth'],
+            'date_of_birth'     => $data['date_of_birth'],
+        ]);
+    }
+
+    // =============================================
+    // STEP 2: Update draft dengan kontak & alamat
+    // =============================================
+    public function updateFromStep2(array $data): self
     {
         $addressDetail = [
-            'jalan'      => $data['addr_jalan'] ?? '',
-            'rt'         => $data['addr_rt'] ?? '',
-            'rw'         => $data['addr_rw'] ?? '',
-            'kelurahan'  => $data['addr_desa'] ?? '',
-            'kecamatan'  => $data['addr_kec'] ?? '',
-            'kabupaten'  => $data['addr_kab'] ?? '',
-            'provinsi'   => $data['addr_prov'] ?? '',
+            'jalan'     => $data['addr_jalan'] ?? '',
+            'rt'        => $data['addr_rt']    ?? '',
+            'rw'        => $data['addr_rw']    ?? '',
+            'kelurahan' => $data['addr_desa']  ?? '',
+            'kecamatan' => $data['addr_kec']   ?? '',
+            'kabupaten' => $data['addr_kab']   ?? '',
+            'provinsi'  => $data['addr_prov']  ?? '',
         ];
 
         $addressFull = implode(', ', array_filter([
@@ -60,24 +80,51 @@ class RegistrationDraft extends Model
             $addressDetail['provinsi'],
         ]));
 
-        return self::create([
-            'admission_wave_id' => $waveId,
+        $this->update([
+            'current_step'    => 2,
+            'mother_name'     => $data['mother_name'],
+            'whatsapp_number' => $data['whatsapp_number'],
+            'phone_number'    => $data['phone_number'] ?? null,
+            'email'           => $data['email'],
+            'address_full'    => $addressFull,
+            'address_detail'  => $addressDetail,
+        ]);
+
+        return $this;
+    }
+
+    // =============================================
+    // STEP 3: Finalisasi draft
+    // Generate registration_code, secret_token, expires_at
+    // =============================================
+    public function finalizeStep3(array $data): self
+    {
+        $this->update([
+            'current_step'      => 3,
+            'school_origin'     => $data['school_origin'],
             'registration_code' => self::generateCode(),
             'secret_token'      => Str::uuid()->toString(),
             'expires_at'        => Carbon::now()->addDays(3),
-            'nisn'              => $data['nisn'],
-            'full_name'         => $data['full_name'],
-            'gender'            => $data['gender'],
-            'place_of_birth'    => $data['place_of_birth'],
-            'date_of_birth'     => $data['date_of_birth'],
-            'mother_name'       => $data['mother_name'],
-            'whatsapp_number'   => $data['whatsapp_number'],
-            'phone_number'      => $data['phone_number'] ?? null,
-            'email'             => $data['email'],
-            'school_origin'     => $data['school_origin'],
-            'address_full'      => $addressFull,
-            'address_detail'    => $addressDetail,
         ]);
+
+        return $this;
+    }
+
+    // =============================================
+    // RESUME: Cari draft aktif by NISN atau NIK
+    // =============================================
+    public static function findActive(string $nisn, string $nik): ?self
+    {
+        return self::where(function ($q) use ($nisn, $nik) {
+                $q->where('nisn', $nisn)->orWhere('nik', $nik);
+            })
+            ->whereNull('deleted_at')
+            ->where(function ($q) {
+                $q->whereNull('expires_at')
+                  ->orWhere('expires_at', '>', now());
+            })
+            ->latest()
+            ->first();
     }
 
     // =============================================
@@ -93,11 +140,12 @@ class RegistrationDraft extends Model
     }
 
     // =============================================
-    // Cek apakah draft masih valid (belum expired)
+    // Cek apakah draft masih valid
     // =============================================
     public function isValid(): bool
     {
-        return $this->expires_at->isFuture() && is_null($this->deleted_at);
+        return is_null($this->deleted_at) &&
+               (is_null($this->expires_at) || $this->expires_at->isFuture());
     }
 
     // =============================================

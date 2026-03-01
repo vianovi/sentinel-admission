@@ -32,22 +32,30 @@ return new class extends Migration
             // IDENTITAS SISWA
             // =========================
             $table->string('nisn', 10)->nullable()->unique();
+            $table->string('nik', 16)->nullable()->unique();    // ← TAMBAH: dari KTP/KK
             $table->string('full_name');
             $table->enum('gender', ['L', 'P']);
             $table->string('place_of_birth');
             $table->date('date_of_birth');
 
             // =========================
-            // ALAMAT & SEKOLAH
+            // ALAMAT
             // =========================
-            $table->text('address');
+            $table->text('address_full')->nullable();           // ← RENAME dari address
+            $table->json('address_detail')->nullable();         // ← TAMBAH: {jalan, rt, rw,
+                                                                //   kelurahan, kecamatan,
+                                                                //   kabupaten, provinsi}
+
+            // =========================
+            // SEKOLAH
+            // =========================
             $table->string('school_origin')->nullable();
 
             // =========================
             // DATA TAMBAHAN (Diisi setelah login)
             // =========================
             $table->string('program_choice')->nullable();
-            $table->string('phone_number', 20)->nullable();
+            $table->string('phone_number', 20)->nullable();     // WA siswa (opsional)
 
             // =========================
             // STATUS PENDAFTARAN
@@ -75,6 +83,7 @@ return new class extends Migration
             $table->index('user_id');
             $table->index('status');
             $table->index('nisn');
+            $table->index('nik');                               // ← TAMBAH
         });
     }
 

@@ -7,7 +7,7 @@ import { animate, stagger } from 'animejs'
 interface WizardSidebarProps {
     currentStep: 1 | 2 | 3
     academicYear?: string
-    batchName?: string   // disiapkan untuk tampil di masa depan
+    batchName?: string
 }
 
 const steps = [
@@ -20,7 +20,7 @@ const steps = [
 
 export default function WizardSidebar({ currentStep, academicYear }: WizardSidebarProps) {
 
-    // Entrance animation — hanya saat pertama mount
+    // Entrance animation — hanya sekali saat mount
     useEffect(() => {
         animate('.sidebar-item', {
             opacity: [0, 1],
@@ -31,8 +31,7 @@ export default function WizardSidebar({ currentStep, academicYear }: WizardSideb
         })
     }, [])
 
-    // FIX: Animate hanya indikator step yang sedang aktif,
-    // bukan semua .step-indicator sekaligus (Bug 9)
+    // Animate indikator step yang aktif saja setiap kali step berubah
     useEffect(() => {
         animate(`.step-indicator-${currentStep}`, {
             scale: [0.75, 1],
@@ -42,9 +41,7 @@ export default function WizardSidebar({ currentStep, academicYear }: WizardSideb
     }, [currentStep])
 
     return (
-        <aside className="bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100 flex flex-col border-r border-white/5">
-
-            {/* ── Desktop layout (px-5 sm:px-8 py-6 sm:py-8) ── */}
+        <aside className="bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100 flex flex-col border-b md:border-b-0 md:border-r border-white/5">
             <div className="px-5 sm:px-7 py-6 sm:py-8 flex flex-col h-full">
 
                 {/* Back link */}
@@ -58,9 +55,7 @@ export default function WizardSidebar({ currentStep, academicYear }: WizardSideb
 
                 {/* Title */}
                 <div className="sidebar-item opacity-0 mt-6 sm:mt-8">
-                    <p className="text-[10px] text-slate-400 uppercase tracking-[0.22em]">
-                        Formulir Online
-                    </p>
+                    <p className="text-[10px] text-slate-400 uppercase tracking-[0.22em]">Formulir Online</p>
                     <h1 className="text-2xl sm:text-4xl font-display font-bold leading-tight mt-2">
                         Formulir<br />
                         <span className="text-gold">Pendaftaran</span>
@@ -73,18 +68,14 @@ export default function WizardSidebar({ currentStep, academicYear }: WizardSideb
                     </p>
                 </div>
 
-                {/* Stepper — hanya tampil di sm ke atas */}
+                {/* Stepper — desktop (sm ke atas) */}
                 <div className="hidden sm:block space-y-5 mt-8 sm:mt-10">
                     {steps.map((step, i) => {
                         const done   = currentStep > step.number
                         const active = currentStep === step.number
                         return (
-                            <div
-                                key={step.number}
-                                className="sidebar-item opacity-0 flex items-start gap-3 sm:gap-4"
-                            >
+                            <div key={step.number} className="sidebar-item opacity-0 flex items-start gap-3 sm:gap-4">
                                 <div className="relative flex-shrink-0">
-                                    {/* Indikator lingkaran — class unik per step untuk animasi spesifik */}
                                     <div className={[
                                         `step-indicator step-indicator-${step.number}`,
                                         'w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-500',
@@ -99,8 +90,7 @@ export default function WizardSidebar({ currentStep, academicYear }: WizardSideb
                                             : step.number
                                         }
                                     </div>
-
-                                    {/* Garis penghubung antar step */}
+                                    {/* Garis penghubung */}
                                     {i < steps.length - 1 && (
                                         <div className={[
                                             'absolute top-7 sm:top-8 left-1/2 -translate-x-1/2 w-px h-10 sm:h-12 transition-all duration-500',
@@ -108,7 +98,6 @@ export default function WizardSidebar({ currentStep, academicYear }: WizardSideb
                                         ].join(' ')} />
                                     )}
                                 </div>
-
                                 <div>
                                     <p className={[
                                         'text-[10px] uppercase tracking-[0.18em] transition-colors duration-300',
@@ -122,20 +111,15 @@ export default function WizardSidebar({ currentStep, academicYear }: WizardSideb
                                     ].join(' ')}>
                                         {step.title}
                                     </p>
-                                    <p className="text-[10px] sm:text-[11px] text-slate-500 mt-0.5">
-                                        {step.desc}
-                                    </p>
+                                    <p className="text-[10px] sm:text-[11px] text-slate-500 mt-0.5">{step.desc}</p>
                                 </div>
                             </div>
                         )
                     })}
                 </div>
 
-                {/* ── Mobile: compact step progress bar ─────────────────────
-                 *  Hanya tampil di bawah sm. Menggantikan sidebar stepper yang
-                 *  tersembunyi di layar kecil agar user tetap tahu posisinya.
-                 */}
-                <div className="sm:hidden mt-6 space-y-2">
+                {/* Stepper — mobile compact */}
+                <div className="sm:hidden mt-5 space-y-2">
                     {steps.map(step => {
                         const done   = currentStep > step.number
                         const active = currentStep === step.number
