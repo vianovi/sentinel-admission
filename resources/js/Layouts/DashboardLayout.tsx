@@ -1,4 +1,5 @@
 import { usePage } from "@inertiajs/react";
+import type { PageProps } from '@/types';
 import { SidebarProvider, useSidebar } from "@/context/SidebarContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import Sidebar from "@/Components/Dashboard/Shared/Sidebar";
@@ -12,7 +13,7 @@ type Props = {
 // Inner layout — needs SidebarContext
 function LayoutInner({ children }: Props) {
     const { isExpanded, isHovered } = useSidebar();
-    const { auth } = usePage<{ auth: { user: { name: string; email: string; role: string } } }>().props;
+    const { auth } = usePage<PageProps>().props;
 
     const role = (auth.user.role ?? "candidate") as "candidate" | "staff" | "admin";
     const isWide = isExpanded || isHovered;
@@ -29,7 +30,7 @@ function LayoutInner({ children }: Props) {
             <div className={`
                 flex flex-col min-h-screen
                 transition-all duration-300 ease-in-out
-                lg:${isWide ? "ml-[272px]" : "ml-[72px]"}
+                ${isWide ? "lg:ml-[272px]" : "lg:ml-[72px]"}
             `}>
                 <Topbar user={auth.user} />
 
