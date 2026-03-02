@@ -1,11 +1,12 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\WelcomeController;
+use App\Http\Controllers\Dashboard\AdminDashboardController;
+use App\Http\Controllers\Dashboard\CandidateDashboardController;
+use App\Http\Controllers\Dashboard\StaffDashboardController;
 use App\Http\Controllers\FormWizardController;
+use App\Http\Controllers\WelcomeController;
 use App\Http\Middleware\RoleMiddleware;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 // ─── Landing Page ─────────────────────────────────────────────────────────────
 Route::get('/', [WelcomeController::class, 'index'])->name('home');
@@ -25,7 +26,7 @@ Route::middleware(['auth', RoleMiddleware::class . ':candidate'])
     ->prefix('dashboard')
     ->name('dashboard')
     ->group(function () {
-        Route::get('/', fn () => Inertia::render('Dashboard/Index'))->name('');
+        Route::get('/', [CandidateDashboardController::class, 'index'])->name('');
     });
 
 // ─── Dashboard Staff ──────────────────────────────────────────────────────────
@@ -33,7 +34,10 @@ Route::middleware(['auth', RoleMiddleware::class . ':staff'])
     ->prefix('dashboard/staff')
     ->name('staff.')
     ->group(function () {
-        Route::get('/', fn () => Inertia::render('Dashboard/Staff/Index'))->name('dashboard');
+        Route::get('/', [StaffDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/candidates/{candidate}', [StaffDashboardController::class, 'show'])->name('candidates.show');
+        Route::post('/documents/{document}/verify', [StaffDashboardController::class, 'verifyDocument'])->name('documents.verify');
+        Route::post('/candidates/{candidate}/status', [StaffDashboardController::class, 'updateStatus'])->name('candidates.status');
     });
 
 // ─── Dashboard Admin ──────────────────────────────────────────────────────────
@@ -41,7 +45,10 @@ Route::middleware(['auth', RoleMiddleware::class . ':admin'])
     ->prefix('dashboard/admin')
     ->name('admin.')
     ->group(function () {
-        Route::get('/', fn () => Inertia::render('Dashboard/Admin/Index'))->name('dashboard');
+        Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+        Route::post('/staff/{user}/toggle', [AdminDashboardController::class, 'toggleStaff'])->name('staff.toggle');
+        Route::delete('/candidates/{candidate}', [AdminDashboardController::class, 'deleteCandidate'])->name('candidates.delete');
+        Route::post('/waves/{wave}/toggle', [AdminDashboardController::class, 'toggleWave'])->name('waves.toggle');
     });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
