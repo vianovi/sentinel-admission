@@ -3,6 +3,15 @@ export interface User {
     name: string;
     email: string;
     email_verified_at?: string;
+    role: 'candidate' | 'staff' | 'admin';
+    is_active: boolean;
+    whatsapp_number?: string;
+}
+
+export interface AppConfig {
+    name: string;
+    tagline: string;
+    logo: string | null;
 }
 
 export type PageProps<
@@ -11,4 +20,5 @@ export type PageProps<
     auth: {
         user: User;
     };
+    app: AppConfig;
 };

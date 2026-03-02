@@ -1,12 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
-import { Head, Link, useForm } from '@inertiajs/react'
+import { Head, Link, useForm, usePage } from '@inertiajs/react'
 import { animate, stagger } from 'animejs'
+import { PageProps } from '@/types'
 
 interface LoginProps {
     status?: string
 }
 
 export default function Login({ status }: LoginProps) {
+    const { props } = usePage<PageProps>()
+    const { app } = props
+
     const { data, setData, post, processing, errors, reset } = useForm({
         email:    '',
         password: '',
@@ -64,11 +68,15 @@ export default function Login({ status }: LoginProps) {
                     {/* Logo */}
                     <div className="relative z-10">
                         <Link href={route('home')} className="inline-flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-gold flex items-center justify-center shadow-lg shadow-amber-400/30">
-                                <i className="fa-solid fa-graduation-cap text-slate-900 text-base"></i>
-                            </div>
+                            {app.logo ? (
+                                <img src={app.logo} alt={app.name} className="w-10 h-10 rounded-xl object-cover shadow-lg" />
+                            ) : (
+                                <div className="w-10 h-10 rounded-xl bg-gold flex items-center justify-center shadow-lg shadow-amber-400/30">
+                                    <i className="fa-solid fa-graduation-cap text-slate-900 text-base"></i>
+                                </div>
+                            )}
                             <span className="text-white font-display font-bold text-lg tracking-tight">
-                                Sentinel<span className="text-gold">.</span>
+                                {app.name}<span className="text-gold">.</span>
                             </span>
                         </Link>
                     </div>
@@ -77,7 +85,7 @@ export default function Login({ status }: LoginProps) {
                     <div className="relative z-10 space-y-6">
                         <div>
                             <p className="text-[11px] text-amber-300/70 uppercase tracking-[0.22em] mb-3">
-                                Sistem SPMB Digital
+                                {app.tagline}
                             </p>
                             <h1 className="text-4xl lg:text-5xl font-display font-bold text-white leading-[1.1]">
                                 Selamat<br />

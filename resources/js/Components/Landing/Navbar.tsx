@@ -1,20 +1,19 @@
 import { useState, useEffect } from 'react'
 import { Link } from '@inertiajs/react'
 import { WelcomeProps } from '@/types/landing'
+import { AppConfig } from '@/types'
 
-type NavbarProps = Pick<WelcomeProps, 'auth'>
+type NavbarProps = Pick<WelcomeProps, 'auth'> & { app: AppConfig }
 
 function smoothScrollTo(targetId: string) {
     const target = document.querySelector(targetId)
     if (!target) return
-
     const targetY = target.getBoundingClientRect().top + window.scrollY - 80
     const startY = window.scrollY
     const distance = targetY - startY
     const duration = 1200
     let startTime: number | null = null
 
-    // easeOutExpo easing — santai di akhir
     function easeOutExpo(t: number): number {
         return t === 1 ? 1 : 1 - Math.pow(2, -10 * t)
     }
@@ -23,19 +22,13 @@ function smoothScrollTo(targetId: string) {
         if (!startTime) startTime = timestamp
         const elapsed = timestamp - startTime
         const progress = Math.min(elapsed / duration, 1)
-        const eased = easeOutExpo(progress)
-
-        window.scrollTo(0, startY + distance * eased)
-
-        if (progress < 1) {
-            requestAnimationFrame(step)
-        }
+        window.scrollTo(0, startY + distance * easeOutExpo(progress))
+        if (progress < 1) requestAnimationFrame(step)
     }
-
     requestAnimationFrame(step)
 }
 
-export default function Navbar({ auth }: NavbarProps) {
+export default function Navbar({ auth, app }: NavbarProps) {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const [scrolled, setScrolled] = useState(false)
 
@@ -68,24 +61,25 @@ export default function Navbar({ auth }: NavbarProps) {
 
                     {/* Logo */}
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-navy rounded-lg flex items-center justify-center text-gold shadow-lg">
-                            <i className="fa-solid fa-graduation-cap text-xl"></i>
-                        </div>
+                        {app.logo ? (
+                            <img src={app.logo} alt={app.name} className="w-10 h-10 rounded-lg object-cover shadow-lg" />
+                        ) : (
+                            <div className="w-10 h-10 bg-navy rounded-lg flex items-center justify-center text-gold shadow-lg">
+                                <i className="fa-solid fa-graduation-cap text-xl"></i>
+                            </div>
+                        )}
                         <div className="leading-tight">
-                            <h1 className="font-display font-bold text-lg md:text-xl tracking-wide text-navy uppercase">Sentinel</h1>
-                            <p className="text-[9px] md:text-[10px] text-gray-500 font-bold tracking-[0.2em] uppercase">Admission System</p>
+                            <h1 className="font-display font-bold text-lg md:text-xl tracking-wide text-navy uppercase">{app.name}</h1>
+                            <p className="text-[9px] md:text-[10px] text-gray-500 font-bold tracking-[0.2em] uppercase">{app.tagline}</p>
                         </div>
                     </div>
 
                     {/* Desktop Menu */}
                     <div className="hidden md:flex items-center gap-8 text-sm font-semibold text-gray-500">
                         {navLinks.map((link) => (
-                            <a
-                                key={link.href}
-                                href={link.href}
+                            <a key={link.href} href={link.href}
                                 onClick={(e) => handleNavClick(e, link.href)}
-                                className="hover:text-navy transition relative group py-1"
-                            >
+                                className="hover:text-navy transition relative group py-1">
                                 {link.label}
                                 <span className="absolute -bottom-0.5 left-0 w-0 h-0.5 bg-gold group-hover:w-full transition-all duration-300 rounded-full"></span>
                             </a>
@@ -119,12 +113,9 @@ export default function Navbar({ auth }: NavbarProps) {
                                 <i className="fa-solid fa-right-to-bracket"></i> Login
                             </Link>
                         )}
-                        <button
-                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                            aria-label="Buka menu navigasi"
-                            aria-expanded={mobileMenuOpen}
-                            className="text-navy hover:text-gold transition"
-                        >
+                        <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                            aria-label="Buka menu navigasi" aria-expanded={mobileMenuOpen}
+                            className="text-navy hover:text-gold transition">
                             <i className={`fa-solid ${mobileMenuOpen ? 'fa-times' : 'fa-bars'} text-2xl`}></i>
                         </button>
                     </div>
@@ -136,16 +127,13 @@ export default function Navbar({ auth }: NavbarProps) {
                 <div className="md:hidden bg-white border-t border-gray-100">
                     <div className="p-4 space-y-1">
                         {navLinks.map((link) => (
-                            <a
-                                key={link.href}
-                                href={link.href}
+                            <a key={link.href} href={link.href}
                                 onClick={(e) => handleNavClick(e, link.href)}
-                                className="block py-2.5 px-2 font-semibold text-gray-700 hover:text-navy hover:bg-gray-50 rounded-lg transition"
-                            >
+                                className="block py-2.5 px-2 font-semibold text-gray-700 hover:text-navy hover:bg-gray-50 rounded-lg transition">
                                 {link.label}
                             </a>
                         ))}
-                        <Link href="/register" className="block w-full text-center py-3 mt-3 bg-navy text-white rounded-lg font-bold shadow-lg">
+                        <Link href="/daftar" className="block w-full text-center py-3 mt-3 bg-navy text-white rounded-lg font-bold shadow-lg">
                             Isi Formulir Pendaftaran
                         </Link>
                     </div>
