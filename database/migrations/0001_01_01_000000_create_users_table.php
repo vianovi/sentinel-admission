@@ -47,8 +47,26 @@ return new class extends Migration
              */
             $table->string('whatsapp_number', 20)->nullable();
 
-            // Path foto profil kecil untuk navbar
+            // Path foto profil kecil untuk navbar & profile page
             $table->string('avatar')->nullable();
+
+            // =========================
+            // GANTI EMAIL (perlu approval staff/admin)
+            // =========================
+
+            /**
+             * Flow ganti email:
+             * 1. Kandidat request ganti email → simpan di pending_email
+             * 2. Staff/admin approve request
+             * 3. Sistem kirim verifikasi ke pending_email
+             * 4. Kandidat klik link → email diganti, pending_email di-null
+             *
+             * pending_email_token  → token unik untuk verifikasi link
+             * pending_email_requested_at → untuk expiry token (24 jam)
+             */
+            $table->string('pending_email')->nullable();
+            $table->string('pending_email_token')->nullable();
+            $table->timestamp('pending_email_requested_at')->nullable();
 
             // =========================
             // STATUS AKUN

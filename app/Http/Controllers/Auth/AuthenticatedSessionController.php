@@ -37,9 +37,9 @@ class AuthenticatedSessionController extends Controller
 
         // Redirect berdasarkan role — mutlak terisolasi
         return match (Auth::user()->role) {
-            'admin'     => redirect()->intended(route('admin.dashboard')),
-            'staff'     => redirect()->intended(route('staff.dashboard')),
-            default     => redirect()->intended(route('dashboard')),
+            'admin'  => redirect()->intended(route('admin.dashboard')),
+            'staff'  => redirect()->intended(route('staff.dashboard')),
+            default  => redirect()->intended(route('dashboard.index')),
         };
     }
 

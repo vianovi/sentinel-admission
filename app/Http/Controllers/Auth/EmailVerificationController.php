@@ -70,7 +70,7 @@ class EmailVerificationController extends Controller
         return match ($request->user()->role) {
             'admin' => route('admin.dashboard'),
             'staff' => route('staff.dashboard'),
-            default => route('dashboard'),
+            default => route('dashboard.index'),
         };
     }
 }

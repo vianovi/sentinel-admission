@@ -81,7 +81,7 @@ class RegisterController extends Controller
         Auth::login($user);
 
         // 7. Redirect ke dashboard candidate
-        return redirect()->route('dashboard')
+        return redirect()->route('dashboard.index')
             ->withCookie($expiredCookie);
     }
 }

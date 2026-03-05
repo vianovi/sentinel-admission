@@ -24,9 +24,30 @@ Route::middleware('guest')->group(function () {
 // ─── Dashboard Candidate ──────────────────────────────────────────────────────
 Route::middleware(['auth', RoleMiddleware::class . ':candidate'])
     ->prefix('dashboard')
-    ->name('dashboard')
+    ->name('dashboard.')
     ->group(function () {
-        Route::get('/', [CandidateDashboardController::class, 'index'])->name('');
+
+        // Dashboard utama
+        Route::get('/', [CandidateDashboardController::class, 'index'])
+            ->name('index');
+
+        // ── Profile ───────────────────────────────────────────────────────
+        Route::get('/profile', [CandidateDashboardController::class, 'showProfile'])
+            ->name('profile');
+        Route::put('/profile', [CandidateDashboardController::class, 'updateProfile'])
+            ->name('profile.update');
+
+        // Avatar
+        Route::post('/profile/avatar', [CandidateDashboardController::class, 'updateAvatar'])
+            ->name('profile.avatar.update');
+        Route::get('/profile/avatar', [CandidateDashboardController::class, 'serveAvatar'])
+            ->name('profile.avatar');
+
+        // Ganti email (perlu approval staff/admin)
+        Route::post('/profile/email', [CandidateDashboardController::class, 'requestEmailChange'])
+            ->name('profile.email.request');
+        Route::delete('/profile/email', [CandidateDashboardController::class, 'cancelEmailChange'])
+            ->name('profile.email.cancel');
     });
 
 // ─── Dashboard Staff ──────────────────────────────────────────────────────────
