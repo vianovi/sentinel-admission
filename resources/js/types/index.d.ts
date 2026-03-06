@@ -1,17 +1,19 @@
 export interface User {
-    id: number;
-    name: string;
-    email: string;
+    id:                 number;
+    name:               string;
+    email:              string;
     email_verified_at?: string;
-    role: 'candidate' | 'staff' | 'admin';
-    is_active: boolean;
-    whatsapp_number?: string;
+    role:               'candidate' | 'staff' | 'admin';
+    is_active:          boolean;
+    whatsapp_number?:   string;
+    avatar_url:         string | null;
+    initials:           string;
 }
 
 export interface AppConfig {
-    name: string;
+    name:    string;
     tagline: string;
-    logo: string | null;
+    logo:    string | null;
 }
 
 export type PageProps<
