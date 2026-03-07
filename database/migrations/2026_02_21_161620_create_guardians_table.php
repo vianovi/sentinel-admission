@@ -24,30 +24,33 @@ return new class extends Migration
             $table->date('father_date_of_birth')->nullable();
             $table->string('father_job')->nullable();
             $table->string('father_income')->nullable();    // "< 1 Juta", "1-3 Juta", dll
+            $table->string('father_phone', 20)->nullable(); // nomor WA/HP ayah
 
             // =========================
             // DATA IBU
             // =========================
-            $table->string('mother_name');                  // NOT NULL — source dari draft
+            // mother_name NOT NULL — sudah diisi dari draft saat registrasi
+            $table->string('mother_name');
             $table->string('mother_nik', 16)->nullable();
             $table->string('mother_place_of_birth')->nullable();
             $table->date('mother_date_of_birth')->nullable();
             $table->string('mother_job')->nullable();
             $table->string('mother_income')->nullable();
+            $table->string('mother_phone', 20)->nullable(); // nomor WA/HP ibu
 
             // =========================
-            // DATA WALI
+            // DATA WALI (opsional — diisi jika tidak tinggal dengan ortu)
             // =========================
             $table->string('guardian_name')->nullable();
             $table->string('guardian_relation')->nullable(); // "Kakak", "Paman", dll
             $table->string('guardian_job')->nullable();
             $table->string('guardian_income')->nullable();
+            $table->string('guardian_phone', 20)->nullable(); // nomor WA/HP wali
 
             // =========================
-            // KONTAK & ADMINISTRASI
+            // ADMINISTRASI
             // =========================
-            $table->string('whatsapp_number', 20);          // NOT NULL — wajib diisi
-            $table->string('no_kk', 16)->nullable();        // Nomor Kartu Keluarga
+            $table->string('no_kk', 16)->nullable(); // Nomor Kartu Keluarga
 
             $table->timestamps();
 

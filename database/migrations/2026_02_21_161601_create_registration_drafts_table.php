@@ -11,7 +11,6 @@ return new class extends Migration
         Schema::create('registration_drafts', function (Blueprint $table) {
             $table->id();
 
-            // Relasi ke gelombang (opsional, bisa null)
             $table->foreignId('admission_wave_id')
                 ->nullable()
                 ->nullOnDelete()
@@ -20,29 +19,23 @@ return new class extends Migration
             // =========================
             // SECURITY KEYS
             // =========================
-
-            /**
-             * registration_code → tampil ke user sebagai referensi
-             * secret_token      → UUID v4, disimpan di HttpOnly Cookie
-             *                     tidak pernah ditampilkan ke user
-             * Keduanya harus match untuk bisa akses draft (Double Key Lock)
-             *
-             * nullable → belum di-generate sampai user klik "Lanjut Buat Akun" di step 3
-             */
+            // registration_code → tampil ke user sebagai referensi
+            // secret_token      → UUID v4, disimpan di HttpOnly Cookie
+            // Keduanya harus match untuk akses draft (Double Key Lock)
             $table->string('registration_code')->unique()->nullable();
             $table->string('secret_token')->unique()->nullable();
-            $table->timestamp('expires_at')->nullable();   // Di-set saat step 3 finalisasi
+            $table->timestamp('expires_at')->nullable();
 
             // =========================
             // PROGRESS TRACKING
             // =========================
-            $table->tinyInteger('current_step')->default(1); // 1 = step1 done, 2 = step2 done, 3 = final
+            $table->tinyInteger('current_step')->default(1);
 
             // =========================
             // DATA IDENTITAS SISWA
             // =========================
             $table->string('nisn', 10)->nullable();
-            $table->string('nik', 16)->nullable();          // ← TAMBAH: NIK dari KTP/KK (16 digit)
+            $table->string('nik', 16)->nullable();
             $table->string('full_name')->nullable();
             $table->enum('gender', ['L', 'P'])->nullable();
             $table->string('place_of_birth')->nullable();
@@ -52,23 +45,22 @@ return new class extends Migration
             // DATA KONTAK
             // =========================
             $table->string('mother_name')->nullable();
+            // whatsapp_number = nomor utama akun → masuk ke users.whatsapp_number
+            // phone_number TIDAK ADA di draft — kandidat isi sendiri setelah login
             $table->string('whatsapp_number', 20)->nullable();
-            $table->string('phone_number', 20)->nullable();
             $table->string('email')->nullable();
 
             // =========================
             // DATA ALAMAT
             // =========================
             $table->text('address_full')->nullable();
-            $table->json('address_detail')->nullable();    // {jalan, rt, rw, kelurahan,
-                                                           //  kecamatan, kabupaten, provinsi}
+            $table->json('address_detail')->nullable(); // {jalan, rt, rw, kelurahan, kecamatan, kabupaten, provinsi}
 
             // =========================
             // DATA SEKOLAH
             // =========================
-            $table->string('school_origin')->nullable();   // Dilengkapi di step 3
+            $table->string('school_origin')->nullable();
 
-            // Soft delete — aktif saat draft dikonversi jadi akun
             $table->softDeletes();
             $table->timestamps();
 
@@ -78,9 +70,9 @@ return new class extends Migration
             $table->index('registration_code');
             $table->index('secret_token');
             $table->index('expires_at');
-            $table->index('nisn');                         // ← TAMBAH: untuk cek duplikat
-            $table->index('nik');                          // ← TAMBAH: untuk cek duplikat
-            $table->index('current_step');                 // ← TAMBAH: untuk filter progress
+            $table->index('nisn');
+            $table->index('nik');
+            $table->index('current_step');
         });
     }
 

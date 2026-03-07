@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Candidate;
+use App\Models\Guardian;
 use App\Models\RegistrationDraft;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
@@ -66,21 +67,25 @@ class RegisterController extends Controller
         ]);
 
         // 2. Konversi draft → candidate
-        Candidate::createFromDraft($draft, $user->id);
+        $candidate = Candidate::createFromDraft($draft, $user->id);
 
-        // 3. Soft delete draft
+        // 3. Buat guardian awal dari draft (mother_name saja)
+        // Sisa data dilengkapi kandidat di /dashboard/data-wali
+        Guardian::createFromDraft($draft, $candidate->id);
+
+        // 4. Soft delete draft
         $draft->delete();
 
-        // 4. Hapus cookie draft_token
+        // 5. Hapus cookie draft_token
         $expiredCookie = Cookie::forget('draft_token');
 
-        // 5. Fire event Registered → trigger email verifikasi
+        // 6. Fire event Registered → trigger email verifikasi
         event(new Registered($user));
 
-        // 6. Login otomatis
+        // 7. Login otomatis
         Auth::login($user);
 
-        // 7. Redirect ke dashboard candidate
+        // 8. Redirect ke dashboard candidate
         return redirect()->route('dashboard.index')
             ->withCookie($expiredCookie);
     }

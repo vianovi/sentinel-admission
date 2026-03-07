@@ -86,6 +86,8 @@ class Candidate extends Model
             'address_detail'        => $draft->address_detail,
             'school_origin'         => $draft->school_origin,
             'status'                => 'draft',
+            // phone_number → diisi kandidat sendiri setelah login
+            // program_choice → diisi kandidat sendiri setelah login
         ]);
     }
 
