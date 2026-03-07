@@ -83,7 +83,7 @@ export default function VerifyEmail({ status }: VerifyEmailProps) {
 
                             {/* Lanjut ke dashboard */}
                             <Link
-                                href={route('dashboard')}
+                                href={route('dashboard.index')}
                                 className="w-full border border-white/10 text-slate-400 hover:text-white hover:border-white/20 px-6 py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2.5 transition"
                             >
                                 <i className="fa-solid fa-arrow-right"></i>

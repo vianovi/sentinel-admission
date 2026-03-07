@@ -2,31 +2,39 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\RegistrationDraft;
+use Closure;
 use Illuminate\Http\Request;
-use Inertia\Middleware;
+use Symfony\Component\HttpFoundation\Response;
 
-class HandleInertiaRequests extends Middleware
+class ValidateDraftToken
 {
-    protected $rootView = 'app';
-
-    public function version(Request $request): ?string
+    public function handle(Request $request, Closure $next): Response
     {
-        return parent::version($request);
-    }
+        $token = $request->cookie("draft_token");
 
-    public function share(Request $request): array
-    {
-        return [
-            ...parent::share($request),
-            'auth' => [
-                'user' => $request->user(),
-            ],
-            // ── Global app config — diambil dari .env ──────────────────────
-            'app' => [
-                'name'    => config('app.name'),
-                'tagline' => env('APP_TAGLINE', 'Sistem SPMB'),
-                'logo'    => env('APP_LOGO', null),  // path ke logo, null = pakai icon FA
-            ],
-        ];
+        if (!$token) {
+            return redirect()->route("daftar")
+                ->with("error", "Sesi pendaftaran tidak ditemukan. Silakan mulai dari awal.");
+        }
+
+        $draft = RegistrationDraft::where("secret_token", $token)
+            ->whereNull("deleted_at")
+            ->first();
+
+        if (!$draft) {
+            return redirect()->route("daftar")
+                ->with("error", "Token tidak valid. Silakan mulai dari awal.");
+        }
+
+        if ($draft->expires_at->isPast()) {
+            $draft->delete();
+            return redirect()->route("daftar")
+                ->with("error", "Sesi pendaftaran telah kadaluarsa. Silakan isi formulir kembali.");
+        }
+
+        $request->merge(["_draft" => $draft]);
+
+        return $next($request);
     }
 }

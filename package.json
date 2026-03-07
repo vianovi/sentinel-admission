@@ -38,6 +38,7 @@
         "vite": "^7.0.7"
     },
     "dependencies": {
-        "animejs": "^4.3.6"
+        "animejs": "^4.3.6",
+        "ziggy-js": "^2.6.2"
     }
 }
