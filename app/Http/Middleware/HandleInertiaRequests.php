@@ -28,13 +28,11 @@ class HandleInertiaRequests extends Middleware
                     'role'            => $user->role,
                     'is_active'       => $user->is_active,
                     'whatsapp_number' => $user->whatsapp_number,
-                    // Avatar — foto asli kalau ada, null kalau belum upload
                     'avatar_url'      => $user->avatar_url,
-                    // Initials — fallback kalau belum ada avatar
                     'initials'        => $user->initials,
                 ] : null,
             ],
-            // ── Global app config — diambil dari .env ──────────────────────
+            // ── Global app config ──────────────────────────────────────────
             'app' => [
                 'name'    => config('app.name'),
                 'tagline' => env('APP_TAGLINE', 'Sistem SPMB'),

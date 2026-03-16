@@ -24,10 +24,9 @@ const toTitleCase = (s: string) =>
     s.toLowerCase().split(' ').filter(Boolean).map(w => w[0].toUpperCase() + w.slice(1)).join(' ')
 
 export default function WizardStep1({ data, onChange, onNext, onDuplicateFound, currentDraftId }: WizardStep1Props) {
-    const [errors, setErrors]       = useState<Partial<Record<keyof Step1Data, string>>>({})
+    const [errors, setErrors]         = useState<Partial<Record<keyof Step1Data, string>>>({})
     const [submitting, setSubmitting] = useState(false)
 
-    // Auto-save ke localStorage setiap kali data berubah
     useWizardStorage('step1', data)
 
     useEffect(() => {
@@ -68,21 +67,24 @@ export default function WizardStep1({ data, onChange, onNext, onDuplicateFound, 
         setSubmitting(true)
 
         try {
-            // 1. Cek duplikat dulu
-            const { data: check } = await axios.post('/daftar/check-duplicate', {
-                nisn:             data.nisn,
-                nik:              data.nik,
-                current_draft_id: currentDraftId ? Number(currentDraftId) : null,
-            })
+            // 1. Cek duplikat — skip kalau currentDraftId sudah ada (edit, bukan baru)
+            if (!currentDraftId) {
+                const { data: check } = await axios.post('/daftar/check-duplicate', {
+                    nisn:             data.nisn,
+                    nik:              data.nik,
+                    current_draft_id: null,
+                })
 
-            if (check.found) {
-                setSubmitting(false)
-                onDuplicateFound(check.status, check.data)
-                return
+                if (check.found) {
+                    setSubmitting(false)
+                    onDuplicateFound(check.status, check.data)
+                    return
+                }
             }
 
-            // 2. Tidak ada duplikat — insert draft
+            // 2. Upsert — kirim draft_id kalau sudah ada (UPDATE), kosong = INSERT baru
             const { data: res } = await axios.post('/daftar/step1', {
+                draft_id:       currentDraftId ? Number(currentDraftId) : null,
                 full_name:      data.full_name,
                 nisn:           data.nisn,
                 nik:            data.nik,

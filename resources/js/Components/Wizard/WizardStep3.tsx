@@ -40,31 +40,51 @@ export default function WizardStep3({
     step1, step2, data, draftId, onChange, onBack, onGoToStep1,
 }: WizardStep3Props) {
 
-    // ── State ─────────────────────────────────────────────────────────────────
-    const [agreement, setAgreement]         = useState(false)
-    const [errors, setErrors]               = useState<Record<string, string>>({})
-    const [submitting, setSubmitting]       = useState(false)
-    const [registrationCode, setRegCode]    = useState<string | null>(null)
-    const [finalizing, setFinalizing]       = useState(false)
-    const [finalizeError, setFinalizeError] = useState<string | null>(null)
+    const [agreement, setAgreement]           = useState(false)
+    const [errors, setErrors]                 = useState<Record<string, string>>({})
+    const [submitting, setSubmitting]         = useState(false)
+    const [finalizing, setFinalizing]         = useState(false)
+    const [finalizeError, setFinalizeError]   = useState<string | null>(null)
 
-    // Auto-save step3 data ke localStorage
+    // Registration code — di-load saat mount via initStep3
+    const [registrationCode, setRegCode]      = useState<string | null>(null)
+    const [loadingCode, setLoadingCode]       = useState(true)
+    const [loadCodeError, setLoadCodeError]   = useState<string | null>(null)
+
+    const redirectTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const initCalled    = useRef(false)
+
     useWizardStorage('step3', data)
 
-    // ── Computed ──────────────────────────────────────────────────────────────
-    const addrDetail = step2
-    const addressFull = [
-        addrDetail.addr_jalan,
-        addrDetail.addr_rt && addrDetail.addr_rw
-            ? `RT ${addrDetail.addr_rt}/RW ${addrDetail.addr_rw}`
-            : addrDetail.addr_rt ? `RT ${addrDetail.addr_rt}` : '',
-        addrDetail.addr_desa,
-        addrDetail.addr_kec ? `Kec. ${addrDetail.addr_kec}` : '',
-        addrDetail.addr_kab,
-        addrDetail.addr_prov,
-    ].filter(Boolean).join(', ')
+    // ── Auto-call initStep3 saat mount ────────────────────────────────────────
+    useEffect(() => {
+        if (initCalled.current) return
+        initCalled.current = true
 
-    // ── Entrance animation ────────────────────────────────────────────────────
+        const init = async () => {
+            try {
+                const { data: res } = await axios.put(`/daftar/step3/init/${draftId}`)
+                setRegCode(res.registration_code)
+                setLoadingCode(false)
+
+                // Animate card kode muncul
+                setTimeout(() => {
+                    animate('.reg-code-card', {
+                        opacity: [0, 1],
+                        translateY: [8, 0],
+                        duration: 400,
+                        ease: 'outExpo',
+                    })
+                }, 50)
+            } catch {
+                setLoadCodeError('Gagal memuat kode pendaftaran. Coba kembali ke langkah 2.')
+                setLoadingCode(false)
+            }
+        }
+
+        init()
+    }, [draftId])
+
     useEffect(() => {
         animate('.s3-card', {
             opacity: [0, 1],
@@ -73,9 +93,22 @@ export default function WizardStep3({
             delay: stagger(100, { start: 80 }),
             ease: 'outExpo',
         })
+        return () => { if (redirectTimer.current) clearTimeout(redirectTimer.current) }
     }, [])
 
-    // ── Validate & submit ─────────────────────────────────────────────────────
+    // ── Computed alamat ───────────────────────────────────────────────────────
+    const addressFull = [
+        step2.addr_jalan,
+        step2.addr_rt && step2.addr_rw
+            ? `RT ${step2.addr_rt}/RW ${step2.addr_rw}`
+            : step2.addr_rt ? `RT ${step2.addr_rt}` : '',
+        step2.addr_desa,
+        step2.addr_kec ? `Kec. ${step2.addr_kec}` : '',
+        step2.addr_kab,
+        step2.addr_prov,
+    ].filter(Boolean).join(', ')
+
+    // ── Validate ──────────────────────────────────────────────────────────────
     const validate = (): boolean => {
         const e: Record<string, string> = {}
         if (!data.school_origin.trim()) e.school_origin = 'Asal sekolah wajib diisi.'
@@ -88,36 +121,25 @@ export default function WizardStep3({
         return Object.keys(e).length === 0
     }
 
+    // ── Submit: simpan school_origin lalu redirect ────────────────────────────
     const handleSubmit = async () => {
         if (!validate()) return
         setFinalizing(true)
         setFinalizeError(null)
 
         try {
-            // Finalisasi draft: generate registration_code + secret_token + expires_at
-            const { data: res } = await axios.put(`/daftar/step3/${draftId}`, {
+            await axios.put(`/daftar/step3/${draftId}`, {
                 school_origin: data.school_origin.trim(),
                 agreement:     '1',
             })
 
-            setRegCode(res.registration_code)
             setFinalizing(false)
+            setSubmitting(true)
 
-            // Animate kode pendaftaran muncul
-            setTimeout(() => {
-                animate('.reg-code-card', {
-                    opacity: [0, 1],
-                    scale:   [0.95, 1],
-                    duration: 450,
-                    ease: 'outBack',
-                })
-            }, 50)
-
-            // Setelah 1.5 detik redirect ke /register
-            setTimeout(() => {
-                setSubmitting(true)
+            // localStorage BELUM dibersihkan — dibersihkan di RegisterController
+            redirectTimer.current = setTimeout(() => {
                 router.visit('/register')
-            }, 1500)
+            }, 300)
 
         } catch (err: any) {
             setFinalizing(false)
@@ -133,35 +155,7 @@ export default function WizardStep3({
         }
     }
 
-    // ── Render saat sudah dapat registration_code ─────────────────────────────
-    if (registrationCode) {
-        return (
-            <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-                <div className="reg-code-card opacity-0 bg-white border border-slate-200 rounded-2xl shadow-lg p-8 max-w-sm w-full">
-                    <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
-                        <i className="fa-solid fa-check text-emerald-500 text-2xl"></i>
-                    </div>
-                    <h3 className="font-display font-bold text-xl text-slate-900 mb-1">Pendaftaran Berhasil!</h3>
-                    <p className="text-sm text-slate-500 mb-5">Kode pendaftaran kamu:</p>
-                    <div className="bg-slate-900 rounded-xl px-6 py-4 mb-4">
-                        <div className="text-xs text-slate-400 uppercase tracking-wider mb-1">Kode Pendaftaran</div>
-                        <div className="text-2xl font-extrabold text-gold font-display tracking-[0.12em]">
-                            {registrationCode}
-                        </div>
-                    </div>
-                    <p className="text-xs text-slate-500 leading-relaxed">
-                        Simpan kode ini. Kode akan aktif otomatis setelah akun dibuat.
-                        Mengarahkan ke halaman buat akun...
-                    </p>
-                    <div className="mt-4 flex justify-center">
-                        <i className="fa-solid fa-spinner fa-spin text-gold text-xl"></i>
-                    </div>
-                </div>
-            </div>
-        )
-    }
-
-    // ── Main render ───────────────────────────────────────────────────────────
+    // ─── Render ───────────────────────────────────────────────────────────────
     return (
         <div className="s3-scope">
 
@@ -175,16 +169,53 @@ export default function WizardStep3({
                         Pastikan semua data sudah benar sebelum membuat akun.
                     </p>
                 </div>
-                <button
-                    type="button"
-                    onClick={onGoToStep1}
-                    className="flex items-center gap-1.5 sm:gap-2 text-slate-500 hover:text-navy transition group flex-shrink-0"
-                >
+                <button type="button" onClick={onGoToStep1}
+                    className="flex items-center gap-1.5 sm:gap-2 text-slate-500 hover:text-navy transition group flex-shrink-0">
                     <span className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-slate-200 transition">
                         <i className="fa-solid fa-pen-to-square text-xs sm:text-sm"></i>
                     </span>
                     <span className="hidden sm:inline text-xs font-bold">Edit Data</span>
                 </button>
+            </div>
+
+            {/* ── Kode Pendaftaran Card ── */}
+            <div className="s3-card opacity-0 mb-4 sm:mb-5">
+                {loadingCode ? (
+                    // Loading state
+                    <div className="bg-white border border-slate-200 rounded-xl p-4 sm:p-5 shadow-sm flex items-center gap-3">
+                        <i className="fa-solid fa-spinner fa-spin text-gold text-lg flex-shrink-0"></i>
+                        <div className="text-sm text-slate-500">Menyiapkan kode pendaftaran...</div>
+                    </div>
+                ) : loadCodeError ? (
+                    // Error state
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
+                        <i className="fa-solid fa-triangle-exclamation text-red-500 flex-shrink-0"></i>
+                        <p className="text-sm text-red-700">{loadCodeError}</p>
+                    </div>
+                ) : (
+                    // Kode tampil
+                    <div className="reg-code-card opacity-0 bg-white border border-slate-200 rounded-xl p-4 sm:p-5 shadow-sm">
+                        <div className="flex items-center justify-between gap-4">
+                            <div className="min-w-0">
+                                <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-1">
+                                    Kode Pendaftaran
+                                </div>
+                                <div className="font-display font-extrabold text-navy text-base sm:text-lg tracking-[0.08em] break-all">
+                                    {registrationCode}
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 rounded-full px-3 py-1.5 flex-shrink-0">
+                                <i className="fa-solid fa-shield-halved text-emerald-500 text-xs"></i>
+                                <span className="text-[11px] font-semibold text-emerald-700 hidden sm:inline">
+                                    Aman &amp; Terverifikasi
+                                </span>
+                            </div>
+                        </div>
+                        <p className="text-[11px] text-slate-400 mt-2">
+                            Demi keamanan, simpan kode ini. Kode aktif otomatis setelah akun berhasil dibuat.
+                        </p>
+                    </div>
+                )}
             </div>
 
             {/* Status tersimpan */}
@@ -202,22 +233,20 @@ export default function WizardStep3({
 
             {/* Preview Data */}
             <div className="s3-card opacity-0 grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-5">
-                {/* Identitas */}
                 <div className="bg-white border border-slate-200 rounded-xl p-4 sm:p-5 shadow-sm">
                     <h4 className="font-bold text-slate-900 mb-3 flex items-center gap-2 text-sm sm:text-base">
                         <i className="fa-solid fa-id-card text-gold"></i> Identitas
                     </h4>
                     <div className="space-y-2">
-                        <Row label="Nama"           value={step1.full_name} />
-                        <Row label="NISN"           value={step1.nisn} />
-                        <Row label="NIK"            value={step1.nik} />
-                        <Row label="Jenis Kelamin"  value={step1.gender === 'L' ? 'Laki-laki' : step1.gender === 'P' ? 'Perempuan' : '-'} />
-                        <Row label="Tempat Lahir"   value={step1.place_of_birth} />
-                        <Row label="Tanggal Lahir"  value={step1.date_of_birth} />
+                        <Row label="Nama"          value={step1.full_name} />
+                        <Row label="NISN"          value={step1.nisn} />
+                        <Row label="NIK"           value={step1.nik} />
+                        <Row label="Jenis Kelamin" value={step1.gender === 'L' ? 'Laki-laki' : step1.gender === 'P' ? 'Perempuan' : '-'} />
+                        <Row label="Tempat Lahir"  value={step1.place_of_birth} />
+                        <Row label="Tanggal Lahir" value={step1.date_of_birth} />
                     </div>
                 </div>
 
-                {/* Kontak & Alamat */}
                 <div className="bg-white border border-slate-200 rounded-xl p-4 sm:p-5 shadow-sm">
                     <h4 className="font-bold text-slate-900 mb-3 flex items-center gap-2 text-sm sm:text-base">
                         <i className="fa-solid fa-location-dot text-gold"></i> Kontak &amp; Alamat
@@ -239,15 +268,9 @@ export default function WizardStep3({
                 <h4 className="font-bold text-slate-900 flex items-center gap-2 text-sm sm:text-base">
                     <i className="fa-solid fa-school text-gold"></i> Data Tambahan
                 </h4>
-
                 <div>
-                    <label className="label">
-                        Asal Sekolah <span className="text-rose-500">*</span>
-                    </label>
-                    <input
-                        type="text"
-                        value={data.school_origin}
-                        autoComplete="organization"
+                    <label className="label">Asal Sekolah <span className="text-rose-500">*</span></label>
+                    <input type="text" value={data.school_origin} autoComplete="organization"
                         onChange={e => {
                             onChange({ ...data, school_origin: e.target.value })
                             if (errors.school_origin) setErrors(p => ({ ...p, school_origin: '' }))
@@ -261,9 +284,7 @@ export default function WizardStep3({
                 </div>
 
                 <label className="flex items-start gap-3 cursor-pointer select-none">
-                    <input
-                        type="checkbox"
-                        checked={agreement}
+                    <input type="checkbox" checked={agreement}
                         onChange={e => {
                             setAgreement(e.target.checked)
                             if (errors.agreement) setErrors(p => ({ ...p, agreement: '' }))
@@ -276,14 +297,12 @@ export default function WizardStep3({
                         </div>
                         <div className="text-[11px] sm:text-xs text-slate-500 mt-1">
                             Setelah lanjut, kamu akan diarahkan ke halaman pembuatan akun.
-                            Kode pendaftaran akan aktif otomatis setelah akun berhasil dibuat.
                         </div>
                     </div>
                 </label>
                 {errors.agreement && <span className="error-text">{errors.agreement}</span>}
             </div>
 
-            {/* Fatal error */}
             {finalizeError && (
                 <div className="s3-card opacity-0 mb-4 bg-red-50 border-l-4 border-red-500 px-4 py-3 rounded-r-xl text-sm text-red-800 flex gap-3">
                     <i className="fa-solid fa-triangle-exclamation mt-0.5 flex-shrink-0"></i>
@@ -293,28 +312,21 @@ export default function WizardStep3({
 
             {/* Footer */}
             <div className="s3-card opacity-0 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
-                <button
-                    type="button"
-                    onClick={onBack}
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 text-xs font-semibold text-slate-500 hover:text-navy transition group"
-                >
+                <button type="button" onClick={onBack}
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 text-xs font-semibold text-slate-500 hover:text-navy transition group">
                     <span className="w-8 h-8 rounded-full border border-slate-300 flex items-center justify-center group-hover:border-gold group-hover:text-gold transition">
                         <i className="fa-solid fa-arrow-left text-[11px]"></i>
                     </span>
                     <span>Kembali ke Langkah 2</span>
                 </button>
 
-                <button
-                    type="button"
-                    onClick={handleSubmit}
-                    disabled={finalizing || submitting}
+                <button type="button" onClick={handleSubmit}
+                    disabled={finalizing || submitting || loadingCode || !!loadCodeError}
                     className="s3-submit w-full sm:w-auto bg-navy hover:bg-navy/90 disabled:opacity-60 disabled:cursor-not-allowed text-white px-7 sm:px-8 py-3.5 rounded-xl font-bold text-sm shadow-xl flex items-center justify-center gap-2.5 transition hover:-translate-y-0.5 active:scale-95"
                 >
-                    {finalizing
+                    {finalizing || submitting
                         ? <><i className="fa-solid fa-spinner fa-spin"></i> Memproses...</>
-                        : submitting
-                            ? <><i className="fa-solid fa-spinner fa-spin"></i> Mengarahkan...</>
-                            : <><i className="fa-solid fa-arrow-right"></i> Lanjut &amp; Buat Akun</>
+                        : <><i className="fa-solid fa-arrow-right"></i> Lanjut &amp; Buat Akun</>
                     }
                 </button>
             </div>
