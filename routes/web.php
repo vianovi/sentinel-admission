@@ -14,6 +14,7 @@ Route::get('/', [WelcomeController::class, 'index'])->name('home');
 // ─── Form Wizard (guest only) ─────────────────────────────────────────────────
 Route::middleware('guest')->group(function () {
     Route::get('/daftar', [FormWizardController::class, 'show'])->name('daftar');
+    Route::post('/daftar/check-draft', [FormWizardController::class, 'checkDraft'])->name('daftar.check-draft');
     Route::post('/daftar/check-duplicate', [FormWizardController::class, 'checkDuplicate'])->name('daftar.check-duplicate');
     Route::post('/daftar/resume', [FormWizardController::class, 'resume'])->name('daftar.resume');
     Route::post('/daftar/step1', [FormWizardController::class, 'storeStep1'])->name('daftar.step1');

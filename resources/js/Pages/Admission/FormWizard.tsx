@@ -68,30 +68,62 @@ export default function FormWizard({ activeWave, flash }: FormWizardProps) {
     const [step2, setStep2]             = useState<Step2Data>(defaultStep2)
     const [step3, setStep3]             = useState<Step3Data>(defaultStep3)
     const [draftId, setDraftId]         = useState<string>('')
+    const [ready, setReady]             = useState(false) // tunggu cek draft selesai
 
     const [resumeDraft, setResumeDraft]   = useState<DuplicateInfo | null>(null)
     const pendingNisnNik = useRef<{ nisn: string; nik: string } | null>(null)
     const contentRef = useRef<HTMLDivElement>(null)
 
-    // ── Restore dari localStorage saat mount ──────────────────────────────────
+    // ── Mount: cek draft di localStorage → validasi ke DB ────────────────────
     useEffect(() => {
         const stored = readWizardStorage()
 
-        if (stored.step1)  setStep1({ ...defaultStep1, ...stored.step1 })
-        if (stored.step2)  setStep2({ ...defaultStep2, ...stored.step2 })
-        if (stored.step3)  setStep3({ ...defaultStep3, ...stored.step3 })
-        if (stored.draftId) setDraftId(stored.draftId)
+        const init = async () => {
+            if (stored.draftId) {
+                try {
+                    const { data: res } = await axios.post('/daftar/check-draft', {
+                        draft_id: stored.draftId,
+                    })
 
-        if (stored.lastStep && stored.lastStep > 1 && stored.draftId) {
-            setCurrentStep(stored.lastStep)
+                    if (res.valid) {
+                        // Draft masih aktif → restore semua data
+                        if (stored.step1)  setStep1({ ...defaultStep1, ...stored.step1 })
+                        if (stored.step2)  setStep2({ ...defaultStep2, ...stored.step2 })
+                        if (stored.step3)  setStep3({ ...defaultStep3, ...stored.step3 })
+                        setDraftId(stored.draftId)
+
+                        if (stored.lastStep && stored.lastStep > 1) {
+                            setCurrentStep(stored.lastStep)
+                        }
+                    } else {
+                        // Draft tidak valid (sudah jadi akun / expired) → bersihkan
+                        clearWizardStorage()
+                    }
+                } catch {
+                    // Kalau request gagal (network error) → tetap restore lokal
+                    // Biar user tidak kehilangan data karena koneksi buruk
+                    if (stored.step1)  setStep1({ ...defaultStep1, ...stored.step1 })
+                    if (stored.step2)  setStep2({ ...defaultStep2, ...stored.step2 })
+                    if (stored.step3)  setStep3({ ...defaultStep3, ...stored.step3 })
+                    setDraftId(stored.draftId)
+                    if (stored.lastStep && stored.lastStep > 1) {
+                        setCurrentStep(stored.lastStep)
+                    }
+                }
+            }
+
+            // Selesai cek → tampilkan form
+            setReady(true)
+
+            animate('.wizard-card', {
+                opacity: [0, 1],
+                translateY: [28, 0],
+                duration: 900,
+                ease: 'outExpo',
+            })
         }
 
-        animate('.wizard-card', {
-            opacity: [0, 1],
-            translateY: [28, 0],
-            duration: 900,
-            ease: 'outExpo',
-        })
+        init()
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
@@ -126,7 +158,6 @@ export default function FormWizard({ activeWave, flash }: FormWizardProps) {
         animateStepTransition(step, () => setCurrentStep(step))
     }
 
-    // ── Step1 berhasil → draft_id tidak berubah kalau UPDATE ─────────────────
     const handleStep1Next = (newDraftId: string) => {
         if (newDraftId !== draftId) {
             setDraftId(newDraftId)
@@ -143,7 +174,6 @@ export default function FormWizard({ activeWave, flash }: FormWizardProps) {
         setResumeDraft({ status, data })
     }
 
-    // ── Resume draft lama ─────────────────────────────────────────────────────
     const handleResume = async () => {
         if (!pendingNisnNik.current) return
         setResumeDraft(null)
@@ -161,7 +191,6 @@ export default function FormWizard({ activeWave, flash }: FormWizardProps) {
         }
     }
 
-    // ── Mulai baru → soft delete draft lama, INSERT baru ─────────────────────
     const handleStartNew = async () => {
         setResumeDraft(null)
         clearWizardStorage()
@@ -190,11 +219,22 @@ export default function FormWizard({ activeWave, flash }: FormWizardProps) {
 
     const handleModalClose = () => setResumeDraft(null)
 
+    // ── Draft tidak valid saat step 3 mount → clear + reset ke step 1 ─────────
+    const handleInvalidDraft = () => {
+        clearWizardStorage()
+        setStep1(defaultStep1)
+        setStep2(defaultStep2)
+        setStep3(defaultStep3)
+        setDraftId('')
+        setCurrentStep(1)
+    }
+
     const mobileTab = (step: number) =>
         currentStep === step
             ? 'text-gold font-bold border-b-2 border-gold pb-1 transition-all duration-300'
             : 'text-slate-400 pb-1 transition-all duration-300'
 
+    // ─── Render ───────────────────────────────────────────────────────────────
     return (
         <>
             <Head title="Formulir Pendaftaran" />
@@ -255,35 +295,49 @@ export default function FormWizard({ activeWave, flash }: FormWizardProps) {
 
                             <div ref={contentRef} className="flex-1 p-4 sm:p-8 md:p-10 overflow-y-auto">
                                 <div className="step-content max-w-2xl mx-auto md:max-w-none">
-                                    {currentStep === 1 && (
-                                        <WizardStep1
-                                            data={step1}
-                                            onChange={setStep1}
-                                            onNext={handleStep1Next}
-                                            onDuplicateFound={handleDuplicateFound}
-                                            currentDraftId={draftId}
-                                        />
-                                    )}
-                                    {currentStep === 2 && (
-                                        <WizardStep2
-                                            data={step2}
-                                            draftId={draftId}
-                                            candidateName={step1.full_name}
-                                            onChange={setStep2}
-                                            onNext={() => goToStep(3)}
-                                            onBack={() => goToStep(1)}
-                                        />
-                                    )}
-                                    {currentStep === 3 && (
-                                        <WizardStep3
-                                            step1={step1}
-                                            step2={step2}
-                                            data={step3}
-                                            draftId={draftId}
-                                            onChange={setStep3}
-                                            onBack={() => goToStep(2)}
-                                            onGoToStep1={() => goToStep(1)}
-                                        />
+
+                                    {/* Loading state saat cek draft ke DB */}
+                                    {!ready ? (
+                                        <div className="flex items-center justify-center py-24">
+                                            <div className="flex items-center gap-3 text-slate-400">
+                                                <i className="fa-solid fa-spinner fa-spin text-gold text-xl"></i>
+                                                <span className="text-sm">Memuat data...</span>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            {currentStep === 1 && (
+                                                <WizardStep1
+                                                    data={step1}
+                                                    onChange={setStep1}
+                                                    onNext={handleStep1Next}
+                                                    onDuplicateFound={handleDuplicateFound}
+                                                    currentDraftId={draftId}
+                                                />
+                                            )}
+                                            {currentStep === 2 && (
+                                                <WizardStep2
+                                                    data={step2}
+                                                    draftId={draftId}
+                                                    candidateName={step1.full_name}
+                                                    onChange={setStep2}
+                                                    onNext={() => goToStep(3)}
+                                                    onBack={() => goToStep(1)}
+                                                />
+                                            )}
+                                            {currentStep === 3 && (
+                                                <WizardStep3
+                                                    step1={step1}
+                                                    step2={step2}
+                                                    data={step3}
+                                                    draftId={draftId}
+                                                    onChange={setStep3}
+                                                    onBack={() => goToStep(2)}
+                                                    onGoToStep1={() => goToStep(1)}
+                                                    onInvalidDraft={handleInvalidDraft}
+                                                />
+                                            )}
+                                        </>
                                     )}
                                 </div>
                             </div>

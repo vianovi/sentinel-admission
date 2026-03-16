@@ -20,6 +20,7 @@ interface WizardStep3Props {
     onChange: (data: Step3Data) => void
     onBack: () => void
     onGoToStep1: () => void
+    onInvalidDraft: () => void  // dipanggil kalau draft sudah tidak valid
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -37,7 +38,7 @@ const Row = ({ label, value }: { label: string; value: string }) => (
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function WizardStep3({
-    step1, step2, data, draftId, onChange, onBack, onGoToStep1,
+    step1, step2, data, draftId, onChange, onBack, onGoToStep1, onInvalidDraft,
 }: WizardStep3Props) {
 
     const [agreement, setAgreement]           = useState(false)
@@ -67,7 +68,6 @@ export default function WizardStep3({
                 setRegCode(res.registration_code)
                 setLoadingCode(false)
 
-                // Animate card kode muncul
                 setTimeout(() => {
                     animate('.reg-code-card', {
                         opacity: [0, 1],
@@ -76,7 +76,14 @@ export default function WizardStep3({
                         ease: 'outExpo',
                     })
                 }, 50)
-            } catch {
+            } catch (err: any) {
+                // 422 = draft tidak valid (sudah jadi akun / expired)
+                // → clear localStorage + kembali ke step 1
+                if (err.response?.status === 422) {
+                    onInvalidDraft()
+                    return
+                }
+                // Error lain (network, dll) → tampilkan pesan error
                 setLoadCodeError('Gagal memuat kode pendaftaran. Coba kembali ke langkah 2.')
                 setLoadingCode(false)
             }
