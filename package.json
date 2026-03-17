@@ -15,6 +15,7 @@
         "@types/node": "^25.3.0",
         "@types/react": "^18.0.28",
         "@types/react-dom": "^18.0.10",
+        "@types/react-select": "^5.0.0",
         "@typescript-eslint/eslint-plugin": "^7.16.0",
         "@typescript-eslint/parser": "^7.16.0",
         "@vitejs/plugin-react": "^4.2.0",
@@ -39,6 +40,9 @@
     },
     "dependencies": {
         "animejs": "^4.3.6",
+        "flatpickr": "^4.6.13",
+        "react-select": "^5.10.2",
+        "sweetalert2": "^11.26.23",
         "ziggy-js": "^2.6.2"
     }
 }

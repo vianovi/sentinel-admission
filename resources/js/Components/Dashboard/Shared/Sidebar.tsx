@@ -22,7 +22,7 @@ const roleBadgeClass: Record<string, string> = {
 };
 
 export default function Sidebar({ role }: Props) {
-    const { isExpanded, isHovered, isMobileOpen, setIsHovered } = useSidebar();
+    const { isExpanded, isHovered, isMobileOpen, setIsHovered, toggleSidebar } = useSidebar();
     const { url, props } = usePage<PageProps>();
     const { app } = props;
     const navRef = useRef<HTMLDivElement>(null);
@@ -157,7 +157,7 @@ export default function Sidebar({ role }: Props) {
                 ${isVisible ? "justify-end" : "justify-center"}
             `}>
                 <button
-                    onClick={() => {}}
+                    onClick={toggleSidebar}
                     className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/5
                                flex items-center justify-center
                                text-slate-500 dark:text-slate-400

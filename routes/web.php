@@ -48,6 +48,16 @@ Route::middleware(['auth', RoleMiddleware::class . ':candidate'])
             ->name('profile.email.request');
         Route::delete('/profile/email', [CandidateDashboardController::class, 'cancelEmailChange'])
             ->name('profile.email.cancel');
+
+        // ── Data Diri ─────────────────────────────────────────────────────
+        Route::get('/data-diri', [CandidateDashboardController::class, 'showDataDiri'])
+            ->name('data-diri');
+        Route::put('/data-diri', [CandidateDashboardController::class, 'updateDataDiri'])
+            ->name('data-diri.update');
+        Route::post('/data-diri/change-request', [CandidateDashboardController::class, 'requestDataChange'])
+            ->name('data-diri.change-request');
+        Route::delete('/data-diri/change-request', [CandidateDashboardController::class, 'cancelDataChange'])
+            ->name('data-diri.change-request.cancel');
     });
 
 // ─── Dashboard Staff ──────────────────────────────────────────────────────────

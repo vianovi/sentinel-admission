@@ -13,23 +13,47 @@ class Candidate extends Model
         'user_id',
         'admission_wave_id',
         'registration_draft_id',
+        // Identitas
         'nisn',
         'nik',
         'full_name',
         'gender',
         'place_of_birth',
         'date_of_birth',
+        'religion',
+        'child_order',
+        'siblings_count',
+        'hobbies',
+        'ambitions',
+        'habits',
+        'extracurricular_interests',
+        // Alamat
         'address_full',
         'address_detail',
+        'postal_code',
+        // Sekolah asal
         'school_origin',
-        'program_choice',
+        'school_npsn',
+        'certificate_number',
+        // Data tambahan
+        'email',
         'phone_number',
+        'birth_certificate_number',
+        'family_card_number',
+        'program_choice',
+        'major_choice',
+        // Status & change request
         'status',
+        'data_change_request',
     ];
 
     protected $casts = [
-        'date_of_birth'  => 'date',
-        'address_detail' => 'array',
+        'date_of_birth'       => 'date',
+        'address_detail'      => 'array',
+        'data_change_request' => 'array',
+        'child_order'                => 'integer',
+        'siblings_count'             => 'integer',
+        'extracurricular_interests'  => 'array',
     ];
 
     // =============================================
@@ -54,6 +78,11 @@ class Candidate extends Model
     public function guardian()
     {
         return $this->hasOne(Guardian::class);
+    }
+
+    public function healthRecord()
+    {
+        return $this->hasOne(HealthRecord::class);
     }
 
     public function documents()
@@ -98,5 +127,22 @@ class Candidate extends Model
     public function genderLabel(): string
     {
         return $this->gender === 'L' ? 'Laki-laki' : 'Perempuan';
+    }
+
+    /**
+     * Cek apakah ada pengajuan perubahan data yang pending.
+     */
+    public function hasPendingChangeRequest(): bool
+    {
+        return ! empty($this->data_change_request) &&
+               ($this->data_change_request['status'] ?? '') === 'pending';
+    }
+
+    /**
+     * Cek apakah data wajib sudah lengkap untuk bisa submit.
+     */
+    public function isDataComplete(): bool
+    {
+        return ! empty($this->program_choice);
     }
 }
