@@ -54,8 +54,9 @@ return new class extends Migration
             // =========================
             // DATA TAMBAHAN (Diisi setelah login)
             // =========================
-            $table->string('program_choice')->nullable();
-            $table->string('phone_number', 20)->nullable();     // WA siswa (opsional)
+            $table->string('program_choice')->nullable();   // Diambil dari admission_waves.available_programs
+            $table->string('major_choice')->nullable();     // Diisi hanya jika admission_waves.majors_enabled = true
+            $table->string('phone_number', 20)->nullable(); // WA siswa (opsional)
 
             // =========================
             // STATUS PENDAFTARAN

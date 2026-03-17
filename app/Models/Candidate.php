@@ -23,6 +23,7 @@ class Candidate extends Model
         'address_detail',
         'school_origin',
         'program_choice',
+        'major_choice',
         'phone_number',
         'status',
     ];
