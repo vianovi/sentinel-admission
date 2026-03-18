@@ -87,20 +87,18 @@ class CandidateDashboardController extends Controller
         $user      = $request->user();
         $candidate = $user->candidate()->with('admissionWave')->first();
 
-        return Inertia::render('Dashboard/Profile', [
-            // ── Data akun (bisa diedit) ───────────────────────────────────
+        return Inertia::render('Dashboard/Candidate/Profile', [
             'user' => [
-                'id'                   => $user->id,
-                'name'                 => $user->name,
-                'email'                => $user->email,
-                'avatar_url'           => $user->avatar_url,
-                'initials'             => $user->initials,
-                'whatsapp_number'      => $user->whatsapp_number,
-                'has_pending_email'    => $user->hasPendingEmailRequest(),
-                'pending_email'        => $user->pending_email,
-                'email_verified'       => $user->hasVerifiedEmail(),
+                'id'                => $user->id,
+                'name'              => $user->name,
+                'email'             => $user->email,
+                'avatar_url'        => $user->avatar_url,
+                'initials'          => $user->initials,
+                'whatsapp_number'   => $user->whatsapp_number,
+                'has_pending_email' => $user->hasPendingEmailRequest(),
+                'pending_email'     => $user->pending_email,
+                'email_verified'    => $user->hasVerifiedEmail(),
             ],
-            // ── Data kandidat read-only ───────────────────────────────────
             'candidate' => $candidate ? [
                 'full_name'      => $candidate->full_name,
                 'nisn'           => $candidate->nisn,
@@ -117,7 +115,6 @@ class CandidateDashboardController extends Controller
 
     // =========================================================================
     // UPDATE PROFILE — PUT /dashboard/profile
-    // Update nama & password. Email butuh approval staff/admin dulu.
     // =========================================================================
 
     public function updateProfile(Request $request)
@@ -125,17 +122,14 @@ class CandidateDashboardController extends Controller
         $user = $request->user();
 
         $validated = $request->validate([
-            'name'                  => ['required', 'string', 'max:255'],
-            'current_password'      => ['nullable', 'string'],
-            'new_password'          => ['nullable', 'confirmed', Password::min(8)],
+            'name'             => ['required', 'string', 'max:255'],
+            'current_password' => ['nullable', 'string'],
+            'new_password'     => ['nullable', 'confirmed', Password::min(8)],
         ]);
 
-        // ── Ganti password — validasi current password dulu ──────────────
         if ($request->filled('new_password')) {
             if (! Hash::check($request->current_password, $user->password)) {
-                return back()->withErrors([
-                    'current_password' => 'Password saat ini tidak sesuai.',
-                ]);
+                return back()->withErrors(['current_password' => 'Password saat ini tidak sesuai.']);
             }
             $user->password = $validated['new_password'];
         }
@@ -148,7 +142,6 @@ class CandidateDashboardController extends Controller
 
     // =========================================================================
     // REQUEST GANTI EMAIL — POST /dashboard/profile/email
-    // Simpan pending_email, tunggu approval staff/admin.
     // =========================================================================
 
     public function requestEmailChange(Request $request)
@@ -157,19 +150,16 @@ class CandidateDashboardController extends Controller
 
         $request->validate([
             'new_email' => [
-                'required',
-                'email',
-                'max:255',
+                'required', 'email', 'max:255',
                 Rule::unique('users', 'email')->ignore($user->id),
                 Rule::unique('users', 'pending_email')->ignore($user->id),
             ],
         ]);
 
-        // Simpan pending email + generate token untuk verifikasi nanti
         $user->update([
-            'pending_email'                => $request->new_email,
-            'pending_email_token'          => Str::random(64),
-            'pending_email_requested_at'   => now(),
+            'pending_email'              => $request->new_email,
+            'pending_email_token'        => Str::random(64),
+            'pending_email_requested_at' => now(),
         ]);
 
         return back()->with('success', 'Permintaan ganti email telah dikirim. Menunggu persetujuan staff.');
@@ -201,78 +191,52 @@ class CandidateDashboardController extends Controller
     // 5. Ext dari magic bytes — bukan dari nama file client
     // =========================================================================
 
-    // Map magic bytes → [mime, ext]
     private const AVATAR_SIGNATURES = [
         "\xFF\xD8\xFF"      => ['mime' => 'image/jpeg', 'ext' => 'jpg'],
         "\x89PNG\r\n\x1A\n" => ['mime' => 'image/png',  'ext' => 'png'],
-        "RIFF"              => ['mime' => 'image/webp',  'ext' => 'webp'], // RIFF????WEBP
+        "RIFF"              => ['mime' => 'image/webp',  'ext' => 'webp'],
     ];
 
     public function updateAvatar(Request $request)
     {
-        // Layer 1 & 2 — Laravel validation (extension + MIME via Symfony)
         $request->validate([
-            'avatar' => [
-                'required',
-                'file',
-                'mimes:jpg,jpeg,png,webp',
-                'mimetypes:image/jpeg,image/png,image/webp',
-                'max:1024', // 1MB
-            ],
+            'avatar' => ['required', 'file', 'mimes:jpg,jpeg,png,webp', 'mimetypes:image/jpeg,image/png,image/webp', 'max:1024'],
         ]);
 
-        $file = $request->file('avatar');
-
-        // Layer 3 — Magic bytes check manual
-        $handle    = fopen($file->getRealPath(), 'rb');
-        $header    = fread($handle, 12);
+        $file   = $request->file('avatar');
+        $handle = fopen($file->getRealPath(), 'rb');
+        $header = fread($handle, 12);
         fclose($handle);
 
         $detected = null;
         foreach (self::AVATAR_SIGNATURES as $signature => $meta) {
             if (str_starts_with($header, $signature)) {
-                // Extra check untuk WebP: header harus "RIFF????WEBP"
-                if ($signature === 'RIFF' && substr($header, 8, 4) !== 'WEBP') {
-                    continue;
-                }
+                if ($signature === 'RIFF' && substr($header, 8, 4) !== 'WEBP') continue;
                 $detected = $meta;
                 break;
             }
         }
 
         if (! $detected) {
-            return back()->withErrors([
-                'avatar' => 'File tidak valid. Hanya JPG, PNG, dan WebP yang diizinkan.',
-            ]);
+            return back()->withErrors(['avatar' => 'File tidak valid. Hanya JPG, PNG, dan WebP yang diizinkan.']);
         }
 
-        // Layer 3b — Scan isi file untuk PHP/script injection (polyglot attack)
-        // Attacker bisa sisipkan <?php di belakang magic bytes yang valid
-        $content  = file_get_contents($file->getRealPath());
+        $content   = file_get_contents($file->getRealPath());
         $forbidden = ['<?php', '<?=', '<script', '<%', 'eval(', 'base64_decode(', 'system(', 'exec(', 'passthru(', 'shell_exec('];
         foreach ($forbidden as $pattern) {
             if (stripos($content, $pattern) !== false) {
-                return back()->withErrors([
-                    'avatar' => 'File tidak valid. Hanya JPG, PNG, dan WebP yang diizinkan.',
-                ]);
+                return back()->withErrors(['avatar' => 'File tidak valid. Hanya JPG, PNG, dan WebP yang diizinkan.']);
             }
         }
 
         $user = $request->user();
 
-        // Hapus avatar lama kalau ada
         if ($user->avatar && Storage::disk('private')->exists($user->avatar)) {
             Storage::disk('private')->delete($user->avatar);
         }
 
-        // Layer 4 & 5 — UUID rename + ext dari magic bytes (bukan dari client)
         $path = 'avatars/' . $user->id . '/' . Str::uuid() . '.' . $detected['ext'];
-
-        Storage::disk('private')->put(
-            $path,
-            file_get_contents($file->getRealPath())
-        );
-
+        Storage::disk('private')->put($path, file_get_contents($file->getRealPath()));
         $user->update(['avatar' => $path]);
 
         return back()->with('success', 'Avatar berhasil diperbarui.');
@@ -280,7 +244,6 @@ class CandidateDashboardController extends Controller
 
     // =========================================================================
     // SERVE AVATAR — GET /dashboard/profile/avatar
-    // Stream avatar dari private storage dengan auth check.
     // =========================================================================
 
     public function serveAvatar(Request $request)
@@ -301,18 +264,16 @@ class CandidateDashboardController extends Controller
     public function showDataDiri(Request $request): Response
     {
         $user      = $request->user();
-        $candidate = $user->candidate()
-            ->with(['admissionWave'])
-            ->first();
+        $candidate = $user->candidate()->with(['admissionWave'])->first();
 
-        return Inertia::render('Dashboard/DataDiri', [
+        return Inertia::render('Dashboard/Candidate/DataDiri', [
             'user' => [
                 'name'       => $user->name,
                 'avatar_url' => $user->avatar_url,
                 'initials'   => $user->initials,
             ],
             'candidate' => $candidate ? [
-                // ── Data kunci (read-only, dari draft) ───────────────────
+                // ── Data kunci (read-only) ────────────────────────────────
                 'id'                  => $candidate->id,
                 'full_name'           => $candidate->full_name,
                 'nisn'                => $candidate->nisn,
@@ -326,19 +287,22 @@ class CandidateDashboardController extends Controller
                 'address_detail'      => $candidate->address_detail,
                 'school_origin'       => $candidate->school_origin,
                 // ── Data tambahan (bisa diedit) ───────────────────────────
-                'email'                    => $candidate->email,
-                'phone_number'             => $candidate->phone_number,
-                'religion'                 => $candidate->religion,
-                'child_order'              => $candidate->child_order,
-                'siblings_count'           => $candidate->siblings_count,
-                'hobbies'                  => $candidate->hobbies,
-                'postal_code'              => $candidate->postal_code,
-                'school_npsn'              => $candidate->school_npsn,
-                'certificate_number'       => $candidate->certificate_number,
-                'birth_certificate_number' => $candidate->birth_certificate_number,
-                'family_card_number'       => $candidate->family_card_number,
-                'program_choice'           => $candidate->program_choice,
-                'major_choice'             => $candidate->major_choice,
+                'email'                      => $candidate->email,
+                'phone_number'               => $candidate->phone_number,
+                'religion'                   => $candidate->religion,
+                'child_order'                => $candidate->child_order,
+                'siblings_count'             => $candidate->siblings_count,
+                'hobbies'                    => $candidate->hobbies,
+                'ambitions'                  => $candidate->ambitions,
+                'habits'                     => $candidate->habits,
+                'extracurricular_interests'  => $candidate->extracurricular_interests ?? [],
+                'postal_code'                => $candidate->postal_code,
+                'school_npsn'                => $candidate->school_npsn,
+                'certificate_number'         => $candidate->certificate_number,
+                'birth_certificate_number'   => $candidate->birth_certificate_number,
+                'family_card_number'         => $candidate->family_card_number,
+                'program_choice'             => $candidate->program_choice,
+                'major_choice'               => $candidate->major_choice,
                 // ── Status & change request ───────────────────────────────
                 'status'              => $candidate->status,
                 'has_pending_change'  => $candidate->hasPendingChangeRequest(),
@@ -357,7 +321,6 @@ class CandidateDashboardController extends Controller
 
     // =========================================================================
     // UPDATE DATA DIRI — PUT /dashboard/data-diri
-    // Hanya update field yang bisa diedit kandidat langsung.
     // =========================================================================
 
     public function updateDataDiri(Request $request)
@@ -366,23 +329,28 @@ class CandidateDashboardController extends Controller
         $candidate = $user->candidate()->with('admissionWave')->firstOrFail();
 
         $validated = $request->validate([
-            'email'                    => ['nullable', 'email', 'max:255'],
-            'phone_number'             => ['nullable', 'string', 'regex:/^08[0-9]{8,12}$/'],
-            'religion'                 => ['nullable', 'string', 'max:50'],
-            'child_order'              => ['nullable', 'integer', 'min:1', 'max:20'],
-            'siblings_count'           => ['nullable', 'integer', 'min:0', 'max:20'],
-            'hobbies'                  => ['nullable', 'string', 'max:500'],
-            'postal_code'              => ['nullable', 'digits:5'],
-            'school_npsn'              => ['nullable', 'digits:8'],
-            'certificate_number'       => ['nullable', 'string', 'max:100'],
-            'birth_certificate_number' => ['nullable', 'string', 'max:100'],
-            'family_card_number'       => ['nullable', 'digits:16'],
-            'program_choice'           => ['nullable', 'string', 'max:100'],
-            'major_choice'             => ['nullable', 'string', 'max:100'],
+            'email'                     => ['nullable', 'email', 'max:255', 'regex:/^[^\s@]+@gmail\.com$/i'],
+            'phone_number'              => ['nullable', 'string', 'regex:/^08[0-9]{8,12}$/'],
+            'religion'                  => ['nullable', 'string', 'max:50'],
+            'child_order'               => ['nullable', 'integer', 'min:1', 'max:20'],
+            'siblings_count'            => ['nullable', 'integer', 'min:0', 'max:20'],
+            'hobbies'                   => ['nullable', 'string', 'max:500'],
+            'ambitions'                 => ['nullable', 'string', 'max:500'],
+            'habits'                    => ['nullable', 'string', 'max:1000'],
+            'extracurricular_interests' => ['nullable', 'array'],
+            'extracurricular_interests.*' => ['string', 'max:100'],
+            'postal_code'               => ['nullable', 'digits:5'],
+            'school_npsn'               => ['nullable', 'digits:8'],
+            'certificate_number'        => ['nullable', 'string', 'max:100'],
+            'birth_certificate_number'  => ['nullable', 'string', 'max:100'],
+            'family_card_number'        => ['nullable', 'digits:16'],
+            'program_choice'            => ['nullable', 'string', 'max:100'],
+            'major_choice'              => ['nullable', 'string', 'max:100'],
         ], [
-            'phone_number.regex'      => 'Nomor HP harus diawali 08 dan terdiri dari 10-14 digit.',
-            'postal_code.digits'      => 'Kode pos harus 5 digit angka.',
-            'school_npsn.digits'      => 'NPSN harus 8 digit angka.',
+            'email.regex'               => 'Email harus berupa Gmail. Contoh: nama@gmail.com',
+            'phone_number.regex'        => 'Nomor HP harus diawali 08 dan terdiri dari 10-14 digit.',
+            'postal_code.digits'        => 'Kode pos harus 5 digit angka.',
+            'school_npsn.digits'        => 'NPSN harus 8 digit angka.',
             'family_card_number.digits' => 'Nomor KK harus 16 digit angka.',
         ]);
 
@@ -412,8 +380,6 @@ class CandidateDashboardController extends Controller
 
     // =========================================================================
     // REQUEST PERUBAHAN DATA KUNCI — POST /dashboard/data-diri/change-request
-    // Data kunci (nisn, nik, dll) tidak bisa langsung diedit kandidat.
-    // Kandidat ajukan perubahan → staff/admin approve/reject.
     // =========================================================================
 
     public function requestDataChange(Request $request)
@@ -421,17 +387,14 @@ class CandidateDashboardController extends Controller
         $user      = $request->user();
         $candidate = $user->candidate()->firstOrFail();
 
-        // Tolak kalau masih ada request pending
         if ($candidate->hasPendingChangeRequest()) {
-            return back()->withErrors([
-                'change_request' => 'Masih ada pengajuan perubahan yang sedang diproses.',
-            ]);
+            return back()->withErrors(['change_request' => 'Masih ada pengajuan perubahan yang sedang diproses.']);
         }
 
         $validated = $request->validate([
             'field'     => ['required', 'string', 'in:full_name,nisn,nik,gender,place_of_birth,date_of_birth,address_detail,school_origin'],
             'new_value' => ['required', 'string', 'max:500'],
-            'reason'    => ['required', 'string', 'max:500'],
+            'reason'    => ['required', 'string', 'min:10', 'max:500'],
         ]);
 
         $candidate->update([
@@ -460,4 +423,5 @@ class CandidateDashboardController extends Controller
         $candidate->update(['data_change_request' => null]);
 
         return back()->with('success', 'Pengajuan perubahan data dibatalkan.');
-    }}
+    }
+}
