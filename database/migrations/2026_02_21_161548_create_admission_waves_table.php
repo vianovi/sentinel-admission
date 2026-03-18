@@ -29,6 +29,20 @@ return new class extends Migration
             $table->decimal('registration_fee', 12, 2)->default(0);
             $table->integer('quota_target')->default(0);   // quota_filled = realtime via relasi
 
+            // Program & Jurusan
+            // available_programs → JSON ["Reguler", "Tahfidz", "Unggulan"]
+            // Admin setting via dashboard, kandidat pilih salah satu setelah login
+            $table->json('available_programs')->nullable();
+
+            // available_majors → JSON ["IPA", "IPS", "Teknik Komputer"]
+            // Hanya relevan jika majors_enabled = true (SMA/SMK)
+            $table->json('available_majors')->nullable();
+
+            // majors_enabled → toggle aktif/tidak untuk input jurusan
+            // false = input jurusan hidden di frontend
+            // true  = input jurusan muncul sebagai pilihan
+            $table->boolean('majors_enabled')->default(false);
+
             // Status
             $table->boolean('is_active')->default(false);
 

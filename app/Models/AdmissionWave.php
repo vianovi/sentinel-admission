@@ -20,6 +20,9 @@ class AdmissionWave extends Model
         'reregistration_date',
         'registration_fee',
         'quota_target',
+        'available_programs',
+        'available_majors',
+        'majors_enabled',
         'is_active',
     ];
 
@@ -28,6 +31,9 @@ class AdmissionWave extends Model
         'end_date'            => 'date',
         'reregistration_date' => 'date',
         'registration_fee'    => 'decimal:2',
+        'available_programs'  => 'array',
+        'available_majors'    => 'array',
+        'majors_enabled'      => 'boolean',
         'is_active'           => 'boolean',
     ];
 

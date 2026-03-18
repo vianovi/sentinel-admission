@@ -48,9 +48,9 @@ class Candidate extends Model
     ];
 
     protected $casts = [
-        'date_of_birth'       => 'date',
-        'address_detail'      => 'array',
-        'data_change_request' => 'array',
+        'date_of_birth'              => 'date',
+        'address_detail'             => 'array',
+        'data_change_request'        => 'array',
         'child_order'                => 'integer',
         'siblings_count'             => 'integer',
         'extracurricular_interests'  => 'array',
@@ -115,8 +115,8 @@ class Candidate extends Model
             'address_detail'        => $draft->address_detail,
             'school_origin'         => $draft->school_origin,
             'status'                => 'draft',
-            // phone_number → diisi kandidat sendiri setelah login
-            // program_choice → diisi kandidat sendiri setelah login
+            // phone_number     → diisi kandidat sendiri setelah login
+            // program_choice   → diisi kandidat sendiri setelah login
         ]);
     }
 
@@ -129,18 +129,12 @@ class Candidate extends Model
         return $this->gender === 'L' ? 'Laki-laki' : 'Perempuan';
     }
 
-    /**
-     * Cek apakah ada pengajuan perubahan data yang pending.
-     */
     public function hasPendingChangeRequest(): bool
     {
         return ! empty($this->data_change_request) &&
                ($this->data_change_request['status'] ?? '') === 'pending';
     }
 
-    /**
-     * Cek apakah data wajib sudah lengkap untuk bisa submit.
-     */
     public function isDataComplete(): bool
     {
         return ! empty($this->program_choice);

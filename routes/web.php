@@ -14,10 +14,14 @@ Route::get('/', [WelcomeController::class, 'index'])->name('home');
 // ─── Form Wizard (guest only) ─────────────────────────────────────────────────
 Route::middleware('guest')->group(function () {
     Route::get('/daftar', [FormWizardController::class, 'show'])->name('daftar');
+    Route::post('/daftar/check-draft', [FormWizardController::class, 'checkDraft'])->name('daftar.check-draft');
     Route::post('/daftar/check-duplicate', [FormWizardController::class, 'checkDuplicate'])->name('daftar.check-duplicate');
     Route::post('/daftar/resume', [FormWizardController::class, 'resume'])->name('daftar.resume');
     Route::post('/daftar/step1', [FormWizardController::class, 'storeStep1'])->name('daftar.step1');
     Route::put('/daftar/step2/{draft}', [FormWizardController::class, 'updateStep2'])->name('daftar.step2');
+
+    // ⚠️ initStep3 HARUS sebelum step3 agar Laravel tidak salah tangkap {draft}
+    Route::put('/daftar/step3/init/{draft}', [FormWizardController::class, 'initStep3'])->name('daftar.step3.init');
     Route::put('/daftar/step3/{draft}', [FormWizardController::class, 'updateStep3'])->name('daftar.step3');
 });
 
@@ -27,23 +31,19 @@ Route::middleware(['auth', RoleMiddleware::class . ':candidate'])
     ->name('dashboard.')
     ->group(function () {
 
-        // Dashboard utama
         Route::get('/', [CandidateDashboardController::class, 'index'])
             ->name('index');
 
-        // ── Profile ───────────────────────────────────────────────────────
         Route::get('/profile', [CandidateDashboardController::class, 'showProfile'])
             ->name('profile');
         Route::put('/profile', [CandidateDashboardController::class, 'updateProfile'])
             ->name('profile.update');
 
-        // Avatar
         Route::post('/profile/avatar', [CandidateDashboardController::class, 'updateAvatar'])
             ->name('profile.avatar.update');
         Route::get('/profile/avatar', [CandidateDashboardController::class, 'serveAvatar'])
             ->name('profile.avatar');
 
-        // Ganti email (perlu approval staff/admin)
         Route::post('/profile/email', [CandidateDashboardController::class, 'requestEmailChange'])
             ->name('profile.email.request');
         Route::delete('/profile/email', [CandidateDashboardController::class, 'cancelEmailChange'])

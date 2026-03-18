@@ -39,13 +39,14 @@ class RegistrationDraft extends Model
 
     // =============================================
     // STEP 1: Insert draft baru
-    // Dipanggil saat user klik "Lanjut ke Langkah 2"
+    // expires_at = now + 2 hari — di-set sekali, tidak pernah diubah
     // =============================================
     public static function createFromStep1(array $data, ?int $waveId = null): self
     {
         return self::create([
             'admission_wave_id' => $waveId,
             'current_step'      => 1,
+            'expires_at'        => Carbon::now()->addDays(2),
             'nisn'              => $data['nisn'],
             'nik'               => $data['nik'],
             'full_name'         => $data['full_name'],
@@ -56,7 +57,7 @@ class RegistrationDraft extends Model
     }
 
     // =============================================
-    // STEP 2: Update draft dengan kontak & alamat
+    // STEP 2: Update kontak & alamat
     // =============================================
     public function updateFromStep2(array $data): self
     {
@@ -92,23 +93,6 @@ class RegistrationDraft extends Model
     }
 
     // =============================================
-    // STEP 3: Finalisasi draft
-    // Generate registration_code, secret_token, expires_at
-    // =============================================
-    public function finalizeStep3(array $data): self
-    {
-        $this->update([
-            'current_step'      => 3,
-            'school_origin'     => $data['school_origin'],
-            'registration_code' => self::generateCode(),
-            'secret_token'      => Str::uuid()->toString(),
-            'expires_at'        => Carbon::now()->addDays(3),
-        ]);
-
-        return $this;
-    }
-
-    // =============================================
     // RESUME: Cari draft aktif by NISN atau NIK
     // =============================================
     public static function findActive(string $nisn, string $nik): ?self
@@ -126,13 +110,30 @@ class RegistrationDraft extends Model
     }
 
     // =============================================
-    // Generate registration code: REG-2026-XXXXX
+    // Generate: REG-{random4}-{yy}-G{gelombang}
+    // Contoh: REG-A3X9-26-G2
+    //
+    // Random 4 karakter alphanumeric uppercase
+    // Loop sampai unique — collision hampir mustahil
     // =============================================
-    public static function generateCode(): string
+    public static function generateCode(?int $waveId): string
     {
+        // Nomor gelombang dari title: "Gelombang 2" → 2
+        $waveNumber = 0;
+        if ($waveId) {
+            $wave = \App\Models\AdmissionWave::find($waveId);
+            if ($wave) {
+                preg_match('/\d+/', $wave->title, $matches);
+                $waveNumber = (int) ($matches[0] ?? $waveId);
+            }
+        }
+
+        $year = date('y'); // 2 digit: 26
+
         do {
-            $code = 'REG-' . date('Y') . '-' . strtoupper(Str::random(5));
-        } while (self::where('registration_code', $code)->exists());
+            $random = strtoupper(Str::random(4));
+            $code   = "REG-{$random}-{$year}-G{$waveNumber}";
+        } while (self::withTrashed()->where('registration_code', $code)->exists());
 
         return $code;
     }

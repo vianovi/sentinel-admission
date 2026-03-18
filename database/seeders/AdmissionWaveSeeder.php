@@ -50,7 +50,10 @@ class AdmissionWaveSeeder extends Seeder
                 'reregistration_date'  => $wave1Close->copy()->addDays(9)->toDateString(),
                 'registration_fee'     => 250000,
                 'quota_target'         => 50,
-                'is_active'            => false, // WAJIB FALSE — historical data
+                'available_programs'   => ['Reguler', 'Tahfidz'],
+                'available_majors'     => [],
+                'majors_enabled'       => false,
+                'is_active'            => false,
             ]
         );
 
@@ -78,7 +81,10 @@ class AdmissionWaveSeeder extends Seeder
                 'reregistration_date'  => $wave2Close->copy()->addDays(9)->toDateString(),
                 'registration_fee'     => 300000,
                 'quota_target'         => 70,
-                'is_active'            => true, // INI YANG TERBACA SISTEM
+                'available_programs'   => ['Reguler', 'Tahfidz', 'Unggulan'],
+                'available_majors'     => [],
+                'majors_enabled'       => false,
+                'is_active'            => true,
             ]
         );
 
@@ -107,7 +113,10 @@ class AdmissionWaveSeeder extends Seeder
                 'reregistration_date'  => null,
                 'registration_fee'     => 350000,
                 'quota_target'         => 30,
-                'is_active'            => false, // Belum dibuka
+                'available_programs'   => ['Reguler', 'Tahfidz', 'Unggulan'],
+                'available_majors'     => [],
+                'majors_enabled'       => false,
+                'is_active'            => false,
             ]
         );
     }

@@ -37,42 +37,41 @@ return new class extends Migration
             $table->enum('gender', ['L', 'P']);
             $table->string('place_of_birth');
             $table->date('date_of_birth');
-            $table->string('religion')->nullable();             // Agama
-            $table->tinyInteger('child_order')->nullable();     // Anak ke-berapa
-            $table->tinyInteger('siblings_count')->nullable();  // Jumlah saudara kandung
-            $table->text('hobbies')->nullable();                // Hobi / minat bakat
-            $table->text('ambitions')->nullable();              // Cita-cita
-            $table->text('habits')->nullable();                 // Kebiasaan
-            $table->json('extracurricular_interests')->nullable(); // Minat ekstrakulikuler (JSON array nama)
+            $table->string('religion')->nullable();
+            $table->tinyInteger('child_order')->nullable();
+            $table->tinyInteger('siblings_count')->nullable();
+            $table->text('hobbies')->nullable();
+            $table->text('ambitions')->nullable();
+            $table->text('habits')->nullable();
+            $table->json('extracurricular_interests')->nullable();
 
             // =========================
             // ALAMAT
             // =========================
             $table->text('address_full')->nullable();
-            $table->json('address_detail')->nullable();         // {jalan, rt, rw, kelurahan, kecamatan, kabupaten, provinsi}
-            $table->string('postal_code', 10)->nullable();      // Kode pos
+            $table->json('address_detail')->nullable();
+            $table->string('postal_code', 10)->nullable();
 
             // =========================
             // SEKOLAH ASAL
             // =========================
-            $table->string('school_origin')->nullable();        // Nama sekolah asal
-            $table->string('school_npsn', 8)->nullable();       // NPSN sekolah asal (standar Dapodik)
-            $table->string('certificate_number')->nullable();   // Nomor ijazah (bisa disusulkan)
+            $table->string('school_origin')->nullable();
+            $table->string('school_npsn', 8)->nullable();
+            $table->string('certificate_number')->nullable();
 
             // =========================
             // DATA TAMBAHAN (Diisi setelah login)
             // =========================
-            $table->string('email')->nullable();                // Email siswa (beda dengan email akun)
-            $table->string('phone_number', 20)->nullable();     // WA/HP siswa (opsional)
-            $table->string('birth_certificate_number')->nullable(); // Nomor akta lahir
-            $table->string('family_card_number', 16)->nullable();   // Nomor KK
-            $table->string('program_choice')->nullable();       // Diambil dari admission_waves.available_programs
-            $table->string('major_choice')->nullable();         // Diisi hanya jika admission_waves.majors_enabled = true
+            $table->string('email')->nullable();
+            $table->string('phone_number', 20)->nullable();
+            $table->string('birth_certificate_number')->nullable();
+            $table->string('family_card_number', 16)->nullable();
+            $table->string('program_choice')->nullable();
+            $table->string('major_choice')->nullable();
 
             // =========================
             // PENGAJUAN PERUBAHAN DATA KUNCI
             // =========================
-            // Disimpan sebagai JSON — tidak perlu tabel terpisah
             // Format: { field, old_value, new_value, reason, status, requested_at }
             // status: pending | approved | rejected
             $table->json('data_change_request')->nullable();
@@ -80,13 +79,6 @@ return new class extends Migration
             // =========================
             // STATUS PENDAFTARAN
             // =========================
-            /**
-             * draft     → data awal dari konversi draft
-             * submitted → kandidat sudah submit lengkap
-             * verified  → lolos verifikasi administrasi
-             * accepted  → diterima
-             * rejected  → ditolak
-             */
             $table->enum('status', [
                 'draft',
                 'submitted',
@@ -103,7 +95,7 @@ return new class extends Migration
             $table->index('user_id');
             $table->index('status');
             $table->index('nisn');
-            $table->index('nik');                               // ← TAMBAH
+            $table->index('nik');
         });
     }
 
