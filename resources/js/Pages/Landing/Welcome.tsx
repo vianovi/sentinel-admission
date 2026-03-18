@@ -22,7 +22,7 @@ export default function Welcome({ activeWave, auth }: WelcomeProps) {
         <>
             <Head title={app.name} />
             <div className="font-sans text-navy bg-light antialiased scroll-smooth">
-                <TopBar />
+                <TopBar activeWave={activeWave} />
                 <Navbar auth={auth} app={app} />
                 <HeroSection activeWave={activeWave} onOpenVideo={() => setVideoModalOpen(true)} />
                 <ProfileSection onOpenVideo={() => setVideoModalOpen(true)} />

@@ -42,30 +42,46 @@ export default function ProfileSection({ onOpenVideo }: ProfileSectionProps) {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 <div className="flex flex-col lg:flex-row gap-16 items-center">
                     <div className="lg:w-1/2 space-y-6 text-center lg:text-left">
-                        <span className="profile-animate opacity-0 block text-gold font-bold tracking-widest text-sm">KENAPA KAMI?</span>
+                        <span className="profile-animate opacity-0 block text-gold font-bold tracking-widest text-sm uppercase">Kenapa Al-Muntaha?</span>
                         <h2 className="profile-animate opacity-0 text-4xl lg:text-5xl font-display font-bold leading-tight">
-                            Mendidik dengan Hati, <br /> Menguasai Teknologi.
+                            Mendidik dengan Hati, <br /> Membentuk Karakter Sejati.
                         </h2>
                         <p className="profile-animate opacity-0 text-gray-400 leading-relaxed text-lg">
-                            Program pendidikan kami memastikan setiap siswa mendapatkan pengawasan yang humanis.
-                            Kami mendorong siswa untuk memiliki nalar kritis melalui kurikulum sains &amp; teknologi.
+                            Di Al-Muntaha, setiap siswa bukan sekadar belajar — mereka bertumbuh.
+                            Program boarding kami memastikan pembinaan karakter Islami yang kuat,
+                            beriringan dengan penguasaan ilmu dan teknologi modern.
                         </p>
                         <div className="profile-animate opacity-0 grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4">
                             <div className="bg-white/5 p-4 rounded-xl border border-white/10 hover:bg-white/10 transition">
-                                <i className="fa-solid fa-book-open text-gold text-2xl mb-3"></i>
-                                <h4 className="font-bold">Kurikulum Unggulan</h4>
-                                <p className="text-xs text-gray-400 mt-1">Terintegrasi dengan standar nasional.</p>
+                                <i className="fa-solid fa-book-quran text-gold text-2xl mb-3"></i>
+                                <h4 className="font-bold">Pembinaan Karakter</h4>
+                                <p className="text-xs text-gray-400 mt-1">Akhlak Islami sebagai pondasi utama.</p>
                             </div>
                             <div className="bg-white/5 p-4 rounded-xl border border-white/10 hover:bg-white/10 transition">
                                 <i className="fa-solid fa-laptop-code text-gold text-2xl mb-3"></i>
-                                <h4 className="font-bold">IT &amp; Teknologi</h4>
-                                <p className="text-xs text-gray-400 mt-1">Cyber Security &amp; Web Development.</p>
+                                <h4 className="font-bold">Teknologi &amp; Sains</h4>
+                                <p className="text-xs text-gray-400 mt-1">Kurikulum modern berorientasi masa depan.</p>
+                            </div>
+                            <div className="bg-white/5 p-4 rounded-xl border border-white/10 hover:bg-white/10 transition">
+                                <i className="fa-solid fa-house-chimney text-gold text-2xl mb-3"></i>
+                                <h4 className="font-bold">Asrama Nyaman</h4>
+                                <p className="text-xs text-gray-400 mt-1">Lingkungan boarding yang aman dan kondusif.</p>
+                            </div>
+                            <div className="bg-white/5 p-4 rounded-xl border border-white/10 hover:bg-white/10 transition">
+                                <i className="fa-solid fa-users text-gold text-2xl mb-3"></i>
+                                <h4 className="font-bold">Pendampingan Penuh</h4>
+                                <p className="text-xs text-gray-400 mt-1">Guru &amp; pembimbing hadir 24 jam.</p>
                             </div>
                         </div>
                     </div>
                     <div className="profile-video-animate opacity-0 lg:w-1/2 relative w-full">
                         <button onClick={onOpenVideo} aria-label="Tonton video profil sekolah" className="w-full rounded-2xl overflow-hidden shadow-2xl border-4 border-white/10 relative group cursor-pointer block">
-                            <img src="/assets/thumbnail-video.jpg" className="w-full object-cover object-center transform group-hover:scale-105 transition duration-700 ease-in-out h-[400px]" alt="Thumbnail video profil sekolah" onError={(e) => { e.currentTarget.src = 'https://placehold.co/800x400/1e293b/d4a017?text=Video+Profil' }} />
+                            <img
+                                src="/assets/thumbnail-video.jpg"
+                                className="w-full object-cover object-center transform group-hover:scale-105 transition duration-700 ease-in-out h-[400px]"
+                                alt="Thumbnail video profil Al-Muntaha Boarding School"
+                                onError={(e) => { e.currentTarget.src = 'https://placehold.co/800x400/1e293b/d4a017?text=Video+Profil+Al-Muntaha' }}
+                            />
                             <div className="absolute inset-0 bg-slate-900/40 group-hover:bg-slate-900/20 transition duration-500 flex items-center justify-center">
                                 <div className="w-20 h-20 rounded-full bg-gold text-white flex items-center justify-center shadow-glow group-hover:scale-110 transition duration-300">
                                     <i className="fa-solid fa-play text-3xl ml-1"></i>

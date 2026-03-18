@@ -24,7 +24,8 @@ export default function Footer({ auth: _auth, app }: FooterProps) {
                             </div>
                         </div>
                         <p className="text-gray-400 text-sm leading-relaxed pr-6">
-                            Sistem penerimaan siswa baru yang modern dan universal. Dirancang untuk semua jenis lembaga pendidikan.
+                            Al-Muntaha Islamic Boarding School — membentuk generasi Muslim yang
+                            unggul dalam ilmu, kokoh dalam iman, dan siap berkontribusi untuk umat.
                         </p>
                         <div className="pt-4">
                             <a href="/assets/brosur.pdf"
@@ -59,14 +60,18 @@ export default function Footer({ auth: _auth, app }: FooterProps) {
                         <div className="space-y-4 text-sm text-gray-400">
                             <div className="flex items-start gap-3">
                                 <i className="fa-solid fa-location-dot mt-1 text-gold"></i>
-                                <span className="leading-relaxed">Jl. Raya Pendidikan No. 404, Kota Teknologi, Jawa Tengah.</span>
+                                <span className="leading-relaxed">Jl. Raya Pendidikan No. 1, Kota Ilmu, Jawa Tengah 50000</span>
                             </div>
                             <div className="flex items-center gap-3">
                                 <i className="fa-regular fa-envelope text-gold"></i>
-                                <span>psb@sekolah.sch.id</span>
+                                <span>info@almuntaha.sch.id</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <i className="fa-solid fa-phone text-gold"></i>
+                                <span>+62 821-0000-1234</span>
                             </div>
                             <div className="pt-2">
-                                <a href="https://wa.me/628123456789" target="_blank" rel="noopener noreferrer"
+                                <a href="https://wa.me/6282100001234" target="_blank" rel="noopener noreferrer"
                                     className="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-lg text-xs font-bold inline-flex items-center gap-2 transition shadow-lg">
                                     <i className="fa-brands fa-whatsapp text-lg"></i>
                                     Chat Sekretariat
@@ -79,11 +84,13 @@ export default function Footer({ auth: _auth, app }: FooterProps) {
                     <div className="lg:col-span-3 space-y-6">
                         <h4 className="font-bold text-lg text-white font-display">Lokasi Kami</h4>
                         <div className="w-full h-40 rounded-xl overflow-hidden shadow-lg border border-gray-600 bg-gray-800">
-                            <iframe title="Lokasi Sekolah di Google Maps"
+                            <iframe
+                                title="Lokasi Al-Muntaha Boarding School di Google Maps"
                                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3960.298059876246!2d110.42232937587635!3d-6.974108868288599!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e708c90327f2f11%3A0xc644c138c227318!2sSemarang!5e0!3m2!1sen!2sid!4v1709282384722!5m2!1sen!2sid"
                                 width="100%" height="100%" style={{ border: 0 }} allowFullScreen loading="lazy"
                                 referrerPolicy="no-referrer-when-downgrade"
-                                className="grayscale hover:grayscale-0 transition duration-500" />
+                                className="grayscale hover:grayscale-0 transition duration-500"
+                            />
                         </div>
                         <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer"
                             className="text-xs text-gold hover:underline flex items-center gap-1">

@@ -32,32 +32,63 @@ export default function VisiMisiSection() {
                     <h2 className="text-3xl lg:text-4xl font-display font-bold text-navy mt-1">Visi &amp; Misi</h2>
                 </div>
                 <div className="grid md:grid-cols-2 gap-8 items-stretch">
+
+                    {/* Visi */}
                     <div className="visimisi-animate opacity-0 bg-white rounded-2xl shadow-sm border border-gray-100 p-2 hover:shadow-lg transition duration-300">
                         <div className="h-48 rounded-xl overflow-hidden bg-gray-200 relative">
-                            <img src="/assets/about-1.jpg" alt="Visi sekolah" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = 'https://placehold.co/600x300/0f172a/ffffff?text=Visi' }} />
+                            <img
+                                src="/assets/about-1.jpg"
+                                alt="Visi Al-Muntaha Boarding School"
+                                className="w-full h-full object-cover"
+                                onError={(e) => { e.currentTarget.src = 'https://placehold.co/600x300/0f172a/ffffff?text=Visi' }}
+                            />
                             <div className="absolute inset-0 bg-navy/60 flex items-center justify-center">
                                 <h3 className="text-2xl font-display font-bold text-white tracking-widest uppercase">Visi</h3>
                             </div>
                         </div>
                         <div className="p-6 text-center">
-                            <p className="text-gray-600 text-lg leading-relaxed">"Menjadi sistem penerimaan siswa baru yang modern, terpercaya, dan dapat digunakan oleh semua jenis lembaga pendidikan."</p>
+                            <p className="text-gray-600 text-lg leading-relaxed">
+                                "Menjadi lembaga pendidikan boarding terkemuka yang melahirkan generasi Muslim
+                                berilmu tinggi, berakhlak mulia, dan siap memimpin di era global."
+                            </p>
                         </div>
                     </div>
+
+                    {/* Misi */}
                     <div className="visimisi-animate opacity-0 bg-white rounded-2xl shadow-sm border border-gray-100 p-2 hover:shadow-lg transition duration-300">
                         <div className="h-48 rounded-xl overflow-hidden bg-gray-200 relative">
-                            <img src="/assets/room-2.jpg" alt="Misi sekolah" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = 'https://placehold.co/600x300/0f172a/ffffff?text=Misi' }} />
+                            <img
+                                src="/assets/room-2.jpg"
+                                alt="Misi Al-Muntaha Boarding School"
+                                className="w-full h-full object-cover"
+                                onError={(e) => { e.currentTarget.src = 'https://placehold.co/600x300/0f172a/ffffff?text=Misi' }}
+                            />
                             <div className="absolute inset-0 bg-navy/60 flex items-center justify-center">
                                 <h3 className="text-2xl font-display font-bold text-white tracking-widest uppercase">Misi</h3>
                             </div>
                         </div>
                         <div className="p-6 text-left">
                             <ul className="space-y-2 text-sm text-gray-600">
-                                <li className="flex items-start gap-3"><i className="fa-solid fa-check text-gold mt-1"></i>Menyediakan platform pendaftaran yang mudah dan transparan.</li>
-                                <li className="flex items-start gap-3"><i className="fa-solid fa-check text-gold mt-1"></i>Mengintegrasikan manajemen data siswa secara digital dan aman.</li>
-                                <li className="flex items-start gap-3"><i className="fa-solid fa-check text-gold mt-1"></i>Mendukung semua jenis sekolah — SMP, SMA, SMK, negeri &amp; swasta.</li>
+                                <li className="flex items-start gap-3">
+                                    <i className="fa-solid fa-check text-gold mt-1 flex-shrink-0"></i>
+                                    Menyelenggarakan pendidikan Islami yang integratif antara ilmu agama dan ilmu umum.
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <i className="fa-solid fa-check text-gold mt-1 flex-shrink-0"></i>
+                                    Membina karakter siswa melalui kehidupan asrama yang terstruktur dan penuh nilai.
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <i className="fa-solid fa-check text-gold mt-1 flex-shrink-0"></i>
+                                    Mengembangkan potensi akademik, seni, dan olahraga setiap siswa secara optimal.
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <i className="fa-solid fa-check text-gold mt-1 flex-shrink-0"></i>
+                                    Membangun ekosistem belajar yang aman, nyaman, dan modern berbasis teknologi.
+                                </li>
                             </ul>
                         </div>
                     </div>
+
                 </div>
             </div>
         </section>

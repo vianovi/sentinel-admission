@@ -13,8 +13,6 @@ interface HeroSectionProps {
 export default function HeroSection({ activeWave, onOpenVideo }: HeroSectionProps) {
     const currentYear = new Date().getFullYear()
     const heroRef = useRef<HTMLDivElement>(null)
-
-    // ── Modal state dipindah ke sini agar render di luar overflow-hidden WaveCard
     const [scheduleModalOpen, setScheduleModalOpen] = useState(false)
 
     useEffect(() => {
@@ -26,11 +24,11 @@ export default function HeroSection({ activeWave, onOpenVideo }: HeroSectionProp
             ease:       'outExpo',
         })
         animate('.wave-card-animate', {
-            opacity:      [0, 1],
-            translateX:   [60, 0],
-            duration:     1300,
-            delay:        600,
-            ease:         'outExpo',
+            opacity:    [0, 1],
+            translateX: [60, 0],
+            duration:   1300,
+            delay:      600,
+            ease:       'outExpo',
         })
     }, [])
 
@@ -40,7 +38,7 @@ export default function HeroSection({ activeWave, onOpenVideo }: HeroSectionProp
                 <div className="absolute inset-0 z-0">
                     <img
                         src="/assets/header.jpg"
-                        alt="Latar belakang halaman utama"
+                        alt="Lingkungan Al-Muntaha Boarding School"
                         className="w-full h-full object-cover"
                         onError={(e) => { e.currentTarget.style.display = 'none' }}
                     />
@@ -57,16 +55,19 @@ export default function HeroSection({ activeWave, onOpenVideo }: HeroSectionProp
                                 </span>
                                 Penerimaan Siswa Baru {currentYear}/{currentYear + 1}
                             </div>
+
                             <h1 className="hero-animate opacity-0 text-4xl lg:text-6xl font-display font-bold text-navy leading-tight">
                                 Membangun Generasi <br />
                                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-navy to-gold">
                                     Cerdas &amp; Beradab
                                 </span>
                             </h1>
+
                             <p className="hero-animate opacity-0 text-gray-600 text-lg leading-relaxed max-w-lg mx-auto lg:mx-0">
-                                Sistem penerimaan siswa baru yang modern, transparan, dan mudah digunakan.
-                                Dirancang untuk semua jenis sekolah — SMP, SMA, dan SMK.
+                                Al-Muntaha Islamic Boarding School — tempat tumbuhnya generasi unggul
+                                yang berilmu, berkarakter, dan siap menghadapi tantangan zaman.
                             </p>
+
                             <div className="hero-animate flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
                                 <Link
                                     href="/daftar"
@@ -83,6 +84,7 @@ export default function HeroSection({ activeWave, onOpenVideo }: HeroSectionProp
                                     Tonton Profil
                                 </button>
                             </div>
+
                             <div className="hero-animate pt-6 flex items-center gap-3 justify-center lg:justify-start">
                                 <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gold/10 border border-gold/30 text-navy font-bold text-xs shadow-sm">
                                     <i className="fa-solid fa-medal text-gold text-sm"></i>
@@ -91,6 +93,10 @@ export default function HeroSection({ activeWave, onOpenVideo }: HeroSectionProp
                                 <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-navy/5 border border-navy/15 text-navy font-bold text-xs shadow-sm">
                                     <i className="fa-solid fa-check-shield text-navy text-sm"></i>
                                     <span>Kemdikbud</span>
+                                </div>
+                                <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-navy/5 border border-navy/15 text-navy font-bold text-xs shadow-sm">
+                                    <i className="fa-solid fa-mosque text-navy text-sm"></i>
+                                    <span>Islamic Boarding</span>
                                 </div>
                             </div>
                         </div>
@@ -105,7 +111,6 @@ export default function HeroSection({ activeWave, onOpenVideo }: HeroSectionProp
                 </div>
             </header>
 
-            {/* Modal di-render di sini — di luar header, bebas dari overflow-hidden */}
             {activeWave && (
                 <ScheduleModal
                     isOpen={scheduleModalOpen}
