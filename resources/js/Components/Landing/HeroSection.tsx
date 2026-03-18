@@ -51,7 +51,10 @@ export default function HeroSection({ activeWave, onOpenVideo }: HeroSectionProp
                     <div className="grid lg:grid-cols-2 gap-12 items-center">
                         <div ref={heroRef} className="space-y-6 text-center lg:text-left">
                             <div className="hero-animate opacity-0 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-navy/5 text-navy text-xs font-bold uppercase tracking-wider">
-                                <span className="fa-solid fa-circle text-[8px] text-green-500 mr-2"></span>
+                                <span className="relative flex h-2 w-2 mr-1">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                                </span>
                                 Penerimaan Siswa Baru {currentYear}/{currentYear + 1}
                             </div>
                             <h1 className="hero-animate opacity-0 text-4xl lg:text-6xl font-display font-bold text-navy leading-tight">
@@ -80,9 +83,15 @@ export default function HeroSection({ activeWave, onOpenVideo }: HeroSectionProp
                                     Tonton Profil
                                 </button>
                             </div>
-                            <div className="hero-animate pt-6 flex items-center gap-6 justify-center lg:justify-start grayscale opacity-60">
-                                <div className="flex items-center gap-2 font-bold text-sm"><i className="fa-solid fa-medal"></i> Akreditasi A</div>
-                                <div className="flex items-center gap-2 font-bold text-sm"><i className="fa-solid fa-check-shield"></i> Kemdikbud</div>
+                            <div className="hero-animate pt-6 flex items-center gap-3 justify-center lg:justify-start">
+                                <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gold/10 border border-gold/30 text-navy font-bold text-xs shadow-sm">
+                                    <i className="fa-solid fa-medal text-gold text-sm"></i>
+                                    <span>Akreditasi <span className="text-gold">A</span></span>
+                                </div>
+                                <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-navy/5 border border-navy/15 text-navy font-bold text-xs shadow-sm">
+                                    <i className="fa-solid fa-check-shield text-navy text-sm"></i>
+                                    <span>Kemdikbud</span>
+                                </div>
                             </div>
                         </div>
 
