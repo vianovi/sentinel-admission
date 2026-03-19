@@ -10,6 +10,7 @@ import VisiMisiSection from '@/Components/Landing/VisiMisiSection'
 import HighlightSection from '@/Components/Landing/HighlightSection'
 import FacilitiesSection from '@/Components/Landing/FacilitiesSection'
 import HowToRegisterSection from '@/Components/Landing/HowToRegisterSection'
+import GallerySection from '@/Components/Landing/GallerySection'
 import Footer from '@/Components/Landing/Footer'
 import VideoModal from '@/Components/Landing/VideoModal'
 
@@ -28,6 +29,7 @@ export default function Welcome({ activeWave, auth }: WelcomeProps) {
                 <ProfileSection onOpenVideo={() => setVideoModalOpen(true)} />
                 <VisiMisiSection />
                 <HighlightSection />
+                <GallerySection />
                 <FacilitiesSection />
                 <HowToRegisterSection />
                 <Footer auth={auth} app={app} />

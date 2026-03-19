@@ -13,37 +13,52 @@ export default function ProfileSection({ onOpenVideo }: ProfileSectionProps) {
             entries.forEach((entry) => {
                 if (entry.isIntersecting) {
                     animate('.profile-animate', {
-                        opacity: [0, 1],
+                        opacity:    [0, 1],
                         translateY: [40, 0],
-                        duration: 1100,
-                        delay: stagger(220),
-                        ease: 'outExpo',
+                        duration:   1100,
+                        delay:      stagger(220),
+                        ease:       'outExpo',
                     })
                     animate('.profile-video-animate', {
-                        opacity: [0, 1],
+                        opacity:    [0, 1],
                         translateX: [60, 0],
-                        duration: 1300,
-                        delay: 300,
-                        ease: 'outExpo',
+                        duration:   1300,
+                        delay:      300,
+                        ease:       'outExpo',
                     })
                 } else {
-                    animate('.profile-animate', { opacity: 0, translateY: 40, duration: 0 })
+                    animate('.profile-animate',       { opacity: 0, translateY: 40, duration: 0 })
                     animate('.profile-video-animate', { opacity: 0, translateX: 60, duration: 0 })
                 }
             })
         }, { threshold: 0.15 })
+
         if (sectionRef.current) observer.observe(sectionRef.current)
         return () => observer.disconnect()
     }, [])
 
     return (
-        <section ref={sectionRef} className="py-24 bg-navy text-white relative overflow-hidden">
-            <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/cubes.png')" }} />
+        <section ref={sectionRef} className="py-24 pb-36 bg-navy text-white relative overflow-hidden">
+
+            {/* Background pattern */}
+            <div className="absolute inset-0 opacity-10"
+                style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/cubes.png')" }} />
+
+            {/* Wave divider bawah — navy → white (VisiMisiSection) */}
+            <div className="absolute bottom-0 left-0 right-0 z-10 leading-none">
+                <svg viewBox="0 0 1440 72" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full h-[60px] md:h-[72px]">
+                    <path d="M0,36 C240,0 480,72 720,36 C960,0 1200,72 1440,36 L1440,72 L0,72 Z" fill="#ffffff" />
+                </svg>
+            </div>
+
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 <div className="flex flex-col lg:flex-row gap-16 items-center">
+
                     <div className="lg:w-1/2 space-y-6 text-center lg:text-left">
-                        <span className="profile-animate opacity-0 block text-gold font-bold tracking-widest text-sm uppercase">Kenapa Al-Muntaha?</span>
-                        <h2 className="profile-animate opacity-0 text-4xl lg:text-5xl font-display font-bold leading-tight">
+                        <span className="profile-animate opacity-0 block text-gold font-bold tracking-widest text-sm uppercase">
+                            Kenapa Al-Muntaha?
+                        </span>
+                        <h2 className="profile-animate opacity-0 text-4xl lg:text-5xl font-display font-bold leading-tight text-white">
                             Mendidik dengan Hati, <br /> Membentuk Karakter Sejati.
                         </h2>
                         <p className="profile-animate opacity-0 text-gray-400 leading-relaxed text-lg">
@@ -52,30 +67,35 @@ export default function ProfileSection({ onOpenVideo }: ProfileSectionProps) {
                             beriringan dengan penguasaan ilmu dan teknologi modern.
                         </p>
                         <div className="profile-animate opacity-0 grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4">
-                            <div className="bg-white/5 p-4 rounded-xl border border-white/10 hover:bg-white/10 transition">
+                            <div className="bg-white/5 p-4 rounded-xl border border-white/10 hover:bg-white/10 hover:-translate-y-0.5 transition duration-300">
                                 <i className="fa-solid fa-book-quran text-gold text-2xl mb-3"></i>
-                                <h4 className="font-bold">Pembinaan Karakter</h4>
+                                <h4 className="font-bold text-white">Pembinaan Karakter</h4>
                                 <p className="text-xs text-gray-400 mt-1">Akhlak Islami sebagai pondasi utama.</p>
                             </div>
-                            <div className="bg-white/5 p-4 rounded-xl border border-white/10 hover:bg-white/10 transition">
+                            <div className="bg-white/5 p-4 rounded-xl border border-white/10 hover:bg-white/10 hover:-translate-y-0.5 transition duration-300">
                                 <i className="fa-solid fa-laptop-code text-gold text-2xl mb-3"></i>
-                                <h4 className="font-bold">Teknologi &amp; Sains</h4>
+                                <h4 className="font-bold text-white">Teknologi &amp; Sains</h4>
                                 <p className="text-xs text-gray-400 mt-1">Kurikulum modern berorientasi masa depan.</p>
                             </div>
-                            <div className="bg-white/5 p-4 rounded-xl border border-white/10 hover:bg-white/10 transition">
+                            <div className="bg-white/5 p-4 rounded-xl border border-white/10 hover:bg-white/10 hover:-translate-y-0.5 transition duration-300">
                                 <i className="fa-solid fa-house-chimney text-gold text-2xl mb-3"></i>
-                                <h4 className="font-bold">Asrama Nyaman</h4>
+                                <h4 className="font-bold text-white">Asrama Nyaman</h4>
                                 <p className="text-xs text-gray-400 mt-1">Lingkungan boarding yang aman dan kondusif.</p>
                             </div>
-                            <div className="bg-white/5 p-4 rounded-xl border border-white/10 hover:bg-white/10 transition">
+                            <div className="bg-white/5 p-4 rounded-xl border border-white/10 hover:bg-white/10 hover:-translate-y-0.5 transition duration-300">
                                 <i className="fa-solid fa-users text-gold text-2xl mb-3"></i>
-                                <h4 className="font-bold">Pendampingan Penuh</h4>
+                                <h4 className="font-bold text-white">Pendampingan Penuh</h4>
                                 <p className="text-xs text-gray-400 mt-1">Guru &amp; pembimbing hadir 24 jam.</p>
                             </div>
                         </div>
                     </div>
+
                     <div className="profile-video-animate opacity-0 lg:w-1/2 relative w-full">
-                        <button onClick={onOpenVideo} aria-label="Tonton video profil sekolah" className="w-full rounded-2xl overflow-hidden shadow-2xl border-4 border-white/10 relative group cursor-pointer block">
+                        <button
+                            onClick={onOpenVideo}
+                            aria-label="Tonton video profil sekolah"
+                            className="w-full rounded-2xl overflow-hidden shadow-2xl border-4 border-white/10 relative group cursor-pointer block"
+                        >
                             <img
                                 src="/assets/profile-thumbnail.webp"
                                 className="w-full object-cover object-center transform group-hover:scale-105 transition duration-700 ease-in-out h-[400px]"
@@ -94,6 +114,7 @@ export default function ProfileSection({ onOpenVideo }: ProfileSectionProps) {
                             </div>
                         </button>
                     </div>
+
                 </div>
             </div>
         </section>

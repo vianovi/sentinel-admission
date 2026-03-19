@@ -39,7 +39,7 @@ export default function TopBar({ activeWave }: TopBarProps) {
     const tickerText = buildTickerItems().join('   ✦   ')
 
     return (
-        <div className="bg-navy text-gray-300 text-xs py-2.5 border-b border-gray-800 hidden md:block overflow-hidden">
+        <div className="bg-navy text-gray-300 text-xs py-2.5 border-b border-white/5 hidden md:block overflow-hidden">
             <div className="max-w-7xl mx-auto px-4 flex items-center justify-between gap-6">
 
                 {/* ========================================================
