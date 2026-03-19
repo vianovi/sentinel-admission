@@ -46,7 +46,7 @@ export default function HighlightSection() {
                     </div>
                     <div className="highlight-animate opacity-0 md:col-span-3">
                         <img
-                            src="/assets/menu-7.jpg"
+                            src="/assets/highlight-seleksi.webp"
                             alt="Proses seleksi siswa Al-Muntaha"
                             className="w-full h-[400px] object-cover rounded-2xl shadow-xl transform md:translate-y-8 hover:translate-y-4 transition duration-500"
                             onError={(e) => { e.currentTarget.src = 'https://placehold.co/400x600/f1f5f9/0f172a?text=Seleksi' }}
@@ -65,7 +65,7 @@ export default function HighlightSection() {
                             </p>
                         </div>
                         <img
-                            src="/assets/room-1.jpg"
+                            src="/assets/highlight-asrama.webp"
                             alt="Asrama Al-Muntaha Boarding School"
                             className="w-full h-48 object-cover rounded-2xl shadow-lg border-4 border-white"
                             onError={(e) => { e.currentTarget.src = 'https://placehold.co/400x200/f1f5f9/0f172a?text=Asrama' }}

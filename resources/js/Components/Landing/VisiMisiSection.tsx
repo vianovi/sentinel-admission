@@ -37,7 +37,7 @@ export default function VisiMisiSection() {
                     <div className="visimisi-animate opacity-0 bg-white rounded-2xl shadow-sm border border-gray-100 p-2 hover:shadow-lg transition duration-300">
                         <div className="h-48 rounded-xl overflow-hidden bg-gray-200 relative">
                             <img
-                                src="/assets/about-1.jpg"
+                                src="/assets/visi-section.webp"
                                 alt="Visi Al-Muntaha Boarding School"
                                 className="w-full h-full object-cover"
                                 onError={(e) => { e.currentTarget.src = 'https://placehold.co/600x300/0f172a/ffffff?text=Visi' }}
@@ -58,7 +58,7 @@ export default function VisiMisiSection() {
                     <div className="visimisi-animate opacity-0 bg-white rounded-2xl shadow-sm border border-gray-100 p-2 hover:shadow-lg transition duration-300">
                         <div className="h-48 rounded-xl overflow-hidden bg-gray-200 relative">
                             <img
-                                src="/assets/room-2.jpg"
+                                src="/assets/misi-section.webp"
                                 alt="Misi Al-Muntaha Boarding School"
                                 className="w-full h-full object-cover"
                                 onError={(e) => { e.currentTarget.src = 'https://placehold.co/600x300/0f172a/ffffff?text=Misi' }}

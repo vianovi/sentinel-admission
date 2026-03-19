@@ -37,7 +37,7 @@ export default function HeroSection({ activeWave, onOpenVideo }: HeroSectionProp
             <header id="home" className="relative min-h-[90vh] flex items-center pt-10">
                 <div className="absolute inset-0 z-0">
                     <img
-                        src="/assets/header.jpg"
+                        src="/assets/hero-background.webp"
                         alt="Lingkungan Al-Muntaha Boarding School"
                         className="w-full h-full object-cover"
                         onError={(e) => { e.currentTarget.style.display = 'none' }}

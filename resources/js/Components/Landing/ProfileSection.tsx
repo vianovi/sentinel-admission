@@ -77,7 +77,7 @@ export default function ProfileSection({ onOpenVideo }: ProfileSectionProps) {
                     <div className="profile-video-animate opacity-0 lg:w-1/2 relative w-full">
                         <button onClick={onOpenVideo} aria-label="Tonton video profil sekolah" className="w-full rounded-2xl overflow-hidden shadow-2xl border-4 border-white/10 relative group cursor-pointer block">
                             <img
-                                src="/assets/thumbnail-video.jpg"
+                                src="/assets/profile-thumbnail.webp"
                                 className="w-full object-cover object-center transform group-hover:scale-105 transition duration-700 ease-in-out h-[400px]"
                                 alt="Thumbnail video profil Al-Muntaha Boarding School"
                                 onError={(e) => { e.currentTarget.src = 'https://placehold.co/800x400/1e293b/d4a017?text=Video+Profil+Al-Muntaha' }}
