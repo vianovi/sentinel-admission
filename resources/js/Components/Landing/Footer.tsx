@@ -83,14 +83,28 @@ export default function Footer({ auth: _auth, app }: FooterProps) {
                     {/* Maps */}
                     <div className="lg:col-span-3 space-y-6">
                         <h4 className="font-bold text-lg text-white font-display">Lokasi Kami</h4>
-                        <div className="w-full h-40 rounded-xl overflow-hidden shadow-lg border border-gray-600 bg-gray-800">
+                        <div className="w-full h-52 rounded-xl overflow-hidden shadow-lg border border-gray-600 bg-gray-800 relative group">
                             <iframe
                                 title="Lokasi Al-Muntaha Boarding School di Google Maps"
-                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3960.298059876246!2d110.42232937587635!3d-6.974108868288599!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e708c90327f2f11%3A0xc644c138c227318!2sSemarang!5e0!3m2!1sen!2sid!4v1709282384722!5m2!1sen!2sid"
-                                width="100%" height="100%" style={{ border: 0 }} allowFullScreen loading="lazy"
+                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3966.0!2d106.8227!3d-6.1701!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e69f5d2e764b12d%3A0x3d2ad6e1e0e9a521!2sIstana+Negara!5e1!3m2!1sid!2sid!4v1709282384722!5m2!1sid!2sid"
+                                width="100%"
+                                height="100%"
+                                style={{ border: 0 }}
+                                allowFullScreen
+                                loading="lazy"
                                 referrerPolicy="no-referrer-when-downgrade"
-                                className="grayscale hover:grayscale-0 transition duration-500"
+                                className="w-full h-full transition duration-500"
                             />
+                            {/* Hover hint */}
+                            <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-sm text-white text-[10px] px-2 py-1 rounded-full border border-white/20 flex items-center gap-1 pointer-events-none opacity-100 group-hover:opacity-0 transition duration-300">
+                                <i className="fa-solid fa-hand-pointer text-gold text-[9px]"></i>
+                                Geser & zoom peta
+                            </div>
+                            {/* Satellite badge */}
+                            <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white text-[10px] px-2 py-1 rounded-full border border-white/20 flex items-center gap-1 pointer-events-none">
+                                <i className="fa-solid fa-satellite text-gold text-[9px]"></i>
+                                Satelit
+                            </div>
                         </div>
                         <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer"
                             className="text-xs text-gold hover:underline flex items-center gap-1">
