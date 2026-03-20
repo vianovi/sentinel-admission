@@ -28,6 +28,10 @@ return new class extends Migration
                 ->nullOnDelete()
                 ->constrained('registration_drafts');
 
+            // Kode unik kandidat — derived dari registration_code draft
+            // Format: CDT-XXXX-YY-GZ (prefix REG- diganti CDT-, nilai belakang sama persis)
+            $table->string('candidate_code')->unique()->nullable();
+
             // =========================
             // IDENTITAS SISWA
             // =========================
@@ -96,6 +100,7 @@ return new class extends Migration
             $table->index('status');
             $table->index('nisn');
             $table->index('nik');
+            $table->index('candidate_code');
         });
     }
 

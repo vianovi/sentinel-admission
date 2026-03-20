@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
+use App\Models\Candidate;
+use App\Observers\CandidateObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +21,8 @@ class AppServiceProvider extends ServiceProvider
         Vite::prefetch(concurrency: 3);
 
         URL::forceScheme('https');
+
+        Candidate::observe(CandidateObserver::class); // ← tambah ini saja
 
         // Trust Cloudflare Tunnel proxies
         Request::setTrustedProxies(

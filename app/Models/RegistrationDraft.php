@@ -13,6 +13,7 @@ class RegistrationDraft extends Model
 
     protected $fillable = [
         'admission_wave_id',
+        'candidate_id',
         'registration_code',
         'secret_token',
         'expires_at',

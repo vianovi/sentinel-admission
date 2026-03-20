@@ -8,6 +8,7 @@ class Guardian extends Model
 {
     protected $fillable = [
         'candidate_id',
+        'candidate_code',
         // Ayah
         'father_name',
         'father_nik',
@@ -56,9 +57,12 @@ class Guardian extends Model
 
     public static function createFromDraft(RegistrationDraft $draft, int $candidateId): self
     {
+        $candidate = \App\Models\Candidate::find($candidateId);
+
         return self::create([
-            'candidate_id' => $candidateId,
-            'mother_name'  => $draft->mother_name,
+            'candidate_id'   => $candidateId,
+            'candidate_code' => $candidate?->candidate_code,
+            'mother_name'    => $draft->mother_name,
         ]);
     }
 

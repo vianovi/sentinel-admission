@@ -13,6 +13,7 @@ class Candidate extends Model
         'user_id',
         'admission_wave_id',
         'registration_draft_id',
+        'candidate_code',
         // Identitas
         'nisn',
         'nik',
@@ -101,10 +102,17 @@ class Candidate extends Model
 
     public static function createFromDraft(RegistrationDraft $draft, int $userId): self
     {
-        return self::create([
+        // Derive candidate_code dari registration_code — hanya ganti prefix REG- → CDT-
+        // Nilai di belakang prefix HARUS sama persis, tidak boleh di-generate ulang
+        $candidateCode = $draft->registration_code
+            ? str_replace('REG-', 'CDT-', $draft->registration_code)
+            : null;
+
+        $candidate = self::create([
             'user_id'               => $userId,
             'admission_wave_id'     => $draft->admission_wave_id,
             'registration_draft_id' => $draft->id,
+            'candidate_code'        => $candidateCode,
             'nisn'                  => $draft->nisn,
             'nik'                   => $draft->nik,
             'full_name'             => $draft->full_name,
@@ -118,6 +126,11 @@ class Candidate extends Model
             // phone_number     → diisi kandidat sendiri setelah login
             // program_choice   → diisi kandidat sendiri setelah login
         ]);
+
+        // Simpan relasi balik draft → candidate
+        $draft->update(['candidate_id' => $candidate->id]);
+
+        return $candidate;
     }
 
     // =============================================

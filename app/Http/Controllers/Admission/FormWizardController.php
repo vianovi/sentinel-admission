@@ -175,6 +175,17 @@ class FormWizardController extends Controller
             }
         }
 
+        // ── Cleanup: soft delete draft lama dengan NISN/NIK sama ────────────────
+        // Mencegah duplikat draft di DB saat user klik "Mulai Baru" di ResumeModal.
+        // Hanya hapus draft yang belum jadi akun (tidak ada di tabel candidates).
+        RegistrationDraft::whereNull('deleted_at')
+            ->where(function ($q) use ($validated) {
+                $q->where('nisn', $validated['nisn'])
+                  ->orWhere('nik', $validated['nik']);
+            })
+            ->whereDoesntHave('candidate')
+            ->delete();
+
         $draft = RegistrationDraft::createFromStep1($validated, $activeWave?->id);
 
         return response()->json([

@@ -8,33 +8,50 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('candidate_documents', function (Blueprint $table) {
+        Schema::create('payments', function (Blueprint $table) {
             $table->id();
 
             $table->foreignId('candidate_id')
                 ->constrained()
                 ->onDelete('cascade');
 
-            // =========================
-            // KLASIFIKASI DOKUMEN
-            // =========================
-            $table->string('document_type');        // kk, ktp, akta, ijazah, foto, dll
-            $table->string('document_owner');       // candidate, father, mother, guardian
-            $table->string('document_category');    // primary, supporting
+            // Denormalisasi candidate_code untuk kemudahan query lintas tabel
+            $table->string('candidate_code')->nullable()->index();
+
+            // Jejak admin yang verifikasi
+            $table->foreignId('verified_by')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
 
             // =========================
-            // FILE INFO
+            // IDENTITAS TRANSAKSI
             // =========================
-            $table->string('stored_name');          // Nama file hasil rename by sistem
-            $table->string('file_path');            // Path di storage/app/public
-            $table->string('mime_type')->nullable();
-            $table->unsignedInteger('file_size')->nullable(); // Dalam KB
+            $table->string('transaction_code')->unique(); // INV-2026-XXXXX
+            $table->string('payment_type');               // registration, reregistration
+            $table->string('payment_method');             // manual_transfer, cash, gateway
 
             // =========================
-            // STATUS VERIFIKASI ADMIN
+            // NOMINAL
             // =========================
-            $table->string('status')->default('pending'); // pending, valid, invalid
-            $table->text('admin_note')->nullable();        // Alasan penolakan
+            $table->decimal('expected_amount', 12, 2);   // Seharusnya dibayar
+            $table->decimal('amount', 12, 2);             // Yang diklaim dibayar user
+
+            // =========================
+            // BUKTI PEMBAYARAN
+            // =========================
+            /**
+             * proof_file nullable untuk kasus cash
+             * payment_method = cash → tidak ada foto bukti
+             */
+            $table->string('proof_file')->nullable();     // Path foto bukti transfer
+
+            // =========================
+            // STATUS & VERIFIKASI
+            // =========================
+            $table->string('status')->default('pending'); // pending, paid, failed
+            $table->timestamp('verified_at')->nullable(); // Kapan admin verifikasi
+            $table->text('admin_note')->nullable();       // Catatan admin
 
             $table->timestamps();
 
@@ -43,11 +60,12 @@ return new class extends Migration
             // =========================
             $table->index('candidate_id');
             $table->index('status');
+            $table->index('transaction_code');
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('candidate_documents');
+        Schema::dropIfExists('payments');
     }
 };

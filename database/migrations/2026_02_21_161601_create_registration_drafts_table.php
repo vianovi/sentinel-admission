@@ -61,6 +61,14 @@ return new class extends Migration
             // =========================
             $table->string('school_origin')->nullable();
 
+            // =========================
+            // RELASI BALIK KE CANDIDATE
+            // =========================
+            // Plain integer tanpa FK constraint — menghindari circular dependency
+            // (registration_drafts dibuat sebelum candidates)
+            // FK constraint ditambah via migration terpisah setelah kedua tabel ada
+            $table->unsignedBigInteger('candidate_id')->nullable();
+
             $table->softDeletes();
             $table->timestamps();
 
@@ -73,6 +81,7 @@ return new class extends Migration
             $table->index('nisn');
             $table->index('nik');
             $table->index('current_step');
+            $table->index('candidate_id');
         });
     }
 

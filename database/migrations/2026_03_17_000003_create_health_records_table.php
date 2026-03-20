@@ -15,6 +15,9 @@ return new class extends Migration
                 ->constrained()
                 ->onDelete('cascade');
 
+            // Denormalisasi candidate_code untuk kemudahan query lintas tabel
+            $table->string('candidate_code')->nullable()->index();
+
             // =========================
             // TAB FISIK
             // =========================

@@ -62,20 +62,34 @@ export default function WizardStep3({
         if (initCalled.current) return
         initCalled.current = true
 
+        // Guard — kalau draftId kosong, langsung kembali ke step 1
+        // Seharusnya tidak terjadi di flow normal, tapi safety net tetap perlu
+        if (!draftId) {
+            onInvalidDraft()
+            return
+        }
+
         const init = async () => {
+            const startTime = Date.now()
             try {
                 const { data: res } = await axios.put(`/daftar/step3/init/${draftId}`)
                 setRegCode(res.registration_code)
-                setLoadingCode(false)
+
+                // Minimum loading 800ms agar user sempat baca "Menyiapkan kode..."
+                const elapsed = Date.now() - startTime
+                const remaining = Math.max(0, 800 - elapsed)
 
                 setTimeout(() => {
-                    animate('.reg-code-card', {
-                        opacity: [0, 1],
-                        translateY: [8, 0],
-                        duration: 400,
-                        ease: 'outExpo',
-                    })
-                }, 50)
+                    setLoadingCode(false)
+                    setTimeout(() => {
+                        animate('.reg-code-card', {
+                            opacity: [0, 1],
+                            translateY: [8, 0],
+                            duration: 400,
+                            ease: 'outExpo',
+                        })
+                    }, 50)
+                }, remaining)
             } catch (err: any) {
                 // 422 = draft tidak valid (sudah jadi akun / expired)
                 // → clear localStorage + kembali ke step 1
@@ -143,10 +157,11 @@ export default function WizardStep3({
             setFinalizing(false)
             setSubmitting(true)
 
-            // localStorage BELUM dibersihkan — dibersihkan di RegisterController
+            // Delay 2.5 detik — beri waktu user baca redirect screen
+            // localStorage dibersihkan di RegisterController setelah login
             redirectTimer.current = setTimeout(() => {
                 router.visit('/register')
-            }, 300)
+            }, 2500)
 
         } catch (err: any) {
             setFinalizing(false)
@@ -165,6 +180,60 @@ export default function WizardStep3({
     // ─── Render ───────────────────────────────────────────────────────────────
     return (
         <div className="s3-scope">
+
+            {/* ── Redirect screen — tampil saat submitting, durasi 2.5 detik ── */}
+            {submitting && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/95 backdrop-blur-sm">
+                    <div className="flex flex-col items-center gap-6 px-8 text-center max-w-sm">
+                        {/* Spinner + icon */}
+                        <div className="relative">
+                            <div className="w-20 h-20 rounded-full border-4 border-gold/20 border-t-gold animate-spin" />
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <i className="fa-solid fa-shield-halved text-gold text-2xl"></i>
+                            </div>
+                        </div>
+
+                        {/* Kode pendaftaran */}
+                        {registrationCode && (
+                            <div className="bg-white/5 border border-white/10 rounded-2xl px-6 py-4 w-full">
+                                <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 mb-1.5">
+                                    Kode Pendaftaran Kamu
+                                </p>
+                                <p className="font-display font-extrabold text-gold text-xl tracking-[0.1em]">
+                                    {registrationCode}
+                                </p>
+                                <p className="text-[10px] text-slate-500 mt-1.5">
+                                    Simpan kode ini baik-baik
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Pesan */}
+                        <div>
+                            <p className="text-white font-semibold text-sm mb-1">
+                                Data kamu sudah tersimpan!
+                            </p>
+                            <p className="text-slate-400 text-xs leading-relaxed">
+                                Kami sedang menyiapkan halaman pembuatan akun
+                                berdasarkan data pendaftaranmu...
+                            </p>
+                        </div>
+
+                        {/* Progress dots */}
+                        <div className="flex gap-1.5">
+                            {[0, 1, 2].map(i => (
+                                <div
+                                    key={i}
+                                    className="w-1.5 h-1.5 rounded-full bg-gold"
+                                    style={{
+                                        animation: `pulse 1.2s ease-in-out ${i * 0.2}s infinite`,
+                                    }}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Header */}
             <div className="s3-card opacity-0 mb-5 sm:mb-8 border-b border-slate-200 pb-4 flex items-start justify-between gap-4">

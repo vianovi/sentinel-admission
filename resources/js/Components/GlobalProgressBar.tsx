@@ -129,12 +129,14 @@ export default function GlobalProgressBar() {
             {/* Bar utama */}
             <div
                 ref={barRef}
+                data-wizard-bar
                 className="absolute top-0 left-0 h-full bg-gold"
                 style={{ width: '0%', opacity: 0 }}
             />
             {/* Glow effect */}
             <div
                 ref={glowRef}
+                data-wizard-glow
                 className="absolute top-0 left-0 h-full"
                 style={{
                     width:     '0%',

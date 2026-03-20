@@ -9,6 +9,7 @@ class HealthRecord extends Model
 {
     protected $fillable = [
         'candidate_id',
+        'candidate_code',
 
         // Tab Fisik
         'blood_type',

@@ -20,6 +20,43 @@ import type { Step1Data } from '@/Components/Wizard/WizardStep1'
 import type { Step2Data } from '@/Components/Wizard/WizardStep2'
 import type { Step3Data } from '@/Components/Wizard/WizardStep3'
 
+// ─── Manual progress bar trigger ─────────────────────────────────────────────
+// Wizard pakai state React (bukan Inertia navigate) — GlobalProgressBar tidak
+// terpanggil otomatis saat pindah step. Kita trigger manual via DOM attribute.
+function triggerProgressBar(action: 'start' | 'finish') {
+    const bar  = document.querySelector<HTMLElement>('[data-wizard-bar]')
+    const glow = document.querySelector<HTMLElement>('[data-wizard-glow]')
+    if (!bar || !glow) return
+
+    if (action === 'start') {
+        bar.style.opacity  = '1'
+        bar.style.width    = '0%'
+        glow.style.opacity = '1'
+        glow.style.width   = '0%'
+        requestAnimationFrame(() => {
+            bar.style.transition  = 'width 400ms cubic-bezier(0.25, 1, 0.5, 1)'
+            glow.style.transition = 'width 400ms cubic-bezier(0.25, 1, 0.5, 1)'
+            requestAnimationFrame(() => {
+                bar.style.width  = '80%'
+                glow.style.width = '80%'
+            })
+        })
+    } else {
+        bar.style.transition  = 'width 200ms ease-out'
+        glow.style.transition = 'width 200ms ease-out'
+        bar.style.width  = '100%'
+        glow.style.width = '100%'
+        setTimeout(() => {
+            bar.style.opacity  = '0'
+            glow.style.opacity = '0'
+            setTimeout(() => {
+                bar.style.width  = '0%'
+                glow.style.width = '0%'
+            }, 300)
+        }, 200)
+    }
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface ActiveWave {
@@ -134,6 +171,10 @@ export default function FormWizard({ activeWave, flash }: FormWizardProps) {
     // ── Animasi transisi ──────────────────────────────────────────────────────
     const animateStepTransition = (nextStep: 1 | 2 | 3, onSwitch: () => void) => {
         const direction = nextStep > currentStep ? -20 : 20
+
+        // Trigger progress bar — wizard pakai state, bukan Inertia navigate
+        triggerProgressBar('start')
+
         animate('.step-content', {
             opacity: [1, 0],
             translateX: [0, direction],
@@ -141,7 +182,11 @@ export default function FormWizard({ activeWave, flash }: FormWizardProps) {
             ease: 'inQuad',
             onComplete: () => {
                 onSwitch()
-                contentRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+
+                // Scroll to top — handle keduanya: div container & window
+                contentRef.current?.scrollTo({ top: 0, behavior: 'instant' })
+                window.scrollTo({ top: 0, behavior: 'instant' })
+
                 setTimeout(() => {
                     animate('.step-content', {
                         opacity: [0, 1],
@@ -149,6 +194,8 @@ export default function FormWizard({ activeWave, flash }: FormWizardProps) {
                         duration: 400,
                         ease: 'outExpo',
                     })
+                    // Finish progress bar setelah animasi masuk selesai
+                    setTimeout(() => triggerProgressBar('finish'), 420)
                 }, 30)
             },
         })
