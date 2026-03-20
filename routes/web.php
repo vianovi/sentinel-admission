@@ -1,85 +1,137 @@
 <?php
 
-use App\Http\Controllers\Dashboard\AdminDashboardController;
-use App\Http\Controllers\Dashboard\CandidateDashboardController;
-use App\Http\Controllers\Dashboard\StaffDashboardController;
-use App\Http\Controllers\FormWizardController;
-use App\Http\Controllers\WelcomeController;
+use App\Http\Controllers\Candidate\DashboardController        as CandidateDashboard;
+use App\Http\Controllers\Candidate\ProfileController          as CandidateProfile;
+use App\Http\Controllers\Candidate\DataDiriController         as CandidateDataDiri;
+use App\Http\Controllers\Candidate\HealthRecordController     as CandidateHealthRecord;
+use App\Http\Controllers\Staff\DashboardController            as StaffDashboard;
+use App\Http\Controllers\Admin\DashboardController            as AdminDashboard;
+use App\Http\Controllers\Admission\FormWizardController;
+use App\Http\Controllers\Admission\RegisterController;
+use App\Http\Controllers\Public\WelcomeController;
 use App\Http\Middleware\RoleMiddleware;
 use Illuminate\Support\Facades\Route;
 
-// ─── Landing Page ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// PUBLIC
+// ─────────────────────────────────────────────────────────────────────────────
+
 Route::get('/', [WelcomeController::class, 'index'])->name('home');
 
-// ─── Form Wizard (guest only) ─────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// ADMISSION — Form Wizard & Register (guest only)
+// ─────────────────────────────────────────────────────────────────────────────
+
 Route::middleware('guest')->group(function () {
-    Route::get('/daftar', [FormWizardController::class, 'show'])->name('daftar');
-    Route::post('/daftar/check-draft', [FormWizardController::class, 'checkDraft'])->name('daftar.check-draft');
-    Route::post('/daftar/check-duplicate', [FormWizardController::class, 'checkDuplicate'])->name('daftar.check-duplicate');
-    Route::post('/daftar/resume', [FormWizardController::class, 'resume'])->name('daftar.resume');
-    Route::post('/daftar/step1', [FormWizardController::class, 'storeStep1'])->name('daftar.step1');
-    Route::put('/daftar/step2/{draft}', [FormWizardController::class, 'updateStep2'])->name('daftar.step2');
+
+    Route::get('/daftar', [FormWizardController::class, 'show'])
+        ->name('daftar');
+    Route::post('/daftar/check-draft', [FormWizardController::class, 'checkDraft'])
+        ->name('daftar.check-draft');
+    Route::post('/daftar/check-duplicate', [FormWizardController::class, 'checkDuplicate'])
+        ->name('daftar.check-duplicate');
+    Route::post('/daftar/resume', [FormWizardController::class, 'resume'])
+        ->name('daftar.resume');
+    Route::post('/daftar/step1', [FormWizardController::class, 'storeStep1'])
+        ->name('daftar.step1');
+    Route::put('/daftar/step2/{draft}', [FormWizardController::class, 'updateStep2'])
+        ->name('daftar.step2');
 
     // ⚠️ initStep3 HARUS sebelum step3 agar Laravel tidak salah tangkap {draft}
-    Route::put('/daftar/step3/init/{draft}', [FormWizardController::class, 'initStep3'])->name('daftar.step3.init');
-    Route::put('/daftar/step3/{draft}', [FormWizardController::class, 'updateStep3'])->name('daftar.step3');
+    Route::put('/daftar/step3/init/{draft}', [FormWizardController::class, 'initStep3'])
+        ->name('daftar.step3.init');
+    Route::put('/daftar/step3/{draft}', [FormWizardController::class, 'updateStep3'])
+        ->name('daftar.step3');
+
 });
 
-// ─── Dashboard Candidate ──────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// CANDIDATE DASHBOARD
+// ─────────────────────────────────────────────────────────────────────────────
+
 Route::middleware(['auth', RoleMiddleware::class . ':candidate'])
     ->prefix('dashboard')
     ->name('dashboard.')
     ->group(function () {
 
-        Route::get('/', [CandidateDashboardController::class, 'index'])
+        // ── Index ─────────────────────────────────────────────────────────
+        Route::get('/', [CandidateDashboard::class, 'index'])
             ->name('index');
 
-        Route::get('/profile', [CandidateDashboardController::class, 'showProfile'])
+        // ── Profile ───────────────────────────────────────────────────────
+        Route::get('/profile', [CandidateProfile::class, 'show'])
             ->name('profile');
-        Route::put('/profile', [CandidateDashboardController::class, 'updateProfile'])
+        Route::put('/profile', [CandidateProfile::class, 'update'])
             ->name('profile.update');
-
-        Route::post('/profile/avatar', [CandidateDashboardController::class, 'updateAvatar'])
-            ->name('profile.avatar.update');
-        Route::get('/profile/avatar', [CandidateDashboardController::class, 'serveAvatar'])
+        Route::get('/profile/avatar', [CandidateProfile::class, 'serveAvatar'])
             ->name('profile.avatar');
-
-        Route::post('/profile/email', [CandidateDashboardController::class, 'requestEmailChange'])
+        Route::post('/profile/avatar', [CandidateProfile::class, 'updateAvatar'])
+            ->name('profile.avatar.update');
+        Route::post('/profile/email', [CandidateProfile::class, 'requestEmailChange'])
             ->name('profile.email.request');
-        Route::delete('/profile/email', [CandidateDashboardController::class, 'cancelEmailChange'])
+        Route::delete('/profile/email', [CandidateProfile::class, 'cancelEmailChange'])
             ->name('profile.email.cancel');
 
         // ── Data Diri ─────────────────────────────────────────────────────
-        Route::get('/data-diri', [CandidateDashboardController::class, 'showDataDiri'])
+        Route::get('/data-diri', [CandidateDataDiri::class, 'show'])
             ->name('data-diri');
-        Route::put('/data-diri', [CandidateDashboardController::class, 'updateDataDiri'])
+        Route::put('/data-diri', [CandidateDataDiri::class, 'update'])
             ->name('data-diri.update');
-        Route::post('/data-diri/change-request', [CandidateDashboardController::class, 'requestDataChange'])
+        Route::post('/data-diri/change-request', [CandidateDataDiri::class, 'requestDataChange'])
             ->name('data-diri.change-request');
-        Route::delete('/data-diri/change-request', [CandidateDashboardController::class, 'cancelDataChange'])
+        Route::delete('/data-diri/change-request', [CandidateDataDiri::class, 'cancelDataChange'])
             ->name('data-diri.change-request.cancel');
+
+        // ── Data Kesehatan ────────────────────────────────────────────────
+        Route::get('/data-kesehatan', [CandidateHealthRecord::class, 'show'])
+            ->name('data-kesehatan');
+        Route::post('/data-kesehatan', [CandidateHealthRecord::class, 'save'])
+            ->name('data-kesehatan.save');
+        Route::post('/data-kesehatan/dokumen/{docType}', [CandidateHealthRecord::class, 'uploadDocument'])
+            ->name('data-kesehatan.upload');
+        Route::delete('/data-kesehatan/dokumen/{docType}', [CandidateHealthRecord::class, 'deleteDocument'])
+            ->name('data-kesehatan.delete-doc');
+
     });
 
-// ─── Dashboard Staff ──────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// STAFF DASHBOARD
+// ─────────────────────────────────────────────────────────────────────────────
+
 Route::middleware(['auth', RoleMiddleware::class . ':staff'])
     ->prefix('dashboard/staff')
     ->name('staff.')
     ->group(function () {
-        Route::get('/', [StaffDashboardController::class, 'index'])->name('dashboard');
-        Route::get('/candidates/{candidate}', [StaffDashboardController::class, 'show'])->name('candidates.show');
-        Route::post('/documents/{document}/verify', [StaffDashboardController::class, 'verifyDocument'])->name('documents.verify');
-        Route::post('/candidates/{candidate}/status', [StaffDashboardController::class, 'updateStatus'])->name('candidates.status');
+
+        Route::get('/', [StaffDashboard::class, 'index'])
+            ->name('dashboard');
+        Route::get('/candidates/{candidate}', [StaffDashboard::class, 'show'])
+            ->name('candidates.show');
+        Route::post('/documents/{document}/verify', [StaffDashboard::class, 'verifyDocument'])
+            ->name('documents.verify');
+        Route::post('/candidates/{candidate}/status', [StaffDashboard::class, 'updateStatus'])
+            ->name('candidates.status');
+
     });
 
-// ─── Dashboard Admin ──────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// ADMIN DASHBOARD
+// ─────────────────────────────────────────────────────────────────────────────
+
 Route::middleware(['auth', RoleMiddleware::class . ':admin'])
     ->prefix('dashboard/admin')
     ->name('admin.')
     ->group(function () {
-        Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
-        Route::post('/staff/{user}/toggle', [AdminDashboardController::class, 'toggleStaff'])->name('staff.toggle');
-        Route::delete('/candidates/{candidate}', [AdminDashboardController::class, 'deleteCandidate'])->name('candidates.delete');
-        Route::post('/waves/{wave}/toggle', [AdminDashboardController::class, 'toggleWave'])->name('waves.toggle');
+
+        Route::get('/', [AdminDashboard::class, 'index'])
+            ->name('dashboard');
+        Route::post('/staff/{user}/toggle', [AdminDashboard::class, 'toggleStaff'])
+            ->name('staff.toggle');
+        Route::delete('/candidates/{candidate}', [AdminDashboard::class, 'deleteCandidate'])
+            ->name('candidates.delete');
+        Route::post('/waves/{wave}/toggle', [AdminDashboard::class, 'toggleWave'])
+            ->name('waves.toggle');
+
     });
 
 require __DIR__ . '/auth.php';

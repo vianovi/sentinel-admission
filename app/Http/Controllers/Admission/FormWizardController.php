@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admission;
 
+use App\Http\Controllers\Controller;
 use App\Models\AdmissionWave;
 use App\Models\RegistrationDraft;
 use Illuminate\Http\Request;
@@ -276,8 +277,6 @@ class FormWizardController extends Controller
     // =============================================
     public function initStep3(Request $request, int $draft)
     {
-        // Manual find — include soft-deleted agar bisa return error yang benar
-        // bukan 404 dari route model binding
         $draft = RegistrationDraft::withTrashed()->find($draft);
 
         if (!$draft || !$draft->isValid()) {
@@ -298,7 +297,6 @@ class FormWizardController extends Controller
 
         $draft->refresh();
 
-        // Cookie duration = sisa menit dari expires_at
         $minutesLeft = max((int) now()->diffInMinutes($draft->expires_at, false), 1);
 
         $cookie = Cookie::make(

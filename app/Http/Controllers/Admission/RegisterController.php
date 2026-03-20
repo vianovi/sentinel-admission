@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admission;
 
+use App\Http\Controllers\Controller;
 use App\Models\Candidate;
 use App\Models\Guardian;
 use App\Models\RegistrationDraft;
