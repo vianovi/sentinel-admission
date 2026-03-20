@@ -4,7 +4,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
-use App\Http\Controllers\RegisterController;
+use App\Http\Controllers\Admission\RegisterController;
 use App\Http\Middleware\ValidateDraftToken;
 use Illuminate\Support\Facades\Route;
 
