@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /* =============================================
-   TAMBAHKAN ke resources/css/app.css
+   SENTINEL-ADMISSION
    Form Wizard styles
    ============================================= */
 
@@ -84,4 +84,40 @@
     0%   { transform: translate3d(-10px, 0, 0); }
     50%  { transform: translate3d(10px, 10px, 0); }
     100% { transform: translate3d(-10px, 0, 0); }
+}
+
+/* =============================================================================
+   SENTINEL — Design Token System
+   Tambahkan ini di resources/css/app.css (setelah @tailwind directives)
+   ============================================================================= */
+
+/* ── Dark mode tokens (default) ─────────────────────────────────────────────── */
+:root {
+    /* Shell — structural, lebih dalam */
+    --shell-bg:      #080d18;
+    --shell-surface: #0a0f1e;
+    --shell-border:  rgba(255, 255, 255, 0.05);
+
+    /* Content — lifted, sedikit lebih terang dari shell */
+    --content-bg:      #0d1424;
+    --content-surface: #111827;
+    --content-card:    rgba(255, 255, 255, 0.04);
+    --content-border:  rgba(255, 255, 255, 0.08);
+    --content-muted:   rgba(255, 255, 255, 0.04);
+}
+
+/* ── Light mode tokens ───────────────────────────────────────────────────────── */
+:root.light,
+.light {
+    /* Shell — warm structural */
+    --shell-bg:      #f0ebe0;
+    --shell-surface: #faf7f0;
+    --shell-border:  rgba(0, 0, 0, 0.06);
+
+    /* Content — clean warm white */
+    --content-bg:      #fdf9f3;
+    --content-surface: #ffffff;
+    --content-card:    rgba(0, 0, 0, 0.025);
+    --content-border:  rgba(0, 0, 0, 0.08);
+    --content-muted:   rgba(0, 0, 0, 0.03);
 }

@@ -43,7 +43,8 @@ class HealthRecordController extends Controller
 
     public function show()
     {
-        $candidate = Auth::user()->candidate;
+        $user      = Auth::user();
+        $candidate = $user->candidate()->with('admissionWave')->first();
 
         if (! $candidate) {
             return redirect()->route('dashboard.index');
@@ -52,9 +53,30 @@ class HealthRecordController extends Controller
         $healthRecord = $candidate->healthRecord;
 
         return Inertia::render('Dashboard/Candidate/DataKesehatan', [
+            // Data kesehatan kandidat
             'healthRecord' => $healthRecord
                 ? $this->formatForFrontend($healthRecord)
                 : null,
+
+            // Props untuk CandidateSidebar
+            'user' => [
+                'name'       => $user->name,
+                'avatar_url' => $user->avatar_url,
+                'initials'   => $user->initials,
+            ],
+            'candidate' => [
+                'full_name'           => $candidate->full_name,
+                'nisn'                => $candidate->nisn,
+                'nik'                 => $candidate->nik,
+                'gender_label'        => $candidate->genderLabel(),
+                'date_of_birth_label' => $candidate->date_of_birth?->format('d F Y'),
+                'school_origin'       => $candidate->school_origin,
+                'status'              => $candidate->status,
+                'program_choice'      => $candidate->program_choice,
+                'admission_wave'      => $candidate->admissionWave
+                    ? ['title' => $candidate->admissionWave->title]
+                    : null,
+            ],
         ]);
     }
 
@@ -146,10 +168,12 @@ class HealthRecordController extends Controller
 
         $column = self::UPLOAD_FIELDS[$docType];
 
-        if ($healthRecord->$column && Storage::exists($healthRecord->$column)) {
-            Storage::delete($healthRecord->$column);
+        // Hapus file lama jika ada
+        if ($healthRecord->$column && Storage::disk('private')->exists($healthRecord->$column)) {
+            Storage::disk('private')->delete($healthRecord->$column);
         }
 
+        // Simpan dengan nama UUID + ekstensi dari magic bytes (bukan dari client)
         $ext      = $this->getExtFromMagicBytes($file);
         $filename = Str::uuid() . '.' . $ext;
         $path     = $file->storeAs("health-documents/{$candidate->id}", $filename, 'private');
@@ -159,7 +183,7 @@ class HealthRecordController extends Controller
 
         return response()->json([
             'message'  => 'Dokumen berhasil diunggah.',
-            'file_url' => Storage::url($path),
+            'file_url' => Storage::disk('private')->url($path),
             'column'   => $column,
         ]);
     }
@@ -184,8 +208,8 @@ class HealthRecordController extends Controller
 
         $column = self::UPLOAD_FIELDS[$docType];
 
-        if ($healthRecord->$column && Storage::exists($healthRecord->$column)) {
-            Storage::delete($healthRecord->$column);
+        if ($healthRecord->$column && Storage::disk('private')->exists($healthRecord->$column)) {
+            Storage::disk('private')->delete($healthRecord->$column);
         }
 
         $healthRecord->$column = null;
@@ -198,6 +222,10 @@ class HealthRecordController extends Controller
     // PRIVATE HELPERS
     // =============================================
 
+    /**
+     * Format health record untuk dikirim ke frontend via Inertia.
+     * Semua accessor dari Model diekspos di sini — bukan di frontend.
+     */
     private function formatForFrontend(HealthRecord $record): array
     {
         return [
@@ -237,8 +265,8 @@ class HealthRecordController extends Controller
             'vaccine_card_url'         => $record->vaccine_card_url,
 
             // Meta
-            'is_complete'              => $record->isComplete(),
-            'completion_percentage'    => $record->completionPercentage(),
+            'is_complete'           => $record->isComplete(),
+            'completion_percentage' => $record->completionPercentage(),
         ];
     }
 
@@ -294,8 +322,8 @@ class HealthRecordController extends Controller
 
     private function passesMagicBytesCheck(\Illuminate\Http\UploadedFile $file): bool
     {
-        $ext    = strtolower($file->getClientOriginalExtension());
-        $magic  = self::MAGIC_BYTES[$ext] ?? null;
+        $ext   = strtolower($file->getClientOriginalExtension());
+        $magic = self::MAGIC_BYTES[$ext] ?? null;
         if (! $magic) return false;
 
         $handle = fopen($file->getRealPath(), 'rb');
