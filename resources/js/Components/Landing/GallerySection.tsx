@@ -2,66 +2,64 @@ import { useEffect, useRef, useState } from 'react'
 import { animate, stagger } from 'animejs'
 
 // ── Daftar foto galeri ────────────────────────────────────────────────────────
-// Ganti src dengan path asset nyata saat foto tersedia.
+// Letakkan foto di: public/assets/gallery/
+// Lalu ganti nilai src dari URL placehold.co → '/assets/gallery/nama-file.webp'
 //
-// PANDUAN UKURAN FILE FOTO:
-// ┌─────────┬───────────────┬────────────────────────────────────────────────┐
-// │  span   │ Ukuran (px)   │ Keterangan                                     │
-// ├─────────┼───────────────┼────────────────────────────────────────────────┤
-// │ 'tall'  │ 600 × 800 px  │ Portrait — cocok untuk foto orang/bangunan     │
-// │ 'wide'  │ 800 × 500 px  │ Landscape — cocok untuk foto lapangan/suasana  │
-// │ 'small' │ 600 × 600 px  │ Square — cocok untuk detail/close-up           │
-// └─────────┴───────────────┴────────────────────────────────────────────────┘
-// Format: WebP direkomendasikan. Max file size: 300KB per foto.
-// Letakkan di: public/assets/gallery/nama-file.webp
-//
-// Susunan grid 4 kolom (kiri→kanan, atas→bawah):
-// [ tall ]  [ wide ........... ]  [ small ]
-// [ tall ]  [ small ]  [ small ]  [ small ]
-//           [ wide ........... ]  [ tall  ]
-//                                 [ tall  ]
+// ┌───┬──────────────────────────────┬─────────┬───────────────┬─────────────────────────────────────────────┐
+// │ # │ Nama file                    │  span   │ Ukuran (px)   │ Keterangan                                  │
+// ├───┼──────────────────────────────┼─────────┼───────────────┼─────────────────────────────────────────────┤
+// │ 1 │ photo-01-600x800-tall.webp   │ 'tall'  │ 600 × 800 px  │ Portrait — cocok foto orang berdiri, gedung │
+// │ 2 │ photo-02-800x500-wide.webp   │ 'wide'  │ 800 × 500 px  │ Landscape — cocok foto lapangan, suasana    │
+// │ 3 │ photo-03-600x600-small.webp  │ 'small' │ 600 × 600 px  │ Square — cocok foto ruangan, close-up       │
+// │ 4 │ photo-04-600x600-small.webp  │ 'small' │ 600 × 600 px  │ Square — cocok foto ruangan, close-up       │
+// │ 5 │ photo-05-600x600-small.webp  │ 'small' │ 600 × 600 px  │ Square — cocok foto ruangan, close-up       │
+// │ 6 │ photo-06-600x800-tall.webp   │ 'tall'  │ 600 × 800 px  │ Portrait — cocok foto orang berdiri, gedung │
+// │ 7 │ photo-07-800x500-wide.webp   │ 'wide'  │ 800 × 500 px  │ Landscape — cocok foto lapangan, suasana    │
+// │ 8 │ photo-08-600x600-small.webp  │ 'small' │ 600 × 600 px  │ Square — cocok foto ruangan, close-up       │
+// └───┴──────────────────────────────┴─────────┴───────────────┴─────────────────────────────────────────────┘
+// Max ukuran file: 300 KB/foto. Format WebP disarankan.
 
 const photos = [
     // Baris 1
     {
-        src: 'https://placehold.co/600x800/1e3a5f/d4a017?text=Kegiatan+Santri%0A600×800px',
+        src: '/assets/gallery/photo-01-600x800-tall.webp',
         alt: 'Kegiatan santri Al-Muntaha',
         span: 'tall',   // 600×800px — portrait
     },
     {
-        src: 'https://placehold.co/800x500/0f2744/d4a017?text=Upacara+Bendera%0A800×500px',
+        src: '/assets/gallery/photo-02-800x500-wide.webp',
         alt: 'Upacara bendera',
         span: 'wide',   // 800×500px — landscape
     },
     {
-        src: 'https://placehold.co/600x600/162236/d4a017?text=Kelas+Tahfidz%0A600×600px',
+        src: '/assets/gallery/photo-03-600x600-small.webp',
         alt: 'Kelas tahfidz',
         span: 'small',  // 600×600px — square
     },
     // Baris 2
     {
-        src: 'https://placehold.co/600x600/1a2c45/d4a017?text=Lab+Komputer%0A600×600px',
+        src: '/assets/gallery/photo-04-600x600-small.webp',
         alt: 'Lab komputer',
         span: 'small',  // 600×600px — square
     },
     {
-        src: 'https://placehold.co/600x600/162236/d4a017?text=Perpustakaan%0A600×600px',
+        src: '/assets/gallery/photo-05-600x600-small.webp',
         alt: 'Perpustakaan',
         span: 'small',  // 600×600px — square
     },
     {
-        src: 'https://placehold.co/600x800/1e3a5f/d4a017?text=Masjid+Sekolah%0A600×800px',
+        src: '/assets/gallery/photo-06-600x800-tall.webp',
         alt: 'Masjid sekolah',
         span: 'tall',   // 600×800px — portrait
     },
     // Baris 3
     {
-        src: 'https://placehold.co/800x500/0f2744/d4a017?text=Lapangan+Olahraga%0A800×500px',
+        src: '/assets/gallery/photo-07-800x500-wide.webp',
         alt: 'Lapangan olahraga',
         span: 'wide',   // 800×500px — landscape
     },
     {
-        src: 'https://placehold.co/600x600/1a2c45/d4a017?text=Asrama+Putra%0A600×600px',
+        src: '/assets/gallery/photo-08-600x600-small.webp',
         alt: 'Asrama putra',
         span: 'small',  // 600×600px — square
     },
