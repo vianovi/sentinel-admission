@@ -4,6 +4,7 @@ use App\Http\Controllers\Candidate\DashboardController        as CandidateDashbo
 use App\Http\Controllers\Candidate\ProfileController          as CandidateProfile;
 use App\Http\Controllers\Candidate\DataDiriController         as CandidateDataDiri;
 use App\Http\Controllers\Candidate\HealthRecordController     as CandidateHealthRecord;
+use App\Http\Controllers\Candidate\GuardianController         as CandidateGuardian;
 use App\Http\Controllers\Staff\DashboardController            as StaffDashboard;
 use App\Http\Controllers\Admin\DashboardController            as AdminDashboard;
 use App\Http\Controllers\Admission\FormWizardController;
@@ -91,6 +92,12 @@ Route::middleware(['auth', RoleMiddleware::class . ':candidate'])
             ->name('data-kesehatan.upload');
         Route::delete('/data-kesehatan/dokumen/{docType}', [CandidateHealthRecord::class, 'deleteDocument'])
             ->name('data-kesehatan.delete-doc');
+
+        // ── Data Wali ─────────────────────────────────────────────────────
+        Route::get('/data-wali', [CandidateGuardian::class, 'index'])
+            ->name('data-wali');
+        Route::put('/data-wali', [CandidateGuardian::class, 'update'])
+            ->name('data-wali.update');
 
     });
 

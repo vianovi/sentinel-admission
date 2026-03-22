@@ -52,29 +52,44 @@ class CandidateObserver
     /**
      * Propagate candidate_code ke semua tabel terkait.
      * Hanya update record yang candidate_code-nya masih null.
+     *
+     * Pakai withTrashed() agar SoftDeletes scope tidak mengganggu query
+     * pada tabel yang belum tentu punya record saat observer jalan.
      */
     private function propagate(Candidate $candidate): void
     {
         $code = $candidate->candidate_code;
 
         // Guardians
-        $candidate->guardian()
-            ->whereNull('candidate_code')
-            ->update(['candidate_code' => $code]);
+        if ($candidate->guardian()->exists()) {
+            $candidate->guardian()
+                ->withTrashed()
+                ->whereNull('candidate_code')
+                ->update(['candidate_code' => $code]);
+        }
 
         // Health records
-        $candidate->healthRecord()
-            ->whereNull('candidate_code')
-            ->update(['candidate_code' => $code]);
+        if ($candidate->healthRecord()->exists()) {
+            $candidate->healthRecord()
+                ->withTrashed()
+                ->whereNull('candidate_code')
+                ->update(['candidate_code' => $code]);
+        }
 
         // Candidate documents
-        $candidate->documents()
-            ->whereNull('candidate_code')
-            ->update(['candidate_code' => $code]);
+        if ($candidate->documents()->exists()) {
+            $candidate->documents()
+                ->withTrashed()
+                ->whereNull('candidate_code')
+                ->update(['candidate_code' => $code]);
+        }
 
         // Payments
-        $candidate->payments()
-            ->whereNull('candidate_code')
-            ->update(['candidate_code' => $code]);
+        if ($candidate->payments()->exists()) {
+            $candidate->payments()
+                ->withTrashed()
+                ->whereNull('candidate_code')
+                ->update(['candidate_code' => $code]);
+        }
     }
 }

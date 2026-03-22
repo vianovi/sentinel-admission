@@ -3,88 +3,160 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Guardian extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
-        'candidate_id',
-        'candidate_code',
+        'candidate_id', 'candidate_code',
+
+        // Shared
+        'no_kk', 'income_type', 'alamat_shared',
+
         // Ayah
-        'father_name',
-        'father_nik',
-        'father_place_of_birth',
-        'father_date_of_birth',
-        'father_job',
-        'father_income',
-        'father_phone',
+        'father_status', 'father_name', 'father_nik',
+        'father_place_of_birth', 'father_date_of_birth',
+        'father_education', 'father_job_ktp', 'father_job_actual',
+        'father_income_range', 'father_phone',
+        'father_province', 'father_city', 'father_district',
+        'father_village', 'father_address', 'father_postal_code',
+
         // Ibu
-        'mother_name',
-        'mother_nik',
-        'mother_place_of_birth',
-        'mother_date_of_birth',
-        'mother_job',
-        'mother_income',
-        'mother_phone',
-        // Wali (opsional)
-        'guardian_name',
-        'guardian_relation',
-        'guardian_job',
-        'guardian_income',
-        'guardian_phone',
-        // Administrasi
-        'no_kk',
+        'mother_status', 'mother_name', 'mother_nik',
+        'mother_place_of_birth', 'mother_date_of_birth',
+        'mother_education', 'mother_job_ktp', 'mother_job_actual',
+        'mother_income_range', 'mother_phone',
+        'mother_province', 'mother_city', 'mother_district',
+        'mother_village', 'mother_address', 'mother_postal_code',
+
+        // Wali
+        'guardian_status', 'guardian_name', 'guardian_relation',
+        'guardian_nik', 'guardian_place_of_birth', 'guardian_date_of_birth',
+        'guardian_education', 'guardian_job_ktp', 'guardian_job_actual',
+        'guardian_income_range', 'guardian_phone',
+        'guardian_province', 'guardian_city', 'guardian_district',
+        'guardian_village', 'guardian_address', 'guardian_postal_code',
+
+        // Profil Keluarga
+        'family_email', 'marital_status', 'house_ownership',
+        'vehicle_ownership', 'family_dependents',
     ];
 
     protected $casts = [
-        'father_date_of_birth' => 'date',
-        'mother_date_of_birth' => 'date',
+        'father_date_of_birth'   => 'date',
+        'mother_date_of_birth'   => 'date',
+        'guardian_date_of_birth' => 'date',
+        'alamat_shared'          => 'boolean',
+        'family_dependents'      => 'integer',
     ];
 
-    // =============================================
-    // RELASI
-    // =============================================
+    // ─── Label Maps (untuk display di Rangkuman) ──────────────────────────
 
-    public function candidate()
+    public static array $educationLabels = [
+        'tidak_sekolah'    => 'Tidak Sekolah',
+        'sd_sederajat'     => 'SD / Sederajat',
+        'smp_sederajat'    => 'SMP / Sederajat',
+        'sma_smk_sederajat'=> 'SMA / SMK / Sederajat',
+        'd1'               => 'D1',
+        'd2'               => 'D2',
+        'd3'               => 'D3',
+        'd4_s1'            => 'D4 / S1',
+        's2'               => 'S2',
+        's3'               => 'S3',
+    ];
+
+    public static array $incomeLabels = [
+        'tidak_berpenghasilan' => 'Tidak Berpenghasilan',
+        'di_bawah_1jt'        => '< Rp 1.000.000',
+        '1jt_2_5jt'           => 'Rp 1.000.000 – 2.500.000',
+        '2_5jt_3_5jt'         => 'Rp 2.500.000 – 3.500.000',
+        '3_5jt_5jt'           => 'Rp 3.500.000 – 5.000.000',
+        '5jt_10jt'            => 'Rp 5.000.000 – 10.000.000',
+        'di_atas_10jt'        => '> Rp 10.000.000',
+    ];
+
+    public static array $statusLabels = [
+        'hidup'          => 'Hidup',
+        'meninggal'      => 'Meninggal',
+        'tidak_diketahui'=> 'Tidak Diketahui',
+    ];
+
+    public static array $maritalLabels = [
+        'nikah_tercatat' => 'Nikah Tercatat',
+        'cerai_hidup'    => 'Cerai Hidup',
+        'cerai_mati'     => 'Cerai Mati',
+    ];
+
+    public static array $houseLabels = [
+        'milik_sendiri' => 'Milik Sendiri',
+        'kontrak'       => 'Kontrak / Sewa',
+        'menumpang'     => 'Menumpang',
+        'rumah_dinas'   => 'Rumah Dinas',
+    ];
+
+    public static array $vehicleLabels = [
+        'tidak_ada'      => 'Tidak Ada',
+        'motor'          => 'Motor',
+        'mobil'          => 'Mobil',
+        'motor_dan_mobil'=> 'Motor & Mobil',
+    ];
+
+    // ─── Progress Calculation ─────────────────────────────────────────────
+
+    /**
+     * Hitung completion percentage Data Wali.
+     * Wali tidak masuk hitungan (opsional).
+     * Ayah auto 35% jika status meninggal/tidak_diketahui.
+     */
+    public function getCompletionPercentageAttribute(): int
+    {
+        $score = 0;
+
+        // ── IBU (40%) ──────────────────────────────────────
+        if (!empty($this->mother_name))         $score += 15;
+        if (!empty($this->mother_phone))        $score += 10;
+        if (!empty($this->mother_job_ktp))      $score += 8;
+        if (!empty($this->mother_income_range)) $score += 7;
+
+        // ── AYAH (35%) ─────────────────────────────────────
+        $fatherAbsent = in_array($this->father_status, ['meninggal', 'tidak_diketahui']);
+        if ($fatherAbsent) {
+            $score += 35;
+        } else {
+            if (!empty($this->father_name))         $score += 12;
+            if (!empty($this->father_phone))        $score += 10;
+            if (!empty($this->father_job_ktp))      $score += 7;
+            if (!empty($this->father_income_range)) $score += 6;
+        }
+
+        // ── PROFIL KELUARGA (25%) ──────────────────────────
+        if (!empty($this->no_kk))              $score += 10;
+        if (!empty($this->marital_status))     $score += 5;
+        if (!empty($this->house_ownership))    $score += 5;
+        if (!empty($this->family_dependents) || $this->family_dependents === 0) $score += 5;
+
+        return min($score, 100);
+    }
+
+    // ─── Helpers ──────────────────────────────────────────────────────────
+
+    public function getFatherAbsentAttribute(): bool
+    {
+        return in_array($this->father_status, ['meninggal', 'tidak_diketahui']);
+    }
+
+    public function getIncomeIsCombinedAttribute(): bool
+    {
+        return $this->income_type === 'combined';
+    }
+
+    // ─── Relationships ────────────────────────────────────────────────────
+
+    public function candidate(): BelongsTo
     {
         return $this->belongsTo(Candidate::class);
-    }
-
-    // =============================================
-    // STATIC: Buat guardian awal dari draft
-    // Hanya mother_name yang tersedia dari draft.
-    // Sisa data dilengkapi kandidat setelah login.
-    // =============================================
-
-    public static function createFromDraft(RegistrationDraft $draft, int $candidateId): self
-    {
-        $candidate = \App\Models\Candidate::find($candidateId);
-
-        return self::create([
-            'candidate_id'   => $candidateId,
-            'candidate_code' => $candidate?->candidate_code,
-            'mother_name'    => $draft->mother_name,
-        ]);
-    }
-
-    // =============================================
-    // HELPERS
-    // =============================================
-
-    /**
-     * Cek apakah data sudah cukup lengkap untuk submit.
-     * Minimal: mother_name + salah satu nomor kontak ortu.
-     */
-    public function isComplete(): bool
-    {
-        return ! empty($this->mother_name) &&
-               (! empty($this->father_phone) || ! empty($this->mother_phone));
-    }
-
-    /**
-     * Cek apakah data wali (bukan ortu) diisi.
-     */
-    public function hasGuardian(): bool
-    {
-        return ! empty($this->guardian_name);
     }
 }
