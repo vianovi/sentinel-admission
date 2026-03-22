@@ -13,29 +13,50 @@ class GuardianController extends Controller
 {
     public function index(): Response
     {
-        $candidate = Auth::user()->candidate;
+        $user      = Auth::user();
+        $candidate = $user->candidate()->with('admissionWave')->first();
+
+        if (! $candidate) {
+            return redirect()->route('dashboard.index');
+        }
 
         $guardian = Guardian::firstOrCreate(
             ['candidate_id' => $candidate->id],
             [
                 'candidate_code' => $candidate->candidate_code,
-                'mother_name'    => $candidate->mother_name ?? '', // seed dari draft jika ada
+                'mother_name'    => $candidate->mother_name ?? '',
             ]
         );
 
         return Inertia::render('Dashboard/Candidate/DataWali', [
             'guardian'   => $guardian,
             'completion' => $guardian->completion_percentage,
-            'candidate'  => [
-                'full_name'       => $candidate->full_name,
-                'candidate_code'  => $candidate->candidate_code,
+
+            // Props untuk CandidateSidebar — sama persis dengan controller lain
+            'user' => [
+                'name'       => $user->name,
+                'avatar_url' => $user->avatar_url,
+                'initials'   => $user->initials,
+            ],
+            'candidate' => [
+                'full_name'           => $candidate->full_name,
+                'nisn'                => $candidate->nisn,
+                'nik'                 => $candidate->nik,
+                'gender_label'        => $candidate->genderLabel(),
+                'date_of_birth_label' => $candidate->date_of_birth?->format('d F Y'),
+                'school_origin'       => $candidate->school_origin,
+                'status'              => $candidate->status,
+                'program_choice'      => $candidate->program_choice,
+                'admission_wave'      => $candidate->admissionWave
+                    ? ['title' => $candidate->admissionWave->title]
+                    : null,
                 // Untuk fitur "salin alamat kandidat"
-                'province'        => $candidate->province ?? null,
-                'city'            => $candidate->city ?? null,
-                'district'        => $candidate->district ?? null,
-                'village'         => $candidate->village ?? null,
-                'address'         => $candidate->address ?? null,
-                'postal_code'     => $candidate->postal_code ?? null,
+                'province'    => $candidate->province ?? null,
+                'city'        => $candidate->city ?? null,
+                'district'    => $candidate->district ?? null,
+                'village'     => $candidate->village ?? null,
+                'address'     => $candidate->address ?? null,
+                'postal_code' => $candidate->postal_code ?? null,
             ],
         ]);
     }

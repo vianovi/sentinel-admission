@@ -1,7 +1,8 @@
 // resources/js/Components/Dashboard/Candidate/DataWali/TabProfilKeluarga.tsx
 
 import Select from 'react-select'
-import { selectStyles } from '@/Components/UI/selectStyles'
+import { makeSelectStyles } from '@/Components/UI/selectStyles'
+const selectStyles = makeSelectStyles()
 import Field from '@/Components/UI/Field'
 import {
     GuardianData,

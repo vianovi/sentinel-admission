@@ -153,6 +153,24 @@ class Guardian extends Model
         return $this->income_type === 'combined';
     }
 
+    // ─── Factory Method ───────────────────────────────────────────────────
+
+    /**
+     * Buat guardian baru dari data registration draft.
+     * Dipanggil di RegisterController setelah candidate dibuat.
+     * mother_name di-seed dari draft, sisanya kosong (diisi kandidat nanti).
+     */
+    public static function createFromDraft(
+        \App\Models\RegistrationDraft $draft,
+        int $candidateId
+    ): static {
+        return static::create([
+            'candidate_id'   => $candidateId,
+            'candidate_code' => str_replace('REG-', 'CDT-', $draft->registration_code),
+            'mother_name'    => $draft->mother_name ?? '',
+        ]);
+    }
+
     // ─── Relationships ────────────────────────────────────────────────────
 
     public function candidate(): BelongsTo

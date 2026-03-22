@@ -3,7 +3,8 @@
 import { useRef } from 'react'
 import { animate } from 'animejs'
 import Select from 'react-select'
-import { selectStyles } from '@/Components/UI/selectStyles'
+import { makeSelectStyles } from '@/Components/UI/selectStyles'
+const selectStyles = makeSelectStyles()
 import Field from '@/Components/UI/Field'
 import AddressForm from './AddressForm'
 import {
