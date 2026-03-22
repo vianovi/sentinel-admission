@@ -1,5 +1,7 @@
 <?php
 
+use Inertia\Inertia;
+use Illuminate\Http\Response;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -29,5 +31,12 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->respond(function (Response $response) {
+            if ($response->getStatusCode() === 404) {
+                return Inertia::render('Errors/NotFound')
+                    ->toResponse(request())
+                    ->setStatusCode(404);
+            }
+            return $response;
+        });
     })->create();
