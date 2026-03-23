@@ -50,8 +50,8 @@ export const navigationConfig: Record<string, NavGroup[]> = {
             items: [
                 { label: "Data Diri",      href: "/dashboard/data-diri",      icon: "fa-solid fa-id-card" },        // ✅ aktif
                 { label: "Data Kesehatan", href: "/dashboard/data-kesehatan", icon: "fa-solid fa-heart-pulse" },    // ✅ aktif
-                { label: "Data Wali",      href: "/dashboard/data-wali",      icon: "fa-solid fa-people-roof" },    // ⏳ belum aktif
-                { label: "Dokumen",        href: "/dashboard/documents",      icon: "fa-solid fa-file-lines" },     // ⏳ belum aktif
+                { label: "Data Wali",      href: "/dashboard/data-wali",      icon: "fa-solid fa-people-roof" },    // ✅ aktif
+                { label: "Dokumen",        href: "/dashboard/data-dokumen",   icon: "fa-solid fa-file-lines" },     // ✅ aktif
                 { label: "Pembayaran",     href: "/dashboard/payment",        icon: "fa-solid fa-credit-card" },    // ⏳ belum aktif
                 { label: "Status",         href: "/dashboard/status",         icon: "fa-solid fa-clock-rotate-left" }, // ⏳ belum aktif
             ],

@@ -14,7 +14,7 @@ interface Props {
 export default function NotFound({
     comingSoon = false,
     backUrl    = '/dashboard',
-    backLabel  = 'Kembali ke Dashboard',
+    backLabel  = 'Kembali',
 }: Props) {
 
     const containerRef = useRef<HTMLDivElement>(null)

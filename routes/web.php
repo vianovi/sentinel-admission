@@ -5,6 +5,7 @@ use App\Http\Controllers\Candidate\ProfileController          as CandidateProfil
 use App\Http\Controllers\Candidate\DataDiriController         as CandidateDataDiri;
 use App\Http\Controllers\Candidate\HealthRecordController     as CandidateHealthRecord;
 use App\Http\Controllers\Candidate\GuardianController         as CandidateGuardian;
+use App\Http\Controllers\Candidate\DocumentController         as CandidateDocument;
 use App\Http\Controllers\Staff\DashboardController            as StaffDashboard;
 use App\Http\Controllers\Admin\DashboardController            as AdminDashboard;
 use App\Http\Controllers\Admission\FormWizardController;
@@ -98,6 +99,21 @@ Route::middleware(['auth', RoleMiddleware::class . ':candidate'])
             ->name('data-wali');
         Route::put('/data-wali', [CandidateGuardian::class, 'update'])
             ->name('data-wali.update');
+
+        // ── Data Dokumen ──────────────────────────────────────────────────
+        Route::get('/data-dokumen', [CandidateDocument::class, 'index'])
+            ->name('data-dokumen.index');
+
+        // ⚠️ download HARUS sebelum store/{docType} — cegah 'download' tertangkap sebagai docType
+        Route::get('/data-dokumen/download/{document}', [CandidateDocument::class, 'download'])
+            ->name('data-dokumen.download');
+
+        Route::post('/data-dokumen/{docType}', [CandidateDocument::class, 'store'])
+            ->name('data-dokumen.store')
+            ->middleware('throttle:upload');
+
+        Route::delete('/data-dokumen/{document}', [CandidateDocument::class, 'destroy'])
+            ->name('data-dokumen.destroy');
 
     });
 

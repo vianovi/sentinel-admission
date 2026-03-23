@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 use App\Models\Candidate;
 use App\Observers\CandidateObserver;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Support\Facades\RateLimiter;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -18,6 +20,10 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        RateLimiter::for('upload', function ($request) {
+            return Limit::perMinute(10)->by($request->user()?->id);
+        });
+
         Vite::prefetch(concurrency: 3);
 
         URL::forceScheme('https');
