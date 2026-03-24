@@ -25,9 +25,19 @@ type DataChangeRequest = {
     reason: string; status: "pending" | "approved" | "rejected"; requested_at: string;
 } | null;
 
+type Program = {
+    name:          string;
+    quota_zone:    'green' | 'yellow' | 'red' | 'open';
+    warning:       string | null;
+    is_open_quota: boolean;
+};
+
 type AdmissionWave = {
-    title: string; academic_year: string;
-    available_programs: string[]; available_majors: string[]; majors_enabled: boolean;
+    title:            string;
+    academic_year:    string;
+    programs:         Program[];
+    available_majors: string[];
+    majors_enabled:   boolean;
 };
 
 type CandidateData = {

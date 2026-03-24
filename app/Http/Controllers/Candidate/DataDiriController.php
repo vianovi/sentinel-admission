@@ -16,7 +16,7 @@ class DataDiriController extends Controller
     public function show(Request $request): Response
     {
         $user      = $request->user();
-        $candidate = $user->candidate()->with(['admissionWave'])->first();
+        $candidate = $user->candidate()->with(['admissionWave.programs'])->first();
 
         return Inertia::render('Dashboard/Candidate/DataDiri', [
             'user' => [
@@ -61,11 +61,20 @@ class DataDiriController extends Controller
                 'data_change_request' => $candidate->data_change_request,
                 // ── Admission wave ────────────────────────────────────────
                 'admission_wave' => $candidate->admissionWave ? [
-                    'title'              => $candidate->admissionWave->title,
-                    'academic_year'      => $candidate->admissionWave->academic_year,
-                    'available_programs' => $candidate->admissionWave->available_programs ?? [],
-                    'available_majors'   => $candidate->admissionWave->available_majors ?? [],
-                    'majors_enabled'     => $candidate->admissionWave->majors_enabled,
+                    'title'          => $candidate->admissionWave->title,
+                    'academic_year'  => $candidate->admissionWave->academic_year,
+                    'majors_enabled' => $candidate->admissionWave->majors_enabled,
+                    'available_majors' => $candidate->admissionWave->available_majors ?? [],
+                    'programs' => $candidate->admissionWave->programs
+                        ->where('is_active', true)
+                        ->sortBy('priority')
+                        ->values()
+                        ->map(fn ($p) => [
+                            'name'          => $p->name,
+                            'quota_zone'    => $p->quotaZone(),
+                            'warning'       => $p->warningMessage('candidate'),
+                            'is_open_quota' => $p->is_open_quota,
+                        ])->all(),
                 ] : null,
             ] : null,
         ]);
@@ -73,13 +82,12 @@ class DataDiriController extends Controller
 
     // =========================================================================
     // UPDATE DATA DIRI — PUT /dashboard/data-diri
-    // route: dashboard.data-diri.update
     // =========================================================================
 
     public function update(Request $request)
     {
         $user      = $request->user();
-        $candidate = $user->candidate()->with('admissionWave')->firstOrFail();
+        $candidate = $user->candidate()->with(['admissionWave.programs'])->firstOrFail();
 
         $validated = $request->validate([
             'email'                       => ['nullable', 'email', 'max:255', 'regex:/^[^\s@]+@gmail\.com$/i'],
@@ -107,11 +115,22 @@ class DataDiriController extends Controller
             'family_card_number.digits' => 'Nomor KK harus 16 digit angka.',
         ]);
 
-        // Validasi program_choice harus dari available_programs gelombang
+        // Validasi program_choice harus dari programs aktif di gelombang
         if ($request->filled('program_choice') && $candidate->admissionWave) {
-            $available = $candidate->admissionWave->available_programs ?? [];
-            if (! in_array($request->program_choice, $available)) {
+            $wave           = $candidate->admissionWave;
+            $waveTotalFilled = $wave->totalFilled();
+
+            $program = $wave->programs
+                ->where('is_active', true)
+                ->where('name', $request->program_choice)
+                ->first();
+
+            if (! $program) {
                 return back()->withErrors(['program_choice' => 'Program tidak valid.']);
+            }
+
+            if (! $program->isAccepting($waveTotalFilled)) {
+                return back()->withErrors(['program_choice' => 'Program ini sudah tidak menerima pendaftar baru.']);
             }
         }
 
@@ -133,7 +152,6 @@ class DataDiriController extends Controller
 
     // =========================================================================
     // REQUEST PERUBAHAN DATA KUNCI — POST /dashboard/data-diri/change-request
-    // route: dashboard.data-diri.change-request
     // =========================================================================
 
     public function requestDataChange(Request $request)

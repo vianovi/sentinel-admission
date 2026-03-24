@@ -8,6 +8,8 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::dropIfExists('candidates');
+
         Schema::create('candidates', function (Blueprint $table) {
             $table->id();
 
@@ -72,6 +74,10 @@ return new class extends Migration
             $table->string('family_card_number', 16)->nullable();
             $table->string('program_choice')->nullable();
             $table->string('major_choice')->nullable();
+
+            // false = kandidat reguler (default)
+            // true  = kandidat pindahan — tampilkan transfer_letter di halaman Dokumen
+            $table->boolean('is_transfer')->default(false);
 
             // =========================
             // PENGAJUAN PERUBAHAN DATA KUNCI
