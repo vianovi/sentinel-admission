@@ -43,6 +43,7 @@ class Candidate extends Model
         'family_card_number',
         'program_choice',
         'major_choice',
+        'is_transfer',
         // Status & change request
         'status',
         'data_change_request',
@@ -55,6 +56,7 @@ class Candidate extends Model
         'child_order'                => 'integer',
         'siblings_count'             => 'integer',
         'extracurricular_interests'  => 'array',
+        'is_transfer'                => 'boolean',
     ];
 
     // =============================================

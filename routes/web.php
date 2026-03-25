@@ -6,6 +6,8 @@ use App\Http\Controllers\Candidate\DataDiriController         as CandidateDataDi
 use App\Http\Controllers\Candidate\HealthRecordController     as CandidateHealthRecord;
 use App\Http\Controllers\Candidate\GuardianController         as CandidateGuardian;
 use App\Http\Controllers\Candidate\DocumentController         as CandidateDocument;
+use App\Http\Controllers\Candidate\PaymentController          as CandidatePayment;
+use App\Http\Controllers\Webhook\MidtransController;
 use App\Http\Controllers\Staff\DashboardController            as StaffDashboard;
 use App\Http\Controllers\Admin\DashboardController            as AdminDashboard;
 use App\Http\Controllers\Admission\FormWizardController;
@@ -115,7 +117,23 @@ Route::middleware(['auth', RoleMiddleware::class . ':candidate'])
         Route::delete('/data-dokumen/{document}', [CandidateDocument::class, 'destroy'])
             ->name('data-dokumen.destroy');
 
+        // ── Pembayaran ────────────────────────────────────────────────
+        Route::get('/pembayaran', [CandidatePayment::class, 'show'])
+            ->name('pembayaran');
+        Route::post('/pembayaran', [CandidatePayment::class, 'create'])
+            ->name('pembayaran.create');
+        Route::delete('/pembayaran/{payment}', [CandidatePayment::class, 'cancel'])
+            ->name('pembayaran.cancel');
+
     });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WEBHOOK — Midtrans (no auth, no CSRF)
+// ─────────────────────────────────────────────────────────────────────────────
+
+Route::post('/payment/webhook', [MidtransController::class, 'handle'])
+    ->name('payment.webhook')
+    ->withoutMiddleware(['web', \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // STAFF DASHBOARD

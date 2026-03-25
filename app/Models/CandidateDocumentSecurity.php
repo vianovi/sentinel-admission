@@ -5,48 +5,80 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class CandidateDocumentSecurity extends Model
+class Payment extends Model
 {
-    protected $table = 'candidate_document_security';
-
     protected $fillable = [
-        'document_id',
-        'magic_bytes_result',
-        'polyglot_clean',
-        'polyglot_detail',
-        'detected_mime',
-        'file_hash',
-        'upload_ip',
-        'user_agent',
-        'scanned_at',
+        'candidate_id',
+        'admission_wave_id',
+        'candidate_code',
+        'order_id',
+        'snap_token',
+        'amount',
+        'payment_method',
+        'status',
+        'midtrans_transaction_id',
+        'paid_at',
+        'expired_at',
+        'metadata',
     ];
 
     protected $casts = [
-        'polyglot_clean' => 'boolean',
-        'scanned_at'     => 'datetime',
+        'amount'   => 'decimal:2',
+        'paid_at'  => 'datetime',
+        'expired_at' => 'datetime',
+        'metadata' => 'array',
     ];
 
-    // =============================================
-    // RELASI
-    // =============================================
+    // ─────────────────────────────────────────────
+    // Relations
+    // ─────────────────────────────────────────────
 
-    public function document(): BelongsTo
+    public function candidate(): BelongsTo
     {
-        return $this->belongsTo(CandidateDocument::class, 'document_id');
+        return $this->belongsTo(Candidate::class);
     }
 
-    // =============================================
-    // HELPERS
-    // =============================================
-
-    public function isSuspicious(): bool
+    public function admissionWave(): BelongsTo
     {
-        return $this->magic_bytes_result === 'suspicious'
-            || $this->polyglot_clean === false;
+        return $this->belongsTo(AdmissionWave::class);
     }
 
-    public function isRejected(): bool
+    // ─────────────────────────────────────────────
+    // Helpers
+    // ─────────────────────────────────────────────
+
+    public function isPending(): bool
     {
-        return $this->magic_bytes_result === 'rejected';
+        return $this->status === 'pending';
+    }
+
+    public function isPaid(): bool
+    {
+        return $this->status === 'paid';
+    }
+
+    public function isExpired(): bool
+    {
+        return $this->status === 'expired'
+            || ($this->isPending() && $this->expired_at?->isPast());
+    }
+
+    public function isCancellable(): bool
+    {
+        return $this->isPending() && ! $this->isExpired();
+    }
+
+    // ─────────────────────────────────────────────
+    // Scopes
+    // ─────────────────────────────────────────────
+
+    public function scopePending($query)
+    {
+        return $query->where('status', 'pending');
+    }
+
+    public function scopePaid($query)
+    {
+        return $query->where('status', 'paid');
     }
 }

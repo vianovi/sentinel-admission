@@ -22,6 +22,14 @@
         <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192x192.png">
         <link rel="icon" type="image/png" sizes="512x512" href="/favicon-512x512.png">
 
+        <!-- Midtrans Snap.js — hanya load di halaman Pembayaran -->
+        @if(isset($page['component']) && $page['component'] === 'Dashboard/Candidate/Pembayaran')
+            <script
+                src="https://app.sandbox.midtrans.com/snap/snap.js"
+                data-client-key="{{ config('midtrans.client_key') }}">
+            </script>
+        @endif
+
         <!-- Scripts -->
         @routes
         @viteReactRefresh
