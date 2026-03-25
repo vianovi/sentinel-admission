@@ -39,8 +39,8 @@ class PaymentController extends Controller
         }
 
         $wave           = $candidate->admissionWave;
-        $activePayment  = $candidate->payments()->pending()->latest()->first();
-        $paidPayment    = $candidate->payments()->paid()->latest()->first();
+        $activePayment  = $candidate->payments()->where('status', 'pending')->latest()->first();
+        $paidPayment    = $candidate->payments()->where('status', 'paid')->latest()->first();
 
         return Inertia::render('Dashboard/Candidate/Pembayaran', [
             'user' => [
@@ -103,13 +103,13 @@ class PaymentController extends Controller
         }
 
         // Sudah punya pembayaran yang berhasil?
-        if ($candidate->payments()->paid()->exists()) {
+        if ($candidate->payments()->where('status', 'paid')->exists()) {
             return back()->withErrors(['payment' => 'Pembayaran sudah berhasil dilakukan.']);
         }
 
         DB::transaction(function () use ($candidate, $wave) {
             // Cancel semua transaksi pending lama ke Midtrans
-            $pendingPayments = $candidate->payments()->pending()->get();
+            $pendingPayments = $candidate->payments()->where('status', 'pending')->get();
             foreach ($pendingPayments as $pending) {
                 try {
                     \Midtrans\Transaction::cancel($pending->order_id);
@@ -123,41 +123,46 @@ class PaymentController extends Controller
             // Generate order_id unik
             $orderId = $candidate->candidate_code . '-' . time();
 
-            // Buat transaksi ke Midtrans
-            $snapToken = Snap::getSnapToken([
-                'transaction_details' => [
-                    'order_id'     => $orderId,
-                    'gross_amount' => (int) $wave->registration_fee,
-                ],
-                'customer_details' => [
-                    'first_name' => $candidate->full_name,
-                    'email'      => $candidate->user->email,
-                    'phone'      => $candidate->phone_number ?? $candidate->user->whatsapp_number,
-                ],
-                'item_details' => [
-                    [
-                        'id'       => 'reg-fee',
-                        'price'    => (int) $wave->registration_fee,
-                        'quantity' => 1,
-                        'name'     => 'Biaya Pendaftaran ' . $wave->title,
+            // Buat transaksi ke Midtrans — silent kalau gagal (akun sandbox belum aktif)
+            $snapToken = null;
+            try {
+                $snapToken = Snap::getSnapToken([
+                    'transaction_details' => [
+                        'order_id'     => $orderId,
+                        'gross_amount' => (int) $wave->registration_fee,
                     ],
-                ],
-                'expiry' => [
-                    'unit'     => 'hours',
-                    'duration' => 24,
-                ],
-            ]);
+                    'customer_details' => [
+                        'first_name' => $candidate->full_name,
+                        'email'      => $candidate->user->email,
+                        'phone'      => $candidate->phone_number ?? $candidate->user->whatsapp_number,
+                    ],
+                    'item_details' => [
+                        [
+                            'id'       => 'reg-fee',
+                            'price'    => (int) $wave->registration_fee,
+                            'quantity' => 1,
+                            'name'     => 'Biaya Pendaftaran ' . $wave->title,
+                        ],
+                    ],
+                    'expiry' => [
+                        'unit'     => 'hours',
+                        'duration' => 24,
+                    ],
+                ]);
+            } catch (\Exception $e) {
+                Log::warning("Midtrans Snap token failed for order {$orderId}: " . $e->getMessage());
+            }
 
             // Simpan ke DB
             Payment::create([
-                'candidate_id'     => $candidate->id,
+                'candidate_id'      => $candidate->id,
                 'admission_wave_id' => $wave->id,
-                'candidate_code'   => $candidate->candidate_code,
-                'order_id'         => $orderId,
-                'snap_token'       => $snapToken,
-                'amount'           => $wave->registration_fee,
-                'status'           => 'pending',
-                'expired_at'       => now()->addHours(24),
+                'candidate_code'    => $candidate->candidate_code,
+                'order_id'          => $orderId,
+                'snap_token'        => $snapToken,
+                'amount'            => $wave->registration_fee,
+                'status'            => 'pending',
+                'expired_at'        => now()->addHours(24),
             ]);
         });
 
