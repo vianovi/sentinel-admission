@@ -55,10 +55,10 @@ const EYE_TYPE_OPTIONS = [
 ];
 
 const BMI_CONFIG: Record<string, { color: string; bg: string; border: string }> = {
-    Kurus:   { color: "dark:text-blue-400 text-blue-600",     bg: "dark:bg-blue-500/10 bg-blue-50",       border: "dark:border-blue-500/20 border-blue-200" },
-    Normal:  { color: "dark:text-emerald-400 text-emerald-600", bg: "dark:bg-emerald-500/10 bg-emerald-50", border: "dark:border-emerald-500/20 border-emerald-200" },
-    Gemuk:   { color: "dark:text-amber-400 text-amber-600",   bg: "dark:bg-amber-500/10 bg-amber-50",     border: "dark:border-amber-500/20 border-amber-200" },
-    Obesitas:{ color: "dark:text-red-400 text-red-600",       bg: "dark:bg-red-500/10 bg-red-50",         border: "dark:border-red-500/20 border-red-200" },
+    Kurus:    { color: "dark:text-blue-400 text-blue-600",       bg: "dark:bg-blue-500/10 bg-blue-50",       border: "dark:border-blue-500/20 border-blue-200" },
+    Normal:   { color: "dark:text-emerald-400 text-emerald-600", bg: "dark:bg-emerald-500/10 bg-emerald-50", border: "dark:border-emerald-500/20 border-emerald-200" },
+    Gemuk:    { color: "dark:text-amber-400 text-amber-600",     bg: "dark:bg-amber-500/10 bg-amber-50",     border: "dark:border-amber-500/20 border-amber-200" },
+    Obesitas: { color: "dark:text-red-400 text-red-600",         bg: "dark:bg-red-500/10 bg-red-50",         border: "dark:border-red-500/20 border-red-200" },
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -70,6 +70,16 @@ const eyeNeedsValue = (type: string) =>
 
 const eyeHasAbnormality = (rightType: string, leftType: string) =>
     eyeNeedsValue(rightType) || eyeNeedsValue(leftType);
+
+// selectStyles dengan portal — mencegah dropdown terpotong oleh parent overflow
+// menuPortalTarget ke document.body memastikan dropdown render di luar card
+const selectStyles = makeSelectStyles();
+const portalProps = {
+    styles:          selectStyles,
+    menuPortalTarget: typeof document !== "undefined" ? document.body : undefined,
+    menuPosition:    "fixed" as const,
+    menuPlacement:   "auto" as const,
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // COMPONENT
@@ -124,9 +134,10 @@ export default function TabFisik({
                             value={BLOOD_TYPE_OPTIONS.find(o => o.value === bloodType) ?? null}
                             onChange={opt => setBloodType(opt?.value ?? "")}
                             placeholder="Pilih golongan darah..."
-                            styles={makeSelectStyles()}
                             isSearchable={false}
+                            {...portalProps}
                         />
+                        {errors.blood_type && <span className="input-error sr-only" />}
                     </Field>
 
                     <Field label="Rhesus" error={errors.rhesus} required>
@@ -135,9 +146,10 @@ export default function TabFisik({
                             value={RHESUS_OPTIONS.find(o => o.value === rhesus) ?? null}
                             onChange={opt => setRhesus(opt?.value ?? "")}
                             placeholder="Pilih rhesus..."
-                            styles={makeSelectStyles()}
                             isSearchable={false}
+                            {...portalProps}
                         />
+                        {errors.rhesus && <span className="input-error sr-only" />}
                     </Field>
                 </div>
             </section>
@@ -294,9 +306,10 @@ export default function TabFisik({
                                     if (!eyeNeedsValue(opt?.value ?? "")) setEyeRightValue("");
                                 }}
                                 placeholder="Pilih kondisi..."
-                                styles={makeSelectStyles()}
                                 isSearchable={false}
+                                {...portalProps}
                             />
+                            {errors.eye_right_type && <span className="input-error sr-only" />}
                         </Field>
                         {eyeNeedsValue(eyeRightType) && (
                             <Field label="Nilai" hint="Contoh: 2.50 (tanpa tanda minus/plus)">
@@ -322,9 +335,10 @@ export default function TabFisik({
                                     if (!eyeNeedsValue(opt?.value ?? "")) setEyeLeftValue("");
                                 }}
                                 placeholder="Pilih kondisi..."
-                                styles={makeSelectStyles()}
                                 isSearchable={false}
+                                {...portalProps}
                             />
+                            {errors.eye_left_type && <span className="input-error sr-only" />}
                         </Field>
                         {eyeNeedsValue(eyeLeftType) && (
                             <Field label="Nilai" hint="Contoh: 1.75 (tanpa tanda minus/plus)">

@@ -88,10 +88,9 @@
 
 /* =============================================================================
    SENTINEL — Design Token System
-   Tambahkan ini di resources/css/app.css (setelah @tailwind directives)
    ============================================================================= */
 
-/* ── Dark mode tokens (default) ─────────────────────────────────────────────── */
+/* ── Dark mode tokens (default — aktif saat class "dark" ada di <html>) ─────── */
 :root {
     /* Shell — structural, lebih dalam */
     --shell-bg:      #080d18;
@@ -106,15 +105,13 @@
     --content-muted:   rgba(255, 255, 255, 0.04);
 }
 
-/* ── Light mode tokens ───────────────────────────────────────────────────────── */
+/* ── Light mode tokens (TODO: implementasi penuh di sesi dedicated) ─────────── */
 :root.light,
 .light {
-    /* Shell — warm structural */
     --shell-bg:      #f0ebe0;
     --shell-surface: #faf7f0;
     --shell-border:  rgba(0, 0, 0, 0.06);
 
-    /* Content — clean warm white */
     --content-bg:      #fdf9f3;
     --content-surface: #ffffff;
     --content-card:    rgba(0, 0, 0, 0.025);

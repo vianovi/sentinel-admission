@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\HealthRecord;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -162,30 +163,56 @@ class HealthRecordController extends Controller
             return response()->json(['message' => 'Data kandidat tidak ditemukan.'], 422);
         }
 
-        $healthRecord = HealthRecord::firstOrCreate(
-            ['candidate_id' => $candidate->id]
-        );
-
-        $column = self::UPLOAD_FIELDS[$docType];
-
-        // Hapus file lama jika ada
-        if ($healthRecord->$column && Storage::disk('private')->exists($healthRecord->$column)) {
-            Storage::disk('private')->delete($healthRecord->$column);
-        }
-
-        // Simpan dengan nama UUID + ekstensi dari magic bytes (bukan dari client)
-        $ext      = $this->getExtFromMagicBytes($file);
+        $column  = self::UPLOAD_FIELDS[$docType];
+        $ext     = $this->getExtFromMagicBytes($file);
         $filename = Str::uuid() . '.' . $ext;
-        $path     = $file->storeAs("health-documents/{$candidate->id}", $filename, 'private');
+        $storagePath = "health-documents/{$candidate->id}/{$filename}";
 
-        $healthRecord->$column = $path;
-        $healthRecord->save();
+        // ── DB Transaction: pastikan file & DB update atomic ─────────────────
+        DB::beginTransaction();
+        try {
+            $healthRecord = HealthRecord::firstOrCreate(
+                ['candidate_id' => $candidate->id]
+            );
 
-        return response()->json([
-            'message'  => 'Dokumen berhasil diunggah.',
-            'file_url' => Storage::disk('private')->url($path),
-            'column'   => $column,
-        ]);
+            $oldPath = $healthRecord->$column;
+
+            // Simpan file ke private storage
+            $file->storeAs("health-documents/{$candidate->id}", $filename, 'private');
+
+            // Update DB
+            $healthRecord->$column = $storagePath;
+            $healthRecord->save();
+
+            DB::commit();
+
+            // Hapus file lama SETELAH commit berhasil — biar tidak orphan
+            if ($oldPath && Storage::disk('private')->exists($oldPath)) {
+                Storage::disk('private')->delete($oldPath);
+            }
+
+            return response()->json([
+                'message'  => 'Dokumen berhasil diunggah.',
+                'file_url' => Storage::disk('private')->url($storagePath),
+                'column'   => $column,
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            // Hapus file yang mungkin sudah terlanjur tersimpan
+            if (Storage::disk('private')->exists($storagePath)) {
+                Storage::disk('private')->delete($storagePath);
+            }
+
+            Log::error('Health record upload failed', [
+                'candidate_id' => $candidate->id,
+                'doc_type'     => $docType,
+                'error'        => $e->getMessage(),
+            ]);
+
+            return response()->json(['message' => 'Sistem sedang mengalami gangguan. Silakan coba beberapa saat lagi.'], 500);
+        }
     }
 
     // =============================================
@@ -208,14 +235,33 @@ class HealthRecordController extends Controller
 
         $column = self::UPLOAD_FIELDS[$docType];
 
-        if ($healthRecord->$column && Storage::disk('private')->exists($healthRecord->$column)) {
-            Storage::disk('private')->delete($healthRecord->$column);
+        DB::beginTransaction();
+        try {
+            $oldPath = $healthRecord->$column;
+
+            $healthRecord->$column = null;
+            $healthRecord->save();
+
+            DB::commit();
+
+            // Hapus file SETELAH commit
+            if ($oldPath && Storage::disk('private')->exists($oldPath)) {
+                Storage::disk('private')->delete($oldPath);
+            }
+
+            return response()->json(['message' => 'Dokumen berhasil dihapus.']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            Log::error('Health record delete document failed', [
+                'candidate_id' => $candidate->id,
+                'doc_type'     => $docType,
+                'error'        => $e->getMessage(),
+            ]);
+
+            return response()->json(['message' => 'Sistem sedang mengalami gangguan. Silakan coba beberapa saat lagi.'], 500);
         }
-
-        $healthRecord->$column = null;
-        $healthRecord->save();
-
-        return response()->json(['message' => 'Dokumen berhasil dihapus.']);
     }
 
     // =============================================

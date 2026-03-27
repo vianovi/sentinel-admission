@@ -1,31 +1,47 @@
 // resources/js/Components/Dashboard/Candidate/DataKesehatan/TabRangkuman.tsx
 
-import { useEffect }   from "react";
+import { useEffect }        from "react";
 import { animate, stagger } from "animejs";
-import { HealthRecord } from "@/Pages/Dashboard/Candidate/DataKesehatan";
+import FilePreviewModal      from "@/Components/UI/FilePreviewModal";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// TYPES
+// TYPES — semua dideklarasikan lokal, tidak import dari page
 // ─────────────────────────────────────────────────────────────────────────────
+
+type TabId = "fisik" | "riwayat" | "catatan" | "tim-kesehatan" | "rangkuman";
+
+// EmptyField — field wajib yang belum diisi
+type EmptyField = { key: string; label: string; tab: TabId };
+
+// HealthRecord subset yang dibutuhkan tab ini
+type HealthRecord = {
+    surat_sehat_url:  string | null;
+    bpjs_card_url:    string | null;
+    vaccine_card_url: string | null;
+};
 
 type FormState = {
-    bloodType: string; rhesus: string;
-    heightCm: string;  weightKg: string;
-    generalHealth: string; mentalNotes: string;
-    eyeRightType: string;  eyeRightValue: string;
-    eyeLeftType: string;   eyeLeftValue: string;
-    eyeSince: string;
-    majorIllnesses: string;  lastIllness: string;
-    allergyFood: string;     allergyMedicine: string;
-    allergyCondition: string; physicalDisab: string;
-    specialNotes: string;    parentConcern: string;
+    bloodType:        string; rhesus:           string;
+    heightCm:         string; weightKg:         string;
+    generalHealth:    string; mentalNotes:       string;
+    eyeRightType:     string; eyeRightValue:     string;
+    eyeLeftType:      string; eyeLeftValue:      string;
+    eyeSince:         string;
+    majorIllnesses:   string; lastIllness:       string;
+    allergyFood:      string; allergyMedicine:   string;
+    allergyCondition: string; physicalDisab:     string;
+    specialNotes:     string; parentConcern:     string;
 };
 
 type Props = {
-    healthRecord: HealthRecord | null;
-    bmi:          number | null;
-    bmiCategory:  string | null;
-    formState:    FormState;
+    healthRecord:        HealthRecord | null;
+    bmi:                 number | null;
+    bmiCategory:         string | null;
+    formState:           FormState;
+    emptyRequiredFields: EmptyField[];
+    progressGradient:    string;
+    completion:          number;
+    onNavigateToTab:     (tab: TabId) => void;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -66,7 +82,7 @@ const bmiColor = (bmi: number | null) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SUB-COMPONENT: Section card
+// SUB-COMPONENTS
 // ─────────────────────────────────────────────────────────────────────────────
 
 function SummarySection({ icon, title, children }: {
@@ -78,7 +94,7 @@ function SummarySection({ icon, title, children }: {
                          dark:border-white/[0.06] border-black/[0.06]
                          overflow-hidden">
             <div className="flex items-center gap-2.5 px-4 py-3
-                            dark:border-b dark:border-white/[0.05] border-b border-black/[0.05]">
+                            border-b dark:border-white/[0.05] border-black/[0.05]">
                 <i className={`${icon} text-emerald-400 text-xs`}></i>
                 <p className="text-xs font-bold dark:text-slate-300 text-slate-700 uppercase tracking-wider">
                     {title}
@@ -91,8 +107,8 @@ function SummarySection({ icon, title, children }: {
     );
 }
 
-function SummaryRow({ label, value, mono = false }: {
-    label: string; value: string | null | undefined; mono?: boolean;
+function SummaryRow({ label, value }: {
+    label: string; value: string | null | undefined;
 }) {
     return (
         <div className="flex items-start justify-between gap-4 py-1.5
@@ -100,8 +116,7 @@ function SummaryRow({ label, value, mono = false }: {
             <p className="text-[11px] dark:text-slate-500 text-slate-400 shrink-0 mt-0.5">
                 {label}
             </p>
-            <p className={`text-[12px] font-medium dark:text-slate-200 text-slate-700
-                          text-right ${mono ? "font-mono" : ""}`}>
+            <p className="text-[12px] font-medium dark:text-slate-200 text-slate-700 text-right">
                 {value || "—"}
             </p>
         </div>
@@ -112,7 +127,10 @@ function SummaryRow({ label, value, mono = false }: {
 // COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function TabRangkuman({ healthRecord, bmi, bmiCategory, formState }: Props) {
+export default function TabRangkuman({
+    healthRecord, bmi, bmiCategory, formState,
+    emptyRequiredFields, progressGradient, completion, onNavigateToTab,
+}: Props) {
     const {
         bloodType, rhesus, heightCm, weightKg,
         generalHealth, mentalNotes,
@@ -132,7 +150,7 @@ export default function TabRangkuman({ healthRecord, bmi, bmiCategory, formState
         });
     }, []);
 
-    const isEmpty = !healthRecord && !bloodType && !heightCm;
+    const isEmpty = !bloodType && !heightCm && !majorIllnesses;
 
     if (isEmpty) {
         return (
@@ -147,7 +165,14 @@ export default function TabRangkuman({ healthRecord, bmi, bmiCategory, formState
                         Data kesehatan belum diisi
                     </p>
                     <p className="text-xs dark:text-slate-500 text-slate-400 max-w-xs">
-                        Mulai dari tab <strong className="dark:text-emerald-400 text-emerald-600">Fisik</strong> untuk mengisi data kesehatan kamu
+                        Mulai dari tab{" "}
+                        <button
+                            onClick={() => onNavigateToTab("fisik")}
+                            className="dark:text-emerald-400 text-emerald-600 font-semibold hover:underline"
+                        >
+                            Fisik
+                        </button>
+                        {" "}untuk mengisi data kesehatan kamu
                     </p>
                 </div>
             </div>
@@ -156,11 +181,105 @@ export default function TabRangkuman({ healthRecord, bmi, bmiCategory, formState
 
     const eyeNeedsValue = (type: string) =>
         ["minus", "plus", "silinder"].includes(type);
-    const eyeConditionFilled = eyeRightType && eyeRightType !== "normal" && eyeRightType !== "unknown"
-        || eyeLeftType && eyeLeftType !== "normal" && eyeLeftType !== "unknown";
+
+    const eyeConditionFilled =
+        (eyeRightType && eyeRightType !== "normal" && eyeRightType !== "unknown") ||
+        (eyeLeftType  && eyeLeftType  !== "normal" && eyeLeftType  !== "unknown");
+
+    const tabLabels: Record<TabId, string> = {
+        fisik:           "Fisik",
+        riwayat:         "Riwayat",
+        catatan:         "Catatan Khusus",
+        "tim-kesehatan": "Tim Kesehatan",
+        rangkuman:       "Rangkuman",
+    };
+
+    // Group empty fields by tab
+    const emptyByTab = emptyRequiredFields.reduce<Record<string, EmptyField[]>>(
+        (acc, f) => {
+            if (!acc[f.tab]) acc[f.tab] = [];
+            acc[f.tab].push(f);
+            return acc;
+        },
+        {}
+    );
 
     return (
         <div className="flex flex-col gap-4">
+
+            {/* ── Status Kelengkapan ─────────────────────────────────────── */}
+            <div className="rangkuman-card opacity-0 rounded-xl border overflow-hidden
+                            dark:bg-white/[0.02] bg-slate-50
+                            dark:border-white/[0.06] border-black/[0.06]">
+                <div className="flex items-center gap-2.5 px-4 py-3
+                                border-b dark:border-white/[0.05] border-black/[0.05]">
+                    <i className="fa-solid fa-circle-check text-emerald-400 text-xs"></i>
+                    <p className="text-xs font-bold dark:text-slate-300 text-slate-700 uppercase tracking-wider">
+                        Status Kelengkapan
+                    </p>
+                    <span className={`ml-auto text-xs font-bold ${
+                        completion === 100
+                            ? "dark:text-emerald-400 text-emerald-600"
+                            : completion >= 75
+                                ? "dark:text-blue-400 text-blue-600"
+                                : completion >= 50
+                                    ? "dark:text-amber-400 text-amber-600"
+                                    : "dark:text-red-400 text-red-600"
+                    }`}>
+                        {completion}%
+                    </span>
+                </div>
+                <div className="p-4">
+                    <div className="h-1.5 dark:bg-white/[0.05] bg-black/[0.06] rounded-full overflow-hidden mb-4">
+                        <div
+                            className="h-full rounded-full transition-all duration-700"
+                            style={{ width: `${completion}%`, background: progressGradient }}
+                        />
+                    </div>
+
+                    {completion === 100 ? (
+                        <div className="flex items-center gap-2 text-xs
+                                        dark:text-emerald-400 text-emerald-600">
+                            <i className="fa-solid fa-circle-check text-[11px]"></i>
+                            Semua data wajib sudah diisi — data kesehatan lengkap!
+                        </div>
+                    ) : (
+                        <div className="flex flex-col gap-3">
+                            <p className="text-xs dark:text-slate-400 text-slate-500">
+                                {emptyRequiredFields.length} field wajib belum diisi:
+                            </p>
+                            {(Object.entries(emptyByTab) as [TabId, EmptyField[]][]).map(([tab, fields]) => (
+                                <div key={tab} className="flex items-start gap-3">
+                                    <button
+                                        onClick={() => onNavigateToTab(tab)}
+                                        className="shrink-0 text-[10px] font-semibold px-2.5 py-1 rounded-lg
+                                                   dark:bg-white/[0.05] bg-black/[0.05]
+                                                   dark:text-slate-400 text-slate-500
+                                                   dark:hover:text-emerald-400 hover:text-emerald-600
+                                                   dark:hover:bg-emerald-500/10 hover:bg-emerald-50
+                                                   border dark:border-white/[0.07] border-black/[0.07]
+                                                   transition-all duration-150 min-h-[28px]"
+                                    >
+                                        <i className="fa-solid fa-arrow-right text-[9px] mr-1"></i>
+                                        {tabLabels[tab]}
+                                    </button>
+                                    <div className="flex flex-wrap gap-1.5 pt-0.5">
+                                        {fields.map(f => (
+                                            <span key={f.key}
+                                                className="text-[10px] px-2 py-0.5 rounded-full
+                                                           dark:bg-amber-500/10 bg-amber-50
+                                                           dark:text-amber-400 text-amber-600
+                                                           border dark:border-amber-500/20 border-amber-200">
+                                                {f.label}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
 
             {/* ── Data Fisik ─────────────────────────────────────────────── */}
             <SummarySection icon="fa-solid fa-heart-pulse" title="Data Fisik">
@@ -177,7 +296,6 @@ export default function TabRangkuman({ healthRecord, bmi, bmiCategory, formState
                         </p>
                     </div>
                 </div>
-
                 <div className="mt-3 pt-3 border-t dark:border-white/[0.05] border-black/[0.05] flex flex-col gap-2">
                     <SummaryRow label="Kondisi Kesehatan Umum" value={generalHealth} />
                     {mentalNotes && <SummaryRow label="Catatan Mental" value={mentalNotes} />}
@@ -219,39 +337,43 @@ export default function TabRangkuman({ healthRecord, bmi, bmiCategory, formState
                 </SummarySection>
             )}
 
-            {/* ── Dokumen ────────────────────────────────────────────────── */}
+            {/* ── Dokumen Kesehatan — dengan FilePreviewModal ─────────────── */}
             {healthRecord && (
                 <SummarySection icon="fa-solid fa-file-medical" title="Dokumen Kesehatan">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="flex flex-col">
                         {[
                             { label: "Surat Keterangan Sehat", url: healthRecord.surat_sehat_url },
                             { label: "Kartu BPJS / JKN",       url: healthRecord.bpjs_card_url },
                             { label: "Kartu Vaksin",           url: healthRecord.vaccine_card_url },
                         ].map(doc => (
                             <div key={doc.label}
-                                className={`flex items-center gap-2.5 p-3 rounded-xl
-                                            border transition-all duration-200
-                                            ${doc.url
-                                                ? "dark:bg-emerald-500/10 bg-emerald-50 dark:border-emerald-500/20 border-emerald-200"
-                                                : "dark:bg-white/[0.02] bg-slate-50 dark:border-white/[0.05] border-black/[0.05]"
-                                            }`}
-                            >
-                                <i className={`fa-solid fa-file-medical text-sm
-                                    ${doc.url ? "dark:text-emerald-400 text-emerald-600" : "dark:text-slate-600 text-slate-300"}`}
-                                ></i>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-[11px] font-medium dark:text-slate-300 text-slate-600 truncate">
-                                        {doc.label}
-                                    </p>
-                                    <p className={`text-[10px] ${doc.url ? "dark:text-emerald-400 text-emerald-600" : "dark:text-slate-600 text-slate-400"}`}>
-                                        {doc.url ? "Sudah diunggah" : "Belum diunggah"}
-                                    </p>
+                                className="flex items-center justify-between gap-3 py-2.5
+                                           border-b dark:border-white/[0.04] border-black/[0.04] last:border-0">
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                    <i className={`fa-solid fa-file-medical text-xs shrink-0
+                                        ${doc.url
+                                            ? "dark:text-emerald-400 text-emerald-600"
+                                            : "dark:text-slate-600 text-slate-300"
+                                        }`}
+                                    ></i>
+                                    <div className="min-w-0">
+                                        <p className="text-[11px] font-medium dark:text-slate-300 text-slate-600 truncate">
+                                            {doc.label}
+                                        </p>
+                                        <p className={`text-[10px] ${
+                                            doc.url
+                                                ? "dark:text-emerald-400 text-emerald-600"
+                                                : "dark:text-slate-600 text-slate-400"
+                                        }`}>
+                                            {doc.url ? "Sudah diunggah" : "Belum diunggah"}
+                                        </p>
+                                    </div>
                                 </div>
                                 {doc.url && (
-                                    <a href={doc.url} target="_blank" rel="noreferrer"
-                                        className="text-[10px] dark:text-emerald-400 text-emerald-600 hover:underline shrink-0">
-                                        Lihat
-                                    </a>
+                                    <FilePreviewModal
+                                        serverUrl={doc.url}
+                                        label="Lihat"
+                                    />
                                 )}
                             </div>
                         ))}
