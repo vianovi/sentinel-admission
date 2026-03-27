@@ -5,15 +5,13 @@ import { animate, stagger } from "animejs";
 import FilePreviewModal      from "@/Components/UI/FilePreviewModal";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// TYPES — semua dideklarasikan lokal, tidak import dari page
+// TYPES — semua lokal, tidak import dari page
 // ─────────────────────────────────────────────────────────────────────────────
 
 type TabId = "fisik" | "riwayat" | "catatan" | "tim-kesehatan" | "rangkuman";
 
-// EmptyField — field wajib yang belum diisi
 type EmptyField = { key: string; label: string; tab: TabId };
 
-// HealthRecord subset yang dibutuhkan tab ini
 type HealthRecord = {
     surat_sehat_url:  string | null;
     bpjs_card_url:    string | null;
@@ -41,7 +39,9 @@ type Props = {
     emptyRequiredFields: EmptyField[];
     progressGradient:    string;
     completion:          number;
+    submitting:          boolean;
     onNavigateToTab:     (tab: TabId) => void;
+    onSubmitAll:         () => void;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -100,9 +100,7 @@ function SummarySection({ icon, title, children }: {
                     {title}
                 </p>
             </div>
-            <div className="p-4">
-                {children}
-            </div>
+            <div className="p-4">{children}</div>
         </div>
     );
 }
@@ -129,7 +127,8 @@ function SummaryRow({ label, value }: {
 
 export default function TabRangkuman({
     healthRecord, bmi, bmiCategory, formState,
-    emptyRequiredFields, progressGradient, completion, onNavigateToTab,
+    emptyRequiredFields, progressGradient, completion,
+    submitting, onNavigateToTab, onSubmitAll,
 }: Props) {
     const {
         bloodType, rhesus, heightCm, weightKg,
@@ -194,7 +193,6 @@ export default function TabRangkuman({
         rangkuman:       "Rangkuman",
     };
 
-    // Group empty fields by tab
     const emptyByTab = emptyRequiredFields.reduce<Record<string, EmptyField[]>>(
         (acc, f) => {
             if (!acc[f.tab]) acc[f.tab] = [];
@@ -337,7 +335,7 @@ export default function TabRangkuman({
                 </SummarySection>
             )}
 
-            {/* ── Dokumen Kesehatan — dengan FilePreviewModal ─────────────── */}
+            {/* ── Dokumen Kesehatan ──────────────────────────────────────── */}
             {healthRecord && (
                 <SummarySection icon="fa-solid fa-file-medical" title="Dokumen Kesehatan">
                     <div className="flex flex-col">
@@ -354,8 +352,7 @@ export default function TabRangkuman({
                                         ${doc.url
                                             ? "dark:text-emerald-400 text-emerald-600"
                                             : "dark:text-slate-600 text-slate-300"
-                                        }`}
-                                    ></i>
+                                        }`} />
                                     <div className="min-w-0">
                                         <p className="text-[11px] font-medium dark:text-slate-300 text-slate-600 truncate">
                                             {doc.label}
@@ -370,16 +367,54 @@ export default function TabRangkuman({
                                     </div>
                                 </div>
                                 {doc.url && (
-                                    <FilePreviewModal
-                                        serverUrl={doc.url}
-                                        label="Lihat"
-                                    />
+                                    <FilePreviewModal serverUrl={doc.url} label="Lihat" />
                                 )}
                             </div>
                         ))}
                     </div>
                 </SummarySection>
             )}
+
+            {/* ── Tombol Kirim & Selesaikan ─────────────────────────────── */}
+            <div className="rangkuman-card opacity-0 pt-2">
+                {completion < 100 && (
+                    <div className="flex items-start gap-2.5 p-3.5 rounded-xl mb-4
+                                    dark:bg-amber-500/[0.08] bg-amber-50
+                                    border dark:border-amber-500/20 border-amber-200">
+                        <i className="fa-solid fa-circle-info text-amber-400 text-xs mt-0.5 shrink-0"></i>
+                        <p className="text-[11px] dark:text-amber-300/80 text-amber-700">
+                            Masih ada <strong>{emptyRequiredFields.length} field wajib</strong> yang belum diisi.
+                            Kamu tetap bisa menyimpan, namun data belum dianggap lengkap.
+                        </p>
+                    </div>
+                )}
+
+                <div className="flex items-center justify-between gap-4">
+                    <div>
+                        <p className="text-xs font-semibold dark:text-slate-300 text-slate-700">
+                            Simpan Semua Data Kesehatan
+                        </p>
+                        <p className="text-[11px] dark:text-slate-500 text-slate-400 mt-0.5">
+                            Data dari semua tab akan disimpan sekaligus
+                        </p>
+                    </div>
+                    <button
+                        onClick={onSubmitAll}
+                        disabled={submitting}
+                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl
+                                   bg-emerald-500 hover:bg-emerald-400
+                                   text-white text-sm font-semibold shrink-0
+                                   transition-all duration-200 active:scale-95
+                                   disabled:opacity-60 disabled:cursor-not-allowed
+                                   min-h-[44px]"
+                    >
+                        {submitting
+                            ? <><i className="fa-solid fa-spinner fa-spin text-xs"></i> Menyimpan...</>
+                            : <><i className="fa-solid fa-paper-plane text-xs"></i> Kirim & Selesaikan</>
+                        }
+                    </button>
+                </div>
+            </div>
 
         </div>
     );

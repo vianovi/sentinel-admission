@@ -1,7 +1,7 @@
 // resources/js/Components/Dashboard/Candidate/DataKesehatan/TabRiwayat.tsx
 
-import { useEffect }        from "react";
-import { animate, stagger } from "animejs";
+import { useEffect }          from "react";
+import { animate, stagger }   from "animejs";
 import Field, { textareaCls } from "@/Components/UI/Field";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -17,6 +17,7 @@ type Props = {
     physicalDisab:    string; setPhysicalDisab:     (v: string) => void;
     chronicDocUrl:    string | null;
     errors:           Record<string, string>;
+    clearError:       (field: string) => void;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -25,13 +26,14 @@ type Props = {
 
 export default function TabRiwayat({
     majorIllnesses, setMajorIllnesses,
-    lastIllness, setLastIllness,
-    allergyFood, setAllergyFood,
-    allergyMedicine, setAllergyMedicine,
+    lastIllness,    setLastIllness,
+    allergyFood,    setAllergyFood,
+    allergyMedicine,  setAllergyMedicine,
     allergyCondition, setAllergyCondition,
-    physicalDisab, setPhysicalDisab,
+    physicalDisab,    setPhysicalDisab,
     chronicDocUrl,
     errors,
+    clearError,
 }: Props) {
 
     useEffect(() => {
@@ -63,10 +65,13 @@ export default function TabRiwayat({
                         required hint="Contoh: Asma, Jantung, Diabetes — atau tulis Tidak Ada">
                         <textarea
                             value={majorIllnesses}
-                            onChange={e => setMajorIllnesses(e.target.value)}
+                            onChange={e => {
+                                setMajorIllnesses(e.target.value);
+                                if (e.target.value) clearError("major_illnesses");
+                            }}
                             rows={3}
                             placeholder="Tulis 'Tidak Ada' jika tidak ada riwayat penyakit berat..."
-                            className={`${textareaCls(errors.major_illnesses)} ${errors.major_illnesses ? "input-error" : ""}`}
+                            className={textareaCls(errors.major_illnesses)}
                         />
                     </Field>
 
@@ -74,10 +79,13 @@ export default function TabRiwayat({
                         required hint="Sakit bukan demam biasa — contoh: DBD, Typhus, Pneumonia">
                         <textarea
                             value={lastIllness}
-                            onChange={e => setLastIllness(e.target.value)}
+                            onChange={e => {
+                                setLastIllness(e.target.value);
+                                if (e.target.value) clearError("last_illness");
+                            }}
                             rows={3}
                             placeholder="Contoh: Typhus pada Januari 2024, dirawat 5 hari..."
-                            className={`${textareaCls(errors.last_illness)} ${errors.last_illness ? "input-error" : ""}`}
+                            className={textareaCls(errors.last_illness)}
                         />
                     </Field>
                 </div>
@@ -96,7 +104,6 @@ export default function TabRiwayat({
                     Semua kolom wajib diisi — tulis <strong className="dark:text-slate-300 text-slate-600">"Tidak Ada"</strong> jika tidak alergi
                 </p>
 
-                {/* Info box */}
                 <div className="flex items-start gap-2.5 p-3.5 rounded-xl mb-5
                                 dark:bg-amber-500/[0.08] bg-amber-50
                                 border dark:border-amber-500/20 border-amber-200">
@@ -112,10 +119,13 @@ export default function TabRiwayat({
                         hint="Contoh: Seafood, Kacang, Susu — atau tulis Tidak Ada">
                         <textarea
                             value={allergyFood}
-                            onChange={e => setAllergyFood(e.target.value)}
+                            onChange={e => {
+                                setAllergyFood(e.target.value);
+                                if (e.target.value) clearError("allergy_food");
+                            }}
                             rows={2}
                             placeholder="Tulis 'Tidak Ada' jika tidak memiliki alergi makanan..."
-                            className={`${textareaCls(errors.allergy_food)} ${errors.allergy_food ? "input-error" : ""}`}
+                            className={textareaCls(errors.allergy_food)}
                         />
                     </Field>
 
@@ -123,10 +133,13 @@ export default function TabRiwayat({
                         hint="Contoh: Penisilin, Ibuprofen, Amoksisilin — atau tulis Tidak Ada">
                         <textarea
                             value={allergyMedicine}
-                            onChange={e => setAllergyMedicine(e.target.value)}
+                            onChange={e => {
+                                setAllergyMedicine(e.target.value);
+                                if (e.target.value) clearError("allergy_medicine");
+                            }}
                             rows={2}
                             placeholder="Tulis 'Tidak Ada' jika tidak memiliki alergi obat..."
-                            className={`${textareaCls(errors.allergy_medicine)} ${errors.allergy_medicine ? "input-error" : ""}`}
+                            className={textareaCls(errors.allergy_medicine)}
                         />
                     </Field>
 
@@ -134,10 +147,13 @@ export default function TabRiwayat({
                         hint="Contoh: Debu, Dingin berlebih, Serbuk sari — atau tulis Tidak Ada">
                         <textarea
                             value={allergyCondition}
-                            onChange={e => setAllergyCondition(e.target.value)}
+                            onChange={e => {
+                                setAllergyCondition(e.target.value);
+                                if (e.target.value) clearError("allergy_condition");
+                            }}
                             rows={2}
                             placeholder="Tulis 'Tidak Ada' jika tidak memiliki alergi kondisi..."
-                            className={`${textareaCls(errors.allergy_condition)} ${errors.allergy_condition ? "input-error" : ""}`}
+                            className={textareaCls(errors.allergy_condition)}
                         />
                     </Field>
                 </div>
@@ -158,14 +174,16 @@ export default function TabRiwayat({
                         required hint="Contoh: Tunarungu ringan, Penggunaan kursi roda — atau tulis Tidak Ada">
                         <textarea
                             value={physicalDisab}
-                            onChange={e => setPhysicalDisab(e.target.value)}
+                            onChange={e => {
+                                setPhysicalDisab(e.target.value);
+                                if (e.target.value) clearError("physical_disabilities");
+                            }}
                             rows={3}
                             placeholder="Tulis 'Tidak Ada' jika tidak ada disabilitas fisik..."
-                            className={`${textareaCls(errors.physical_disabilities)} ${errors.physical_disabilities ? "input-error" : ""}`}
+                            className={textareaCls(errors.physical_disabilities)}
                         />
                     </Field>
 
-                    {/* Chronic disease doc — info jika sudah ada */}
                     <div>
                         <p className="text-xs font-semibold dark:text-slate-400 text-slate-600 mb-2">
                             Dokumen Hasil Lab / CT Scan / USG
@@ -191,7 +209,7 @@ export default function TabRiwayat({
                         ) : (
                             <div className="flex items-center gap-3 p-3.5 rounded-xl
                                             dark:bg-white/[0.02] bg-slate-50
-                                            border dark:border-white/[0.05] border-dashed dark:border-slate-700 border-slate-200">
+                                            border border-dashed dark:border-slate-700 border-slate-200">
                                 <i className="fa-solid fa-file-waveform dark:text-slate-600 text-slate-300 text-sm shrink-0"></i>
                                 <p className="text-xs dark:text-slate-500 text-slate-400">
                                     Upload hasil lab dapat dilakukan di tab{" "}

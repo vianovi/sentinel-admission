@@ -104,8 +104,6 @@ type Props = {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONSTANTS
-// Urutan: Fisik → Riwayat → Catatan Khusus → Tim Kesehatan → Rangkuman
-// Default: fisik — Rangkuman di paling kanan sebagai reward tab
 // ─────────────────────────────────────────────────────────────────────────────
 
 const TABS = [
@@ -133,6 +131,19 @@ const REQUIRED_FIELDS: EmptyField[] = [
     { key: "allergyCondition", label: "Alergi Kondisi",          tab: "riwayat" },
     { key: "physicalDisab",    label: "Disabilitas Fisik",       tab: "riwayat" },
 ];
+
+// Field wajib per tab — untuk validasi per-tab
+const REQUIRED_BY_TAB: Record<string, string[]> = {
+    fisik: [
+        "blood_type", "rhesus", "height_cm", "weight_kg",
+        "general_health_condition", "eye_right_type", "eye_left_type",
+    ],
+    riwayat: [
+        "major_illnesses", "last_illness", "allergy_food",
+        "allergy_medicine", "allergy_condition", "physical_disabilities",
+    ],
+    catatan: [], // semua opsional
+};
 
 const swalDark = Swal.mixin({
     background:          "#0f172a",
@@ -276,7 +287,17 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
         }, 190);
     };
 
-    // ── Validate field ────────────────────────────────────────────────────────
+    // ── Clear single error (dipanggil saat user mulai mengetik) ──────────────
+    const clearError = (field: string) => {
+        setErrors(prev => {
+            if (!prev[field]) return prev;
+            const next = { ...prev };
+            delete next[field];
+            return next;
+        });
+    };
+
+    // ── Validate inline field (onBlur) ────────────────────────────────────────
     const validateField = (field: string, value: string) => {
         const newErrors = { ...errors };
         if (field === "height_cm") {
@@ -302,10 +323,158 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
         setErrors(newErrors);
     };
 
-    // ── Submit ────────────────────────────────────────────────────────────────
-    const handleSubmit = () => {
+    // ── Validate per-tab (sebelum submit tab) ─────────────────────────────────
+    const validateTab = (tabId: TabId): boolean => {
+        const required = REQUIRED_BY_TAB[tabId] ?? [];
+        if (required.length === 0) return true;
+
+        const currentValues: Record<string, string> = {
+            blood_type:               bloodType,
+            rhesus,
+            height_cm:                heightCm,
+            weight_kg:                weightKg,
+            general_health_condition: generalHealth,
+            eye_right_type:           eyeRightType,
+            eye_left_type:            eyeLeftType,
+            major_illnesses:          majorIllnesses,
+            last_illness:             lastIllness,
+            allergy_food:             allergyFood,
+            allergy_medicine:         allergyMedicine,
+            allergy_condition:        allergyCondition,
+            physical_disabilities:    physicalDisab,
+        };
+
+        const newErrors: Record<string, string> = {};
+        required.forEach(field => {
+            if (!currentValues[field]) {
+                newErrors[field] = "Field ini wajib diisi.";
+            }
+        });
+
+        // Validasi tambahan untuk numerik
+        if (tabId === "fisik") {
+            const h = parseInt(heightCm);
+            const w = parseInt(weightKg);
+            if (heightCm && (h < 50 || h > 250)) newErrors.height_cm = "Tinggi badan harus 50–250 cm.";
+            if (weightKg && (w < 10 || w > 300)) newErrors.weight_kg = "Berat badan harus 10–300 kg.";
+            if (eyeSince) {
+                const v = parseInt(eyeSince);
+                if (v < 1990 || v > new Date().getFullYear()) newErrors.eye_condition_since = "Tahun tidak valid.";
+            }
+        }
+
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(prev => ({ ...prev, ...newErrors }));
+            // Shake semua input error di tab aktif
+            setTimeout(() => {
+                animate(".input-error", {
+                    translateX: [0, -6, 6, -4, 4, 0],
+                    duration:   380,
+                    ease:       "outExpo",
+                });
+            }, 50);
+            return false;
+        }
+
+        return true;
+    };
+
+    // ── Submit per-tab ────────────────────────────────────────────────────────
+    const handleTabSubmit = (tabId: TabId) => {
+        if (!validateTab(tabId)) return;
+
         setSubmitting(true);
-        setErrors({});
+
+        // Payload sesuai tab — type explicit agar compatible dengan Inertia RequestPayload
+        type Payload = Record<string, string | number | boolean | null>;
+        const payloads: Record<string, Payload> = {
+            fisik: {
+                blood_type:               bloodType,
+                rhesus,
+                height_cm:                heightCm,
+                weight_kg:                weightKg,
+                general_health_condition: generalHealth,
+                mental_health_notes:      mentalNotes || null,
+                eye_right_type:           eyeRightType,
+                eye_right_value:          eyeRightValue || null,
+                eye_left_type:            eyeLeftType,
+                eye_left_value:           eyeLeftValue || null,
+                eye_condition_since:      eyeSince || null,
+            },
+            riwayat: {
+                major_illnesses:       majorIllnesses,
+                last_illness:          lastIllness,
+                allergy_food:          allergyFood,
+                allergy_medicine:      allergyMedicine,
+                allergy_condition:     allergyCondition,
+                physical_disabilities: physicalDisab,
+            },
+            catatan: {
+                special_notes:        specialNotes || null,
+                parent_concern_notes: parentConcern || null,
+            },
+        };
+
+        router.post(route("dashboard.data-kesehatan.save"), (payloads[tabId] ?? {}) as Payload, {
+            onError: (errs) => {
+                setErrors(prev => ({ ...prev, ...errs }));
+                setSubmitting(false);
+                setTimeout(() => {
+                    animate(".input-error", {
+                        translateX: [0, -6, 6, -4, 4, 0],
+                        duration:   380,
+                        ease:       "outExpo",
+                    });
+                }, 50);
+            },
+            onSuccess: () => {
+                setSubmitting(false);
+                // Clear error field tab ini setelah berhasil
+                const tabFields = REQUIRED_BY_TAB[tabId] ?? [];
+                setErrors(prev => {
+                    const next = { ...prev };
+                    tabFields.forEach(f => delete next[f]);
+                    return next;
+                });
+            },
+            preserveScroll: true,
+        });
+    };
+
+    // ── Submit semua (dari Rangkuman) — dengan konfirmasi ─────────────────────
+    const handleSubmitAll = async () => {
+        // Validasi semua tab wajib dulu
+        const fisikValid   = validateTab("fisik");
+        const riwayatValid = validateTab("riwayat");
+
+        if (!fisikValid || !riwayatValid) {
+            // Navigasi ke tab pertama yang error
+            if (!fisikValid) handleTabChange("fisik");
+            else handleTabChange("riwayat");
+
+            swalDark.fire({
+                icon:  "warning",
+                title: "Data belum lengkap",
+                text:  "Masih ada field wajib yang belum diisi. Silakan lengkapi terlebih dahulu.",
+                confirmButtonText: "Cek & Perbaiki",
+            });
+            return;
+        }
+
+        // Semua valid — tampilkan konfirmasi
+        const result = await swalDark.fire({
+            icon:              "question",
+            title:             "Kirim Data Kesehatan?",
+            text:              "Pastikan semua informasi yang kamu isi sudah benar sebelum dikirim.",
+            showCancelButton:  true,
+            confirmButtonText: "<i class='fa-solid fa-paper-plane mr-2'></i> Ya, Kirim Sekarang",
+            cancelButtonText:  "<i class='fa-solid fa-pencil mr-2'></i> Cek & Perbaiki",
+            reverseButtons:    true,
+        });
+
+        if (!result.isConfirmed) return;
+
+        setSubmitting(true);
 
         router.post(route("dashboard.data-kesehatan.save"), {
             blood_type:               bloodType,
@@ -331,11 +500,7 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
             onError: (errs) => {
                 setErrors(errs);
                 setSubmitting(false);
-                animate(".input-error", {
-                    translateX: [0, -6, 6, -4, 4, 0],
-                    duration:   380,
-                    ease:       "outExpo",
-                });
+                // Navigasi ke tab yang error
                 const fisikFields   = ["blood_type","rhesus","height_cm","weight_kg",
                                        "general_health_condition","eye_right_type","eye_left_type"];
                 const riwayatFields = ["major_illnesses","last_illness","allergy_food",
@@ -345,14 +510,16 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
                 else if (errKeys.some(k => riwayatFields.includes(k))) handleTabChange("riwayat");
                 else handleTabChange("catatan");
             },
-            onSuccess: () => setSubmitting(false),
+            onSuccess: () => {
+                setSubmitting(false);
+                setErrors({});
+            },
             preserveScroll: true,
         });
     };
 
     // ─────────────────────────────────────────────────────────────────────────
-    // RENDER — mengikuti pola DataWali persis:
-    // Header naked → tab pill container → content card → action buttons
+    // RENDER
     // ─────────────────────────────────────────────────────────────────────────
 
     return (
@@ -375,7 +542,7 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
 
             <div className="space-y-5 px-4 py-6 sm:px-6">
 
-                {/* ── Header — naked, tidak ada card/box ───────────────────── */}
+                {/* ── Header ───────────────────────────────────────────────── */}
                 <div className="kesehatan-card">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-2xl
@@ -395,7 +562,7 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
                     </div>
                 </div>
 
-                {/* ── Tab navigation — pill style persis seperti DataWali ───── */}
+                {/* ── Tab navigation — pill style ──────────────────────────── */}
                 <div className="kesehatan-card">
                     <div className="flex overflow-x-auto rounded-xl
                                     border dark:border-content-border border-black/[0.08]
@@ -422,7 +589,7 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
                                     <span className="hidden sm:inline">{tab.label}</span>
                                     <span className="sm:hidden">{tab.label.split(" ")[0]}</span>
 
-                                    {/* Dot amber — hanya di Rangkuman kalau ada field kosong */}
+                                    {/* Dot amber — Rangkuman kalau ada field kosong */}
                                     {isRangkuman && hasEmptyRequired && !isActive && (
                                         <span className="absolute -right-0.5 -top-0.5
                                                          h-2 w-2 rounded-full bg-amber-400" />
@@ -457,6 +624,7 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
                             eyeSince={eyeSince}             setEyeSince={setEyeSince}
                             errors={errors}
                             validateField={validateField}
+                            clearError={clearError}
                         />
                     )}
 
@@ -470,6 +638,7 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
                             physicalDisab={physicalDisab}         setPhysicalDisab={setPhysicalDisab}
                             chronicDocUrl={healthRecord?.chronic_disease_doc_url ?? null}
                             errors={errors}
+                            clearError={clearError}
                         />
                     )}
 
@@ -496,7 +665,9 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
                             emptyRequiredFields={emptyRequiredFields}
                             progressGradient={progressGradient}
                             completion={completion}
+                            submitting={submitting}
                             onNavigateToTab={handleTabChange}
+                            onSubmitAll={handleSubmitAll}
                             formState={{
                                 bloodType, rhesus, heightCm, weightKg,
                                 generalHealth, mentalNotes,
@@ -510,11 +681,11 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
                     )}
                 </div>
 
-                {/* ── Submit — hanya di tab form ────────────────────────────── */}
+                {/* ── Submit per-tab — hanya di tab form ───────────────────── */}
                 {(activeTab === "fisik" || activeTab === "riwayat" || activeTab === "catatan") && (
                     <div className="kesehatan-card flex justify-end">
                         <button
-                            onClick={handleSubmit}
+                            onClick={() => handleTabSubmit(activeTab)}
                             disabled={submitting}
                             className="flex items-center gap-2 px-6 py-2.5 rounded-xl
                                        bg-emerald-500 hover:bg-emerald-400
@@ -525,7 +696,7 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
                         >
                             {submitting
                                 ? <><i className="fa-solid fa-spinner fa-spin"></i> Menyimpan...</>
-                                : <><i className="fa-solid fa-floppy-disk"></i> Simpan Data Kesehatan</>
+                                : <><i className="fa-solid fa-floppy-disk"></i> Simpan Data</>
                             }
                         </button>
                     </div>

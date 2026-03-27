@@ -26,11 +26,12 @@ class AppServiceProvider extends ServiceProvider
 
         Vite::prefetch(concurrency: 3);
 
-        URL::forceScheme('https');
+        if (env('FORCE_HTTPS', false)) {
+            URL::forceScheme('https');
+        }
 
-        Candidate::observe(CandidateObserver::class); // ← tambah ini saja
+        Candidate::observe(CandidateObserver::class);
 
-        // Trust Cloudflare Tunnel proxies
         Request::setTrustedProxies(
             ['127.0.0.1', '10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16', 'REMOTE_ADDR'],
             Request::HEADER_X_FORWARDED_FOR |

@@ -30,9 +30,33 @@
     box-shadow: 0 0 0 3px rgba(212, 160, 23, 0.15);
 }
 
+/* ── Error state — persis seperti WizardStep2 ─────────────────────────────── */
 .input-error {
     border-color: #e11d48 !important;
     background-color: #fff1f2 !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Suppress focus ring saat error — tidak ada border biru/gold yang nabrak */
+.input-error:focus,
+.input-error:focus-visible {
+    border-color: #e11d48 !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Dark mode — background gelap subtle, tidak pink terang */
+.dark .input-error {
+    border-color: rgba(244, 63, 94, 0.55) !important;
+    background-color: rgba(244, 63, 94, 0.08) !important;
+}
+
+.dark .input-error:focus,
+.dark .input-error:focus-visible {
+    border-color: rgba(244, 63, 94, 0.55) !important;
+    outline: none !important;
+    box-shadow: none !important;
 }
 
 .label {
@@ -92,12 +116,10 @@
 
 /* ── Dark mode tokens (default — aktif saat class "dark" ada di <html>) ─────── */
 :root {
-    /* Shell — structural, lebih dalam */
     --shell-bg:      #080d18;
     --shell-surface: #0a0f1e;
     --shell-border:  rgba(255, 255, 255, 0.05);
 
-    /* Content — lifted, sedikit lebih terang dari shell */
     --content-bg:      #0d1424;
     --content-surface: #111827;
     --content-card:    rgba(255, 255, 255, 0.04);

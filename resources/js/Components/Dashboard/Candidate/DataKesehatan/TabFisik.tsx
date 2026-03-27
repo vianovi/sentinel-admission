@@ -26,6 +26,7 @@ type Props = {
     eyeSince:       string; setEyeSince:       (v: string) => void;
     errors:         Record<string, string>;
     validateField:  (field: string, value: string) => void;
+    clearError:     (field: string) => void;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -71,15 +72,14 @@ const eyeNeedsValue = (type: string) =>
 const eyeHasAbnormality = (rightType: string, leftType: string) =>
     eyeNeedsValue(rightType) || eyeNeedsValue(leftType);
 
-// selectStyles dengan portal — mencegah dropdown terpotong oleh parent overflow
-// menuPortalTarget ke document.body memastikan dropdown render di luar card
-const selectStyles = makeSelectStyles();
-const portalProps = {
-    styles:          selectStyles,
+// Portal props — dropdown tidak terpotong oleh parent overflow
+// hasError: pass true agar border dropdown ikut merah saat error
+const portalProps = (hasError = false) => ({
+    styles:           makeSelectStyles(hasError),
     menuPortalTarget: typeof document !== "undefined" ? document.body : undefined,
-    menuPosition:    "fixed" as const,
-    menuPlacement:   "auto" as const,
-};
+    menuPosition:     "fixed" as const,
+    menuPlacement:    "auto" as const,
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // COMPONENT
@@ -98,7 +98,7 @@ export default function TabFisik({
     eyeLeftType, setEyeLeftType,
     eyeLeftValue, setEyeLeftValue,
     eyeSince, setEyeSince,
-    errors, validateField,
+    errors, validateField, clearError,
 }: Props) {
 
     useEffect(() => {
@@ -132,24 +132,28 @@ export default function TabFisik({
                         <Select
                             options={BLOOD_TYPE_OPTIONS}
                             value={BLOOD_TYPE_OPTIONS.find(o => o.value === bloodType) ?? null}
-                            onChange={opt => setBloodType(opt?.value ?? "")}
+                            onChange={opt => {
+                                setBloodType(opt?.value ?? "");
+                                clearError("blood_type");
+                            }}
                             placeholder="Pilih golongan darah..."
                             isSearchable={false}
-                            {...portalProps}
+                            {...portalProps(!!errors.blood_type)}
                         />
-                        {errors.blood_type && <span className="input-error sr-only" />}
                     </Field>
 
                     <Field label="Rhesus" error={errors.rhesus} required>
                         <Select
                             options={RHESUS_OPTIONS}
                             value={RHESUS_OPTIONS.find(o => o.value === rhesus) ?? null}
-                            onChange={opt => setRhesus(opt?.value ?? "")}
+                            onChange={opt => {
+                                setRhesus(opt?.value ?? "");
+                                clearError("rhesus");
+                            }}
                             placeholder="Pilih rhesus..."
                             isSearchable={false}
-                            {...portalProps}
+                            {...portalProps(!!errors.rhesus)}
                         />
-                        {errors.rhesus && <span className="input-error sr-only" />}
                     </Field>
                 </div>
             </section>
@@ -169,11 +173,14 @@ export default function TabFisik({
                         <div className="relative">
                             <input
                                 value={heightCm}
-                                onChange={e => setHeightCm(e.target.value.replace(/\D/g, "").slice(0, 3))}
+                                onChange={e => {
+                                    setHeightCm(e.target.value.replace(/\D/g, "").slice(0, 3));
+                                    if (e.target.value) clearError("height_cm");
+                                }}
                                 onBlur={e => validateField("height_cm", e.target.value)}
                                 inputMode="numeric"
                                 placeholder="Contoh: 158"
-                                className={`${inputCls(errors.height_cm)} pr-10 ${errors.height_cm ? "input-error" : ""}`}
+                                className={`${inputCls(errors.height_cm)} pr-10`}
                             />
                             <span className="absolute right-3 top-1/2 -translate-y-1/2
                                              text-[11px] dark:text-slate-500 text-slate-400 font-medium">
@@ -186,11 +193,14 @@ export default function TabFisik({
                         <div className="relative">
                             <input
                                 value={weightKg}
-                                onChange={e => setWeightKg(e.target.value.replace(/\D/g, "").slice(0, 3))}
+                                onChange={e => {
+                                    setWeightKg(e.target.value.replace(/\D/g, "").slice(0, 3));
+                                    if (e.target.value) clearError("weight_kg");
+                                }}
                                 onBlur={e => validateField("weight_kg", e.target.value)}
                                 inputMode="numeric"
                                 placeholder="Contoh: 52"
-                                className={`${inputCls(errors.weight_kg)} pr-10 ${errors.weight_kg ? "input-error" : ""}`}
+                                className={`${inputCls(errors.weight_kg)} pr-10`}
                             />
                             <span className="absolute right-3 top-1/2 -translate-y-1/2
                                              text-[11px] dark:text-slate-500 text-slate-400 font-medium">
@@ -261,10 +271,13 @@ export default function TabFisik({
                         required hint="Contoh: Sehat, aktif berolahraga 3x seminggu, tidak ada keluhan">
                         <textarea
                             value={generalHealth}
-                            onChange={e => setGeneralHealth(e.target.value)}
+                            onChange={e => {
+                                setGeneralHealth(e.target.value);
+                                if (e.target.value) clearError("general_health_condition");
+                            }}
                             rows={3}
                             placeholder="Jelaskan kondisi kesehatan fisik dan pola hidup saat ini..."
-                            className={`${textareaCls(errors.general_health_condition)} ${errors.general_health_condition ? "input-error" : ""}`}
+                            className={textareaCls(errors.general_health_condition)}
                         />
                     </Field>
 
@@ -304,12 +317,12 @@ export default function TabFisik({
                                 onChange={opt => {
                                     setEyeRightType(opt?.value ?? "");
                                     if (!eyeNeedsValue(opt?.value ?? "")) setEyeRightValue("");
+                                    clearError("eye_right_type");
                                 }}
                                 placeholder="Pilih kondisi..."
                                 isSearchable={false}
-                                {...portalProps}
+                                {...portalProps(!!errors.eye_right_type)}
                             />
-                            {errors.eye_right_type && <span className="input-error sr-only" />}
                         </Field>
                         {eyeNeedsValue(eyeRightType) && (
                             <Field label="Nilai" hint="Contoh: 2.50 (tanpa tanda minus/plus)">
@@ -333,12 +346,12 @@ export default function TabFisik({
                                 onChange={opt => {
                                     setEyeLeftType(opt?.value ?? "");
                                     if (!eyeNeedsValue(opt?.value ?? "")) setEyeLeftValue("");
+                                    clearError("eye_left_type");
                                 }}
                                 placeholder="Pilih kondisi..."
                                 isSearchable={false}
-                                {...portalProps}
+                                {...portalProps(!!errors.eye_left_type)}
                             />
-                            {errors.eye_left_type && <span className="input-error sr-only" />}
                         </Field>
                         {eyeNeedsValue(eyeLeftType) && (
                             <Field label="Nilai" hint="Contoh: 1.75 (tanpa tanda minus/plus)">
@@ -361,11 +374,14 @@ export default function TabFisik({
                             hint="Tahun mulai terdeteksi gangguan penglihatan">
                             <input
                                 value={eyeSince}
-                                onChange={e => setEyeSince(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                                onChange={e => {
+                                    setEyeSince(e.target.value.replace(/\D/g, "").slice(0, 4));
+                                    if (e.target.value) clearError("eye_condition_since");
+                                }}
                                 onBlur={e => validateField("eye_condition_since", e.target.value)}
                                 inputMode="numeric"
                                 placeholder={`Contoh: ${new Date().getFullYear() - 3}`}
-                                className={`${inputCls(errors.eye_condition_since)} ${errors.eye_condition_since ? "input-error" : ""}`}
+                                className={inputCls(errors.eye_condition_since)}
                             />
                         </Field>
                     </div>

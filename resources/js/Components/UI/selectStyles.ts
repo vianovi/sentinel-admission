@@ -1,16 +1,24 @@
 // resources/js/Components/UI/selectStyles.ts
-// Shared react-select styles — dark mode, gold accent
+// Shared react-select styles — dark mode + light mode + error state support
 
-export const makeSelectStyles = (isMulti = false) => ({
+export const makeSelectStyles = (hasError = false) => ({
     control: (base: any, state: any) => ({
         ...base,
-        backgroundColor: "rgba(15,23,42,0.6)",
-        borderColor: state.isFocused ? "#d4a017" : "rgba(255,255,255,0.1)",
+        // Error state: border merah + bg pink muted (sama dengan .input-error)
+        // Normal state: dark/light mode styling
+        backgroundColor: hasError
+            ? "rgba(255, 241, 242, 1)"           // light: #fff1f2
+            : "rgba(15, 23, 42, 0.6)",            // dark: slate-900/60
+        borderColor: hasError
+            ? state.isFocused ? "#e11d48" : "#e11d48"  // selalu merah saat error
+            : state.isFocused ? "#d4a017" : "rgba(255,255,255,0.1)",
         borderRadius: "0.75rem",
         padding: "2px 4px",
-        boxShadow: "none",
+        boxShadow: "none",                        // no focus ring — tidak ada biru
         minHeight: "44px",
-        "&:hover": { borderColor: "#d4a017" },
+        "&:hover": {
+            borderColor: hasError ? "#e11d48" : "#d4a017",
+        },
     }),
     menu: (base: any) => ({
         ...base,
@@ -30,10 +38,21 @@ export const makeSelectStyles = (isMulti = false) => ({
         cursor: "pointer",
         fontSize: "13px",
     }),
-    singleValue:      (base: any) => ({ ...base, color: "#e2e8f0", fontSize: "14px" }),
+    singleValue:      (base: any) => ({
+        ...base,
+        color: hasError ? "#1e293b" : "#e2e8f0",
+        fontSize: "14px",
+    }),
     multiValue:       (base: any) => ({ ...base, backgroundColor: "rgba(212,160,23,0.2)", borderRadius: "6px" }),
     multiValueLabel:  (base: any) => ({ ...base, color: "#d4a017", fontSize: "12px" }),
     multiValueRemove: (base: any) => ({ ...base, color: "#d4a017", "&:hover": { backgroundColor: "rgba(212,160,23,0.3)", color: "#fff" } }),
-    placeholder:      (base: any) => ({ ...base, color: "#64748b", fontSize: "14px" }),
-    input:            (base: any) => ({ ...base, color: "#e2e8f0" }),
+    placeholder:      (base: any) => ({
+        ...base,
+        color: hasError ? "#9ca3af" : "#64748b",
+        fontSize: "14px",
+    }),
+    input:            (base: any) => ({
+        ...base,
+        color: hasError ? "#1e293b" : "#e2e8f0",
+    }),
 });
