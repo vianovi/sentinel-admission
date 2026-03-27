@@ -5,6 +5,7 @@ import { animate, stagger }     from "animejs";
 import Select                   from "react-select";
 import Field, { inputCls, textareaCls } from "@/Components/UI/Field";
 import { makeSelectStyles }     from "@/Components/UI/selectStyles";
+import { useTheme }             from "@/context/ThemeContext";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -72,15 +73,6 @@ const eyeNeedsValue = (type: string) =>
 const eyeHasAbnormality = (rightType: string, leftType: string) =>
     eyeNeedsValue(rightType) || eyeNeedsValue(leftType);
 
-// Portal props — dropdown tidak terpotong oleh parent overflow
-// hasError: pass true agar border dropdown ikut merah saat error
-const portalProps = (hasError = false) => ({
-    styles:           makeSelectStyles(hasError),
-    menuPortalTarget: typeof document !== "undefined" ? document.body : undefined,
-    menuPosition:     "fixed" as const,
-    menuPlacement:    "auto" as const,
-});
-
 // ─────────────────────────────────────────────────────────────────────────────
 // COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
@@ -101,6 +93,17 @@ export default function TabFisik({
     errors, validateField, clearError,
 }: Props) {
 
+    const { theme } = useTheme();
+    const isDark    = theme === "dark";
+
+    // Portal props — dropdown tidak terpotong oleh parent overflow
+    const portalProps = (hasError = false) => ({
+        styles:           makeSelectStyles(hasError, isDark),
+        menuPortalTarget: typeof document !== "undefined" ? document.body : undefined,
+        menuPosition:     "fixed" as const,
+        menuPlacement:    "auto" as const,
+    });
+
     useEffect(() => {
         animate(".fisik-section", {
             opacity:    [0, 1],
@@ -118,12 +121,18 @@ export default function TabFisik({
 
             {/* ── Golongan Darah & Rhesus ───────────────────────────────── */}
             <section className="fisik-section opacity-0">
-                <h3 className="text-sm font-display font-bold dark:text-white text-slate-800
-                                flex items-center gap-2 mb-1">
-                    <i className="fa-solid fa-droplet text-emerald-400 text-xs"></i>
-                    Golongan Darah
-                </h3>
-                <p className="text-xs dark:text-slate-500 text-slate-400 mb-5">
+                <div className="flex items-center gap-3 mb-1">
+                    <div className="w-9 h-9 rounded-xl shrink-0
+                                    dark:bg-emerald-500/10 bg-emerald-50
+                                    border dark:border-emerald-500/20 border-emerald-200
+                                    flex items-center justify-center">
+                        <i className="fa-solid fa-droplet text-emerald-400 text-sm"></i>
+                    </div>
+                    <h3 className="text-sm font-display font-bold dark:text-white text-slate-800">
+                        Golongan Darah
+                    </h3>
+                </div>
+                <p className="text-xs dark:text-slate-500 text-slate-400 mb-5 ml-12">
                     Pilih "Belum pernah tes" jika tidak tahu
                 </p>
 
@@ -162,11 +171,17 @@ export default function TabFisik({
 
             {/* ── Tinggi, Berat & BMI ───────────────────────────────────── */}
             <section className="fisik-section opacity-0">
-                <h3 className="text-sm font-display font-bold dark:text-white text-slate-800
-                                flex items-center gap-2 mb-5">
-                    <i className="fa-solid fa-weight-scale text-emerald-400 text-xs"></i>
-                    Pengukuran Tubuh
-                </h3>
+                <div className="flex items-center gap-3 mb-5">
+                    <div className="w-9 h-9 rounded-xl shrink-0
+                                    dark:bg-emerald-500/10 bg-emerald-50
+                                    border dark:border-emerald-500/20 border-emerald-200
+                                    flex items-center justify-center">
+                        <i className="fa-solid fa-weight-scale text-emerald-400 text-sm"></i>
+                    </div>
+                    <h3 className="text-sm font-display font-bold dark:text-white text-slate-800">
+                        Pengukuran Tubuh
+                    </h3>
+                </div>
 
                 <div className="grid grid-cols-2 gap-4 mb-4">
                     <Field label="Tinggi Badan" error={errors.height_cm} required hint="Satuan: cm">
@@ -243,10 +258,14 @@ export default function TabFisik({
                     </div>
                 ) : (
                     <div className="flex items-center gap-3 p-4 rounded-xl
-                                    dark:bg-white/[0.02] bg-slate-50
-                                    border dark:border-white/[0.05] border-black/[0.05]">
-                        <i className="fa-solid fa-calculator dark:text-slate-600 text-slate-300 text-lg"></i>
-                        <p className="text-xs dark:text-slate-500 text-slate-400">
+                                    dark:bg-white/[0.04] bg-slate-100
+                                    border dark:border-white/[0.07] border-black/[0.07]">
+                        <div className="w-8 h-8 rounded-lg dark:bg-white/[0.06] bg-white
+                                        border dark:border-white/[0.08] border-black/[0.08]
+                                        flex items-center justify-center shrink-0">
+                            <i className="fa-solid fa-calculator dark:text-slate-500 text-slate-400 text-sm"></i>
+                        </div>
+                        <p className="text-xs dark:text-slate-400 text-slate-500">
                             Isi tinggi &amp; berat badan untuk kalkulasi BMI otomatis
                         </p>
                     </div>
@@ -257,12 +276,18 @@ export default function TabFisik({
 
             {/* ── Kondisi Kesehatan Umum ────────────────────────────────── */}
             <section className="fisik-section opacity-0">
-                <h3 className="text-sm font-display font-bold dark:text-white text-slate-800
-                                flex items-center gap-2 mb-1">
-                    <i className="fa-solid fa-stethoscope text-emerald-400 text-xs"></i>
-                    Kondisi Kesehatan Umum
-                </h3>
-                <p className="text-xs dark:text-slate-500 text-slate-400 mb-5">
+                <div className="flex items-center gap-3 mb-1">
+                    <div className="w-9 h-9 rounded-xl shrink-0
+                                    dark:bg-emerald-500/10 bg-emerald-50
+                                    border dark:border-emerald-500/20 border-emerald-200
+                                    flex items-center justify-center">
+                        <i className="fa-solid fa-stethoscope text-emerald-400 text-sm"></i>
+                    </div>
+                    <h3 className="text-sm font-display font-bold dark:text-white text-slate-800">
+                        Kondisi Kesehatan Umum
+                    </h3>
+                </div>
+                <p className="text-xs dark:text-slate-500 text-slate-400 mb-5 ml-12">
                     Deskripsikan kondisi fisik &amp; pola hidup secara keseluruhan saat ini
                 </p>
 
@@ -298,12 +323,18 @@ export default function TabFisik({
 
             {/* ── Kondisi Mata ──────────────────────────────────────────── */}
             <section className="fisik-section opacity-0">
-                <h3 className="text-sm font-display font-bold dark:text-white text-slate-800
-                                flex items-center gap-2 mb-1">
-                    <i className="fa-solid fa-eye text-emerald-400 text-xs"></i>
-                    Kondisi Mata
-                </h3>
-                <p className="text-xs dark:text-slate-500 text-slate-400 mb-5">
+                <div className="flex items-center gap-3 mb-1">
+                    <div className="w-9 h-9 rounded-xl shrink-0
+                                    dark:bg-emerald-500/10 bg-emerald-50
+                                    border dark:border-emerald-500/20 border-emerald-200
+                                    flex items-center justify-center">
+                        <i className="fa-solid fa-eye text-emerald-400 text-sm"></i>
+                    </div>
+                    <h3 className="text-sm font-display font-bold dark:text-white text-slate-800">
+                        Kondisi Mata
+                    </h3>
+                </div>
+                <p className="text-xs dark:text-slate-500 text-slate-400 mb-5 ml-12">
                     Pilih "Normal" jika tidak ada gangguan penglihatan
                 </p>
 

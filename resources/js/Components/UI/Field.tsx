@@ -39,5 +39,5 @@ export const inputCls = (err?: string) => err
     : "w-full dark:bg-slate-900/60 bg-white border dark:border-white/10 border-black/10 rounded-xl px-4 py-2.5 text-sm dark:text-slate-200 text-slate-800 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-gold dark:focus:bg-slate-900/80 focus:bg-white transition-all duration-200 min-h-[44px]";
 
 export const textareaCls = (err?: string) => err
-    ? "input-error w-full border rounded-xl px-4 py-3 text-sm text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-all duration-200 resize-none"
-    : "w-full dark:bg-slate-900/60 bg-white border dark:border-white/10 border-black/10 rounded-xl px-4 py-3 text-sm dark:text-slate-200 text-slate-800 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-gold transition-all duration-200 resize-none";
+    ? "input-error w-full border rounded-xl px-4 py-3 text-sm text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-all duration-200 resize-none min-h-[88px]"
+    : "w-full dark:bg-slate-900/60 bg-white border dark:border-white/10 border-black/10 rounded-xl px-4 py-3 text-sm dark:text-slate-200 text-slate-800 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-gold transition-all duration-200 resize-none min-h-[88px]";
