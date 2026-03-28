@@ -37,11 +37,15 @@ return [
 
         // ── Private disk — untuk dokumen & avatar yang tidak boleh diakses publik
         // Semua file di sini hanya bisa diakses via controller dengan auth check
+        // serve: true  → aktifkan temporaryUrl() untuk local driver
+        // url          → base URL untuk generate signed temporary URL
         'private' => [
-            'driver' => 'local',
-            'root'   => storage_path('app/private'),
-            'throw'  => false,
-            'report' => false,
+            'driver'     => 'local',
+            'root'       => storage_path('app/private'),
+            'serve'      => true,
+            'url'        => rtrim(env('APP_URL', 'http://localhost'), '/') . '/storage/private',
+            'throw'      => false,
+            'report'     => false,
         ],
 
         's3' => [

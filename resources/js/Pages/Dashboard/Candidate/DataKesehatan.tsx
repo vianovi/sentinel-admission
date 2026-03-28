@@ -132,7 +132,7 @@ const REQUIRED_FIELDS: EmptyField[] = [
     { key: "physicalDisab",    label: "Disabilitas Fisik",       tab: "riwayat" },
 ];
 
-// Field wajib per tab — untuk validasi per-tab
+// Field wajib per tab — validasi sebelum simpan & pindah tab
 const REQUIRED_BY_TAB: Record<string, string[]> = {
     fisik: [
         "blood_type", "rhesus", "height_cm", "weight_kg",
@@ -142,7 +142,9 @@ const REQUIRED_BY_TAB: Record<string, string[]> = {
         "major_illnesses", "last_illness", "allergy_food",
         "allergy_medicine", "allergy_condition", "physical_disabilities",
     ],
-    catatan: [], // semua opsional
+    catatan:         [], // semua opsional
+    "tim-kesehatan": [], // read-only
+    rangkuman:       [], // submit all
 };
 
 const swalDark = Swal.mixin({
@@ -373,19 +375,29 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
                     ease:       "outExpo",
                 });
             }, 50);
+            // Toast pojok kanan — data belum terisi
+            swalDark.fire({
+                toast:             true,
+                position:          "top-end",
+                icon:              "warning",
+                title:             "Data belum terisi",
+                text:              "Lengkapi field yang ditandai merah terlebih dahulu.",
+                showConfirmButton: false,
+                timer:             3000,
+                timerProgressBar:  true,
+            });
             return false;
         }
 
         return true;
     };
 
-    // ── Submit per-tab ────────────────────────────────────────────────────────
+    // ── Submit per-tab + auto pindah ke tab berikutnya ──────────────────────
     const handleTabSubmit = (tabId: TabId) => {
         if (!validateTab(tabId)) return;
 
         setSubmitting(true);
 
-        // Payload sesuai tab — type explicit agar compatible dengan Inertia RequestPayload
         type Payload = Record<string, string | number | boolean | null>;
         const payloads: Record<string, Payload> = {
             fisik: {
@@ -429,50 +441,72 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
             },
             onSuccess: () => {
                 setSubmitting(false);
-                // Clear error field tab ini setelah berhasil
+                // Clear error field tab ini
                 const tabFields = REQUIRED_BY_TAB[tabId] ?? [];
                 setErrors(prev => {
                     const next = { ...prev };
                     tabFields.forEach(f => delete next[f]);
                     return next;
                 });
+
+                // Toast sukses — hanya kalau ada payload yang dikirim
+                const payload = payloads[tabId] ?? {};
+                const hasData = Object.values(payload).some(v => v !== null && v !== "");
+                if (hasData) {
+                    swalDark.fire({
+                        toast:             true,
+                        position:          "top-end",
+                        icon:              "success",
+                        title:             "Tersimpan!",
+                        showConfirmButton: false,
+                        timer:             2000,
+                        timerProgressBar:  true,
+                    });
+                }
+
+                // Auto pindah ke tab berikutnya
+                const currentIdx = TABS.findIndex(t => t.id === tabId);
+                const nextTab    = TABS[currentIdx + 1];
+                if (nextTab) handleTabChange(nextTab.id);
             },
             preserveScroll: true,
         });
     };
 
-    // ── Submit semua (dari Rangkuman) — dengan konfirmasi ─────────────────────
+    // ── Submit semua (dari Rangkuman) — konfirmasi 2 langkah ────────────────
     const handleSubmitAll = async () => {
-        // Validasi semua tab wajib dulu
+        // Validasi fisik & riwayat sebelum kirim semua
         const fisikValid   = validateTab("fisik");
         const riwayatValid = validateTab("riwayat");
 
         if (!fisikValid || !riwayatValid) {
-            // Navigasi ke tab pertama yang error
             if (!fisikValid) handleTabChange("fisik");
             else handleTabChange("riwayat");
-
             swalDark.fire({
-                icon:  "warning",
-                title: "Data belum lengkap",
-                text:  "Masih ada field wajib yang belum diisi. Silakan lengkapi terlebih dahulu.",
-                confirmButtonText: "Cek & Perbaiki",
+                icon:              "warning",
+                title:             "Ada yang perlu dilengkapi",
+                text:              "Silakan periksa kembali isian yang ditandai merah.",
+                confirmButtonText: "OK",
             });
             return;
         }
 
-        // Semua valid — tampilkan konfirmasi
-        const result = await swalDark.fire({
+        // Langkah 1 — konfirmasi apakah data sudah sesuai
+        const confirm1 = await swalDark.fire({
             icon:              "question",
-            title:             "Kirim Data Kesehatan?",
+            title:             "Data sudah sesuai?",
             text:              "Pastikan semua informasi yang kamu isi sudah benar sebelum dikirim.",
             showCancelButton:  true,
-            confirmButtonText: "<i class='fa-solid fa-paper-plane mr-2'></i> Ya, Kirim Sekarang",
-            cancelButtonText:  "<i class='fa-solid fa-pencil mr-2'></i> Cek & Perbaiki",
+            confirmButtonText: "<i class='fa-solid fa-paper-plane mr-2'></i> Tetap Kirim",
+            cancelButtonText:  "<i class='fa-solid fa-arrow-left mr-2'></i> Cek Lagi",
             reverseButtons:    true,
         });
 
-        if (!result.isConfirmed) return;
+        if (!confirm1.isConfirmed) {
+            // Kembali ke tab fisik untuk cek ulang
+            handleTabChange("fisik");
+            return;
+        }
 
         setSubmitting(true);
 
@@ -513,6 +547,13 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
             onSuccess: () => {
                 setSubmitting(false);
                 setErrors({});
+                // Langkah 2 — konfirmasi data telah tersimpan
+                swalDark.fire({
+                    icon:              "success",
+                    title:             "Data Tersimpan!",
+                    text:              "Semua data kesehatan kamu telah berhasil dikirim.",
+                    confirmButtonText: "Oke, Terima Kasih!",
+                });
             },
             preserveScroll: true,
         });
@@ -681,26 +722,76 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
                     )}
                 </div>
 
-                {/* ── Submit per-tab — hanya di tab form ───────────────────── */}
-                {(activeTab === "fisik" || activeTab === "riwayat" || activeTab === "catatan") && (
-                    <div className="kesehatan-card flex justify-end">
-                        <button
-                            onClick={() => handleTabSubmit(activeTab)}
-                            disabled={submitting}
-                            className="flex items-center gap-2 px-6 py-2.5 rounded-xl
-                                       bg-emerald-500 hover:bg-emerald-400
-                                       text-white text-sm font-semibold
-                                       transition-all duration-200 active:scale-95
-                                       disabled:opacity-60 disabled:cursor-not-allowed
-                                       min-h-[44px]"
-                        >
-                            {submitting
-                                ? <><i className="fa-solid fa-spinner fa-spin"></i> Menyimpan...</>
-                                : <><i className="fa-solid fa-floppy-disk"></i> Simpan Data</>
-                            }
-                        </button>
-                    </div>
-                )}
+                {/* ── Navigasi tab — Kembali & Simpan & Lanjut / Kirim Semua ── */}
+                {(() => {
+                    const currentIdx  = TABS.findIndex(t => t.id === activeTab);
+                    const prevTab     = TABS[currentIdx - 1];
+                    const nextTab     = TABS[currentIdx + 1];
+                    const isRangkuman = activeTab === "rangkuman";
+                    const isFormTab   = !isRangkuman && activeTab !== "tim-kesehatan";
+
+                    return (
+                        <div className="kesehatan-card flex items-center justify-between gap-3">
+                            {/* Tombol Kembali — semua tab kecuali tab pertama */}
+                            {prevTab ? (
+                                <button
+                                    type="button"
+                                    onClick={() => handleTabChange(prevTab.id)}
+                                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl
+                                               dark:bg-white/[0.05] bg-slate-100
+                                               dark:hover:bg-white/[0.08] hover:bg-slate-200
+                                               dark:text-slate-300 text-slate-600
+                                               text-sm font-semibold
+                                               transition-all duration-200 active:scale-95
+                                               min-h-[44px]"
+                                >
+                                    <i className="fa-solid fa-arrow-left text-xs"></i>
+                                    <span>Kembali</span>
+                                </button>
+                            ) : (
+                                <div />
+                            )}
+
+                            {/* Tombol kanan — kontekstual per tab */}
+                            {isFormTab ? (
+                                /* Form tab — Simpan & Lanjut */
+                                <button
+                                    onClick={() => handleTabSubmit(activeTab)}
+                                    disabled={submitting}
+                                    className="flex items-center gap-2 px-6 py-2.5 rounded-xl
+                                               bg-emerald-500 hover:bg-emerald-400
+                                               text-white text-sm font-semibold
+                                               transition-all duration-200 active:scale-95
+                                               disabled:opacity-60 disabled:cursor-not-allowed
+                                               min-h-[44px]"
+                                >
+                                    {submitting
+                                        ? <><i className="fa-solid fa-spinner fa-spin"></i> Menyimpan...</>
+                                        : nextTab
+                                            ? <><i className="fa-solid fa-floppy-disk"></i> Simpan &amp; Lanjut <i className="fa-solid fa-arrow-right text-xs ml-1"></i></>
+                                            : <><i className="fa-solid fa-floppy-disk"></i> Simpan Data</>
+                                    }
+                                </button>
+                            ) : (
+                                /* Tim Kesehatan — hanya Lanjut */
+                                nextTab ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => handleTabChange(nextTab.id)}
+                                        className="flex items-center gap-2 px-6 py-2.5 rounded-xl
+                                                   bg-emerald-500 hover:bg-emerald-400
+                                                   text-white text-sm font-semibold
+                                                   transition-all duration-200 active:scale-95
+                                                   min-h-[44px]"
+                                    >
+                                        <span>Lanjut</span>
+                                        <i className="fa-solid fa-arrow-right text-xs"></i>
+                                    </button>
+                                ) : <div />
+                            )}
+                        </div>
+                    );
+                })()}
 
             </div>
         </DashboardSplitLayout>

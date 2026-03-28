@@ -4,6 +4,7 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - .:/var/www/html:Z  # :Z itu WAJIB di Fedora biar gak error Permission Denied
+      - .:/var/www/html:Z
+    user: "1000:1000"
     extra_hosts:
-      - "host.docker.internal:host-gateway" # Biar bisa konek ke MariaDB laptop server
+      - "host.docker.internal:host-gateway"

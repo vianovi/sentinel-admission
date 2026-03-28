@@ -39,9 +39,9 @@ type Props = {
     emptyRequiredFields: EmptyField[];
     progressGradient:    string;
     completion:          number;
-    submitting:          boolean;
     onNavigateToTab:     (tab: TabId) => void;
     onSubmitAll:         () => void;
+    submitting:          boolean;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -375,20 +375,22 @@ export default function TabRangkuman({
                 </SummarySection>
             )}
 
-            {/* ── Tombol Kirim & Selesaikan ─────────────────────────────── */}
-            <div className="rangkuman-card opacity-0 pt-2">
-                {completion < 100 && (
-                    <div className="flex items-start gap-2.5 p-3.5 rounded-xl mb-4
-                                    dark:bg-amber-500/[0.08] bg-amber-50
-                                    border dark:border-amber-500/20 border-amber-200">
-                        <i className="fa-solid fa-circle-info text-amber-400 text-xs mt-0.5 shrink-0"></i>
-                        <p className="text-[11px] dark:text-amber-300/80 text-amber-700">
-                            Masih ada <strong>{emptyRequiredFields.length} field wajib</strong> yang belum diisi.
-                            Kamu tetap bisa menyimpan, namun data belum dianggap lengkap.
-                        </p>
-                    </div>
-                )}
+            {/* ── Info field belum lengkap ───────────────────────────────── */}
+            {/* ── Warning field belum lengkap ───────────────────────────── */}
+            {completion < 100 && (
+                <div className="rangkuman-card opacity-0 flex items-start gap-2.5 p-3.5 rounded-xl
+                                dark:bg-amber-500/[0.08] bg-amber-50
+                                border dark:border-amber-500/20 border-amber-200">
+                    <i className="fa-solid fa-circle-info text-amber-400 text-xs mt-0.5 shrink-0"></i>
+                    <p className="text-[11px] dark:text-amber-300/80 text-amber-700">
+                        Masih ada <strong>{emptyRequiredFields.length} field wajib</strong> yang belum diisi.
+                        Klik tab di atas untuk melengkapi data yang kurang.
+                    </p>
+                </div>
+            )}
 
+            {/* ── Tombol Kirim Semua ────────────────────────────────────── */}
+            <div className="rangkuman-card opacity-0 pt-2">
                 <div className="flex items-center justify-between gap-4">
                     <div>
                         <p className="text-xs font-semibold dark:text-slate-300 text-slate-700">
@@ -409,8 +411,8 @@ export default function TabRangkuman({
                                    min-h-[44px]"
                     >
                         {submitting
-                            ? <><i className="fa-solid fa-spinner fa-spin text-xs"></i> Menyimpan...</>
-                            : <><i className="fa-solid fa-paper-plane text-xs"></i> Kirim & Selesaikan</>
+                            ? <><i className="fa-solid fa-spinner fa-spin text-xs"></i> Mengirim...</>
+                            : <><i className="fa-solid fa-paper-plane text-xs"></i> Kirim &amp; Selesaikan</>
                         }
                     </button>
                 </div>

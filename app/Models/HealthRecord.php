@@ -152,28 +152,28 @@ class HealthRecord extends Model
     public function getSuratSehatUrlAttribute(): ?string
     {
         return $this->surat_sehat_path
-            ? Storage::url($this->surat_sehat_path)
+            ? Storage::disk('private')->temporaryUrl($this->surat_sehat_path, now()->addMinutes(5))
             : null;
     }
 
     public function getBpjsCardUrlAttribute(): ?string
     {
         return $this->bpjs_card_path
-            ? Storage::url($this->bpjs_card_path)
+            ? Storage::disk('private')->temporaryUrl($this->bpjs_card_path, now()->addMinutes(5))
             : null;
     }
 
     public function getVaccineCardUrlAttribute(): ?string
     {
         return $this->vaccine_card_path
-            ? Storage::url($this->vaccine_card_path)
+            ? Storage::disk('private')->temporaryUrl($this->vaccine_card_path, now()->addMinutes(5))
             : null;
     }
 
     public function getChronicDiseaseDocUrlAttribute(): ?string
     {
         return $this->chronic_disease_doc_path
-            ? Storage::url($this->chronic_disease_doc_path)
+            ? Storage::disk('private')->temporaryUrl($this->chronic_disease_doc_path, now()->addMinutes(5))
             : null;
     }
 
