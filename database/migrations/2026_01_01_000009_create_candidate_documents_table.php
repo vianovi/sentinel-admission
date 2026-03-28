@@ -31,7 +31,7 @@ return new class extends Migration
                 'academic',    // Kelompok B — Akademik
                 'achievement', // Kelompok C — Prestasi (multi-upload diizinkan)
                 'welfare',     // Kelompok D — Bantuan & Afirmasi (pilih salah satu)
-                'boarding',    // Kelompok E — Boarding School (sebagian kondisional)
+                'administration',    // Kelompok E — administration School (sebagian kondisional)
             ]);
 
             // ─── FILE INFO ────────────────────────────────────────────────
