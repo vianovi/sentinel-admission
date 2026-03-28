@@ -1,6 +1,6 @@
 /**
  * Tab components for DataDokumen
- * TabIdentitas, TabAkademik, TabPrestasi, TabBantuan, TabBoarding
+ * TabIdentitas, TabAkademik, TabPrestasi, TabBantuan, TabAdministrasi
  */
 
 import { useEffect } from 'react'
@@ -11,9 +11,9 @@ import type { DocumentRecord } from '@/Pages/Dashboard/Candidate/DataDokumen'
 // ─── Shared tab props type ────────────────────────────────────
 
 interface TabProps {
-    documents:      Record<string, DocumentRecord>
+    documents:       Record<string, DocumentRecord>
     achievementDocs: Record<string, DocumentRecord[]>
-    isTransfer:     boolean
+    isTransfer:      boolean
 }
 
 // ─── Shared stagger hook ──────────────────────────────────────
@@ -62,10 +62,10 @@ export function TabIdentitas({ documents }: TabProps) {
     useTabEntrance('.doc-card')
 
     const docs = [
-        { type: 'photo_formal',   label: 'Pas Foto Resmi',       hint: 'Untuk kartu peserta & arsip digital' },
-        { type: 'birth_certificate', label: 'Akta Kelahiran',     hint: 'Verifikasi identitas resmi' },
-        { type: 'family_card',    label: 'Kartu Keluarga (KK)',   hint: 'Verifikasi data keluarga & domisili' },
-        { type: 'parent_id_card', label: 'KTP Orang Tua / Wali', hint: 'Legalitas pendaftaran oleh wali' },
+        { type: 'photo_formal',      label: 'Pas Foto Resmi',        hint: 'Untuk kartu peserta & arsip digital' },
+        { type: 'birth_certificate', label: 'Akta Kelahiran',         hint: 'Verifikasi identitas resmi' },
+        { type: 'family_card',       label: 'Kartu Keluarga (KK)',    hint: 'Verifikasi data keluarga & domisili' },
+        { type: 'parent_id_card',    label: 'KTP Orang Tua / Wali',  hint: 'Legalitas pendaftaran oleh wali' },
     ]
 
     return (
@@ -87,33 +87,54 @@ export function TabIdentitas({ documents }: TabProps) {
 }
 
 // =============================================================
-// TAB B — Akademik
+// TAB B — Akademik (termasuk transfer_letter jika is_transfer)
 // =============================================================
 
-export function TabAkademik({ documents }: TabProps) {
+export function TabAkademik({ documents, isTransfer }: TabProps) {
     useTabEntrance('.doc-card')
 
     const docs = [
-        { type: 'graduation_certificate', label: 'Ijazah / SKL',            hint: 'Bukti kelulusan jenjang sebelumnya' },
-        { type: 'report_card',            label: 'Rapor Semester Terakhir',  hint: 'Rekam jejak akademik terkini' },
-        { type: 'academic_transcript',    label: 'Transkrip Nilai Lengkap',  hint: 'Gambaran akademik menyeluruh untuk evaluasi' },
+        { type: 'graduation_certificate', label: 'Ijazah / SKL',           hint: 'Bukti kelulusan jenjang sebelumnya' },
+        { type: 'report_card',            label: 'Rapor Semester Terakhir', hint: 'Rekam jejak akademik terkini' },
+        { type: 'academic_transcript',    label: 'Transkrip Nilai Lengkap', hint: 'Gambaran akademik menyeluruh untuk evaluasi' },
     ]
 
     return (
-        <TabSection
-            title="Akademik"
-            description="Dokumen rekam jejak pendidikanmu dari sekolah sebelumnya."
-        >
-            {docs.map(({ type, label, hint }) => (
-                <DocumentCard
-                    key={type}
-                    docType={type}
-                    label={label}
-                    hint={hint}
-                    document={documents[type] ?? null}
-                />
-            ))}
-        </TabSection>
+        <div>
+            <TabSection
+                title="Akademik"
+                description="Dokumen rekam jejak pendidikanmu dari sekolah sebelumnya."
+            >
+                {docs.map(({ type, label, hint }) => (
+                    <DocumentCard
+                        key={type}
+                        docType={type}
+                        label={label}
+                        hint={hint}
+                        document={documents[type] ?? null}
+                    />
+                ))}
+            </TabSection>
+
+            {/* Conditional: transfer_letter hanya untuk siswa pindahan */}
+            {isTransfer && (
+                <div className="doc-card">
+                    <div className="mb-3 rounded-2xl border border-amber-200 dark:border-amber-800/50
+                                    bg-amber-50 dark:bg-amber-900/20 p-3">
+                        <p className="text-sm text-amber-700 dark:text-amber-400 flex items-center gap-2">
+                            <i className="fa-solid fa-right-left text-xs flex-shrink-0" />
+                            Kamu terdaftar sebagai <strong>siswa pindahan</strong> — surat keterangan pindah diperlukan.
+                        </p>
+                    </div>
+                    <DocumentCard
+                        docType="transfer_letter"
+                        label="Surat Keterangan Pindah"
+                        hint="Wajib dilampirkan karena kamu mendaftar sebagai siswa pindahan"
+                        document={documents['transfer_letter'] ?? null}
+                    />
+                </div>
+            )}
+        </div>
     )
 }
 
@@ -200,9 +221,6 @@ export function TabPrestasi({ achievementDocs }: TabProps) {
 export function TabBantuan({ documents }: TabProps) {
     useTabEntrance('.doc-card')
 
-    const hasAny = ['kip_card', 'welfare_card', 'poverty_letter']
-        .some(t => documents[t] != null)
-
     const docs = [
         {
             type:  'kip_card',
@@ -252,50 +270,29 @@ export function TabBantuan({ documents }: TabProps) {
 }
 
 // =============================================================
-// TAB E — Boarding School (sebagian kondisional)
+// TAB E — Administrasi & Pernyataan (universal — semua jenis sekolah)
 // =============================================================
 
-export function TabBoarding({ documents, isTransfer }: TabProps) {
+export function TabAdministrasi({ documents }: TabProps) {
     useTabEntrance('.doc-card')
 
     return (
-        <div>
-            <TabSection
-                title="Administrasi Boarding School"
-                description="Dokumen khusus untuk kehidupan di pondok pesantren."
-            >
-                <DocumentCard
-                    docType="parent_statement"
-                    label="Surat Pernyataan Orang Tua"
-                    hint="Persetujuan & kesanggupan mengikuti tata tertib pondok"
-                    document={documents['parent_statement'] ?? null}
-                />
-                <DocumentCard
-                    docType="recommendation_letter"
-                    label="Surat Rekomendasi"
-                    hint="Dari guru, ustadz, atau kepala sekolah (opsional)"
-                    document={documents['recommendation_letter'] ?? null}
-                />
-            </TabSection>
-
-            {/* Conditional: transfer_letter hanya untuk santri pindahan */}
-            {isTransfer && (
-                <div className="doc-card">
-                    <div className="mb-3 rounded-2xl border border-purple-200 dark:border-purple-800/50
-                                    bg-purple-50 dark:bg-purple-900/20 p-3">
-                        <p className="text-sm text-purple-700 dark:text-purple-400 flex items-center gap-2">
-                            <i className="fa-solid fa-right-left text-xs" />
-                            Kamu terdaftar sebagai <strong>santri pindahan</strong>. Surat keterangan pindah diperlukan.
-                        </p>
-                    </div>
-                    <DocumentCard
-                        docType="transfer_letter"
-                        label="Surat Keterangan Pindah"
-                        hint="Wajib dilampirkan karena kamu mendaftar sebagai santri pindahan"
-                        document={documents['transfer_letter'] ?? null}
-                    />
-                </div>
-            )}
-        </div>
+        <TabSection
+            title="Administrasi & Pernyataan"
+            description="Dokumen administratif yang diperlukan sebagai kelengkapan pendaftaran."
+        >
+            <DocumentCard
+                docType="parent_statement"
+                label="Surat Pernyataan Orang Tua"
+                hint="Persetujuan & kesanggupan mengikuti tata tertib sekolah"
+                document={documents['parent_statement'] ?? null}
+            />
+            <DocumentCard
+                docType="recommendation_letter"
+                label="Surat Rekomendasi"
+                hint="Dari guru atau kepala sekolah (opsional)"
+                document={documents['recommendation_letter'] ?? null}
+            />
+        </TabSection>
     )
 }

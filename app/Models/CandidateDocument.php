@@ -36,11 +36,11 @@ class CandidateDocument extends Model
     // =============================================
 
     const DOC_GROUPS = [
-        'identity'    => 'Kelompok A — Identitas & Kependudukan',
-        'academic'    => 'Kelompok B — Akademik',
-        'achievement' => 'Kelompok C — Prestasi (multi-upload)',
-        'welfare'     => 'Kelompok D — Bantuan & Afirmasi',
-        'boarding'    => 'Kelompok E — Boarding School',
+        'identity'       => 'Kelompok A — Identitas & Kependudukan',
+        'academic'       => 'Kelompok B — Akademik',
+        'achievement'    => 'Kelompok C — Prestasi (multi-upload)',
+        'welfare'        => 'Kelompok D — Bantuan & Afirmasi',
+        'administration' => 'Kelompok E — Administrasi & Pernyataan',
     ];
 
     // =============================================
@@ -86,6 +86,15 @@ class CandidateDocument extends Model
             'label' => 'Transkrip Nilai Lengkap',
             'hint'  => 'Gambaran akademik menyeluruh untuk evaluasi',
         ],
+        // transfer_letter masuk academic — dokumen riwayat pendidikan,
+        // bukan eksklusif boarding. Berlaku untuk semua jenis sekolah.
+        'transfer_letter'         => [
+            'group'           => 'academic',
+            'label'           => 'Surat Keterangan Pindah',
+            'hint'            => 'Wajib jika kamu mendaftar sebagai siswa pindahan',
+            'conditional'     => true,
+            'condition_field' => 'is_transfer',
+        ],
 
         // ─── Kelompok C — achievement (multi-upload) ─────────────
         'achievement_academic'    => [
@@ -121,23 +130,17 @@ class CandidateDocument extends Model
             'hint'  => 'Alternatif jika belum punya KIP/KKS, diurus di kelurahan',
         ],
 
-        // ─── Kelompok E — boarding ────────────────────────────────
+        // ─── Kelompok E — administration ─────────────────────────
+        // Dokumen administratif & pernyataan — universal untuk semua jenis sekolah
         'parent_statement'        => [
-            'group' => 'boarding',
+            'group' => 'administration',
             'label' => 'Surat Pernyataan Orang Tua',
-            'hint'  => 'Persetujuan & kesanggupan mengikuti tata tertib pondok',
+            'hint'  => 'Persetujuan & kesanggupan mengikuti tata tertib sekolah',
         ],
         'recommendation_letter'   => [
-            'group' => 'boarding',
+            'group' => 'administration',
             'label' => 'Surat Rekomendasi',
-            'hint'  => 'Dari guru, ustadz, atau kepala sekolah (opsional)',
-        ],
-        'transfer_letter'         => [
-            'group'           => 'boarding',
-            'label'           => 'Surat Keterangan Pindah',
-            'hint'            => 'Wajib jika kamu mendaftar sebagai santri pindahan',
-            'conditional'     => true,
-            'condition_field' => 'is_transfer',
+            'hint'  => 'Dari guru atau kepala sekolah (opsional)',
         ],
     ];
 
@@ -145,8 +148,6 @@ class CandidateDocument extends Model
     // MULTI UPLOAD POLICY
     // =============================================
 
-    // allow_multiple adalah policy di Model — bukan kolom DB
-    // Hanya kelompok achievement yang boleh multi-upload
     const MULTI_UPLOAD_TYPES = [
         'achievement_academic',
         'achievement_nonacademic',

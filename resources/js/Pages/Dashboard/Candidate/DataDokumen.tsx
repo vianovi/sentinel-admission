@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import { animate, stagger } from 'animejs'
-import { usePage } from '@inertiajs/react'
 import DashboardSplitLayout from '@/Layouts/DashboardSplitLayout'
 import CandidateSidebar from '@/Components/Dashboard/Candidate/Shared/CandidateSidebar'
 import {
@@ -8,7 +7,7 @@ import {
     TabAkademik,
     TabPrestasi,
     TabBantuan,
-    TabBoarding,
+    TabAdministrasi,
 } from '@/Components/Dashboard/Candidate/DataDokumen/TabComponents'
 
 // ─── Types ───────────────────────────────────────────────────
@@ -16,64 +15,65 @@ import {
 export type DocumentStatus = 'empty' | 'uploading' | 'pending' | 'verified' | 'rejected'
 
 export interface DocumentRecord {
-    id: number
-    doc_type: string
-    doc_group: string
+    id:                number
+    doc_type:          string
+    doc_group:         string
     original_filename: string
-    status: DocumentStatus
-    rejection_reason: string | null
-    created_at: string
-    updated_at: string
+    status:            DocumentStatus
+    rejection_reason:  string | null
+    created_at:        string
+    updated_at:        string
 }
 
 interface CandidateSnippet {
-    full_name: string
-    nisn: string
-    nik: string
-    gender_label: string
+    full_name:           string
+    nisn:                string
+    nik:                 string
+    gender_label:        string
     date_of_birth_label: string
-    school_origin: string
-    status: string
-    program_choice: string | null
-    admission_wave: { title: string } | null
+    school_origin:       string
+    status:              string
+    program_choice:      string | null
+    admission_wave:      { title: string } | null
 }
 
 interface Props {
-    user: { name: string; avatar_url: string | null; initials: string }
-    candidate: CandidateSnippet
-    documents: Record<string, DocumentRecord>         // single-upload docs, keyed by doc_type
-    achievementDocs: Record<string, DocumentRecord[]> // multi-upload docs, keyed by doc_type
-    isTransfer: boolean
-    completion: number
+    user:           { name: string; avatar_url: string | null; initials: string }
+    candidate:      CandidateSnippet
+    documents:      Record<string, DocumentRecord>          // single-upload docs, keyed by doc_type
+    achievementDocs: Record<string, DocumentRecord[]>       // multi-upload docs, keyed by doc_type
+    isTransfer:     boolean
+    completion:     number
 }
 
 // ─── Tab definitions ─────────────────────────────────────────
 
 const TABS = [
-    { id: 'identity',    label: 'Identitas',  icon: 'fa-id-card' },
-    { id: 'academic',    label: 'Akademik',   icon: 'fa-graduation-cap' },
-    { id: 'achievement', label: 'Prestasi',   icon: 'fa-trophy' },
-    { id: 'welfare',     label: 'Bantuan',    icon: 'fa-hand-holding-heart' },
-    { id: 'boarding',    label: 'Boarding',   icon: 'fa-mosque' },
+    { id: 'identity',        label: 'Identitas',      icon: 'fa-id-card' },
+    { id: 'academic',        label: 'Akademik',        icon: 'fa-graduation-cap' },
+    { id: 'achievement',     label: 'Prestasi',        icon: 'fa-trophy' },
+    { id: 'welfare',         label: 'Bantuan',         icon: 'fa-hand-holding-heart' },
+    { id: 'administration',  label: 'Administrasi',    icon: 'fa-file-signature' },
 ] as const
 
 type TabId = typeof TABS[number]['id']
 
 // ─── Component ───────────────────────────────────────────────
 
-export default function DataDokumen({ user, candidate, documents, achievementDocs, isTransfer, completion }: Props) {
-    const [activeTab, setActiveTab]   = useState<TabId>('identity')
-    const [prevTab, setPrevTab]       = useState<TabId>('identity')
-    const containerRef                = useRef<HTMLDivElement>(null)
+export default function DataDokumen({
+    user, candidate, documents, achievementDocs, isTransfer, completion
+}: Props) {
+    const [activeTab, setActiveTab] = useState<TabId>('identity')
+    const containerRef              = useRef<HTMLDivElement>(null)
 
     // Entrance animation on mount
     useEffect(() => {
         animate('.dokumen-tab-btn', {
-            opacity:      [0, 1],
-            translateY:   [10, 0],
-            duration:     400,
-            delay:        stagger(60),
-            ease:         'outExpo',
+            opacity:    [0, 1],
+            translateY: [10, 0],
+            duration:   400,
+            delay:      stagger(60),
+            ease:       'outExpo',
         })
         animate('.dokumen-content', {
             opacity:    [0, 1],
@@ -83,7 +83,7 @@ export default function DataDokumen({ user, candidate, documents, achievementDoc
         })
     }, [])
 
-    // Tab transition
+    // Tab transition — keluar dulu (inQuad) baru masuk (outExpo)
     const handleTabChange = (newTab: TabId) => {
         if (newTab === activeTab) return
         if (!containerRef.current) return
@@ -100,7 +100,6 @@ export default function DataDokumen({ user, candidate, documents, achievementDoc
 
         // Phase 2: enter
         setTimeout(() => {
-            setPrevTab(activeTab)
             setActiveTab(newTab)
             if (!containerRef.current) return
             animate(containerRef.current, {
@@ -153,7 +152,7 @@ export default function DataDokumen({ user, candidate, documents, achievementDoc
                             className={[
                                 'dokumen-tab-btn flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl',
                                 'text-sm font-medium transition-all duration-200',
-                                'min-h-[44px]', // touch target
+                                'min-h-[44px]', // touch target minimum 44px
                                 activeTab === tab.id
                                     ? 'bg-[var(--content-surface)] text-amber-600 dark:text-amber-400 shadow-sm border border-[var(--content-border)]'
                                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-[var(--content-card)]',
@@ -167,11 +166,11 @@ export default function DataDokumen({ user, candidate, documents, achievementDoc
 
                 {/* Tab content */}
                 <div ref={containerRef} className="mt-4">
-                    {activeTab === 'identity'    && <TabIdentitas    {...tabProps} />}
-                    {activeTab === 'academic'    && <TabAkademik     {...tabProps} />}
-                    {activeTab === 'achievement' && <TabPrestasi     {...tabProps} />}
-                    {activeTab === 'welfare'     && <TabBantuan      {...tabProps} />}
-                    {activeTab === 'boarding'    && <TabBoarding     {...tabProps} />}
+                    {activeTab === 'identity'       && <TabIdentitas      {...tabProps} />}
+                    {activeTab === 'academic'       && <TabAkademik       {...tabProps} />}
+                    {activeTab === 'achievement'    && <TabPrestasi       {...tabProps} />}
+                    {activeTab === 'welfare'        && <TabBantuan        {...tabProps} />}
+                    {activeTab === 'administration' && <TabAdministrasi   {...tabProps} />}
                 </div>
             </div>
         </DashboardSplitLayout>
@@ -189,10 +188,10 @@ function OverallProgressBanner({ completion }: { completion: number }) {
     }
 
     const getMessage = (pct: number): string => {
-        if (pct === 0)   return 'Belum ada dokumen yang diupload'
-        if (pct < 50)    return 'Baru mulai — yuk lengkapi dokumenmu~'
-        if (pct < 75)    return 'Sudah lebih dari setengah jalan!'
-        if (pct < 100)   return 'Hampir lengkap, sedikit lagi~'
+        if (pct === 0) return 'Belum ada dokumen yang diupload'
+        if (pct < 50)  return 'Baru mulai — yuk lengkapi dokumenmu~'
+        if (pct < 75)  return 'Sudah lebih dari setengah jalan!'
+        if (pct < 100) return 'Hampir lengkap, sedikit lagi~'
         return 'Semua dokumen sudah diupload!'
     }
 
