@@ -92,7 +92,7 @@ class DataDiriController extends Controller
         $validated = $request->validate([
             'email'                       => ['nullable', 'email', 'max:255', 'regex:/^[^\s@]+@gmail\.com$/i'],
             'phone_number'                => ['nullable', 'string', 'regex:/^08[0-9]{8,12}$/'],
-            'religion'                    => ['nullable', 'string', 'max:50'],
+            'religion'                    => ['nullable', 'string', 'max:50', 'in:Islam,Kristen,Katolik,Hindu,Buddha,Konghucu'],
             'child_order'                 => ['nullable', 'integer', 'min:1', 'max:20'],
             'siblings_count'              => ['nullable', 'integer', 'min:0', 'max:20'],
             'hobbies'                     => ['nullable', 'string', 'max:500'],

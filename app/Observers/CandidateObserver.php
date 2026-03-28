@@ -3,46 +3,114 @@
 namespace App\Observers;
 
 use App\Models\Candidate;
+use App\Models\Guardian;
+use App\Models\HealthRecord;
+use Illuminate\Support\Facades\Log;
 
 /**
  * CandidateObserver
  *
- * Otomatis propagate candidate_code ke semua tabel terkait
- * saat record candidate dibuat atau candidate_code diupdate.
+ * Dua tanggung jawab utama:
  *
- * Tabel yang di-handle:
- * - guardians
- * - health_records
- * - candidate_documents
- * - payments
+ * 1. Propagate candidate_code ke semua tabel terkait
+ *    saat record candidate dibuat atau candidate_code diupdate.
+ *
+ * 2. Auto-submitted: ubah status kandidat dari 'draft' → 'submitted'
+ *    secara otomatis ketika semua kriteria wajib terpenuhi.
+ *    Status TIDAK PERNAH mundur dari 'submitted' → 'draft' secara otomatis.
+ *
+ * Kriteria auto-submitted (13 field dari 3 tabel):
+ *
+ *   candidates:
+ *     - religion        → not null
+ *     - program_choice  → not null
+ *
+ *   guardians:
+ *     - mother_name     → not null
+ *     - income_type     → not null
+ *     - father_status   → not null
+ *     - mother_status   → not null
+ *     - no_kk           → not null
+ *
+ *   health_records:
+ *     - blood_type               → not null
+ *     - rhesus                   → not null
+ *     - height_cm                → not null
+ *     - weight_kg                → not null
+ *     - general_health_condition → not null
+ *     - eye_right_type           → not null
+ *     - eye_left_type            → not null
  */
 class CandidateObserver
 {
+    // =========================================================================
+    // CANDIDATE EVENTS
+    // =========================================================================
+
     /**
-     * Saat candidate baru dibuat — propagate candidate_code ke guardian
-     * yang sudah dibuat sebelumnya via Guardian::createFromDraft().
-     *
-     * Catatan: guardian dibuat di RegisterController SETELAH candidate dibuat,
-     * jadi guardian sudah dapat candidate_code langsung di createFromDraft().
-     * Observer ini sebagai safety net kalau ada create manual lain.
+     * Saat candidate baru dibuat:
+     * - Propagate candidate_code ke tabel terkait
+     * - Cek auto-submitted (kemungkinan belum terpenuhi, tapi tetap dicek)
      */
     public function created(Candidate $candidate): void
     {
-        if (! $candidate->candidate_code) return;
+        if ($candidate->candidate_code) {
+            $this->propagate($candidate);
+        }
 
-        $this->propagate($candidate);
+        $this->checkAndSubmit($candidate);
     }
 
     /**
-     * Saat candidate_code diupdate — sync ke semua tabel terkait.
-     * Seharusnya tidak pernah terjadi, tapi tetap di-handle untuk keamanan.
+     * Saat candidate diupdate:
+     * - Propagate candidate_code kalau berubah
+     * - Cek auto-submitted kalau field relevan berubah
      */
     public function updated(Candidate $candidate): void
     {
-        if (! $candidate->isDirty('candidate_code')) return;
-        if (! $candidate->candidate_code) return;
+        // Propagate candidate_code kalau berubah
+        if ($candidate->isDirty('candidate_code') && $candidate->candidate_code) {
+            $this->propagate($candidate);
+        }
 
-        $this->propagate($candidate);
+        // Cek auto-submitted hanya kalau field relevan yang berubah
+        // Early exit kalau sudah submitted — tidak perlu cek apapun
+        if ($candidate->status === 'submitted') return;
+
+        $watchedFields = ['religion', 'program_choice', 'status'];
+        if ($candidate->isDirty($watchedFields)) {
+            $this->checkAndSubmit($candidate);
+        }
+    }
+
+    // =========================================================================
+    // GUARDIAN & HEALTH RECORD EVENTS
+    // =========================================================================
+    // Dipanggil dari Guardian Observer dan HealthRecord Observer masing-masing.
+    // Dipisah agar setiap model bisa trigger cek secara independen.
+
+    /**
+     * Dipanggil oleh GuardianObserver saat guardian di-save.
+     * Cek auto-submitted untuk candidate yang terkait.
+     */
+    public function checkFromGuardian(Guardian $guardian): void
+    {
+        $candidate = $guardian->candidate;
+        if (! $candidate || $candidate->status === 'submitted') return;
+
+        $this->checkAndSubmit($candidate);
+    }
+
+    /**
+     * Dipanggil oleh HealthRecordObserver saat health record di-save.
+     * Cek auto-submitted untuk candidate yang terkait.
+     */
+    public function checkFromHealthRecord(HealthRecord $healthRecord): void
+    {
+        $candidate = $healthRecord->candidate;
+        if (! $candidate || $candidate->status === 'submitted') return;
+
+        $this->checkAndSubmit($candidate);
     }
 
     // =========================================================================
@@ -50,17 +118,79 @@ class CandidateObserver
     // =========================================================================
 
     /**
+     * Cek apakah semua kriteria terpenuhi, lalu update status ke 'submitted'.
+     *
+     * Optimasi server:
+     * - Early exit kalau status sudah submitted
+     * - Query guardian & health_record pakai select() — hanya kolom yang dicek
+     * - Tidak ada N+1, semua dalam 1 query per tabel
+     * - Wrapped dalam try-catch — tidak boleh throw exception ke user
+     */
+    private function checkAndSubmit(Candidate $candidate): void
+    {
+        try {
+            // ── Early exit — sudah submitted, tidak perlu cek ────────────────
+            if ($candidate->status === 'submitted') return;
+
+            // ── Cek candidates table (sudah ada di memory) ───────────────────
+            if (empty($candidate->religion))       return;
+            if (empty($candidate->program_choice)) return;
+
+            // ── Cek guardians table — select hanya kolom yang dicek ──────────
+            $guardian = $candidate->guardian()
+                ->select(['mother_name', 'income_type', 'father_status', 'mother_status', 'no_kk'])
+                ->first();
+
+            if (! $guardian)                        return;
+            if (empty($guardian->mother_name))      return;
+            if (empty($guardian->income_type))      return;
+            if (empty($guardian->father_status))    return;
+            if (empty($guardian->mother_status))    return;
+            if (empty($guardian->no_kk))            return;
+
+            // ── Cek health_records table — select hanya kolom yang dicek ─────
+            $health = $candidate->healthRecord()
+                ->select([
+                    'blood_type', 'rhesus', 'height_cm', 'weight_kg',
+                    'general_health_condition', 'eye_right_type', 'eye_left_type',
+                ])
+                ->first();
+
+            if (! $health)                                  return;
+            if (empty($health->blood_type))                 return;
+            if (empty($health->rhesus))                     return;
+            if (empty($health->height_cm))                  return;
+            if (empty($health->weight_kg))                  return;
+            if (empty($health->general_health_condition))   return;
+            if (empty($health->eye_right_type))             return;
+            if (empty($health->eye_left_type))              return;
+
+            // ── Semua kriteria terpenuhi → update status ─────────────────────
+            // Pakai updateQuietly() agar tidak trigger observer loop
+            $candidate->updateQuietly(['status' => 'submitted']);
+
+            Log::info('Candidate auto-submitted', [
+                'candidate_id'   => $candidate->id,
+                'candidate_code' => $candidate->candidate_code,
+            ]);
+
+        } catch (\Exception $e) {
+            // Silent — jangan crash request user karena gagal auto-submitted
+            Log::error('CandidateObserver@checkAndSubmit failed', [
+                'candidate_id' => $candidate->id ?? null,
+                'error'        => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
      * Propagate candidate_code ke semua tabel terkait.
      * Hanya update record yang candidate_code-nya masih null.
-     *
-     * Pakai withTrashed() agar SoftDeletes scope tidak mengganggu query
-     * pada tabel yang belum tentu punya record saat observer jalan.
      */
     private function propagate(Candidate $candidate): void
     {
         $code = $candidate->candidate_code;
 
-        // Guardians
         if ($candidate->guardian()->exists()) {
             $candidate->guardian()
                 ->withTrashed()
@@ -68,7 +198,6 @@ class CandidateObserver
                 ->update(['candidate_code' => $code]);
         }
 
-        // Health records
         if ($candidate->healthRecord()->exists()) {
             $candidate->healthRecord()
                 ->withTrashed()
@@ -76,7 +205,6 @@ class CandidateObserver
                 ->update(['candidate_code' => $code]);
         }
 
-        // Candidate documents
         if ($candidate->documents()->exists()) {
             $candidate->documents()
                 ->withTrashed()
@@ -84,7 +212,6 @@ class CandidateObserver
                 ->update(['candidate_code' => $code]);
         }
 
-        // Payments
         if ($candidate->payments()->exists()) {
             $candidate->payments()
                 ->withTrashed()

@@ -83,7 +83,7 @@ class GuardianController extends Controller
 
         return [
             // Shared
-            'no_kk'        => ['nullable', 'digits:16'],
+            'no_kk'        => ['required', 'digits:16'],
             'income_type'  => ['required', 'in:separate,combined'],
             'alamat_shared'=> ['boolean'],
 

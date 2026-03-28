@@ -7,6 +7,10 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 use App\Models\Candidate;
+use App\Models\Guardian;
+use App\Models\HealthRecord;
+use App\Observers\GuardianObserver;
+use App\Observers\HealthRecordObserver;
 use App\Observers\CandidateObserver;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\RateLimiter;
@@ -31,6 +35,9 @@ class AppServiceProvider extends ServiceProvider
         }
 
         Candidate::observe(CandidateObserver::class);
+        Guardian::observe(GuardianObserver::class);
+        HealthRecord::observe(HealthRecordObserver::class);
+
 
         Request::setTrustedProxies(
             ['127.0.0.1', '10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16', 'REMOTE_ADDR'],

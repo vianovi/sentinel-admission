@@ -319,23 +319,26 @@ class HealthRecordController extends Controller
     private function validationRules(): array
     {
         return [
-            'blood_type'               => ['required', 'in:A,B,AB,O,unknown'],
-            'rhesus'                   => ['required', 'in:positive,negative,unknown'],
-            'height_cm'                => ['required', 'integer', 'min:50', 'max:250'],
-            'weight_kg'                => ['required', 'integer', 'min:10', 'max:300'],
-            'general_health_condition' => ['required', 'string', 'max:1000'],
+            // Tab Fisik — nullable untuk partial save, auto-submitted yang jaga gerbang
+            'blood_type'               => ['nullable', 'in:A,B,AB,O,unknown'],
+            'rhesus'                   => ['nullable', 'in:positive,negative,unknown'],
+            'height_cm'                => ['nullable', 'integer', 'min:50', 'max:250'],
+            'weight_kg'                => ['nullable', 'integer', 'min:10', 'max:300'],
+            'general_health_condition' => ['nullable', 'string', 'max:1000'],
             'mental_health_notes'      => ['nullable', 'string', 'max:1000'],
-            'eye_right_type'           => ['required', 'in:normal,minus,plus,silinder,unknown'],
+            'eye_right_type'           => ['nullable', 'in:normal,minus,plus,silinder,unknown'],
             'eye_right_value'          => ['nullable', 'numeric', 'min:0.25', 'max:20'],
-            'eye_left_type'            => ['required', 'in:normal,minus,plus,silinder,unknown'],
+            'eye_left_type'            => ['nullable', 'in:normal,minus,plus,silinder,unknown'],
             'eye_left_value'           => ['nullable', 'numeric', 'min:0.25', 'max:20'],
             'eye_condition_since'      => ['nullable', 'integer', 'min:1990', 'max:' . date('Y')],
-            'major_illnesses'          => ['required', 'string', 'max:2000'],
-            'last_illness'             => ['required', 'string', 'max:2000'],
-            'allergy_food'             => ['required', 'string', 'max:1000'],
-            'allergy_medicine'         => ['required', 'string', 'max:1000'],
-            'allergy_condition'        => ['required', 'string', 'max:1000'],
-            'physical_disabilities'    => ['required', 'string', 'max:1000'],
+            // Tab Riwayat — semua nullable, tidak masuk kriteria auto-submitted
+            'major_illnesses'          => ['nullable', 'string', 'max:2000'],
+            'last_illness'             => ['nullable', 'string', 'max:2000'],
+            'allergy_food'             => ['nullable', 'string', 'max:1000'],
+            'allergy_medicine'         => ['nullable', 'string', 'max:1000'],
+            'allergy_condition'        => ['nullable', 'string', 'max:1000'],
+            'physical_disabilities'    => ['nullable', 'string', 'max:1000'],
+            // Tab Catatan Khusus — semua opsional
             'special_notes'            => ['nullable', 'string', 'max:2000'],
             'parent_concern_notes'     => ['nullable', 'string', 'max:2000'],
         ];
@@ -344,25 +347,17 @@ class HealthRecordController extends Controller
     private function validationMessages(): array
     {
         return [
-            'blood_type.required'               => 'Golongan darah wajib dipilih.',
-            'rhesus.required'                   => 'Rhesus wajib dipilih.',
-            'height_cm.required'                => 'Tinggi badan wajib diisi.',
-            'height_cm.min'                     => 'Tinggi badan minimal 50 cm.',
-            'height_cm.max'                     => 'Tinggi badan maksimal 250 cm.',
-            'weight_kg.required'                => 'Berat badan wajib diisi.',
-            'weight_kg.min'                     => 'Berat badan minimal 10 kg.',
-            'weight_kg.max'                     => 'Berat badan maksimal 300 kg.',
-            'general_health_condition.required' => 'Kondisi kesehatan umum wajib diisi.',
-            'eye_right_type.required'           => 'Kondisi mata kanan wajib dipilih.',
-            'eye_left_type.required'            => 'Kondisi mata kiri wajib dipilih.',
-            'eye_condition_since.min'           => 'Tahun kondisi mata tidak valid.',
-            'eye_condition_since.max'           => 'Tahun tidak boleh melebihi tahun ini.',
-            'major_illnesses.required'          => 'Riwayat penyakit berat wajib diisi.',
-            'last_illness.required'             => 'Sakit terakhir wajib diisi.',
-            'allergy_food.required'             => 'Alergi makanan wajib diisi.',
-            'allergy_medicine.required'         => 'Alergi obat wajib diisi.',
-            'allergy_condition.required'        => 'Alergi kondisi wajib diisi.',
-            'physical_disabilities.required'    => 'Disabilitas fisik wajib diisi.',
+            // Format validasi tetap ada — hanya pesan required yang dihapus
+            'height_cm.min'           => 'Tinggi badan minimal 50 cm.',
+            'height_cm.max'           => 'Tinggi badan maksimal 250 cm.',
+            'weight_kg.min'           => 'Berat badan minimal 10 kg.',
+            'weight_kg.max'           => 'Berat badan maksimal 300 kg.',
+            'eye_condition_since.min' => 'Tahun kondisi mata tidak valid.',
+            'eye_condition_since.max' => 'Tahun tidak boleh melebihi tahun ini.',
+            'eye_right_value.min'     => 'Nilai mata kanan tidak valid.',
+            'eye_right_value.max'     => 'Nilai mata kanan tidak valid.',
+            'eye_left_value.min'      => 'Nilai mata kiri tidak valid.',
+            'eye_left_value.max'      => 'Nilai mata kiri tidak valid.',
         ];
     }
 
