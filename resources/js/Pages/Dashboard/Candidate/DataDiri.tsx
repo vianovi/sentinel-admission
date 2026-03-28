@@ -54,6 +54,7 @@ type CandidateData = {
     postal_code: string | null; school_npsn: string | null; certificate_number: string | null;
     birth_certificate_number: string | null; family_card_number: string | null;
     program_choice: string | null; major_choice: string | null;
+    is_transfer: boolean;
     status: string; has_pending_change: boolean; data_change_request: DataChangeRequest;
     admission_wave: AdmissionWave | null;
 };
@@ -148,6 +149,7 @@ export default function DataDiriPage({ user, candidate, flash }: Props) {
     const [extracts,      setExtracts]      = useState<string[]>(candidate?.extracurricular_interests ?? []);
     const [programChoice, setProgramChoice] = useState(candidate?.program_choice ?? "");
     const [majorChoice,   setMajorChoice]   = useState(candidate?.major_choice ?? "");
+    const [isTransfer,    setIsTransfer]    = useState<boolean>(candidate?.is_transfer ?? false);
     const [changeField,    setChangeField]    = useState("");
     const [changeNewValue, setChangeNewValue] = useState("");
     const [changeReason,   setChangeReason]   = useState("");
@@ -167,6 +169,7 @@ export default function DataDiriPage({ user, candidate, flash }: Props) {
         siblings_count:          siblingsCount !== "" ? +siblingsCount : null,
         hobbies:                 hobbies       || null,
         ambitions:               ambitions     || null,
+        is_transfer:             isTransfer,
     }) : 0;
 
     // ── Animations ───────────────────────────────────────────────────────────
@@ -277,6 +280,7 @@ export default function DataDiriPage({ user, candidate, flash }: Props) {
             family_card_number:       familyCardNo  || null,
             program_choice:           programChoice || null,
             major_choice:             majorChoice   || null,
+            is_transfer:              isTransfer,
         }, {
             onError:   (e) => { setErrors(e); swalDark.fire({ icon: "error", title: "Gagal menyimpan", text: "Terjadi kesalahan. Periksa koneksi dan coba lagi." }); },
             onSuccess: () => { swalDark.fire({ icon: "success", title: "Tersimpan!", text: "Data diri berhasil diperbarui.", timer: 2000, showConfirmButton: false }); },
@@ -420,8 +424,10 @@ export default function DataDiriPage({ user, candidate, flash }: Props) {
                             <TabAlamat
                                 candidate={candidate}
                                 postalCode={postalCode} schoolNpsn={schoolNpsn} certNumber={certNumber}
+                                isTransfer={isTransfer}
                                 errors={errors}
                                 setPostalCode={setPostalCode} setSchoolNpsn={setSchoolNpsn} setCertNumber={setCertNumber}
+                                setIsTransfer={setIsTransfer}
                                 validateField={validateField}
                             />
                         )}

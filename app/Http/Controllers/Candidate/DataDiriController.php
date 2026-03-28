@@ -55,6 +55,10 @@ class DataDiriController extends Controller
                 'family_card_number'         => $candidate->family_card_number,
                 'program_choice'             => $candidate->program_choice,
                 'major_choice'               => $candidate->major_choice,
+                // ── is_transfer ───────────────────────────────────────────
+                // true  = kandidat pindahan → transfer_letter muncul di halaman Dokumen
+                // false = kandidat reguler (default)
+                'is_transfer'                => (bool) $candidate->is_transfer,
                 // ── Status & change request ───────────────────────────────
                 'status'              => $candidate->status,
                 'has_pending_change'  => $candidate->hasPendingChangeRequest(),
@@ -107,6 +111,8 @@ class DataDiriController extends Controller
             'family_card_number'          => ['nullable', 'digits:16'],
             'program_choice'              => ['nullable', 'string', 'max:100'],
             'major_choice'                => ['nullable', 'string', 'max:100'],
+            // is_transfer: boolean, kandidat boleh ubah sendiri
+            'is_transfer'                 => ['nullable', 'boolean'],
         ], [
             'email.regex'               => 'Email harus berupa Gmail. Contoh: nama@gmail.com',
             'phone_number.regex'        => 'Nomor HP harus diawali 08 dan terdiri dari 10-14 digit.',
