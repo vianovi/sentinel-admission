@@ -587,10 +587,10 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
                 <div className="kesehatan-card">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-2xl
-                                        dark:bg-emerald-500/10 bg-emerald-50
-                                        border dark:border-emerald-500/20 border-emerald-200
+                                        dark:bg-cyan-500/10 bg-cyan-50
+                                        border dark:border-cyan-500/20 border-cyan-200
                                         flex items-center justify-center shrink-0">
-                            <i className="fa-solid fa-heart-pulse text-emerald-400 text-sm"></i>
+                            <i className="fa-solid fa-heart-pulse text-cyan-400 text-sm"></i>
                         </div>
                         <div>
                             <h1 className="text-xl font-bold dark:text-slate-100 text-slate-800">
@@ -622,7 +622,7 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
                                         "whitespace-nowrap px-3 py-2 text-xs font-semibold",
                                         "transition-all duration-200 min-w-[72px] min-h-[36px]",
                                         isActive
-                                            ? "dark:bg-emerald-500 bg-emerald-500 text-white shadow-sm"
+                                            ? "dark:bg-cyan-500 bg-cyan-500 text-white shadow-sm"
                                             : "dark:text-slate-400 text-slate-500 dark:hover:bg-content-muted hover:bg-black/[0.04] dark:hover:text-slate-300 hover:text-slate-700",
                                     ].join(" ")}
                                 >
@@ -759,7 +759,7 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
                                     onClick={() => handleTabSubmit(activeTab)}
                                     disabled={submitting}
                                     className="flex items-center gap-2 px-6 py-2.5 rounded-xl
-                                               bg-emerald-500 hover:bg-emerald-400
+                                               bg-cyan-500 hover:bg-cyan-400
                                                text-white text-sm font-semibold
                                                transition-all duration-200 active:scale-95
                                                disabled:opacity-60 disabled:cursor-not-allowed
@@ -779,7 +779,7 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
                                         type="button"
                                         onClick={() => handleTabChange(nextTab.id)}
                                         className="flex items-center gap-2 px-6 py-2.5 rounded-xl
-                                                   bg-emerald-500 hover:bg-emerald-400
+                                                   bg-cyan-500 hover:bg-cyan-400
                                                    text-white text-sm font-semibold
                                                    transition-all duration-200 active:scale-95
                                                    min-h-[44px]"

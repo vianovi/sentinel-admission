@@ -1,8 +1,9 @@
 // resources/js/Components/Dashboard/Candidate/DataDiri/TabMinat.tsx
 
-import Select                    from "react-select";
+import Select                           from "react-select";
 import Field, { inputCls, textareaCls } from "@/Components/UI/Field";
-import { makeSelectStyles }      from "@/Components/UI/selectStyles";
+import { makeSelectStyles }             from "@/Components/UI/selectStyles";
+import { useTheme }                     from "@/context/ThemeContext";
 
 const EXTRACURRICULAR_OPTIONS = [
     "OSIS","Pramuka","PMR (Palang Merah Remaja)","Rohis","Paskibra",
@@ -14,10 +15,10 @@ const EXTRACURRICULAR_OPTIONS = [
 ].map(e => ({ value: e, label: e }));
 
 type Props = {
-    hobbies:    string;
-    ambitions:  string;
-    habits:     string;
-    extracts:   string[];
+    hobbies:      string;
+    ambitions:    string;
+    habits:       string;
+    extracts:     string[];
     setHobbies:   (v: string)   => void;
     setAmbitions: (v: string)   => void;
     setHabits:    (v: string)   => void;
@@ -28,47 +29,75 @@ export default function TabMinat({
     hobbies, ambitions, habits, extracts,
     setHobbies, setAmbitions, setHabits, setExtracts,
 }: Props) {
+    // isDark harus dari dalam komponen — tidak bisa module level
+    const { theme } = useTheme();
+    const isDark    = theme === "dark";
+
+    const portalProps = (hasError = false) => ({
+        styles:           makeSelectStyles(hasError, isDark),
+        menuPortalTarget: typeof document !== "undefined" ? document.body : undefined,
+        menuPosition:     "fixed"  as const,
+        menuPlacement:    "auto"   as const,
+    });
+
     return (
         <div className="flex flex-col gap-8">
 
             {/* ── Hobi & Minat ──────────────────────────────────────────── */}
             <section>
-                <h3 className="text-sm font-display font-bold text-white mb-1 flex items-center gap-2">
-                    <i className="fa-solid fa-star text-gold text-xs"></i>
-                    Hobi, Minat & Bakat
+                <h3 className="text-sm font-semibold dark:text-slate-200 text-slate-700
+                               mb-1 flex items-center gap-2">
+                    <i className="fa-solid fa-star text-blue-400 text-xs"></i>
+                    Hobi, Minat &amp; Bakat
                 </h3>
-                <p className="text-xs text-slate-500 mb-5">Data ini membantu sekolah mengenal kamu lebih baik</p>
+                <p className="text-xs dark:text-slate-500 text-slate-400 mb-5">
+                    Data ini membantu sekolah mengenal kamu lebih baik
+                </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <Field label="Hobi / Minat Bakat" hint="Pisahkan dengan koma">
-                        <input value={hobbies} onChange={e => setHobbies(e.target.value)}
+                        <input
+                            value={hobbies}
+                            onChange={e => setHobbies(e.target.value)}
                             placeholder="Contoh: Membaca, Futsal, Menggambar"
-                            className={inputCls()} />
+                            className={inputCls()}
+                        />
                     </Field>
 
                     <Field label="Cita-cita" hint="Apa yang ingin kamu capai?">
-                        <input value={ambitions} onChange={e => setAmbitions(e.target.value)}
+                        <input
+                            value={ambitions}
+                            onChange={e => setAmbitions(e.target.value)}
                             placeholder="Contoh: Dokter, Insinyur, Pengusaha"
-                            className={inputCls()} />
+                            className={inputCls()}
+                        />
                     </Field>
 
-                    <Field label="Kebiasaan Positif" hint="Kebiasaan baik sehari-hari" className="sm:col-span-2">
-                        <textarea value={habits} onChange={e => setHabits(e.target.value)}
-                            rows={3} placeholder="Contoh: Bangun pagi, membaca setiap malam, olahraga rutin..."
-                            className={textareaCls()} />
+                    <Field label="Kebiasaan Positif" hint="Kebiasaan baik sehari-hari"
+                        className="sm:col-span-2">
+                        <textarea
+                            value={habits}
+                            onChange={e => setHabits(e.target.value)}
+                            rows={3}
+                            placeholder="Contoh: Bangun pagi, membaca setiap malam, olahraga rutin..."
+                            className={textareaCls()}
+                        />
                     </Field>
                 </div>
             </section>
 
-            <div className="border-t border-white/5"></div>
+            <div className="border-b dark:border-white/[0.06] border-black/[0.06]"></div>
 
             {/* ── Ekstrakulikuler ───────────────────────────────────────── */}
             <section>
-                <h3 className="text-sm font-display font-bold text-white mb-1 flex items-center gap-2">
-                    <i className="fa-solid fa-people-group text-gold text-xs"></i>
+                <h3 className="text-sm font-semibold dark:text-slate-200 text-slate-700
+                               mb-1 flex items-center gap-2">
+                    <i className="fa-solid fa-people-group text-blue-400 text-xs"></i>
                     Minat Ekstrakulikuler
                 </h3>
-                <p className="text-xs text-slate-500 mb-4">Pilih ekstrakulikuler yang diminati (bisa lebih dari satu)</p>
+                <p className="text-xs dark:text-slate-500 text-slate-400 mb-4">
+                    Pilih ekstrakulikuler yang diminati (bisa lebih dari satu)
+                </p>
 
                 <Select
                     isMulti
@@ -76,10 +105,10 @@ export default function TabMinat({
                     value={EXTRACURRICULAR_OPTIONS.filter(o => extracts.includes(o.value))}
                     onChange={opts => setExtracts(opts ? opts.map(o => o.value) : [])}
                     placeholder="Pilih atau ketik untuk mencari..."
-                    styles={makeSelectStyles(true)}
                     noOptionsMessage={() => "Tidak ditemukan — kamu bisa input manual di Hobi"}
+                    {...portalProps()}
                 />
-                <p className="text-[11px] text-slate-500 mt-2">
+                <p className="text-[11px] dark:text-slate-500 text-slate-400 mt-2">
                     Tidak ada di daftar? Tulis di kolom Hobi / Minat Bakat di atas.
                 </p>
             </section>

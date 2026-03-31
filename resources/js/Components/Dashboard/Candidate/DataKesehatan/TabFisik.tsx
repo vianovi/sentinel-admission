@@ -58,7 +58,7 @@ const EYE_TYPE_OPTIONS = [
 
 const BMI_CONFIG: Record<string, { color: string; bg: string; border: string }> = {
     Kurus:    { color: "dark:text-blue-400 text-blue-600",       bg: "dark:bg-blue-500/10 bg-blue-50",       border: "dark:border-blue-500/20 border-blue-200" },
-    Normal:   { color: "dark:text-emerald-400 text-emerald-600", bg: "dark:bg-emerald-500/10 bg-emerald-50", border: "dark:border-emerald-500/20 border-emerald-200" },
+    Normal:   { color: "dark:text-cyan-400 text-cyan-600", bg: "dark:bg-cyan-500/10 bg-cyan-50", border: "dark:border-cyan-500/20 border-cyan-200" },
     Gemuk:    { color: "dark:text-amber-400 text-amber-600",     bg: "dark:bg-amber-500/10 bg-amber-50",     border: "dark:border-amber-500/20 border-amber-200" },
     Obesitas: { color: "dark:text-red-400 text-red-600",         bg: "dark:bg-red-500/10 bg-red-50",         border: "dark:border-red-500/20 border-red-200" },
 };
@@ -123,10 +123,10 @@ export default function TabFisik({
             <section className="fisik-section opacity-0">
                 <div className="flex items-center gap-3 mb-1">
                     <div className="w-9 h-9 rounded-xl shrink-0
-                                    dark:bg-emerald-500/10 bg-emerald-50
-                                    border dark:border-emerald-500/20 border-emerald-200
+                                    dark:bg-cyan-500/10 bg-cyan-50
+                                    border dark:border-cyan-500/20 border-cyan-200
                                     flex items-center justify-center">
-                        <i className="fa-solid fa-droplet text-emerald-400 text-sm"></i>
+                        <i className="fa-solid fa-droplet text-cyan-400 text-sm"></i>
                     </div>
                     <h3 className="text-sm font-display font-bold dark:text-white text-slate-800">
                         Golongan Darah
@@ -173,10 +173,10 @@ export default function TabFisik({
             <section className="fisik-section opacity-0">
                 <div className="flex items-center gap-3 mb-5">
                     <div className="w-9 h-9 rounded-xl shrink-0
-                                    dark:bg-emerald-500/10 bg-emerald-50
-                                    border dark:border-emerald-500/20 border-emerald-200
+                                    dark:bg-cyan-500/10 bg-cyan-50
+                                    border dark:border-cyan-500/20 border-cyan-200
                                     flex items-center justify-center">
-                        <i className="fa-solid fa-weight-scale text-emerald-400 text-sm"></i>
+                        <i className="fa-solid fa-weight-scale text-cyan-400 text-sm"></i>
                     </div>
                     <h3 className="text-sm font-display font-bold dark:text-white text-slate-800">
                         Pengukuran Tubuh
@@ -278,10 +278,10 @@ export default function TabFisik({
             <section className="fisik-section opacity-0">
                 <div className="flex items-center gap-3 mb-1">
                     <div className="w-9 h-9 rounded-xl shrink-0
-                                    dark:bg-emerald-500/10 bg-emerald-50
-                                    border dark:border-emerald-500/20 border-emerald-200
+                                    dark:bg-cyan-500/10 bg-cyan-50
+                                    border dark:border-cyan-500/20 border-cyan-200
                                     flex items-center justify-center">
-                        <i className="fa-solid fa-stethoscope text-emerald-400 text-sm"></i>
+                        <i className="fa-solid fa-stethoscope text-cyan-400 text-sm"></i>
                     </div>
                     <h3 className="text-sm font-display font-bold dark:text-white text-slate-800">
                         Kondisi Kesehatan Umum
@@ -325,10 +325,10 @@ export default function TabFisik({
             <section className="fisik-section opacity-0">
                 <div className="flex items-center gap-3 mb-1">
                     <div className="w-9 h-9 rounded-xl shrink-0
-                                    dark:bg-emerald-500/10 bg-emerald-50
-                                    border dark:border-emerald-500/20 border-emerald-200
+                                    dark:bg-cyan-500/10 bg-cyan-50
+                                    border dark:border-cyan-500/20 border-cyan-200
                                     flex items-center justify-center">
-                        <i className="fa-solid fa-eye text-emerald-400 text-sm"></i>
+                        <i className="fa-solid fa-eye text-cyan-400 text-sm"></i>
                     </div>
                     <h3 className="text-sm font-display font-bold dark:text-white text-slate-800">
                         Kondisi Mata

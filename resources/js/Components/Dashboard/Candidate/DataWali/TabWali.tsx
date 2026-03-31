@@ -11,17 +11,19 @@ interface Props {
 }
 
 export default function TabWali({ data, errors, onChange, candidateAddr }: Props) {
-    const hasAnyData = !!(data.guardian_name || data.guardian_phone || data.guardian_relation)
-
     return (
         <div className="space-y-6">
+
             {/* Info banner */}
-            <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3">
+            <div className="rounded-xl border dark:border-amber-500/20 border-amber-200
+                            dark:bg-amber-500/5 bg-amber-50 px-4 py-3">
                 <div className="flex items-start gap-3">
-                    <i className="fa-solid fa-shield-halved mt-0.5 text-amber-400" />
+                    <i className="fa-solid fa-shield-halved mt-0.5 text-amber-400 shrink-0" />
                     <div>
-                        <p className="text-sm font-medium text-amber-300">Data Wali (Opsional)</p>
-                        <p className="mt-1 text-xs text-amber-400/70">
+                        <p className="text-sm font-medium dark:text-amber-300 text-amber-700">
+                            Data Wali (Opsional)
+                        </p>
+                        <p className="mt-1 text-xs dark:text-amber-400/70 text-amber-600/80">
                             Wali dapat berupa siapapun yang bertanggung jawab atas anak —
                             nenek, paman, bibi, atau orang tua asuh. Pengisian ini tidak wajib,
                             namun sangat disarankan terutama jika anak tinggal terpisah dari orang tua.

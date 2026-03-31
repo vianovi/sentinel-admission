@@ -79,13 +79,13 @@ function DocRow({
 
     // Warna icon berdasarkan status
     const iconColor = isLocked
-        ? "dark:text-emerald-400 text-emerald-600"
+        ? "dark:text-cyan-400 text-cyan-600"
         : docState.localFile || docState.serverUrl
             ? "dark:text-amber-400 text-amber-500"
             : "dark:text-slate-500 text-slate-400";
 
     const iconBg = isLocked
-        ? "dark:bg-emerald-500/10 bg-emerald-50"
+        ? "dark:bg-cyan-500/10 bg-cyan-50"
         : docState.localFile || docState.serverUrl
             ? "dark:bg-amber-500/10 bg-amber-50"
             : "dark:bg-white/[0.04] bg-slate-100";
@@ -114,9 +114,9 @@ function DocRow({
                     {/* Status badge */}
                     {isLocked && (
                         <span className="text-[10px] px-2 py-0.5 rounded-full
-                                         dark:bg-emerald-500/10 bg-emerald-50
-                                         dark:text-emerald-400 text-emerald-600
-                                         border dark:border-emerald-500/20 border-emerald-200">
+                                         dark:bg-cyan-500/10 bg-cyan-50
+                                         dark:text-cyan-400 text-cyan-600
+                                         border dark:border-cyan-500/20 border-cyan-200">
                             <i className="fa-solid fa-lock text-[9px] mr-1"></i>Terverifikasi
                         </span>
                     )}
@@ -319,7 +319,7 @@ export default function TabCatatanKhusus({
             <section className="catatan-section opacity-0">
                 <h3 className="text-sm font-display font-bold dark:text-white text-slate-800
                                 flex items-center gap-2 mb-1">
-                    <i className="fa-solid fa-note-sticky text-emerald-400 text-xs"></i>
+                    <i className="fa-solid fa-note-sticky text-cyan-400 text-xs"></i>
                     Catatan untuk Tim Kesehatan
                 </h3>
                 <p className="text-xs dark:text-slate-500 text-slate-400 mb-5">
@@ -358,7 +358,7 @@ export default function TabCatatanKhusus({
                 <div className="flex items-center gap-2 mb-1">
                     <h3 className="text-sm font-display font-bold dark:text-white text-slate-800
                                     flex items-center gap-2">
-                        <i className="fa-solid fa-file-medical text-emerald-400 text-xs"></i>
+                        <i className="fa-solid fa-file-medical text-cyan-400 text-xs"></i>
                         Dokumen Kesehatan
                     </h3>
                 </div>
@@ -410,7 +410,7 @@ export default function TabCatatanKhusus({
                                 onClick={handleSubmitAll}
                                 disabled={submitting}
                                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl
-                                           bg-emerald-500 hover:bg-emerald-400
+                                           bg-cyan-500 hover:bg-cyan-400
                                            text-white text-xs font-semibold
                                            transition-all duration-200 min-h-[40px]
                                            disabled:opacity-60 disabled:cursor-not-allowed"
@@ -427,7 +427,7 @@ export default function TabCatatanKhusus({
                 {/* State: semua sudah terkirim */}
                 {submitted && (
                     <div className="mt-4 flex items-center gap-2 text-[11px]
-                                    dark:text-emerald-400 text-emerald-600">
+                                    dark:text-cyan-400 text-cyan-600">
                         <i className="fa-solid fa-circle-check text-[10px]"></i>
                         Semua dokumen berhasil dikirim
                     </div>

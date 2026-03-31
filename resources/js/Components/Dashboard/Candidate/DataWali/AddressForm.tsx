@@ -11,6 +11,21 @@ interface Props {
     candidateAddr: CandidateAddress
 }
 
+// inputCls — adaptive dark/light, konsisten dengan PersonForm & TabProfilKeluarga
+function inputCls(hasError = false) {
+    return [
+        'w-full rounded-lg border px-4 py-2.5 text-sm',
+        'dark:bg-content-card bg-white',
+        'dark:text-slate-200 text-slate-800',
+        'placeholder:dark:text-slate-600 placeholder:text-slate-400',
+        'transition-colors duration-200',
+        'focus:outline-none focus:ring-2 dark:focus:ring-gold/40 focus:ring-amber-300/50',
+        hasError
+            ? 'border-red-500/60 focus:border-red-500'
+            : 'dark:border-content-border border-black/[0.10] dark:focus:border-gold/60 focus:border-amber-400/60',
+    ].join(' ')
+}
+
 export default function AddressForm({ prefix, data, errors, onChange, candidateAddr }: Props) {
     const get = (field: string) => (data as Record<string, unknown>)[`${prefix}_${field}`]
     const set = (field: string, val: unknown) => onChange(`${prefix}_${field}`, val)
@@ -35,8 +50,9 @@ export default function AddressForm({ prefix, data, errors, onChange, candidateA
                     type="button"
                     onClick={copyFromCandidate}
                     className="flex items-center gap-2 rounded-lg border border-gold/40 bg-gold/5
-                               px-3 py-2 text-xs font-medium text-gold transition-all duration-200
-                               hover:bg-gold/10 hover:border-gold/60"
+                               px-3 py-2.5 text-xs font-medium text-gold
+                               transition-all duration-200 hover:bg-gold/10 hover:border-gold/60
+                               min-h-[44px]"
                 >
                     <i className="fa-solid fa-copy text-xs" />
                     Salin alamat dari data kandidat ({candidateAddr.full_name})
@@ -47,7 +63,7 @@ export default function AddressForm({ prefix, data, errors, onChange, candidateA
                 <Field label="Provinsi" error={err('province')}>
                     <input
                         type="text"
-                        className={inputClass(!!err('province'))}
+                        className={inputCls(!!err('province'))}
                         value={(get('province') as string) ?? ''}
                         onChange={e => set('province', e.target.value)}
                         placeholder="cth: Jawa Tengah"
@@ -57,7 +73,7 @@ export default function AddressForm({ prefix, data, errors, onChange, candidateA
                 <Field label="Kota / Kabupaten" error={err('city')}>
                     <input
                         type="text"
-                        className={inputClass(!!err('city'))}
+                        className={inputCls(!!err('city'))}
                         value={(get('city') as string) ?? ''}
                         onChange={e => set('city', e.target.value)}
                         placeholder="cth: Kota Semarang"
@@ -67,7 +83,7 @@ export default function AddressForm({ prefix, data, errors, onChange, candidateA
                 <Field label="Kecamatan" error={err('district')}>
                     <input
                         type="text"
-                        className={inputClass(!!err('district'))}
+                        className={inputCls(!!err('district'))}
                         value={(get('district') as string) ?? ''}
                         onChange={e => set('district', e.target.value)}
                         placeholder="cth: Banyumanik"
@@ -77,7 +93,7 @@ export default function AddressForm({ prefix, data, errors, onChange, candidateA
                 <Field label="Kelurahan / Desa" error={err('village')}>
                     <input
                         type="text"
-                        className={inputClass(!!err('village'))}
+                        className={inputCls(!!err('village'))}
                         value={(get('village') as string) ?? ''}
                         onChange={e => set('village', e.target.value)}
                         placeholder="cth: Pudakpayung"
@@ -87,7 +103,7 @@ export default function AddressForm({ prefix, data, errors, onChange, candidateA
                 <Field label="Kode Pos" error={err('postal_code')}>
                     <input
                         type="text"
-                        className={inputClass(!!err('postal_code'))}
+                        className={inputCls(!!err('postal_code'))}
                         value={(get('postal_code') as string) ?? ''}
                         onChange={e => set('postal_code', e.target.value.replace(/\D/g, '').slice(0, 5))}
                         placeholder="5 digit kode pos"
@@ -98,7 +114,7 @@ export default function AddressForm({ prefix, data, errors, onChange, candidateA
 
             <Field label="Alamat Lengkap" error={err('address')}>
                 <textarea
-                    className={`${inputClass(!!err('address'))} min-h-[80px] resize-none`}
+                    className={`${inputCls(!!err('address'))} min-h-[80px] resize-none`}
                     value={(get('address') as string) ?? ''}
                     onChange={e => set('address', e.target.value)}
                     placeholder="Jalan, nomor rumah, RT/RW, dsb."
@@ -107,15 +123,4 @@ export default function AddressForm({ prefix, data, errors, onChange, candidateA
             </Field>
         </div>
     )
-}
-
-function inputClass(hasError: boolean) {
-    return [
-        'w-full rounded-lg border bg-content-card px-4 py-2.5 text-sm text-slate-200',
-        'placeholder:text-slate-600 transition-colors duration-200',
-        'focus:outline-none focus:ring-2 focus:ring-gold/40',
-        hasError
-            ? 'border-red-500/60 focus:border-red-500'
-            : 'border-content-border focus:border-gold/60',
-    ].join(' ')
 }
