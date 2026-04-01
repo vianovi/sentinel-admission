@@ -319,7 +319,7 @@ export default function TabRangkuman({
                                         {e}
                                     </span>
                                 ))
-                                : <span className="text-[12px] font-medium dark:text-slate-600 text-slate-300 italic font-normal">—</span>
+                                : <span className="text-[12px] font-medium dark:text-slate-600 text-slate-300 italic">—</span>
                             }
                         </div>
                     </div>
