@@ -41,7 +41,7 @@ export default function StateEmpty({ wave, processing, onCreateTransaction }: Pr
             {/* ── Ilustrasi ───────────────────────────────────── */}
             <div className="anim-item flex flex-col items-center justify-center py-8 gap-4">
                 <div className="relative">
-                    <div className="w-20 h-20 rounded-2xl bg-gold/8 border border-gold/15 flex items-center justify-content-center items-center justify-center">
+                    <div className="w-20 h-20 rounded-2xl bg-gold/8 border border-gold/15 flex justify-content-center items-center justify-center">
                         <i className="fa-solid fa-wallet text-3xl text-gold/60"></i>
                     </div>
                     <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-navy border border-amber-400/30 flex items-center justify-center">
