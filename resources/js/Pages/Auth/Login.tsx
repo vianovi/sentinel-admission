@@ -17,12 +17,12 @@ export default function Login({ status }: LoginProps) {
         remember: false,
     })
 
-    const [showPassword, setShowPassword] = useState(false)
+    const[showPassword, setShowPassword] = useState(false)
     const leftRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
         animate(leftRef.current!, {
-            opacity:    [0, 1],
+            opacity:[0, 1],
             translateX: [-40, 0],
             duration:   900,
             ease:       'outExpo',
@@ -34,7 +34,7 @@ export default function Login({ status }: LoginProps) {
             delay:      stagger(90, { start: 400 }),
             ease:       'outExpo',
         })
-    }, [])
+    },[])
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
@@ -54,60 +54,68 @@ export default function Login({ status }: LoginProps) {
         <>
             <Head title="Login" />
 
-            <div className="min-h-screen w-full flex bg-slate-950">
+            <div className="min-h-screen w-full flex bg-slate-950 font-sans selection:bg-gold/30 selection:text-gold">
 
-                {/* ── Left Panel ── */}
+                {/* ── Left Panel (Brand & Info) ── */}
                 <div
                     ref={leftRef}
-                    className="hidden md:flex md:w-[45%] lg:w-[40%] flex-col justify-between p-10 lg:p-14 relative overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 border-r border-white/5"
+                    className="hidden md:flex md:w-[45%] lg:w-[42%] flex-col justify-between p-10 lg:p-14 relative overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 border-r border-white/5"
                     style={{ opacity: 0 }}
                 >
-                    <div className="pointer-events-none absolute -top-20 -left-10 w-72 h-72 bg-gradient-to-br from-amber-400/30 via-rose-400/20 to-sky-400/20 rounded-full blur-3xl" />
-                    <div className="pointer-events-none absolute -bottom-20 -right-10 w-80 h-80 bg-gradient-to-tr from-emerald-400/20 via-cyan-400/20 to-amber-300/20 rounded-full blur-3xl" />
+                    {/* Glowing Orbs Ambient */}
+                    <div className="pointer-events-none absolute -top-20 -left-10 w-72 h-72 bg-gradient-to-br from-amber-400/20 via-rose-400/10 to-sky-400/10 rounded-full blur-3xl" />
+                    <div className="pointer-events-none absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-tr from-emerald-400/10 via-cyan-400/10 to-amber-300/10 rounded-full blur-3xl" />
 
-                    {/* Logo */}
+                    {/* Subtle Cyber Grid Overlay on Dark Side */}
+                    <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wMykiLz48L3N2Zz4=')] pointer-events-none opacity-50" />
+
+                    {/* Logo Area */}
                     <div className="relative z-10">
-                        <Link href={route('home')} className="inline-flex items-center gap-3">
+                        <Link href={route('home')} className="inline-flex items-center gap-3 group">
                             {app.logo ? (
-                                <img src={app.logo} alt={app.name} className="w-10 h-10 rounded-xl object-cover shadow-lg" />
+                                <img src={app.logo} alt={app.name} className="w-11 h-11 rounded-xl object-cover shadow-lg group-hover:scale-105 transition-transform duration-300" />
                             ) : (
-                                <div className="w-10 h-10 rounded-xl bg-gold flex items-center justify-center shadow-lg shadow-amber-400/30">
-                                    <i className="fa-solid fa-graduation-cap text-slate-900 text-base"></i>
+                                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-gold to-amber-500 flex items-center justify-center shadow-lg shadow-amber-400/20 group-hover:scale-105 transition-transform duration-300">
+                                    <i className="fa-solid fa-graduation-cap text-slate-900 text-lg"></i>
                                 </div>
                             )}
-                            <span className="text-white font-display font-bold text-lg tracking-tight">
+                            <span className="text-white font-display font-bold text-xl tracking-tight">
                                 {app.name}<span className="text-gold">.</span>
                             </span>
                         </Link>
                     </div>
 
-                    {/* Center */}
-                    <div className="relative z-10 space-y-6">
+                    {/* Center Content */}
+                    <div className="relative z-10 space-y-8">
                         <div>
-                            <p className="text-[11px] text-amber-300/70 uppercase tracking-[0.22em] mb-3">
-                                {app.tagline}
-                            </p>
-                            <h1 className="text-4xl lg:text-5xl font-display font-bold text-white leading-[1.1]">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 mb-5 backdrop-blur-sm">
+                                <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse"></span>
+                                <span className="text-[10px] text-amber-300/90 font-bold uppercase tracking-widest">
+                                    {app.tagline}
+                                </span>
+                            </div>
+                            <h1 className="text-4xl lg:text-[52px] font-display font-extrabold text-white leading-[1.15] tracking-tight">
                                 Selamat<br />
                                 Datang<br />
-                                <span className="text-gold">Kembali.</span>
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold via-amber-300 to-yellow-200">Kembali.</span>
                             </h1>
-                            <p className="text-slate-400 text-sm mt-4 leading-relaxed max-w-xs">
-                                Masuk ke akun kamu untuk melanjutkan proses pendaftaran dan memantau status pendaftaran.
+                            <p className="text-slate-400 text-[15px] mt-6 leading-relaxed max-w-sm font-medium">
+                                Masuk ke sistem terenkripsi untuk melanjutkan proses pendaftaran dan memantau status secara real-time.
                             </p>
                         </div>
 
-                        <div className="space-y-3">
+                        {/* Feature List */}
+                        <div className="space-y-4 pt-4">
                             {[
-                                { icon: 'fa-shield-halved', text: 'Sesi aman & terenkripsi' },
-                                { icon: 'fa-bolt',          text: 'Akses real-time ke status pendaftaran' },
-                                { icon: 'fa-bell',          text: 'Notifikasi pengumuman langsung' },
+                                { icon: 'fa-shield-halved', text: 'Sesi aman & terenkripsi end-to-end' },
+                                { icon: 'fa-bolt',          text: 'Akses real-time ke sistem lab' },
+                                { icon: 'fa-bell',          text: 'Notifikasi pengumuman instan' },
                             ].map((item, i) => (
-                                <div key={i} className="flex items-center gap-3 text-sm text-slate-400">
-                                    <div className="w-7 h-7 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
-                                        <i className={`fa-solid ${item.icon} text-gold text-[11px]`}></i>
+                                <div key={i} className="flex items-center gap-4 text-sm text-slate-300 group">
+                                    <div className="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center flex-shrink-0 shadow-inner group-hover:border-gold/30 transition-colors">
+                                        <i className={`fa-solid ${item.icon} text-amber-400 text-[13px]`}></i>
                                     </div>
-                                    <span>{item.text}</span>
+                                    <span className="font-medium tracking-wide">{item.text}</span>
                                 </div>
                             ))}
                         </div>
@@ -117,61 +125,70 @@ export default function Login({ status }: LoginProps) {
                     <div className="relative z-10">
                         <Link
                             href="/staff/login"
-                            className="inline-flex items-center gap-2 text-[11px] text-slate-500 hover:text-amber-300/70 transition group"
+                            className="inline-flex items-center gap-3 text-xs font-medium text-slate-400 hover:text-amber-300 transition-all group px-5 py-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 hover:border-white/10 backdrop-blur-sm w-max"
                         >
-                            <div className="w-5 h-5 rounded-md bg-white/5 border border-white/10 flex items-center justify-center">
-                                <i className="fa-solid fa-user-tie text-[9px] text-slate-400 group-hover:text-gold transition"></i>
+                            <div className="w-7 h-7 rounded-lg bg-slate-800/80 flex items-center justify-center shadow-inner">
+                                <i className="fa-solid fa-user-tie text-[11px] text-slate-400 group-hover:text-gold transition-colors"></i>
                             </div>
                             Portal Staff & Tenaga Pendidik
-                            <i className="fa-solid fa-arrow-right text-[9px] group-hover:translate-x-0.5 transition-transform"></i>
+                            <i className="fa-solid fa-arrow-right text-[11px] opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"></i>
                         </Link>
                     </div>
                 </div>
 
-                {/* ── Right Panel ── */}
-                <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-10 bg-white relative">
+                {/* ── Right Panel (The "Wow" Form Area) ── */}
+                <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-10 relative overflow-hidden bg-slate-50">
 
-                    {/* Kembali ke beranda */}
-                    <div className="absolute top-6 left-6">
+                    {/* ── Ambient Background Kanan (Biar Gak Polos) ── */}
+                    {/* Dot Matrix Pattern */}
+                    <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMTQ4LDE2MywxODQsMC4yKSIvPjwvc3ZnPg==')] pointer-events-none" />
+
+                    {/* Glowing Orbs di kanan */}
+                    <div className="absolute top-0 right-0 -translate-y-12 translate-x-1/3 w-[500px] h-[500px] bg-gold/10 rounded-full blur-[100px] pointer-events-none" />
+                    <div className="absolute bottom-0 left-0 translate-y-1/4 -translate-x-1/4 w-[400px] h-[400px] bg-sky-400/10 rounded-full blur-[100px] pointer-events-none" />
+
+                    {/* Button Kembali ke beranda */}
+                    <div className="absolute top-6 left-6 md:top-8 md:left-8 z-20">
                         <Link
                             href={route('home')}
-                            className="inline-flex items-center gap-2 text-xs font-medium text-slate-500 hover:text-slate-800 transition"
+                            className="inline-flex items-center gap-2 text-[13px] font-semibold text-slate-600 hover:text-slate-900 bg-white/60 hover:bg-white/90 backdrop-blur-md px-4 py-2.5 rounded-xl transition-all duration-300 shadow-sm border border-slate-200/50 hover:shadow-md"
                         >
-                            <i className="fa-solid fa-arrow-left text-[10px]"></i>
-                            Kembali ke Beranda
+                            <i className="fa-solid fa-arrow-left-long text-[11px]"></i>
+                            Beranda
                         </Link>
                     </div>
 
-                    <div className="w-full max-w-sm">
+                    {/* ── Floating Glass Card Form ── */}
+                    <div className="w-full max-w-[420px] relative z-10 bg-white/70 backdrop-blur-xl p-8 sm:p-10 rounded-[2rem] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] border border-white shadow-slate-200/50">
 
-                        {/* Header */}
-                        <div className="login-field opacity-0 mb-7">
-                            <h2 className="text-2xl font-display font-bold text-slate-900">
+                        {/* Header Form */}
+                        <div className="login-field opacity-0 mb-8">
+                            <h2 className="text-[28px] font-display font-extrabold text-slate-900 tracking-tight">
                                 Masuk ke Akun
                             </h2>
-                            <p className="text-sm text-slate-600 mt-1">
-                                Gunakan email dan password yang sudah terdaftar.
+                            <p className="text-sm text-slate-500 mt-2 font-medium">
+                                Masukkan kredensial kamu untuk mengakses lab.
                             </p>
                         </div>
 
-                        {/* Status flash */}
+                        {/* Status flash message */}
                         {status && (
-                            <div className="login-field opacity-0 mb-5 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 text-sm text-emerald-700 flex items-center gap-2.5">
-                                <i className="fa-solid fa-circle-check text-emerald-500 flex-shrink-0"></i>
-                                <span>{status}</span>
+                            <div className="login-field opacity-0 mb-6 bg-emerald-50/80 backdrop-blur-sm border border-emerald-200/60 rounded-xl px-4 py-3.5 text-sm text-emerald-700 flex items-start gap-3 shadow-sm">
+                                <i className="fa-solid fa-circle-check text-emerald-500 mt-0.5 flex-shrink-0"></i>
+                                <span className="font-medium leading-relaxed">{status}</span>
                             </div>
                         )}
 
-                        <form onSubmit={handleSubmit} className="space-y-4">
+                        <form onSubmit={handleSubmit} className="space-y-5">
 
-                            {/* Email */}
+                            {/* Input Email */}
                             <div className="login-field opacity-0">
-                                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                <label className="block text-[13px] font-bold text-slate-700 mb-2">
                                     Email <span className="text-red-500">*</span>
                                 </label>
-                                <div className="relative">
-                                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
-                                        <i className="fa-solid fa-envelope"></i>
+                                <div className="relative group">
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-gold transition-colors">
+                                        <i className="fa-solid fa-envelope text-sm"></i>
                                     </span>
                                     <input
                                         type="email"
@@ -179,36 +196,31 @@ export default function Login({ status }: LoginProps) {
                                         autoComplete="email"
                                         autoFocus
                                         onChange={e => setData('email', e.target.value)}
-                                        placeholder="nama@gmail.com"
+                                        placeholder="nama@email.com"
                                         className={[
-                                            'w-full border rounded-xl pl-10 pr-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 outline-none transition bg-white',
+                                            'w-full border rounded-xl pl-11 pr-4 py-3.5 text-[14px] text-slate-900 placeholder:text-slate-400 font-medium outline-none transition-all duration-300',
                                             errors.email
-                                                ? 'border-red-400 focus:border-red-500'
-                                                : 'border-slate-300 focus:border-gold',
+                                                ? 'bg-red-50/50 border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-500/10'
+                                                : 'bg-white/50 border-slate-200 focus:bg-white focus:border-gold focus:ring-4 focus:ring-gold/15 hover:border-slate-300',
                                         ].join(' ')}
                                     />
                                 </div>
                                 {errors.email && (
-                                    <span className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                                    <span className="text-xs font-semibold text-red-500 mt-1.5 flex items-center gap-1.5 animate-pulse">
                                         <i className="fa-solid fa-circle-exclamation text-[10px]"></i>
                                         {errors.email}
                                     </span>
                                 )}
                             </div>
 
-                            {/* Password */}
+                            {/* Input Password */}
                             <div className="login-field opacity-0">
-                                <div className="flex items-center justify-between mb-1.5">
-                                    <label className="block text-xs font-semibold text-slate-700">
-                                        Password <span className="text-red-500">*</span>
-                                    </label>
-                                    <Link href={route('password.request')} className="text-[11px] text-slate-500 hover:text-gold transition font-medium">
-                                        Lupa password?
-                                    </Link>
-                                </div>
-                                <div className="relative">
-                                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
-                                        <i className="fa-solid fa-lock"></i>
+                                <label className="block text-[13px] font-bold text-slate-700 mb-2">
+                                    Password <span className="text-red-500">*</span>
+                                </label>
+                                <div className="relative group">
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-gold transition-colors">
+                                        <i className="fa-solid fa-lock text-sm"></i>
                                     </span>
                                     <input
                                         type={showPassword ? 'text' : 'password'}
@@ -217,67 +229,84 @@ export default function Login({ status }: LoginProps) {
                                         onChange={e => setData('password', e.target.value)}
                                         placeholder="••••••••"
                                         className={[
-                                            'w-full border rounded-xl pl-10 pr-11 py-3 text-sm text-slate-800 placeholder:text-slate-400 outline-none transition bg-white',
+                                            'w-full border rounded-xl pl-11 pr-12 py-3.5 text-[14px] text-slate-900 placeholder:text-slate-400 font-medium outline-none transition-all duration-300',
                                             errors.password
-                                                ? 'border-red-400 focus:border-red-500'
-                                                : 'border-slate-300 focus:border-gold',
+                                                ? 'bg-red-50/50 border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-500/10'
+                                                : 'bg-white/50 border-slate-200 focus:bg-white focus:border-gold focus:ring-4 focus:ring-gold/15 hover:border-slate-300',
                                         ].join(' ')}
                                     />
-                                    <button type="button" onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition text-sm">
-                                        <i className={`fa-solid ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors"
+                                    >
+                                        <i className={`fa-solid ${showPassword ? 'fa-eye-slash' : 'fa-eye'} text-sm`}></i>
                                     </button>
                                 </div>
                                 {errors.password && (
-                                    <span className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                                    <span className="text-xs font-semibold text-red-500 mt-1.5 flex items-center gap-1.5 animate-pulse">
                                         <i className="fa-solid fa-circle-exclamation text-[10px]"></i>
                                         {errors.password}
                                     </span>
                                 )}
                             </div>
 
-                            {/* Remember me */}
-                            <div className="login-field opacity-0">
-                                <label className="flex items-center gap-2 cursor-pointer select-none">
-                                    <input
-                                        type="checkbox"
-                                        checked={data.remember}
-                                        onChange={e => setData('remember', e.target.checked)}
-                                        className="w-4 h-4 rounded border-gray-300 accent-navy"
-                                    />
-                                    <span className="text-xs text-slate-600">Ingat saya selama 30 hari</span>
+                            {/* Actions (Remember Me & Lupa Password di Bawah) */}
+                            <div className="login-field opacity-0 flex items-center justify-between pt-1">
+                                <label className="flex items-center gap-2.5 cursor-pointer select-none group">
+                                    <div className="relative flex items-center justify-center">
+                                        <input
+                                            type="checkbox"
+                                            checked={data.remember}
+                                            onChange={e => setData('remember', e.target.checked)}
+                                            className="peer w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-gold/30 transition-all cursor-pointer"
+                                        />
+                                    </div>
+                                    <span className="text-[13px] font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
+                                        Ingat saya
+                                    </span>
                                 </label>
+
+                                <Link
+                                    href={route('password.request')}
+                                    className="text-[13px] font-semibold text-slate-700 hover:text-gold transition-colors"
+                                >
+                                    Lupa password?
+                                </Link>
                             </div>
 
-                            {/* Submit */}
-                            <div className="login-field opacity-0 pt-1">
+                            {/* Submit Button */}
+                            <div className="login-field opacity-0 pt-3">
                                 <button
                                     type="submit"
                                     disabled={processing}
-                                    className="login-btn w-full bg-navy hover:bg-navy/90 disabled:opacity-60 disabled:cursor-not-allowed text-white px-6 py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2.5 transition hover:-translate-y-0.5 active:scale-95"
+                                    className="login-btn w-full bg-slate-900 hover:bg-slate-800 disabled:opacity-70 disabled:cursor-not-allowed text-white px-6 py-4 rounded-xl font-bold text-[14px] flex items-center justify-center gap-2.5 transition-all duration-300 hover:-translate-y-1 shadow-[0_8px_20px_rgb(15,23,42,0.2)] hover:shadow-[0_12px_25px_rgb(15,23,42,0.3)] active:scale-[0.98]"
                                 >
                                     {processing
                                         ? <><i className="fa-solid fa-spinner fa-spin"></i> Memproses...</>
-                                        : <><i className="fa-solid fa-right-to-bracket"></i> Masuk</>
+                                        : <><i className="fa-solid fa-fingerprint text-gold"></i> Masuk Sekarang</>
                                     }
                                 </button>
                             </div>
                         </form>
 
-                        {/* Daftar link */}
-                        <div className="login-field opacity-0 mt-5 text-center text-xs text-slate-600">
-                            Belum punya akun?{' '}
-                            <Link href={route('daftar')} className="text-gold font-semibold hover:underline">
-                                Daftar sekarang
-                            </Link>
-                        </div>
-
-                        {/* Security note */}
-                        <div className="login-field opacity-0 mt-5 flex items-center justify-center gap-2 text-[11px] text-slate-500">
-                            <i className="fa-solid fa-shield-halved text-slate-400"></i>
-                            <span>Koneksi aman · Dilindungi enkripsi SSL</span>
+                        {/* Divider / Daftar Link */}
+                        <div className="login-field opacity-0 mt-8 pt-6 border-t border-slate-200/60 text-center">
+                            <p className="text-[13px] font-medium text-slate-500">
+                                Belum punya akses?{' '}
+                                <Link href={route('daftar')} className="text-gold font-bold hover:text-amber-500 transition-colors">
+                                    Daftar sekarang
+                                </Link>
+                            </p>
                         </div>
                     </div>
+
+                    {/* Security Badge (Outside Card at Bottom) */}
+                    <div className="login-field opacity-0 absolute bottom-8 flex items-center justify-center gap-2.5 text-[11px] font-semibold text-slate-400 bg-white/50 backdrop-blur-md px-4 py-2 rounded-full border border-slate-200/50 shadow-sm">
+                        <i className="fa-solid fa-shield-halved text-emerald-500"></i>
+                        <span>Koneksi Diamankan · AES-256 Encryption</span>
+                    </div>
+
                 </div>
             </div>
         </>

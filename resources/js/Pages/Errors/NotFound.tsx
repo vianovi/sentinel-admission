@@ -12,7 +12,7 @@ interface Props {
 }
 
 export default function NotFound({
-    comingSoon = false,
+    comingSoon = true,
     backUrl    = '/dashboard',
     backLabel  = 'Kembali',
 }: Props) {
