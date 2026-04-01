@@ -11,6 +11,7 @@ import HighlightSection from '@/Components/Landing/HighlightSection'
 import FacilitiesSection from '@/Components/Landing/FacilitiesSection'
 import HowToRegisterSection from '@/Components/Landing/HowToRegisterSection'
 import GallerySection from '@/Components/Landing/GallerySection'
+import CinematicShowcase from '@/Components/Landing/CinematicShowcase' // Import Komponen Baru
 import Footer from '@/Components/Landing/Footer'
 import VideoModal from '@/Components/Landing/VideoModal'
 
@@ -22,7 +23,7 @@ export default function Welcome({ activeWave, auth }: WelcomeProps) {
     return (
         <>
             <Head title={app.name} />
-            <div className="font-sans text-navy bg-light antialiased scroll-smooth">
+            <div className="font-sans text-navy bg-light antialiased scroll-smooth selection:bg-gold/30 selection:text-gold">
                 <TopBar activeWave={activeWave} />
                 <Navbar auth={auth} app={app} />
                 <HeroSection activeWave={activeWave} onOpenVideo={() => setVideoModalOpen(true)} />
@@ -30,6 +31,10 @@ export default function Welcome({ activeWave, auth }: WelcomeProps) {
                 <VisiMisiSection />
                 <HighlightSection />
                 <GallerySection />
+
+                {/* ── New Premium Showcase Section ── */}
+                <CinematicShowcase />
+
                 <FacilitiesSection />
                 <HowToRegisterSection />
                 <Footer auth={auth} app={app} />
