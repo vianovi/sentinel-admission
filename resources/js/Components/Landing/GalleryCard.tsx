@@ -9,11 +9,50 @@ export type GalleryItem = {
     title: string;
     description: string;
     category?: string;
+    /** Controls card width in the marquee. Default: 'normal' */
+    size?: 'narrow' | 'normal' | 'wide';
 };
 
 interface Props {
     item: GalleryItem;
     onClick: (originRect: DOMRect) => void;
+}
+
+// ─────────────────────────────────────────────
+//  Width map — creates editorial rhythm
+// ─────────────────────────────────────────────
+const SIZE_WIDTH: Record<NonNullable<GalleryItem['size']>, string> = {
+    narrow: '180px',
+    normal: '260px',
+    wide:   '360px',
+};
+
+// ─────────────────────────────────────────────
+//  Gold shimmer — shown while image loads
+// ─────────────────────────────────────────────
+function Shimmer() {
+    return (
+        <div
+            className="absolute inset-0"
+            style={{
+                background: 'linear-gradient(110deg, #04081a 25%, #0d1630 50%, #04081a 75%)',
+                backgroundSize: '200% 100%',
+                animation: 'gallery-shimmer 1.6s ease-in-out infinite',
+            }}
+        >
+            <style dangerouslySetInnerHTML={{ __html: `
+                @keyframes gallery-shimmer {
+                    0%   { background-position: 200% 0; }
+                    100% { background-position: -200% 0; }
+                }
+            ` }} />
+            {/* Subtle gold tint in shimmer center */}
+            <div
+                className="absolute inset-0"
+                style={{ background: 'radial-gradient(ellipse at center, rgba(212,175,55,0.04) 0%, transparent 70%)' }}
+            />
+        </div>
+    );
 }
 
 // ─────────────────────────────────────────────
@@ -37,23 +76,25 @@ function spawnRipple(container: HTMLDivElement, e: React.MouseEvent) {
     `;
     container.appendChild(ripple);
 
-    animate({
-        targets: ripple,
+    animate(ripple, {
         scale: [0, 28],
         opacity: [1, 0],
         duration: 650,
-        easing: 'easeOutExpo',
-        complete: () => ripple.remove(),
+        ease: 'easeOutExpo',
+        onComplete: () => ripple.remove(),
     });
 }
 
 export default function GalleryCard({ item, onClick }: Props) {
     const cardRef   = useRef<HTMLDivElement>(null);
-    const innerRef  = useRef<HTMLDivElement>(null);  // inner layer for 3D parallax
+    const innerRef  = useRef<HTMLDivElement>(null);
     const videoRef  = useRef<HTMLVideoElement>(null);
-    const [isHovered, setIsHovered]   = useState(false);
-    const [isClicked, setIsClicked]   = useState(false);
     const animFrame = useRef<number>(0);
+
+    const [isHovered,  setIsHovered]  = useState(false);
+    const [isLoaded,   setIsLoaded]   = useState(false);
+
+    const cardWidth = SIZE_WIDTH[item.size ?? 'normal'];
 
     // ── Magnetic + 3D Parallax ──
     const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -62,35 +103,26 @@ export default function GalleryCard({ item, onClick }: Props) {
 
         animFrame.current = requestAnimationFrame(() => {
             const { left, top, width, height } = cardRef.current!.getBoundingClientRect();
-            const px = (e.clientX - left) / width;   // 0 → 1
-            const py = (e.clientY - top)  / height;  // 0 → 1
-            const dx = (px - 0.5) * 2;               // -1 → 1
+            const px = (e.clientX - left) / width;
+            const py = (e.clientY - top)  / height;
+            const dx = (px - 0.5) * 2;
             const dy = (py - 0.5) * 2;
 
-            const tiltX = dy * -12;   // card tilt
-            const tiltY = dx *  12;
-            const magX  = dx *  8;    // magnetic translate
-            const magY  = dy *  8;
-
-            // Card: magnetic + tilt
-            animate({
-                targets: cardRef.current,
-                translateX: magX,
-                translateY: magY,
-                rotateX: tiltX,
-                rotateY: tiltY,
+            animate(cardRef.current!, {
+                translateX: dx *  8,
+                translateY: dy *  8,
+                rotateX:    dy * -12,
+                rotateY:    dx *  12,
                 duration: 400,
-                easing: 'easeOutQuart',
+                ease: 'easeOutQuart',
             });
 
-            // Inner media: counter-parallax (3D depth illusion)
-            animate({
-                targets: innerRef.current,
+            animate(innerRef.current!, {
                 translateX: dx * -6,
                 translateY: dy * -6,
                 scale: 1.06,
                 duration: 400,
-                easing: 'easeOutQuart',
+                ease: 'easeOutQuart',
             });
         });
     }, []);
@@ -104,20 +136,18 @@ export default function GalleryCard({ item, onClick }: Props) {
             videoRef.current.currentTime = 0;
         }
 
-        animate({
-            targets: cardRef.current,
+        animate(cardRef.current!, {
             translateX: 0, translateY: 0,
-            rotateX: 0, rotateY: 0,
+            rotateX: 0,    rotateY: 0,
             duration: 900,
-            easing: 'easeOutElastic(1, 0.5)',
+            ease: 'easeOutElastic(1, 0.5)',
         });
 
-        animate({
-            targets: innerRef.current,
+        animate(innerRef.current!, {
             translateX: 0, translateY: 0,
             scale: 1,
             duration: 900,
-            easing: 'easeOutElastic(1, 0.5)',
+            ease: 'easeOutElastic(1, 0.5)',
         });
     }, []);
 
@@ -130,19 +160,15 @@ export default function GalleryCard({ item, onClick }: Props) {
 
     const handleClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
         if (!cardRef.current) return;
-        setIsClicked(true);
         spawnRipple(cardRef.current, e);
 
-        // Brief flash before opening lightbox
-        animate({
-            targets: cardRef.current,
+        animate(cardRef.current, {
             scale: [1, 0.96, 1],
             duration: 300,
-            easing: 'easeInOutQuad',
+            ease: 'easeInOutQuad',
         });
 
         setTimeout(() => {
-            setIsClicked(false);
             onClick(cardRef.current!.getBoundingClientRect());
         }, 320);
     }, [onClick]);
@@ -154,8 +180,9 @@ export default function GalleryCard({ item, onClick }: Props) {
             onMouseMove={handleMouseMove}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
-            className="relative h-[230px] w-auto min-w-[210px] flex-shrink-0 rounded-2xl overflow-hidden cursor-none group"
+            className="relative h-[230px] flex-shrink-0 rounded-2xl overflow-hidden cursor-none group"
             style={{
+                width: cardWidth,
                 perspective: '900px',
                 transformStyle: 'preserve-3d',
                 willChange: 'transform',
@@ -165,6 +192,9 @@ export default function GalleryCard({ item, onClick }: Props) {
                 transition: 'box-shadow 0.4s ease',
             }}
         >
+            {/* ── Shimmer while loading ── */}
+            {!isLoaded && <Shimmer />}
+
             {/* ── Inner parallax container ── */}
             <div
                 ref={innerRef}
@@ -175,53 +205,49 @@ export default function GalleryCard({ item, onClick }: Props) {
                     <img
                         src={item.src}
                         alt={item.title}
-                        className="h-full w-auto min-w-full object-cover"
+                        className="h-full w-full object-cover"
                         draggable={false}
+                        onLoad={() => setIsLoaded(true)}
+                        style={{ opacity: isLoaded ? 1 : 0, transition: 'opacity 0.4s ease' }}
                     />
                 ) : (
                     <video
                         ref={videoRef}
                         src={item.src}
                         poster={item.thumbnail}
-                        className="h-full w-auto min-w-full object-cover"
+                        className="h-full w-full object-cover"
                         muted loop playsInline
+                        onLoadedData={() => setIsLoaded(true)}
+                        style={{ opacity: isLoaded ? 1 : 0, transition: 'opacity 0.4s ease' }}
                     />
                 )}
             </div>
 
-            {/* ── Ambient gradient overlay (always) ── */}
+            {/* ── Ambient gradient overlay ── */}
             <div
                 className="absolute inset-0 pointer-events-none"
-                style={{
-                    background: 'linear-gradient(to top, rgba(4,8,20,0.85) 0%, rgba(4,8,20,0.1) 55%, transparent 100%)',
-                }}
+                style={{ background: 'linear-gradient(to top, rgba(4,8,20,0.85) 0%, rgba(4,8,20,0.1) 55%, transparent 100%)' }}
             />
 
             {/* ── Hover glassmorphism panel ── */}
             <div
-                className="absolute inset-0 flex flex-col justify-end p-5 transition-opacity duration-500"
+                className="absolute inset-0 flex flex-col justify-end p-5"
                 style={{
                     opacity: isHovered ? 1 : 0,
                     background: 'linear-gradient(135deg, rgba(4,8,20,0.6) 0%, rgba(10,18,40,0.45) 100%)',
                     backdropFilter: isHovered ? 'blur(4px)' : 'blur(0px)',
+                    transition: 'opacity 0.5s ease, backdropFilter 0.5s ease',
                 }}
             >
-                {/* Category badge */}
                 {item.category && (
                     <span
                         className="absolute top-4 left-4 text-[9px] font-extrabold tracking-[0.25em] uppercase px-2.5 py-1 rounded-full"
-                        style={{
-                            color: '#D4AF37',
-                            border: '1px solid rgba(212,175,55,0.35)',
-                            background: 'rgba(212,175,55,0.08)',
-                            letterSpacing: '0.2em',
-                        }}
+                        style={{ color: '#D4AF37', border: '1px solid rgba(212,175,55,0.35)', background: 'rgba(212,175,55,0.08)' }}
                     >
                         {item.category}
                     </span>
                 )}
 
-                {/* Title */}
                 <p
                     className="text-white font-bold text-[13px] leading-snug"
                     style={{ fontFamily: "'Clash Display', 'DM Sans', sans-serif", textShadow: '0 2px 12px rgba(0,0,0,0.6)' }}
@@ -229,7 +255,6 @@ export default function GalleryCard({ item, onClick }: Props) {
                     {item.title}
                 </p>
 
-                {/* Gold accent bar + label */}
                 <div className="flex items-center gap-2.5 mt-2.5">
                     <div
                         className="h-[1.5px] rounded-full"
@@ -248,7 +273,7 @@ export default function GalleryCard({ item, onClick }: Props) {
                 </div>
             </div>
 
-            {/* ── Permanent bottom title (subtle, always visible) ── */}
+            {/* ── Permanent bottom title ── */}
             <div
                 className="absolute bottom-0 left-0 right-0 p-4 pt-8 pointer-events-none"
                 style={{
@@ -262,10 +287,10 @@ export default function GalleryCard({ item, onClick }: Props) {
                 </p>
             </div>
 
-            {/* ── Video indicator badge ── */}
+            {/* ── Video indicator badge — subtle pulse ring ── */}
             {item.type === 'video' && (
                 <div
-                    className="absolute top-3 right-3 flex items-center gap-1.5 px-2 py-1 rounded-full transition-all duration-300"
+                    className="absolute top-3 right-3 flex items-center gap-1.5 px-2 py-1 rounded-full"
                     style={{
                         background: 'rgba(0,0,0,0.45)',
                         backdropFilter: 'blur(8px)',
@@ -275,11 +300,22 @@ export default function GalleryCard({ item, onClick }: Props) {
                         transition: 'opacity 0.3s, transform 0.3s',
                     }}
                 >
-                    <div
-                        className="w-1.5 h-1.5 rounded-full animate-pulse"
-                        style={{ background: '#D4AF37' }}
-                    />
+                    {/* Pulse ring around dot */}
+                    <div className="relative w-1.5 h-1.5">
+                        <div
+                            className="absolute inset-0 rounded-full"
+                            style={{ background: '#D4AF37', animation: 'video-pulse-ring 2s ease-out infinite' }}
+                        />
+                        <div className="w-1.5 h-1.5 rounded-full relative" style={{ background: '#D4AF37' }} />
+                    </div>
                     <span className="text-white/80 text-[8px] font-bold tracking-wider uppercase">Video</span>
+                    <style dangerouslySetInnerHTML={{ __html: `
+                        @keyframes video-pulse-ring {
+                            0%   { transform: scale(1);   opacity: 0.8; }
+                            70%  { transform: scale(2.8); opacity: 0;   }
+                            100% { transform: scale(1);   opacity: 0;   }
+                        }
+                    ` }} />
                 </div>
             )}
 
@@ -303,7 +339,7 @@ export default function GalleryCard({ item, onClick }: Props) {
                 />
             </div>
 
-            {/* ── Corner accent (premium detail) ── */}
+            {/* ── Corner accents ── */}
             <div
                 className="absolute top-0 left-0 w-8 h-8 pointer-events-none"
                 style={{

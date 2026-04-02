@@ -22,6 +22,10 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [WelcomeController::class, 'index'])->name('home');
 
+Route::get('/media/gallery/{filename}', [WelcomeController::class, 'serveGallery'])
+    ->name('media.gallery')
+    ->where('filename', '.+'); 
+
 // ─────────────────────────────────────────────────────────────────────────────
 // ADMISSION — Form Wizard & Register (guest only)
 // ─────────────────────────────────────────────────────────────────────────────
