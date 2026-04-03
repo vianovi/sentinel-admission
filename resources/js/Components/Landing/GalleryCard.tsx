@@ -1,22 +1,28 @@
+// resources/js/Components/Landing/GalleryCard.tsx
+
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { animate } from 'animejs';
 
 export type GalleryItem = {
-    id: number;
-    type: 'image' | 'video';
-    src: string;
-    title: string;
+    id:          number;
+    type:        'image' | 'video';
+    src:         string;
+    title:       string;
     description: string;
-    category?: string;
-    size?: 'narrow' | 'normal' | 'wide';
+    category?:   string;
+    size?:       'narrow' | 'normal' | 'wide';
 };
 
 export type OriginRect = { top: number; left: number; width: number; height: number };
 
 interface Props {
-    item: GalleryItem;
-    onClick: (origin: OriginRect) => void;
+    item:            GalleryItem;
+    onClick:         (origin: OriginRect) => void;
     lightboxActive?: boolean;
+    // Row 1 = eager (visible), Row 2 = lazy (below fold)
+    loading?:        'eager' | 'lazy';
+    // Index dalam set — untuk stagger delay shimmer
+    shimmerDelay?:   number;
 }
 
 const SIZE_WIDTH: Record<NonNullable<GalleryItem['size']>, { mobile: string; desktop: string }> = {
@@ -48,11 +54,19 @@ function spawnRipple(container: HTMLDivElement, e: React.MouseEvent) {
     });
 }
 
-export default function GalleryCard({ item, onClick, lightboxActive = false }: Props) {
-    const cardRef  = useRef<HTMLDivElement>(null);
-    const innerRef = useRef<HTMLDivElement>(null);
-    const videoRef = useRef<HTMLVideoElement>(null);
+export default function GalleryCard({
+    item,
+    onClick,
+    lightboxActive = false,
+    loading        = 'lazy',
+    shimmerDelay   = 0,
+}: Props) {
+    const cardRef   = useRef<HTMLDivElement>(null);
+    const innerRef  = useRef<HTMLDivElement>(null);
+    const videoRef  = useRef<HTMLVideoElement>(null);
+    const shimmerRef = useRef<HTMLDivElement>(null);
     const animFrame = useRef<number>(0);
+    const shimmerTimer = useRef<ReturnType<typeof setTimeout>>();
 
     const [isHovered, setIsHovered] = useState(false);
     const [isLoaded,  setIsLoaded]  = useState(false);
@@ -62,6 +76,46 @@ export default function GalleryCard({ item, onClick, lightboxActive = false }: P
 
     // Reset loaded state kalau src berubah
     useEffect(() => { setIsLoaded(false); }, [item.src]);
+
+    // ── Shimmer sweep — periodic gold light, hanya saat idle (tidak hover) ──
+    // Satu keyframe CSS, tidak ada JS loop — sangat ringan
+    useEffect(() => {
+        if (!shimmerRef.current) return;
+        const el = shimmerRef.current;
+
+        // Inject keyframe sekali secara global
+        const keyframeId = 'gallery-shimmer-kf';
+        if (!document.getElementById(keyframeId)) {
+            const style = document.createElement('style');
+            style.id = keyframeId;
+            style.textContent = `
+                @keyframes gallery-shimmer {
+                    0%   { transform: translateX(-120%) skewX(-20deg); opacity: 0; }
+                    10%  { opacity: 1; }
+                    90%  { opacity: 1; }
+                    100% { transform: translateX(220%) skewX(-20deg); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // Trigger shimmer dengan random interval — tidak semua card bersamaan
+        const baseInterval = 4500;
+        const jitter       = shimmerDelay * 600; // stagger antar card
+
+        const runShimmer = () => {
+            if (!el || isHovered) return;
+            el.style.animation = 'none';
+            // Force reflow agar animation restart
+            void el.offsetWidth;
+            el.style.animation = 'gallery-shimmer 1.1s cubic-bezier(0.4,0,0.2,1) forwards';
+            shimmerTimer.current = setTimeout(runShimmer, baseInterval + Math.random() * 2000);
+        };
+
+        shimmerTimer.current = setTimeout(runShimmer, jitter + 800);
+        return () => clearTimeout(shimmerTimer.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [shimmerDelay, isHovered]);
 
     // ── Magnetic + 3D ──
     const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -114,7 +168,6 @@ export default function GalleryCard({ item, onClick, lightboxActive = false }: P
         animate(cardRef.current, {
             scale: [1, 0.96, 1], duration: 300, ease: 'easeInOutQuad',
         });
-        // Kirim origin rect ke parent untuk animasi lightbox
         const rect = cardRef.current.getBoundingClientRect();
         setTimeout(() => onClick({
             top:    rect.top,
@@ -143,9 +196,28 @@ export default function GalleryCard({ item, onClick, lightboxActive = false }: P
                 transition: 'box-shadow 0.4s ease',
             }}
         >
-            {/* ── Dark placeholder saat loading ── */}
+            {/* ── Placeholder blur saat loading ── */}
             {!isLoaded && (
-                <div className="absolute inset-0" style={{ background: '#080d1a', zIndex: 5 }} />
+                <div
+                    className="absolute inset-0 animate-pulse"
+                    style={{
+                        background: 'linear-gradient(135deg, #080d1a 0%, #0d1528 50%, #080d1a 100%)',
+                        zIndex: 5,
+                    }}
+                >
+                    {/* Subtle shimmer pada placeholder */}
+                    <div style={{
+                        position: 'absolute', inset: 0,
+                        background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.03) 50%, transparent 100%)',
+                        animation: 'placeholder-sweep 1.8s ease-in-out infinite',
+                    }} />
+                    <style dangerouslySetInnerHTML={{ __html: `
+                        @keyframes placeholder-sweep {
+                            0%   { transform: translateX(-100%); }
+                            100% { transform: translateX(200%); }
+                        }
+                    `}} />
+                </div>
             )}
 
             {/* ── Media ── */}
@@ -156,6 +228,8 @@ export default function GalleryCard({ item, onClick, lightboxActive = false }: P
                         alt={item.title}
                         className="h-full w-full object-cover"
                         draggable={false}
+                        loading={loading}
+                        decoding="async"
                         onLoad={() => setIsLoaded(true)}
                     />
                 ) : (
@@ -171,6 +245,19 @@ export default function GalleryCard({ item, onClick, lightboxActive = false }: P
                     />
                 )}
             </div>
+
+            {/* ── Shimmer sweep — gold diagonal light, periodic, idle only ── */}
+            <div
+                ref={shimmerRef}
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                    zIndex: 8,
+                    background: 'linear-gradient(105deg, transparent 20%, rgba(212,175,55,0.18) 50%, rgba(245,224,152,0.08) 60%, transparent 80%)',
+                    opacity: isHovered ? 0 : 1,
+                    transition: 'opacity 0.3s',
+                    // animation diset via JS
+                }}
+            />
 
             {/* ── Permanent dark gradient — kontras teks ── */}
             <div

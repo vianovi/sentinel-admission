@@ -83,10 +83,13 @@ class DocumentController extends Controller
     // STORE — Upload dokumen
     // =============================================
 
-    public function store(Request $request, string $docType): RedirectResponse
+    public function store(Request $request, string $docType)
     {
+        $isJson = $request->wantsJson();
+
         // ── Validasi doc_type ─────────────────────────────────────
         if (!CandidateDocument::isValidDocType($docType)) {
+            if ($isJson) return response()->json(['errors' => ['file' => 'Jenis dokumen tidak valid.']], 422);
             return back()->withErrors(['file' => 'Jenis dokumen tidak valid.']);
         }
 
@@ -94,7 +97,7 @@ class DocumentController extends Controller
         $candidate = $user->candidate()->firstOrFail();
 
         // ── Layer 3A: Laravel validation ─────────────────────────
-        $request->validate([
+        $validated = $request->validate([
             'file' => [
                 'required',
                 'file',
@@ -104,16 +107,17 @@ class DocumentController extends Controller
             ],
         ]);
 
-        $file          = $request->file('file');
-        $uploadIp      = $request->ip();
-        $userAgent     = $request->userAgent() ?? '';
+        $file      = $request->file('file');
+        $uploadIp  = $request->ip();
+        $userAgent = $request->userAgent() ?? '';
 
         // ── Layer 3B + 3C: Magic bytes + Polyglot scan ───────────
         $securityResult = $this->security->runAll($file, $uploadIp, $userAgent);
 
         if (!$this->security->isSafeToStore($securityResult)) {
-            // Error SILENT ke user — detail hanya di log (sudah dicatat di service)
-            return back()->withErrors(['file' => 'Format file tidak didukung. Pastikan file berupa JPEG, PNG, atau PDF yang valid.']);
+            $msg = 'Format file tidak didukung. Pastikan file berupa JPEG, PNG, atau PDF yang valid.';
+            if ($isJson) return response()->json(['errors' => ['file' => $msg]], 422);
+            return back()->withErrors(['file' => $msg]);
         }
 
         // ── Layer 4: UUID rename + private storage ────────────────
@@ -130,9 +134,8 @@ class DocumentController extends Controller
                     ->where('doc_type', $docType)
                     ->whereNull('deleted_at')
                     ->each(function ($doc) {
-                        // Hapus file fisik yang lama
                         Storage::disk('private')->delete($doc->file_path);
-                        $doc->delete(); // SoftDelete
+                        $doc->delete();
                     });
             }
 
@@ -144,10 +147,7 @@ class DocumentController extends Controller
                     'private'
                 );
             } else {
-                // LAB-HACK: simpan ke public storage
-                Log::warning('[LAB-HACK] Private storage DISABLED — saving to public', [
-                    'user_id' => $user->id,
-                ]);
+                Log::warning('[LAB-HACK] Private storage DISABLED — saving to public', ['user_id' => $user->id]);
                 $file->storeAs(
                     "candidates/{$candidate->candidate_code}",
                     $storedFilename,
@@ -177,11 +177,11 @@ class DocumentController extends Controller
 
             DB::commit();
 
+            if ($isJson) return response()->json(['message' => 'Dokumen berhasil diupload.'], 200);
             return back()->with('success', 'Dokumen berhasil diupload dan sedang menunggu verifikasi.');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            // Hapus file yang mungkin sudah tersimpan
             Storage::disk('private')->delete($storagePath);
 
             Log::error('DocumentController@store failed', [
@@ -191,7 +191,9 @@ class DocumentController extends Controller
                 'trace'    => $e->getTraceAsString(),
             ]);
 
-            return back()->withErrors(['file' => 'Sistem sedang mengalami gangguan. Silakan coba beberapa saat lagi.']);
+            $msg = 'Sistem sedang mengalami gangguan. Silakan coba beberapa saat lagi.';
+            if ($isJson) return response()->json(['errors' => ['file' => $msg]], 500);
+            return back()->withErrors(['file' => $msg]);
         }
     }
 

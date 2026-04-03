@@ -8,7 +8,6 @@ import GalleryCard, { GalleryItem, OriginRect } from './GalleryCard';
 // ─────────────────────────────────────────────────────────────
 const img   = (file: string) => route('media.gallery', { filename: `images/${file}` });
 const vid   = (file: string) => route('media.gallery', { filename: `videos/${file}` });
-const thumb = (file: string) => route('media.gallery', { filename: `images/${file}` });
 
 
 // MASTER_DATA — 134 foto + 4 video
@@ -292,9 +291,10 @@ interface SeamlessTrackProps {
     gap: number;
     onItemClick: (id: number, rect: OriginRect) => void;
     lightboxActive: boolean;
+    loading?: 'eager' | 'lazy';
 }
 
-function SeamlessTrack({ items, direction, duration, gap, onItemClick, lightboxActive }: SeamlessTrackProps) {
+function SeamlessTrack({ items, direction, duration, gap, onItemClick, lightboxActive, loading = 'lazy' }: SeamlessTrackProps) {
     // Stable class name — tidak re-generate saat re-render
     const cls      = useRef(`smq-${++instanceCount}`).current;
     const [paused, setPaused] = useState(false);
@@ -348,6 +348,8 @@ function SeamlessTrack({ items, direction, duration, gap, onItemClick, lightboxA
                 item={item}
                 onClick={(rect) => onItemClick(item.id, rect)}
                 lightboxActive={lightboxActive}
+                loading={loading}
+                shimmerDelay={i}
             />
         ));
 
@@ -517,21 +519,37 @@ function Lightbox({ item, total, currentIdx, originRect, onClose, onNavigate }: 
                     border: '1px solid rgba(255,255,255,0.07)',
                     background: 'linear-gradient(135deg, rgba(4,10,28,0.98) 0%, rgba(8,14,36,0.95) 100%)',
                     boxShadow: '0 40px 120px rgba(0,0,0,0.8), 0 0 0 1px rgba(212,175,55,0.08), inset 0 1px 0 rgba(255,255,255,0.06)',
-                    maxHeight: '88vh',
+                    maxHeight: '90vh',
                     opacity: 0,
                 }}
             >
-                {/* ── Left info panel ── */}
+                {/* ── Left info panel — blurred backdrop dari foto aktif ── */}
                 <div
                     ref={infoRef}
-                    className="relative w-full lg:w-[38%] flex flex-col justify-between overflow-y-auto"
+                    className="relative w-full lg:w-[38%] flex flex-col justify-between overflow-hidden"
                     style={{
-                        padding: '3rem 3rem 2.5rem',
                         borderRight: '1px solid rgba(255,255,255,0.05)',
-                        background: 'linear-gradient(160deg, rgba(8,16,40,0.6) 0%, rgba(4,8,20,0.3) 100%)',
                         minHeight: '280px',
+                        maxHeight: '88vh',
                     }}
                 >
+                    {/* Blurred photo backdrop — hanya image, bukan video */}
+                    {item.type === 'image' && (
+                        <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 0 }}>
+                            <img
+                                src={item.src}
+                                alt=""
+                                aria-hidden
+                                className="w-full h-full object-cover"
+                                style={{ filter: 'blur(32px) saturate(0.6) brightness(0.3)', transform: 'scale(1.1)' }}
+                            />
+                            <div className="absolute inset-0" style={{ background: 'rgba(4,8,20,0.75)' }} />
+                        </div>
+                    )}
+                    {item.type === 'video' && (
+                        <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 0, background: 'linear-gradient(160deg, rgba(8,16,40,0.95) 0%, rgba(4,8,20,0.9) 100%)' }} />
+                    )}
+                    <div className="relative flex flex-col justify-between h-full overflow-y-auto" style={{ zIndex: 1, padding: '3rem 3rem 2.5rem' }}>
                     <div className="flex items-center justify-between mb-8">
                         {item.category && (
                             <span
@@ -633,12 +651,13 @@ function Lightbox({ item, total, currentIdx, originRect, onClose, onNavigate }: 
                             Geser kiri / kanan untuk navigasi
                         </p>
                     </div>
+                    </div>
                 </div>
 
                 {/* ── Right media panel ── */}
                 <div
                     className="w-full lg:w-[62%] bg-black flex items-center justify-center overflow-hidden relative"
-                    style={{ minHeight: '320px' }}
+                    style={{ minHeight: '200px', maxHeight: '55vh', flex: '1 1 auto' }}
                 >
                     {item.type === 'video' ? (
                         <video
@@ -646,7 +665,7 @@ function Lightbox({ item, total, currentIdx, originRect, onClose, onNavigate }: 
                             src={item.src}
                             controls autoPlay muted
                             className="w-full h-full object-contain"
-                            style={{ maxHeight: '88vh' }}
+                            style={{ maxHeight: '55vh' }}
                         />
                     ) : (
                         <img
@@ -654,7 +673,7 @@ function Lightbox({ item, total, currentIdx, originRect, onClose, onNavigate }: 
                             src={item.src}
                             alt={item.title}
                             className="w-full h-full object-contain"
-                            style={{ maxHeight: '88vh' }}
+                            style={{ maxHeight: '55vh' }}
                         />
                     )}
                 </div>
@@ -851,6 +870,7 @@ export default function CinematicShowcase() {
                     gap={20}
                     onItemClick={handleItemClick}
                     lightboxActive={activeIndex !== null}
+                    loading="eager"
                 />
                 <SeamlessTrack
                     items={row2}
@@ -859,6 +879,7 @@ export default function CinematicShowcase() {
                     gap={20}
                     onItemClick={handleItemClick}
                     lightboxActive={activeIndex !== null}
+                    loading="lazy"
                 />
             </div>
 

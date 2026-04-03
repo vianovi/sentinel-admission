@@ -98,28 +98,35 @@ class DocumentSecurityService
         $header = bin2hex(fread($handle, 8));
         fclose($handle);
 
-        $claimedMime = $file->getMimeType();
+        // Deteksi MIME dari magic bytes secara langsung — tidak bergantung pada
+        // getMimeType() karena bisa return octet-stream di beberapa server/Docker config
+        $detectedMime = null;
+        foreach (self::MAGIC_SIGNATURES as $mime => $signatures) {
+            foreach ($signatures as $sig) {
+                if (str_starts_with($header, $sig)) {
+                    $detectedMime = $mime;
+                    break 2;
+                }
+            }
+        }
 
-        // Jika MIME bukan yang kita izinkan, langsung reject
-        if (!in_array($claimedMime, self::ALLOWED_MIMES)) {
+        // Tidak ada signature yang cocok → reject
+        if ($detectedMime === null) {
+            Log::warning('[SENTINEL] Magic bytes tidak cocok dengan format apapun', [
+                'user_id'      => auth()->id(),
+                'filename'     => $file->getClientOriginalName(),
+                'header_hex'   => $header,
+                'claimed_mime' => $file->getMimeType(),
+            ]);
             return [
                 'result'        => 'rejected',
                 'detected_mime' => 'unknown',
             ];
         }
 
-        // Cek apakah header sesuai dengan signatures yang diharapkan
-        $valid = false;
-        foreach (self::MAGIC_SIGNATURES[$claimedMime] ?? [] as $sig) {
-            if (str_starts_with($header, $sig)) {
-                $valid = true;
-                break;
-            }
-        }
-
         return [
-            'result'        => $valid ? 'passed' : 'rejected',
-            'detected_mime' => $valid ? $claimedMime : 'unknown',
+            'result'        => 'passed',
+            'detected_mime' => $detectedMime,
         ];
     }
 

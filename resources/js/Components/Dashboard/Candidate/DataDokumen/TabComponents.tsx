@@ -1,14 +1,11 @@
-/**
- * Tab components for DataDokumen
- * TabIdentitas, TabAkademik, TabPrestasi, TabBantuan, TabAdministrasi
- */
+// resources/js/Components/Dashboard/Candidate/DataDokumen/TabComponents.tsx
 
-import { useEffect } from 'react'
+import { useEffect }   from 'react'
 import { animate, stagger } from 'animejs'
-import DocumentCard from './DocumentCard'
+import DocumentCard    from './DocumentCard'
 import type { DocumentRecord } from '@/Pages/Dashboard/Candidate/DataDokumen'
 
-// ─── Shared tab props type ────────────────────────────────────
+// ─── Shared tab props ─────────────────────────────────────────────────────────
 
 interface TabProps {
     documents:       Record<string, DocumentRecord>
@@ -16,283 +13,337 @@ interface TabProps {
     isTransfer:      boolean
 }
 
-// ─── Shared stagger hook ──────────────────────────────────────
+// ─── Shared entrance animation ────────────────────────────────────────────────
 
-function useTabEntrance(selector: string) {
+function useTabEntrance() {
     useEffect(() => {
-        animate(selector, {
+        animate('.dok-section', {
             opacity:    [0, 1],
-            translateY: [16, 0],
-            duration:   500,
+            translateY: [12, 0],
+            duration:   450,
             delay:      stagger(80),
             ease:       'outExpo',
         })
     }, [])
 }
 
-// ─── Section wrapper ──────────────────────────────────────────
+// ─── Section Header — template DataKesehatan ─────────────────────────────────
+// icon container w-9 h-9 rounded-xl, bold title, subtitle muted
 
-function TabSection({ title, description, children }: {
-    title:       string
-    description: string
-    children:    React.ReactNode
+function SectionHeader({ icon, title, subtitle }: {
+    icon:     string
+    title:    string
+    subtitle: string
 }) {
     return (
-        <div className="mb-8">
-            <div className="mb-4">
-                <h2 className="text-base font-semibold text-slate-800 dark:text-slate-200">
-                    {title}
-                </h2>
-                <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
-                    {description}
-                </p>
+        <div className="flex items-center gap-3 mb-1">
+            <div className="w-9 h-9 rounded-xl shrink-0
+                            dark:bg-amber-500/10 bg-amber-50
+                            border dark:border-amber-500/20 border-amber-200
+                            flex items-center justify-center">
+                <i className={`${icon} text-amber-400 text-sm`}></i>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 doc-card">
-                {children}
+            <div>
+                <h3 className="text-sm font-bold dark:text-white text-slate-800">
+                    {title}
+                </h3>
+                <p className="text-xs dark:text-slate-500 text-slate-400 mt-0.5">
+                    {subtitle}
+                </p>
             </div>
         </div>
     )
 }
 
-// =============================================================
-// TAB A — Identitas & Kependudukan
-// =============================================================
+// ─── Info Banner ──────────────────────────────────────────────────────────────
 
-export function TabIdentitas({ documents }: TabProps) {
-    useTabEntrance('.doc-card')
-
-    const docs = [
-        { type: 'photo_formal',      label: 'Pas Foto Resmi',        hint: 'Untuk kartu peserta & arsip digital' },
-        { type: 'birth_certificate', label: 'Akta Kelahiran',         hint: 'Verifikasi identitas resmi' },
-        { type: 'family_card',       label: 'Kartu Keluarga (KK)',    hint: 'Verifikasi data keluarga & domisili' },
-        { type: 'parent_id_card',    label: 'KTP Orang Tua / Wali',  hint: 'Legalitas pendaftaran oleh wali' },
-    ]
+function InfoBanner({ color, icon, children }: {
+    color:    'blue' | 'amber'
+    icon:     string
+    children: React.ReactNode
+}) {
+    const cls = {
+        blue:  'dark:border-blue-500/20 border-blue-200 dark:bg-blue-500/[0.06] bg-blue-50 text-blue-400 dark:text-blue-300/80 text-blue-700',
+        amber: 'dark:border-amber-500/20 border-amber-200 dark:bg-amber-500/[0.06] bg-amber-50 text-amber-400 dark:text-amber-300/80 text-amber-700',
+    }[color]
 
     return (
-        <TabSection
-            title="Identitas & Kependudukan"
-            description="Dokumen yang membuktikan identitas kamu secara hukum negara."
-        >
-            {docs.map(({ type, label, hint }) => (
-                <DocumentCard
-                    key={type}
-                    docType={type}
-                    label={label}
-                    hint={hint}
-                    document={documents[type] ?? null}
-                />
-            ))}
-        </TabSection>
+        <div className={`flex items-start gap-2.5 p-3.5 rounded-xl border mb-5 ${cls}`}>
+            <i className={`${icon} text-xs mt-0.5 shrink-0`}></i>
+            <p className="text-[11px] leading-relaxed">{children}</p>
+        </div>
     )
 }
 
-// =============================================================
-// TAB B — Akademik (termasuk transfer_letter jika is_transfer)
-// =============================================================
+// ─── Doc List wrapper — row style ─────────────────────────────────────────────
+// Tidak pakai card box lagi — list item style, lebih clean
 
-export function TabAkademik({ documents, isTransfer }: TabProps) {
-    useTabEntrance('.doc-card')
+function DocList({ children }: { children: React.ReactNode }) {
+    return (
+        <div className="dark:bg-white/[0.02] bg-white rounded-xl
+                        border dark:border-white/[0.06] border-black/[0.06]
+                        px-4 overflow-hidden">
+            {children}
+        </div>
+    )
+}
+
+// =============================================================================
+// TAB A — Identitas & Kependudukan
+// =============================================================================
+
+export function TabIdentitas({ documents }: TabProps) {
+    useTabEntrance()
 
     const docs = [
-        { type: 'graduation_certificate', label: 'Ijazah / SKL',           hint: 'Bukti kelulusan jenjang sebelumnya' },
-        { type: 'report_card',            label: 'Rapor Semester Terakhir', hint: 'Rekam jejak akademik terkini' },
-        { type: 'academic_transcript',    label: 'Transkrip Nilai Lengkap', hint: 'Gambaran akademik menyeluruh untuk evaluasi' },
+        { type: 'photo_formal',      label: 'Pas Foto Resmi',       hint: 'Untuk kartu peserta & arsip digital',   required: 'required'   as const },
+        { type: 'birth_certificate', label: 'Akta Kelahiran',        hint: 'Verifikasi identitas resmi',            required: 'required'   as const },
+        { type: 'family_card',       label: 'Kartu Keluarga (KK)',   hint: 'Verifikasi data keluarga & domisili',   required: 'required'   as const },
+        { type: 'parent_id_card',    label: 'KTP Orang Tua / Wali', hint: 'Legalitas pendaftaran oleh wali',       required: 'required'   as const },
     ]
 
     return (
-        <div>
-            <TabSection
-                title="Akademik"
-                description="Dokumen rekam jejak pendidikanmu dari sekolah sebelumnya."
-            >
-                {docs.map(({ type, label, hint }) => (
-                    <DocumentCard
-                        key={type}
-                        docType={type}
-                        label={label}
-                        hint={hint}
-                        document={documents[type] ?? null}
-                    />
-                ))}
-            </TabSection>
-
-            {/* Conditional: transfer_letter hanya untuk siswa pindahan */}
-            {isTransfer && (
-                <div className="doc-card">
-                    <div className="mb-3 rounded-2xl border border-amber-200 dark:border-amber-800/50
-                                    bg-amber-50 dark:bg-amber-900/20 p-3">
-                        <p className="text-sm text-amber-700 dark:text-amber-400 flex items-center gap-2">
-                            <i className="fa-solid fa-right-left text-xs flex-shrink-0" />
-                            Kamu terdaftar sebagai <strong>siswa pindahan</strong> — surat keterangan pindah diperlukan.
-                        </p>
-                    </div>
-                    <DocumentCard
-                        docType="transfer_letter"
-                        label="Surat Keterangan Pindah"
-                        hint="Wajib dilampirkan karena kamu mendaftar sebagai siswa pindahan"
-                        document={documents['transfer_letter'] ?? null}
-                    />
+        <div className="flex flex-col gap-6">
+            <section className="dok-section opacity-0">
+                <SectionHeader
+                    icon="fa-solid fa-id-card"
+                    title="Identitas & Kependudukan"
+                    subtitle="Dokumen yang membuktikan identitas secara hukum negara"
+                />
+                <div className="mt-5">
+                    <DocList>
+                        {docs.map(({ type, label, hint, required }) => (
+                            <DocumentCard
+                                key={type}
+                                docType={type}
+                                label={label}
+                                hint={hint}
+                                document={documents[type] ?? null}
+                                requiredLevel={required}
+                            />
+                        ))}
+                    </DocList>
                 </div>
+            </section>
+        </div>
+    )
+}
+
+// =============================================================================
+// TAB B — Akademik
+// =============================================================================
+
+export function TabAkademik({ documents, isTransfer }: TabProps) {
+    useTabEntrance()
+
+    const docs = [
+        { type: 'graduation_certificate', label: 'Ijazah / SKL',            hint: 'Bukti kelulusan jenjang sebelumnya',               required: 'required' as const },
+        { type: 'report_card',            label: 'Rapor Semester Terakhir',  hint: 'Rekam jejak akademik terkini',                     required: 'required' as const },
+        { type: 'academic_transcript',    label: 'Transkrip Nilai Lengkap',  hint: 'Gambaran akademik menyeluruh untuk evaluasi',       required: 'optional' as const },
+    ]
+
+    return (
+        <div className="flex flex-col gap-6">
+            <section className="dok-section opacity-0">
+                <SectionHeader
+                    icon="fa-solid fa-graduation-cap"
+                    title="Akademik"
+                    subtitle="Dokumen rekam jejak pendidikan dari sekolah sebelumnya"
+                />
+                <div className="mt-5">
+                    <DocList>
+                        {docs.map(({ type, label, hint, required }) => (
+                            <DocumentCard
+                                key={type}
+                                docType={type}
+                                label={label}
+                                hint={hint}
+                                document={documents[type] ?? null}
+                                requiredLevel={required}
+                            />
+                        ))}
+                    </DocList>
+                </div>
+            </section>
+
+            {/* Conditional: transfer_letter */}
+            {isTransfer && (
+                <section className="dok-section opacity-0">
+                    <SectionHeader
+                        icon="fa-solid fa-right-left"
+                        title="Surat Pindahan"
+                        subtitle="Diperlukan karena kamu mendaftar sebagai siswa pindahan"
+                    />
+                    <div className="mt-5">
+                        <InfoBanner color="amber" icon="fa-solid fa-triangle-exclamation">
+                            Kamu terdaftar sebagai <strong>siswa pindahan</strong> — surat keterangan pindah wajib dilampirkan.
+                        </InfoBanner>
+                        <DocList>
+                            <DocumentCard
+                                docType="transfer_letter"
+                                label="Surat Keterangan Pindah"
+                                hint="Dari sekolah asal — wajib untuk siswa pindahan"
+                                document={documents['transfer_letter'] ?? null}
+                            />
+                        </DocList>
+                    </div>
+                </section>
             )}
         </div>
     )
 }
 
-// =============================================================
+// =============================================================================
 // TAB C — Prestasi (multi-upload)
-// =============================================================
+// =============================================================================
 
 export function TabPrestasi({ achievementDocs }: TabProps) {
-    useTabEntrance('.doc-card')
+    useTabEntrance()
 
     const categories = [
         {
-            type:  'achievement_academic',
-            label: 'Sertifikat Prestasi Akademik',
-            hint:  'OSN, olimpiade sains, karya tulis ilmiah, dll',
+            type:     'achievement_academic',
+            label:    'Prestasi Akademik',
+            subtitle: 'OSN, olimpiade sains, karya tulis ilmiah, dll',
+            icon:     'fa-solid fa-flask',
         },
         {
-            type:  'achievement_nonacademic',
-            label: 'Sertifikat Prestasi Non-Akademik',
-            hint:  'O2SN, FLS2N, olahraga, seni, debat, dll',
+            type:     'achievement_nonacademic',
+            label:    'Prestasi Non-Akademik',
+            subtitle: 'O2SN, FLS2N, olahraga, seni, debat, dll',
+            icon:     'fa-solid fa-medal',
         },
         {
-            type:  'achievement_religious',
-            label: 'Sertifikat Prestasi Keagamaan',
-            hint:  'MTQ, tahfidz, lomba keagamaan',
+            type:     'achievement_religious',
+            label:    'Prestasi Keagamaan',
+            subtitle: 'MTQ, tahfidz, lomba keagamaan',
+            icon:     'fa-solid fa-star-and-crescent',
         },
     ]
 
     return (
-        <div>
-            <div className="mb-6 rounded-2xl border border-amber-200 dark:border-amber-800/50
-                            bg-amber-50 dark:bg-amber-900/20 p-4 doc-card">
-                <p className="text-sm text-amber-700 dark:text-amber-400 flex items-start gap-2">
-                    <i className="fa-solid fa-circle-info mt-0.5 flex-shrink-0" />
-                    Kelompok ini boleh diupload lebih dari satu dokumen. Kamu bisa melampirkan
-                    semua sertifikat prestasi yang kamu miliki untuk memperkuat profil seleksimu~
-                </p>
-            </div>
+        <div className="flex flex-col gap-6">
+            <InfoBanner color="blue" icon="fa-solid fa-circle-info">
+                Kelompok ini boleh diupload <strong>lebih dari satu dokumen</strong>.
+                Lampirkan semua sertifikat prestasi yang kamu miliki~
+            </InfoBanner>
 
-            {categories.map(({ type, label, hint }) => {
+            {categories.map(({ type, label, subtitle, icon }) => {
                 const existingDocs = achievementDocs[type] ?? []
                 return (
-                    <div key={type} className="mb-6 doc-card">
-                        <div className="mb-3">
-                            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                                {label}
-                            </p>
-                            <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-                                {hint}
-                            </p>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {/* Existing docs */}
-                            {existingDocs.map((doc) => (
+                    <section key={type} className="dok-section opacity-0">
+                        <SectionHeader icon={icon} title={label} subtitle={subtitle} />
+                        <div className="mt-5">
+                            <DocList>
+                                {existingDocs.map((doc, idx) => (
+                                    <DocumentCard
+                                        key={doc.id}
+                                        docType={type}
+                                        label={`${label} #${idx + 1}`}
+                                        hint={doc.original_filename}
+                                        document={doc}
+                                        multiple
+                                        requiredLevel="optional"
+                                    />
+                                ))}
+                                {/* Tambah baru */}
                                 <DocumentCard
-                                    key={doc.id}
                                     docType={type}
-                                    label={`${label} #${existingDocs.indexOf(doc) + 1}`}
-                                    hint={doc.original_filename}
-                                    document={doc}
+                                    label={existingDocs.length > 0 ? `Tambah ${label}` : label}
+                                    hint="Klik Upload untuk menambah sertifikat"
+                                    document={null}
                                     multiple
+                                    requiredLevel="optional"
                                 />
-                            ))}
-                            {/* Add new */}
-                            <DocumentCard
-                                docType={type}
-                                label={existingDocs.length > 0 ? `Tambah ${label}` : label}
-                                hint="Klik untuk upload sertifikat baru"
-                                document={null}
-                                multiple
-                            />
+                            </DocList>
                         </div>
-                    </div>
+                    </section>
                 )
             })}
         </div>
     )
 }
 
-// =============================================================
-// TAB D — Bantuan & Afirmasi (welfare — pilih salah satu)
-// =============================================================
+// =============================================================================
+// TAB D — Bantuan & Afirmasi
+// =============================================================================
 
 export function TabBantuan({ documents }: TabProps) {
-    useTabEntrance('.doc-card')
+    useTabEntrance()
 
     const docs = [
-        {
-            type:  'kip_card',
-            label: 'Kartu Indonesia Pintar (KIP)',
-            hint:  'Untuk pengusulan PIP — bantuan biaya pendidikan dari pemerintah',
-        },
-        {
-            type:  'welfare_card',
-            label: 'Kartu KKS / PKH',
-            hint:  'Bukti keluarga penerima program kesejahteraan sosial',
-        },
-        {
-            type:  'poverty_letter',
-            label: 'Surat Keterangan Tidak Mampu (SKTM)',
-            hint:  'Alternatif jika belum punya KIP/KKS, diurus di kelurahan',
-        },
+        { type: 'kip_card',      label: 'Kartu Indonesia Pintar (KIP)', hint: 'Untuk pengusulan PIP — bantuan biaya pendidikan dari pemerintah', required: 'choose-one' as const },
+        { type: 'welfare_card',  label: 'Kartu KKS / PKH',              hint: 'Bukti keluarga penerima program kesejahteraan sosial',             required: 'choose-one' as const },
+        { type: 'poverty_letter',label: 'Surat Keterangan Tidak Mampu', hint: 'Alternatif jika belum punya KIP/KKS — diurus di kelurahan',        required: 'choose-one' as const },
     ]
 
     return (
-        <div>
-            {/* Info banner */}
-            <div className="mb-6 rounded-2xl border border-blue-200 dark:border-blue-800/50
-                            bg-blue-50 dark:bg-blue-900/20 p-4 doc-card">
-                <p className="text-sm text-blue-700 dark:text-blue-400 flex items-start gap-2">
-                    <i className="fa-solid fa-circle-info mt-0.5 flex-shrink-0" />
-                    Kelompok ini bersifat <strong>pilih salah satu</strong> — upload dokumen yang
-                    kamu miliki. Jika tidak memiliki ketiganya, bagian ini bisa dilewati.
-                </p>
-            </div>
-
-            <TabSection
-                title="Bantuan & Afirmasi"
-                description="Dokumen untuk eligibilitas program bantuan pemerintah (PIP/KIP)."
-            >
-                {docs.map(({ type, label, hint }) => (
-                    <DocumentCard
-                        key={type}
-                        docType={type}
-                        label={label}
-                        hint={hint}
-                        document={documents[type] ?? null}
-                    />
-                ))}
-            </TabSection>
+        <div className="flex flex-col gap-6">
+            <section className="dok-section opacity-0">
+                <SectionHeader
+                    icon="fa-solid fa-hand-holding-heart"
+                    title="Bantuan & Afirmasi"
+                    subtitle="Dokumen eligibilitas program bantuan pemerintah (PIP/KIP)"
+                />
+                <div className="mt-5">
+                    <InfoBanner color="blue" icon="fa-solid fa-circle-info">
+                        Kelompok ini bersifat <strong>pilih salah satu</strong> — upload dokumen yang kamu miliki.
+                        Jika tidak memiliki ketiganya, bagian ini bisa dilewati.
+                    </InfoBanner>
+                    <DocList>
+                        {docs.map(({ type, label, hint, required }) => (
+                            <DocumentCard
+                                key={type}
+                                docType={type}
+                                label={label}
+                                hint={hint}
+                                document={documents[type] ?? null}
+                                requiredLevel={required}
+                            />
+                        ))}
+                    </DocList>
+                </div>
+            </section>
         </div>
     )
 }
 
-// =============================================================
-// TAB E — Administrasi & Pernyataan (universal — semua jenis sekolah)
-// =============================================================
+// =============================================================================
+// TAB E — Administrasi & Pernyataan
+// =============================================================================
 
 export function TabAdministrasi({ documents }: TabProps) {
-    useTabEntrance('.doc-card')
+    useTabEntrance()
 
     return (
-        <TabSection
-            title="Administrasi & Pernyataan"
-            description="Dokumen administratif yang diperlukan sebagai kelengkapan pendaftaran."
-        >
-            <DocumentCard
-                docType="parent_statement"
-                label="Surat Pernyataan Orang Tua"
-                hint="Persetujuan & kesanggupan mengikuti tata tertib sekolah"
-                document={documents['parent_statement'] ?? null}
-            />
-            <DocumentCard
-                docType="recommendation_letter"
-                label="Surat Rekomendasi"
-                hint="Dari guru atau kepala sekolah (opsional)"
-                document={documents['recommendation_letter'] ?? null}
-            />
-        </TabSection>
+        <div className="flex flex-col gap-6">
+            <section className="dok-section opacity-0">
+                <SectionHeader
+                    icon="fa-solid fa-file-signature"
+                    title="Administrasi & Pernyataan"
+                    subtitle="Dokumen administratif kelengkapan pendaftaran"
+                />
+                <div className="mt-5">
+                    <DocList>
+                        <DocumentCard
+                            docType="parent_statement"
+                            label="Surat Pernyataan Orang Tua"
+                            hint="Bisa diserahkan offline atau online — lihat keterangan di bawah"
+                            document={documents['parent_statement'] ?? null}
+                            requiredLevel="required"
+                            showTemplate
+                            templateUrl="/assets/surat-pernyataan-template.docx"
+                        />
+                        <DocumentCard
+                            docType="recommendation_letter"
+                            label="Surat Rekomendasi"
+                            hint="Dari guru atau kepala sekolah"
+                            document={documents['recommendation_letter'] ?? null}
+                            requiredLevel="optional"
+                        />
+                    </DocList>
+                </div>
+            </section>
+        </div>
     )
 }

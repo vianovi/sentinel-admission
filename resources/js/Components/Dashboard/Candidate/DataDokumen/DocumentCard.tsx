@@ -1,21 +1,30 @@
-import { useRef, useState } from 'react'
-import { router } from '@inertiajs/react'
-import { animate } from 'animejs'
-import axios from 'axios'
-import Swal from 'sweetalert2'
-import type { DocumentRecord } from '@/Pages/Dashboard/Candidate/DataDokumen'
+// resources/js/Components/Dashboard/Candidate/DataDokumen/DocumentCard.tsx
 
-// ─── Types ───────────────────────────────────────────────────
+import { useRef, useState, useCallback } from 'react'
+import { router }                         from '@inertiajs/react'
+import { animate }                        from 'animejs'
+import axios                              from 'axios'
+import Swal                               from 'sweetalert2'
+import FilePreviewModal                   from '@/Components/UI/FilePreviewModal'
+import type { DocumentRecord }            from '@/Pages/Dashboard/Candidate/DataDokumen'
+
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+type RequiredLevel = 'required' | 'optional' | 'choose-one'
 
 interface Props {
-    docType:   string
-    label:     string
-    hint:      string
-    document:  DocumentRecord | null  // null = belum diupload
-    multiple?: boolean                // untuk achievement group
+    docType:        string
+    label:          string
+    hint:           string
+    document:       DocumentRecord | null
+    multiple?:      boolean
+    requiredLevel?: RequiredLevel
+    // Khusus Surat Pernyataan — tampilkan tombol download template
+    showTemplate?:  boolean
+    templateUrl?:   string
 }
 
-// ─── swalDark mixin ──────────────────────────────────────────
+// ─── SwalDark ────────────────────────────────────────────────────────────────
 
 const swalDark = Swal.mixin({
     background:         '#0f172a',
@@ -30,38 +39,62 @@ const swalDark = Swal.mixin({
     },
 })
 
-// ─── Component ───────────────────────────────────────────────
+// ─── Required badge config ────────────────────────────────────────────────────
+
+const REQUIRED_CONFIG: Record<RequiredLevel, { label: string; cls: string }> = {
+    'required':   { label: 'Wajib',           cls: 'dark:bg-red-500/10 bg-red-50 dark:text-red-400 text-red-500 dark:border-red-500/20 border-red-200' },
+    'optional':   { label: 'Opsional',         cls: 'dark:bg-white/[0.05] bg-slate-100 dark:text-slate-500 text-slate-400 dark:border-white/[0.07] border-black/[0.07]' },
+    'choose-one': { label: 'Pilih salah satu', cls: 'dark:bg-blue-500/10 bg-blue-50 dark:text-blue-400 text-blue-600 dark:border-blue-500/20 border-blue-200' },
+}
+
+// ─── Status config ────────────────────────────────────────────────────────────
+
+const STATUS_CONFIG = {
+    empty:     { dot: 'dark:bg-slate-700 bg-slate-200',           label: 'Belum diupload',       badge: 'dark:bg-white/[0.05] bg-slate-100 dark:text-slate-500 text-slate-400 dark:border-white/[0.07] border-black/[0.07]' },
+    uploading: { dot: 'bg-blue-500 animate-pulse',                label: 'Mengupload...',         badge: 'dark:bg-blue-500/10 bg-blue-50 dark:text-blue-400 text-blue-600 dark:border-blue-500/20 border-blue-200' },
+    pending:   { dot: 'bg-amber-400',                             label: 'Menunggu verifikasi',   badge: 'dark:bg-amber-500/10 bg-amber-50 dark:text-amber-400 text-amber-600 dark:border-amber-500/20 border-amber-200' },
+    verified:  { dot: 'bg-emerald-400',                           label: 'Terverifikasi',         badge: 'dark:bg-emerald-500/10 bg-emerald-50 dark:text-emerald-400 text-emerald-600 dark:border-emerald-500/20 border-emerald-200' },
+    rejected:  { dot: 'bg-red-500',                               label: 'Ditolak',               badge: 'dark:bg-red-500/10 bg-red-50 dark:text-red-400 text-red-500 dark:border-red-500/20 border-red-200' },
+} as const
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function DocumentCard({
-    docType,
-    label,
-    hint,
-    document: docRecord,   // rename prop → tidak clash dengan window.document
-    multiple = false,
+    docType, label, hint,
+    document:     docRecord,
+    multiple      = false,
+    requiredLevel = 'required',
+    showTemplate  = false,
+    templateUrl   = '/assets/surat-pernyataan-template.pdf',
 }: Props) {
-    const [isUploading, setIsUploading]       = useState(false)
+    const [isUploading,    setIsUploading]    = useState(false)
     const [uploadProgress, setUploadProgress] = useState(0)
+    const [isDragOver,     setIsDragOver]     = useState(false)
     const inputRef = useRef<HTMLInputElement>(null)
-    const cardRef  = useRef<HTMLDivElement>(null)
+    const rowRef   = useRef<HTMLDivElement>(null)
 
     const status = isUploading ? 'uploading' : (docRecord?.status ?? 'empty')
+    const cfg    = STATUS_CONFIG[status]
+    const reqCfg = REQUIRED_CONFIG[requiredLevel]
+    const isLocked = status === 'verified'
 
-    // ── Upload handler ────────────────────────────────────────
+    // ── Shake ─────────────────────────────────────────────────────────────────
+    const shakeRow = () => {
+        if (!rowRef.current) return
+        animate(rowRef.current, { translateX: [0, -6, 6, -4, 4, 0], duration: 380, ease: 'outExpo' })
+    }
 
-    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0]
-        if (!file) return
-
-        // UI validation — UX gate saja, backend tetap validasi ulang
+    // ── Upload handler (shared) ────────────────────────────────────────────────
+    const handleUpload = useCallback(async (file: File) => {
         const allowed = ['image/jpeg', 'image/png', 'application/pdf']
         if (!allowed.includes(file.type)) {
-            shakeCard()
-            await swalDark.fire({ icon: 'error', title: 'Format tidak didukung', text: 'Hanya JPEG, PNG, atau PDF yang diterima.' })
+            shakeRow()
+            await swalDark.fire({ icon: 'error', title: 'Format tidak didukung', text: 'Hanya JPEG, PNG, atau PDF.' })
             return
         }
         if (file.size > 5 * 1024 * 1024) {
-            shakeCard()
-            await swalDark.fire({ icon: 'error', title: 'File terlalu besar', text: 'Ukuran maksimum 5MB.' })
+            shakeRow()
+            await swalDark.fire({ icon: 'error', title: 'File terlalu besar', text: 'Maksimum 5MB.' })
             return
         }
 
@@ -71,57 +104,75 @@ export default function DocumentCard({
         const formData = new FormData()
         formData.append('file', file)
 
-        // CSRF token dari meta tag — window.document aman di sini (bukan prop)
-        const csrf = window.document
-            .querySelector('meta[name="csrf-token"]')
-            ?.getAttribute('content') ?? ''
+        const csrf = window.document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? ''
 
         try {
             await axios.post(
                 route('dashboard.data-dokumen.store', { docType }),
                 formData,
                 {
-                    headers: { 'Content-Type': 'multipart/form-data', 'X-CSRF-TOKEN': csrf },
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        'X-CSRF-TOKEN': csrf,
+                        'Accept':       'application/json',
+                    },
                     onUploadProgress: (e) => {
-                        // e.total bisa undefined di beberapa browser — selalu guard
                         if (e.total) setUploadProgress(Math.round((e.loaded * 100) / e.total))
                     },
                 }
             )
-
-            // Partial reload — ambil data terbaru tanpa full page reload
             router.reload({ only: ['documents', 'achievementDocs', 'completion'] })
-
             swalDark.fire({
                 toast: true, position: 'top-end', icon: 'success',
                 title: 'Dokumen berhasil diupload',
                 showConfirmButton: false, timer: 3000, timerProgressBar: true,
             })
-
         } catch (err: any) {
-            shakeCard()
+            shakeRow()
             const msg = err?.response?.data?.errors?.file?.[0]
-                ?? 'Gagal mengupload. Silakan coba lagi.'
+                ?? err?.response?.data?.message
+                ?? 'Gagal mengupload. Coba lagi.'
             await swalDark.fire({ icon: 'error', title: 'Upload gagal', text: msg })
         } finally {
             setIsUploading(false)
             setUploadProgress(0)
             if (inputRef.current) inputRef.current.value = ''
         }
+    }, [docType])
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (file) handleUpload(file)
     }
 
-    // ── Delete handler ────────────────────────────────────────
+    // ── Drag & Drop ───────────────────────────────────────────────────────────
+    const handleDragOver = useCallback((e: React.DragEvent) => {
+        e.preventDefault()
+        if (!isLocked && !isUploading) setIsDragOver(true)
+    }, [isLocked, isUploading])
 
+    const handleDragLeave = useCallback((e: React.DragEvent) => {
+        e.preventDefault()
+        setIsDragOver(false)
+    }, [])
+
+    const handleDrop = useCallback((e: React.DragEvent) => {
+        e.preventDefault()
+        setIsDragOver(false)
+        if (isLocked || isUploading) return
+        const file = e.dataTransfer.files[0]
+        if (file) handleUpload(file)
+    }, [isLocked, isUploading, handleUpload])
+
+    // ── Delete ────────────────────────────────────────────────────────────────
     const handleDelete = async () => {
         if (!docRecord) return
-
         const result = await swalDark.fire({
             title: 'Hapus dokumen ini?', text: 'Kamu bisa upload ulang kapan saja.',
             icon: 'warning', showCancelButton: true,
             confirmButtonText: 'Ya, hapus', cancelButtonText: 'Batal',
         })
         if (!result.isConfirmed) return
-
         router.delete(
             route('dashboard.data-dokumen.destroy', { document: docRecord.id }),
             {
@@ -129,111 +180,226 @@ export default function DocumentCard({
                     toast: true, position: 'top-end', icon: 'success',
                     title: 'Dokumen dihapus', showConfirmButton: false, timer: 2500,
                 }),
-                onError: () => shakeCard(),
+                onError: () => shakeRow(),
             }
         )
     }
 
-    // ── Shake animation ───────────────────────────────────────
-
-    const shakeCard = () => {
-        if (!cardRef.current) return
-        animate(cardRef.current, { translateX: [0, -6, 6, -4, 4, 0], duration: 380, ease: 'outExpo' })
-    }
-
-    // ── Status config ─────────────────────────────────────────
-
-    const statusConfig = {
-        empty:     { border: 'border-slate-200 dark:border-slate-700',   badge: 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400',    label: 'Belum diupload',       icon: 'fa-cloud-arrow-up' },
-        uploading: { border: 'border-blue-300 dark:border-blue-700',     badge: 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400',       label: `Mengupload ${uploadProgress}%`, icon: 'fa-spinner fa-spin' },
-        pending:   { border: 'border-amber-300 dark:border-amber-700',   badge: 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400',   label: 'Menunggu verifikasi',  icon: 'fa-clock' },
-        verified:  { border: 'border-emerald-300 dark:border-emerald-700', badge: 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400', label: 'Terverifikasi', icon: 'fa-circle-check' },
-        rejected:  { border: 'border-red-300 dark:border-red-700',       badge: 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400',           label: 'Ditolak',              icon: 'fa-circle-xmark' },
-    }
-
-    const cfg = statusConfig[status]
-
-    // ─────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────────
+    // RENDER
+    // ─────────────────────────────────────────────────────────────────────────
 
     return (
         <div
-            ref={cardRef}
-            className={`rounded-2xl border bg-[var(--content-surface)] p-4 transition-all duration-300 ${cfg.border}`}
+            ref={rowRef}
+            className="flex flex-col"
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
         >
-            {/* Header row */}
-            <div className="flex items-start justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">{label}</p>
-                    <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500 line-clamp-2">{hint}</p>
+            {/* ── Main Row ─────────────────────────────────────────────── */}
+            <div className={[
+                'flex items-center gap-3 py-3 transition-all duration-200',
+                'border-b dark:border-white/[0.05] border-black/[0.05] last:border-0',
+                isDragOver && !isLocked
+                    ? 'dark:bg-amber-500/[0.06] bg-amber-50/60 rounded-lg'
+                    : '',
+            ].join(' ')}>
+
+                {/* Status dot indicator */}
+                <div className="flex flex-col items-center gap-1 shrink-0">
+                    <div className={`w-2.5 h-2.5 rounded-full ${cfg.dot}`} />
                 </div>
-                <span className={`flex-shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${cfg.badge}`}>
-                    <i className={`fa-solid ${cfg.icon} text-[10px]`} />
-                    {cfg.label}
-                </span>
+
+                {/* Progress ring — hanya saat uploading */}
+                {status === 'uploading' && (
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0
+                                    dark:bg-blue-500/10 bg-blue-50 relative">
+                        <svg className="w-5 h-5 -rotate-90" viewBox="0 0 20 20">
+                            <circle cx="10" cy="10" r="7" fill="none" stroke="currentColor" strokeWidth="2"
+                                className="dark:text-blue-500/20 text-blue-200" />
+                            <circle cx="10" cy="10" r="7" fill="none" stroke="currentColor" strokeWidth="2"
+                                strokeDasharray={`${2 * Math.PI * 7}`}
+                                strokeDashoffset={`${2 * Math.PI * 7 * (1 - uploadProgress / 100)}`}
+                                strokeLinecap="round"
+                                className="text-blue-400 transition-all duration-300" />
+                        </svg>
+                        <span className="absolute text-[8px] font-bold text-blue-400">{uploadProgress}</span>
+                    </div>
+                )}
+
+                {/* Label + badge + hint/filename */}
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-[13px] font-medium dark:text-slate-200 text-slate-700 truncate">
+                            {label}
+                        </p>
+                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px]
+                                         font-medium border shrink-0 ${reqCfg.cls}`}>
+                            {reqCfg.label}
+                        </span>
+                        {/* Status badge — hanya kalau bukan empty */}
+                        {status !== 'empty' && (
+                            <span className={`hidden sm:inline-flex items-center gap-1 px-2 py-0.5
+                                             rounded-full text-[10px] font-medium border ${cfg.badge}`}>
+                                {cfg.label}
+                            </span>
+                        )}
+                    </div>
+
+                    {/* Hint / filename / progress bar */}
+                    {status === 'uploading' ? (
+                        <div className="mt-1.5 h-1 w-full max-w-[180px] rounded-full
+                                        dark:bg-white/[0.08] bg-black/[0.07] overflow-hidden">
+                            <div className="h-full rounded-full bg-blue-500 transition-all duration-300"
+                                 style={{ width: `${uploadProgress}%` }} />
+                        </div>
+                    ) : docRecord?.original_filename ? (
+                        <p className="text-[11px] dark:text-slate-500 text-slate-400 truncate mt-0.5">
+                            <i className="fa-solid fa-file text-[9px] mr-1"></i>
+                            {docRecord.original_filename}
+                        </p>
+                    ) : (
+                        <p className={`text-[11px] mt-0.5 truncate ${
+                            isDragOver
+                                ? 'dark:text-amber-400 text-amber-600 font-medium'
+                                : 'dark:text-slate-600 text-slate-400'
+                        }`}>
+                            {isDragOver ? 'Lepas file di sini~' : hint}
+                        </p>
+                    )}
+
+                    {/* Keterangan khusus Surat Pernyataan */}
+                    {showTemplate && status === 'empty' && (
+                        <p className="text-[10px] dark:text-slate-600 text-slate-400 mt-1 leading-relaxed">
+                            Bisa diserahkan <strong className="dark:text-slate-400 text-slate-500">offline</strong> (tulis tangan saat datang ke sekolah) atau{' '}
+                            <strong className="dark:text-slate-400 text-slate-500">online</strong> (unduh template, isi di komputer, tanda tangan digital/materai elektronik)
+                        </p>
+                    )}
+                </div>
+
+                {/* Actions kanan */}
+                <div className="flex items-center gap-1.5 shrink-0">
+
+                    {/* Download template — khusus Surat Pernyataan */}
+                    {showTemplate && (
+                        <a
+                            href={templateUrl}
+                            download
+                            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg
+                                       dark:bg-white/[0.04] bg-slate-100
+                                       dark:hover:bg-white/[0.08] hover:bg-slate-200
+                                       dark:text-slate-400 text-slate-500
+                                       border dark:border-white/[0.07] border-black/[0.07]
+                                       text-[11px] font-semibold transition-all duration-150
+                                       min-h-[32px]"
+                            title="Unduh template surat pernyataan"
+                        >
+                            <i className="fa-solid fa-file-arrow-down text-[10px]"></i>
+                            <span className="hidden sm:inline">Template</span>
+                        </a>
+                    )}
+
+                    {/* Preview — muncul kalau ada file */}
+                    {docRecord && status !== 'uploading' && (
+                        <FilePreviewModal
+                            serverUrl={route('dashboard.data-dokumen.preview', { document: docRecord.id })}
+                            label=""
+                        />
+                    )}
+
+                    {/* Upload / Ganti — tidak muncul kalau verified atau uploading */}
+                    {!isLocked && status !== 'uploading' && (
+                        <>
+                            <button
+                                onClick={() => inputRef.current?.click()}
+                                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg
+                                           dark:bg-amber-500/10 bg-amber-50
+                                           dark:hover:bg-amber-500/20 hover:bg-amber-100
+                                           dark:text-amber-400 text-amber-600
+                                           border dark:border-amber-500/20 border-amber-200
+                                           text-[11px] font-semibold transition-all duration-150
+                                           min-h-[32px]"
+                            >
+                                <i className="fa-solid fa-cloud-arrow-up text-[10px]"></i>
+                                <span className="hidden sm:inline">
+                                    {docRecord ? 'Ganti' : 'Upload'}
+                                </span>
+                            </button>
+                            <input
+                                ref={inputRef}
+                                type="file"
+                                accept=".jpg,.jpeg,.png,.pdf"
+                                className="hidden"
+                                onChange={handleFileChange}
+                            />
+                        </>
+                    )}
+
+                    {/* Hapus — tidak kalau verified atau uploading */}
+                    {docRecord && !isLocked && status !== 'uploading' && (
+                        <button
+                            onClick={handleDelete}
+                            className="w-8 h-8 flex items-center justify-center rounded-lg
+                                       dark:bg-red-500/10 bg-red-50
+                                       dark:hover:bg-red-500/20 hover:bg-red-100
+                                       dark:text-red-400 text-red-500
+                                       border dark:border-red-500/20 border-red-200
+                                       transition-all duration-150"
+                            title="Hapus dokumen"
+                        >
+                            <i className="fa-solid fa-trash text-[10px]"></i>
+                        </button>
+                    )}
+
+                    {/* Download — verified only */}
+                    {isLocked && docRecord && (
+                        <a
+                            href={route('dashboard.data-dokumen.download', { document: docRecord.id })}
+                            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg
+                                       dark:bg-emerald-500/10 bg-emerald-50
+                                       dark:hover:bg-emerald-500/20 hover:bg-emerald-100
+                                       dark:text-emerald-400 text-emerald-600
+                                       border dark:border-emerald-500/20 border-emerald-200
+                                       text-[11px] font-semibold transition-all duration-150
+                                       min-h-[32px]"
+                        >
+                            <i className="fa-solid fa-download text-[10px]"></i>
+                            <span className="hidden sm:inline">Unduh</span>
+                        </a>
+                    )}
+
+                    {/* Lock icon — verified */}
+                    {isLocked && (
+                        <div className="w-8 h-8 flex items-center justify-center rounded-lg
+                                        dark:bg-emerald-500/10 bg-emerald-50
+                                        border dark:border-emerald-500/20 border-emerald-200"
+                             title="Dokumen telah diverifikasi dan terkunci">
+                            <i className="fa-solid fa-lock text-[10px] dark:text-emerald-400 text-emerald-600"></i>
+                        </div>
+                    )}
+                </div>
             </div>
 
-            {/* Upload progress bar */}
-            {status === 'uploading' && (
-                <div className="mt-3 h-1.5 w-full rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
-                    <div className="h-full rounded-full bg-blue-500 transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
-                </div>
-            )}
-
-            {/* Filename */}
-            {docRecord && status !== 'uploading' && (
-                <p className="mt-2 text-xs text-slate-400 dark:text-slate-500 truncate flex items-center gap-1.5">
-                    <i className="fa-solid fa-file text-[10px]" />
-                    {docRecord.original_filename}
-                </p>
-            )}
-
-            {/* Rejection reason */}
+            {/* ── Rejection reason ─────────────────────────────────────── */}
             {status === 'rejected' && docRecord?.rejection_reason && (
-                <div className="mt-2 rounded-xl bg-red-50 dark:bg-red-900/20 px-3 py-2">
-                    <p className="text-xs text-red-600 dark:text-red-400">
-                        <i className="fa-solid fa-circle-info mr-1.5" />
+                <div className="flex items-start gap-2 py-2 px-1 mb-1">
+                    <i className="fa-solid fa-circle-info text-[10px] text-red-400 mt-0.5 shrink-0"></i>
+                    <p className="text-[11px] dark:text-red-400/80 text-red-500">
                         {docRecord.rejection_reason}
                     </p>
                 </div>
             )}
 
-            {/* Actions — tidak tampil saat verified */}
-            {status !== 'verified' && (
-                <div className="mt-3 flex gap-2">
-                    {status !== 'uploading' && (
-                        <>
-                            <button
-                                onClick={() => inputRef.current?.click()}
-                                className="flex-1 min-h-[44px] flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-[0.98] text-white text-sm font-medium transition-all duration-200"
-                            >
-                                <i className="fa-solid fa-cloud-arrow-up text-xs" />
-                                {docRecord ? 'Ganti' : 'Upload'}
-                            </button>
-                            <input ref={inputRef} type="file" accept=".jpg,.jpeg,.png,.pdf" className="hidden" onChange={handleFileChange} />
-                        </>
-                    )}
-                    {docRecord && status !== 'uploading' && (
-                        <button
-                            onClick={handleDelete}
-                            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-500 dark:text-red-400 transition-all duration-200"
-                            title="Hapus dokumen"
-                        >
-                            <i className="fa-solid fa-trash text-xs" />
-                        </button>
-                    )}
-                </div>
-            )}
-
-            {/* Verified — download only */}
-            {status === 'verified' && docRecord && (
-                <div className="mt-3">
-                    <a
-                        href={route('dashboard.data-dokumen.download', { document: docRecord.id })}
-                        className="flex items-center justify-center gap-2 min-h-[44px] rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 text-sm font-medium transition-all duration-200"
-                    >
-                        <i className="fa-solid fa-download text-xs" />
-                        Unduh dokumen
-                    </a>
+            {/* ── Drag & drop hint — hanya di empty state, desktop ─────── */}
+            {status === 'empty' && !isLocked && (
+                <div className={`hidden sm:flex items-center gap-2 pb-2 transition-opacity duration-200 ${
+                    isDragOver ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                }`}>
+                    <i className="fa-solid fa-hand-point-up text-[9px] dark:text-slate-600 text-slate-300"></i>
+                    <span className="text-[10px] dark:text-slate-600 text-slate-400">
+                        atau seret & lepas file ke sini
+                    </span>
                 </div>
             )}
         </div>
