@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useRef, useCallback, CSSProperties } from 'react';
 import { animate, stagger } from 'animejs';
 import { route } from 'ziggy-js';
-import GalleryCard, { GalleryItem } from './GalleryCard';
+import GalleryCard, { GalleryItem, OriginRect } from './GalleryCard';
 
 // ─────────────────────────────────────────────────────────────
 //  Helper — generate Ziggy route untuk media
@@ -10,231 +10,258 @@ const img   = (file: string) => route('media.gallery', { filename: `images/${fil
 const vid   = (file: string) => route('media.gallery', { filename: `videos/${file}` });
 const thumb = (file: string) => route('media.gallery', { filename: `images/${file}` });
 
-// ─────────────────────────────────────────────────────────────
-//  MASTER DATA — 25 foto + 5 video, campur di 2 row
-//  size: 'narrow' | 'normal' | 'wide' → bikin rhythm editorial
-//  Row 1: 15 items  |  Row 2: 15 items
-// ─────────────────────────────────────────────────────────────
+
+// MASTER_DATA — 134 foto + 4 video
+// Generate otomatis, edit title/description sesuai kebutuhan
+// MASTER_DATA — 31 foto + 4 video = 35 items total
 const MASTER_DATA: GalleryItem[] = [
-    // ── Row 1 ───────────────────────────────────────────────
     {
-        id:  1, type: 'image', size: 'wide',
+        id: 1, type: 'image', size: 'wide',
         src: img('photo-01.webp'),
         title: 'Suasana Kelas Modern',
         category: 'Akademik',
-        description: 'Ruang belajar nyaman dilengkapi teknologi mutakhir untuk menunjang proses pembelajaran optimal dan kolaboratif.',
+        description: 'Proses pembelajaran interaktif berbasis teknologi terkini.',
     },
     {
-        id:  2, type: 'image', size: 'normal',
+        id: 2, type: 'image', size: 'normal',
         src: img('photo-02.webp'),
         title: 'Praktikum di Lab',
         category: 'Laboratorium',
-        description: 'Simulasi real-time di laboratorium berstandar industri dengan pengawasan mentor berpengalaman.',
+        description: 'Fasilitas lab berstandar industri untuk praktik langsung.',
     },
     {
-        id:  3, type: 'video', size: 'wide',
-        src: vid('video-01.mp4'),
-        thumbnail: thumb('photo-03.webp'),
-        title: 'Kehidupan Kampus',
-        category: 'Event',
-        description: 'Momen-momen terbaik kehidupan kampus yang dinamis dan penuh semangat belajar.',
-    },
-    {
-        id:  4, type: 'image', size: 'narrow',
-        src: img('photo-04.webp'),
+        id: 3, type: 'image', size: 'narrow',
+        src: img('photo-03.webp'),
         title: 'Server Utama',
-        category: 'Infrastruktur',
-        description: 'Pusat data redundan yang andal untuk mendukung seluruh ekosistem sistem akademik.',
-    },
-    {
-        id:  5, type: 'image', size: 'normal',
-        src: img('photo-05.webp'),
-        title: 'Diskusi Mahasiswa',
-        category: 'Kolaborasi',
-        description: 'Area kolaborasi terbuka mendorong pertukaran ide lintas program studi.',
-    },
-    {
-        id:  6, type: 'image', size: 'wide',
-        src: img('photo-06.webp'),
-        title: 'Perpustakaan Digital',
-        category: 'Fasilitas',
-        description: 'Koleksi referensi digital lengkap yang dapat diakses kapan saja dan di mana saja.',
-    },
-    {
-        id:  7, type: 'image', size: 'normal',
-        src: img('photo-07.webp'),
-        title: 'Aula Utama',
-        category: 'Fasilitas',
-        description: 'Aula berkapasitas besar dengan sistem audio-visual premium untuk acara kampus.',
-    },
-    {
-        id:  8, type: 'video', size: 'normal',
-        src: vid('video-02.mp4'),
-        thumbnail: thumb('photo-08.webp'),
-        title: 'Ekshibisi Tahunan',
-        category: 'Event',
-        description: 'Pameran karya inovasi mahasiswa dihadiri lebih dari 120 mitra industri nasional.',
-    },
-    {
-        id:  9, type: 'image', size: 'narrow',
-        src: img('photo-09.webp'),
-        title: 'Riset Teknologi',
-        category: 'Riset',
-        description: 'Pengembangan teknologi terapan relevan dengan kebutuhan pasar masa depan.',
-    },
-    {
-        id: 10, type: 'image', size: 'wide',
-        src: img('photo-10.webp'),
-        title: 'Area Outdoor',
         category: 'Lingkungan',
-        description: 'Lingkungan kampus yang hijau dan asri, atmosfer belajar yang tenang dan inspiratif.',
+        description: 'Suasana kampus hijau dan asri yang menginspirasi kreativitas.',
+    },
+    {
+        id: 4, type: 'image', size: 'normal',
+        src: img('photo-04.webp'),
+        title: 'Diskusi Mahasiswa',
+        category: 'Fasilitas',
+        description: 'Sarana lengkap untuk menunjang kehidupan akademik kampus.',
+    },
+    {
+        id: 5, type: 'image', size: 'wide',
+        src: img('photo-05.webp'),
+        title: 'Perpustakaan Digital',
+        category: 'Event',
+        description: 'Momen berkesan dari berbagai kegiatan dan acara kampus.',
+    },
+    {
+        id: 6, type: 'image', size: 'normal',
+        src: img('photo-06.webp'),
+        title: 'Aula Utama',
+        category: 'Kolaborasi',
+        description: 'Area diskusi dan kerja sama lintas program studi.',
+    },
+    {
+        id: 7, type: 'image', size: 'normal',
+        src: img('photo-07.webp'),
+        title: 'Workshop Design',
+        category: 'Riset',
+        description: 'Pengembangan inovasi dan teknologi terapan bersama para ahli.',
+    },
+    {
+        id: 8, type: 'image', size: 'narrow',
+        src: img('photo-08.webp'),
+        title: 'Lounge Mahasiswa',
+        category: 'Program',
+        description: 'Kegiatan terstruktur yang memperluas wawasan dan kompetensi.',
+    },
+    {
+        id: 9, type: 'image', size: 'wide',
+        src: img('photo-09.webp'),
+        title: 'Studio Multimedia',
+        category: 'Boarding',
+        description: 'Kehidupan asrama yang nyaman dan penuh semangat kebersamaan.',
+    },
+    {
+        id: 10, type: 'image', size: 'normal',
+        src: img('photo-10.webp'),
+        title: 'Lab Jaringan',
+        category: 'Olahraga',
+        description: 'Fasilitas olahraga untuk menjaga keseimbangan fisik dan mental.',
     },
     {
         id: 11, type: 'image', size: 'normal',
         src: img('photo-11.webp'),
-        title: 'Kantin Modern',
-        category: 'Fasilitas',
-        description: 'Fasilitas makan dengan menu beragam dan suasana yang nyaman untuk istirahat.',
-    },
-    {
-        id: 12, type: 'image', size: 'normal',
-        src: img('photo-12.webp'),
-        title: 'Workshop Design',
+        title: 'Fasilitas Olahraga',
         category: 'Akademik',
-        description: 'Studio kreatif dengan peralatan terkini untuk eksplorasi ide dan prototipe.',
+        description: 'Proses pembelajaran interaktif berbasis teknologi terkini.',
     },
     {
-        id: 13, type: 'image', size: 'narrow',
+        id: 12, type: 'image', size: 'wide',
+        src: img('photo-12.webp'),
+        title: 'Masjid Kampus',
+        category: 'Laboratorium',
+        description: 'Fasilitas lab berstandar industri untuk praktik langsung.',
+    },
+    {
+        id: 13, type: 'image', size: 'normal',
         src: img('photo-13.webp'),
-        title: 'Lounge Mahasiswa',
-        category: 'Fasilitas',
-        description: 'Ruang relaksasi dan networking informal yang mendukung kreativitas.',
+        title: 'Asrama Modern',
+        category: 'Lingkungan',
+        description: 'Suasana kampus hijau dan asri yang menginspirasi kreativitas.',
     },
     {
-        id: 14, type: 'video', size: 'wide',
-        src: vid('video-03.mp4'),
-        thumbnail: thumb('photo-14.webp'),
-        title: 'Kunjungan Industri',
-        category: 'Program',
-        description: 'Immersive visit ke perusahaan mitra terkemuka untuk wawasan profesional.',
+        id: 14, type: 'image', size: 'narrow',
+        src: img('photo-14.webp'),
+        title: 'Galeri Prestasi',
+        category: 'Fasilitas',
+        description: 'Sarana lengkap untuk menunjang kehidupan akademik kampus.',
     },
     {
         id: 15, type: 'image', size: 'normal',
         src: img('photo-15.webp'),
-        title: 'Studio Multimedia',
-        category: 'Laboratorium',
-        description: 'Fasilitas produksi konten profesional dengan equipment broadcast standar.',
-    },
-
-    // ── Row 2 ───────────────────────────────────────────────
-    {
-        id: 16, type: 'image', size: 'normal',
-        src: img('photo-16.webp'),
-        title: 'Lab Jaringan',
-        category: 'Laboratorium',
-        description: 'Simulasi infrastruktur jaringan enterprise untuk persiapan sertifikasi internasional.',
-    },
-    {
-        id: 17, type: 'video', size: 'wide',
-        src: vid('video-04.mp4'),
-        thumbnail: thumb('photo-17.webp'),
-        title: 'Seminar Nasional',
+        title: 'Taman Belajar',
         category: 'Event',
-        description: 'Forum ilmiah bergengsi menghadirkan pakar industri dan akademisi terkemuka.',
+        description: 'Momen berkesan dari berbagai kegiatan dan acara kampus.',
     },
     {
-        id: 18, type: 'image', size: 'wide',
+        id: 16, type: 'image', size: 'wide',
+        src: img('photo-16.webp'),
+        title: 'Ruang Dosen',
+        category: 'Kolaborasi',
+        description: 'Area diskusi dan kerja sama lintas program studi.',
+    },
+    {
+        id: 17, type: 'image', size: 'normal',
+        src: img('photo-17.webp'),
+        title: 'Lab Bahasa',
+        category: 'Riset',
+        description: 'Pengembangan inovasi dan teknologi terapan bersama para ahli.',
+    },
+    {
+        id: 18, type: 'image', size: 'normal',
         src: img('photo-18.webp'),
-        title: 'Fasilitas Olahraga',
-        category: 'Fasilitas',
-        description: 'Kompleks olahraga lengkap untuk menjaga keseimbangan fisik dan mental mahasiswa.',
+        title: 'Ruang Sidang',
+        category: 'Program',
+        description: 'Kegiatan terstruktur yang memperluas wawasan dan kompetensi.',
     },
     {
         id: 19, type: 'image', size: 'narrow',
         src: img('photo-19.webp'),
-        title: 'Masjid Kampus',
-        category: 'Lingkungan',
-        description: 'Tempat ibadah yang megah dan nyaman di jantung kompleks kampus.',
+        title: 'Koridor Utama',
+        category: 'Boarding',
+        description: 'Kehidupan asrama yang nyaman dan penuh semangat kebersamaan.',
     },
     {
-        id: 20, type: 'image', size: 'normal',
+        id: 20, type: 'image', size: 'wide',
         src: img('photo-20.webp'),
-        title: 'Asrama Modern',
-        category: 'Fasilitas',
-        description: 'Hunian mahasiswa berstandar tinggi dengan fasilitas belajar 24 jam.',
+        title: 'Ruang Komputer',
+        category: 'Olahraga',
+        description: 'Fasilitas olahraga untuk menjaga keseimbangan fisik dan mental.',
     },
     {
         id: 21, type: 'image', size: 'normal',
         src: img('photo-21.webp'),
-        title: 'Galeri Prestasi',
+        title: 'Gerbang Utama',
         category: 'Akademik',
-        description: 'Ruang pamer pencapaian mahasiswa dari berbagai kompetisi nasional dan internasional.',
+        description: 'Proses pembelajaran interaktif berbasis teknologi terkini.',
     },
     {
-        id: 22, type: 'image', size: 'wide',
+        id: 22, type: 'image', size: 'normal',
         src: img('photo-22.webp'),
-        title: 'Taman Belajar',
-        category: 'Lingkungan',
-        description: 'Area outdoor yang dirancang khusus untuk sesi belajar dan diskusi informal.',
+        title: 'Area Parkir',
+        category: 'Laboratorium',
+        description: 'Fasilitas lab berstandar industri untuk praktik langsung.',
     },
     {
-        id: 23, type: 'image', size: 'narrow',
+        id: 23, type: 'image', size: 'wide',
         src: img('photo-23.webp'),
-        title: 'Ruang Dosen',
-        category: 'Akademik',
-        description: 'Kantor tenaga pengajar berpengalaman yang siap membimbing mahasiswa.',
+        title: 'Kantin Modern',
+        category: 'Lingkungan',
+        description: 'Suasana kampus hijau dan asri yang menginspirasi kreativitas.',
     },
     {
         id: 24, type: 'image', size: 'normal',
         src: img('photo-24.webp'),
-        title: 'Lab Bahasa',
-        category: 'Laboratorium',
-        description: 'Fasilitas pembelajaran bahasa interaktif dengan teknologi audio terkini.',
+        title: 'Studio Rekaman',
+        category: 'Fasilitas',
+        description: 'Sarana lengkap untuk menunjang kehidupan akademik kampus.',
     },
     {
-        id: 25, type: 'video', size: 'normal',
-        src: vid('video-05.mp4'),
-        thumbnail: thumb('photo-25.webp'),
-        title: 'Wisuda Akbar',
+        id: 25, type: 'image', size: 'narrow',
+        src: img('photo-25.webp'),
+        title: 'Lapangan Utama',
         category: 'Event',
-        description: 'Momen bersejarah perayaan kelulusan mahasiswa bersama keluarga tercinta.',
+        description: 'Momen berkesan dari berbagai kegiatan dan acara kampus.',
     },
     {
         id: 26, type: 'image', size: 'normal',
-        src: img('photo-26.webp'),   // ← masih dari pool 25, Silvia bisa tambah lebih
-        title: 'Ruang Sidang',
-        category: 'Akademik',
-        description: 'Ruang presentasi formal untuk sidang tugas akhir dan seminar mahasiswa.',
+        src: img('photo-26.webp'),
+        title: 'Lab Fisika',
+        category: 'Kolaborasi',
+        description: 'Area diskusi dan kerja sama lintas program studi.',
     },
     {
         id: 27, type: 'image', size: 'wide',
         src: img('photo-27.webp'),
-        title: 'Koridor Utama',
-        category: 'Lingkungan',
-        description: 'Jalur pedestrian utama yang menghubungkan seluruh gedung dengan nyaman.',
+        title: 'Ruang Seni',
+        category: 'Riset',
+        description: 'Pengembangan inovasi dan teknologi terapan bersama para ahli.',
     },
     {
-        id: 28, type: 'image', size: 'narrow',
+        id: 28, type: 'image', size: 'normal',
         src: img('photo-28.webp'),
-        title: 'Ruang Komputer',
-        category: 'Laboratorium',
-        description: 'Ratusan unit workstation bertenaga tinggi siap mendukung proses belajar.',
+        title: 'Klinik Kampus',
+        category: 'Program',
+        description: 'Kegiatan terstruktur yang memperluas wawasan dan kompetensi.',
     },
     {
         id: 29, type: 'image', size: 'normal',
         src: img('photo-29.webp'),
-        title: 'Area Parkir',
-        category: 'Fasilitas',
-        description: 'Parkir luas dengan sistem keamanan CCTV 24 jam untuk kenyamanan civitas.',
+        title: 'Greenhouse Kampus',
+        category: 'Boarding',
+        description: 'Kehidupan asrama yang nyaman dan penuh semangat kebersamaan.',
     },
     {
-        id: 30, type: 'image', size: 'normal',
+        id: 30, type: 'image', size: 'narrow',
         src: img('photo-30.webp'),
-        title: 'Gerbang Utama',
-        category: 'Lingkungan',
-        description: 'Pintu masuk kampus yang ikonik mencerminkan identitas dan kebanggaan institusi.',
+        title: 'Lab Elektronika',
+        category: 'Olahraga',
+        description: 'Fasilitas olahraga untuk menjaga keseimbangan fisik dan mental.',
+    },
+    {
+        id: 31, type: 'image', size: 'wide',
+        src: img('photo-31.webp'),
+        title: 'Kolam Renang',
+        category: 'Akademik',
+        description: 'Proses pembelajaran interaktif berbasis teknologi terkini.',
+    },
+    {
+        id: 32, type: 'video', size: 'wide',
+        src: vid('video-01.mp4'),
+        title: 'Kehidupan Kampus',
+        category: 'Event',
+        description: 'Momen terbaik kehidupan kampus yang dinamis dan penuh semangat.',
+    },
+    {
+        id: 33, type: 'video', size: 'normal',
+        src: vid('video-02.mp4'),
+        title: 'Ekshibisi Tahunan',
+        category: 'Event',
+        description: 'Pameran karya inovasi mahasiswa dihadiri 120+ mitra industri.',
+    },
+    {
+        id: 34, type: 'video', size: 'wide',
+        src: vid('video-03.mp4'),
+        title: 'Kunjungan Industri',
+        category: 'Program',
+        description: 'Immersive visit ke perusahaan mitra untuk wawasan profesional.',
+    },
+    {
+        id: 35, type: 'video', size: 'normal',
+        src: vid('video-04.mp4'),
+        title: 'Wisuda Akbar',
+        category: 'Event',
+        description: 'Perayaan kelulusan mahasiswa bersama keluarga tercinta.',
     },
 ];
+
 
 // ─────────────────────────────────────────────────────────────
 //  SeamlessTrack — Pure CSS infinite marquee
@@ -263,10 +290,11 @@ interface SeamlessTrackProps {
     /** Durasi satu siklus penuh dalam detik */
     duration: number;
     gap: number;
-    onItemClick: (id: number) => void;
+    onItemClick: (id: number, rect: OriginRect) => void;
+    lightboxActive: boolean;
 }
 
-function SeamlessTrack({ items, direction, duration, gap, onItemClick }: SeamlessTrackProps) {
+function SeamlessTrack({ items, direction, duration, gap, onItemClick, lightboxActive }: SeamlessTrackProps) {
     // Stable class name — tidak re-generate saat re-render
     const cls      = useRef(`smq-${++instanceCount}`).current;
     const [paused, setPaused] = useState(false);
@@ -306,19 +334,20 @@ function SeamlessTrack({ items, direction, duration, gap, onItemClick }: Seamles
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []); // intentionally run once
 
-    // Pause/resume on hover
+    // Pause when hovered OR lightbox active
     useEffect(() => {
         const el = document.querySelector<HTMLDivElement>(`.${cls}-inner`);
         if (!el) return;
-        el.classList.toggle('paused', paused);
-    }, [paused, cls]);
+        el.classList.toggle('paused', paused || lightboxActive);
+    }, [paused, lightboxActive, cls]);
 
     const renderSet = (prefix: string) =>
         items.map((item, i) => (
             <GalleryCard
                 key={`${prefix}-${i}`}
                 item={item}
-                onClick={() => onItemClick(item.id)}
+                onClick={(rect) => onItemClick(item.id, rect)}
+                lightboxActive={lightboxActive}
             />
         ));
 
@@ -327,11 +356,13 @@ function SeamlessTrack({ items, direction, duration, gap, onItemClick }: Seamles
             className="overflow-hidden"
             onMouseEnter={() => setPaused(true)}
             onMouseLeave={() => setPaused(false)}
+            onTouchStart={() => setPaused(true)}
+            onTouchEnd={() => setPaused(false)}
         >
             <div className={`${cls}-inner`} style={{ paddingBlock: '12px' }}>
                 {/* Set A */}
                 <div className={`${cls}-set`}>{renderSet('a')}</div>
-                {/* Set B — gap kiri sama dengan gap antar card */}
+                {/* Set B */}
                 <div className={`${cls}-set`} style={{ marginLeft: `${gap}px` }}>{renderSet('b')}</div>
             </div>
         </div>
@@ -375,26 +406,47 @@ interface LightboxProps {
     item: GalleryItem;
     total: number;
     currentIdx: number;
+    originRect: OriginRect | null;
     onClose: () => void;
     onNavigate: (dir: number) => void;
 }
 
-function Lightbox({ item, total, currentIdx, onClose, onNavigate }: LightboxProps) {
+function Lightbox({ item, total, currentIdx, originRect, onClose, onNavigate }: LightboxProps) {
     const panelRef   = useRef<HTMLDivElement>(null);
     const overlayRef = useRef<HTMLDivElement>(null);
     const infoRef    = useRef<HTMLDivElement>(null);
     const touchStartX = useRef<number | null>(null);
 
-    // Mount animation
+    // Mount animation — muncul dari posisi card yang diklik
     useEffect(() => {
         animate(overlayRef.current!, { opacity: [0, 1], duration: 350, ease: 'easeOutQuad' });
-        animate(panelRef.current!, {
-            opacity:    [0, 1],
-            translateY: [40, 0],
-            scale:      [0.95, 1],
-            duration: 500,
-            ease: 'easeOutQuart',
-        });
+
+        if (originRect && panelRef.current) {
+            // Hitung offset dari tengah viewport ke posisi card
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+            const originCX = originRect.left + originRect.width  / 2;
+            const originCY = originRect.top  + originRect.height / 2;
+            const dx = originCX - vw / 2;
+            const dy = originCY - vh / 2;
+            const scaleX = originRect.width  / (Math.min(vw * 0.9, 1100));
+            const scaleY = originRect.height / (Math.min(vh * 0.88, 700));
+            const initScale = Math.max(Math.min(scaleX, scaleY), 0.05);
+
+            animate(panelRef.current, {
+                opacity:    [0, 1],
+                translateX: [dx, 0],
+                translateY: [dy, 0],
+                scale:      [initScale, 1],
+                duration: 520,
+                ease: 'easeOutQuart',
+            });
+        } else {
+            animate(panelRef.current!, {
+                opacity: [0, 1], translateY: [40, 0], scale: [0.95, 1],
+                duration: 500, ease: 'easeOutQuart',
+            });
+        }
     }, []);
 
     // Info slide-in on item change
@@ -404,8 +456,22 @@ function Lightbox({ item, total, currentIdx, onClose, onNavigate }: LightboxProp
     }, [item.id]);
 
     const handleClose = () => {
-        animate(panelRef.current!, { opacity: [1, 0], translateY: [0, 30], scale: [1, 0.96], duration: 320, ease: 'easeInQuart' });
-        animate(overlayRef.current!, { opacity: [1, 0], duration: 350, ease: 'easeInQuad', onComplete: onClose });
+        if (originRect && panelRef.current) {
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+            const dx = (originRect.left + originRect.width  / 2) - vw / 2;
+            const dy = (originRect.top  + originRect.height / 2) - vh / 2;
+            animate(panelRef.current, {
+                opacity: [1, 0], translateX: [0, dx], translateY: [0, dy], scale: [1, 0.08],
+                duration: 380, ease: 'easeInQuart',
+            });
+        } else {
+            animate(panelRef.current!, {
+                opacity: [1, 0], translateY: [0, 30], scale: [1, 0.96],
+                duration: 320, ease: 'easeInQuart',
+            });
+        }
+        animate(overlayRef.current!, { opacity: [1, 0], duration: 380, ease: 'easeInQuad', onComplete: onClose });
     };
 
     // Touch swipe handlers
@@ -611,14 +677,30 @@ const STATS = [
 //  Main component
 // ─────────────────────────────────────────────────────────────
 export default function CinematicShowcase() {
-    const [activeIndex, setActiveIndex] = useState<number | null>(null);
+    const [activeIndex,  setActiveIndex]  = useState<number | null>(null);
+    const [originRect,   setOriginRect]   = useState<OriginRect | null>(null);
     const headerRef = useRef<HTMLDivElement>(null);
 
-    // Split 30 items menjadi 2 row — 15 + 15
-    const { row1, row2 } = useMemo(() => ({
-        row1: MASTER_DATA.slice(0, 15),
-        row2: MASTER_DATA.slice(15),
-    }), []);
+    // Row 1: foto saja (16 item), Row 2: sisa foto + 4 video tersebar
+    const { row1, row2 } = useMemo(() => {
+        const photos = MASTER_DATA.filter(i => i.type === 'image').slice(0, 31);
+        const videos = MASTER_DATA.filter(i => i.type === 'video');
+        const half   = Math.ceil(photos.length / 2); // 16 foto row1
+
+        // Sebar video merata di antara foto row2
+        const row2Photos = photos.slice(half);
+        const step       = Math.floor(row2Photos.length / videos.length);
+        const mixed: GalleryItem[] = [];
+        row2Photos.forEach((photo, idx) => {
+            mixed.push(photo);
+            const vidIdx = Math.floor(idx / step);
+            if ((idx + 1) % step === 0 && videos[vidIdx]) {
+                mixed.push(videos[vidIdx]);
+            }
+        });
+
+        return { row1: photos.slice(0, half), row2: mixed };
+    }, []);
 
     const activeItem = activeIndex !== null
         ? (MASTER_DATA.find(i => i.id === activeIndex) ?? null)
@@ -654,7 +736,10 @@ export default function CinematicShowcase() {
         return () => window.removeEventListener('keydown', handler);
     }, [activeItem, navigate]);
 
-    const handleItemClick = useCallback((id: number) => setActiveIndex(id), []);
+    const handleItemClick = useCallback((id: number, rect: OriginRect) => {
+        setOriginRect(rect);
+        setActiveIndex(id);
+    }, []);
 
     return (
         <section
@@ -670,11 +755,16 @@ export default function CinematicShowcase() {
             <div className="pointer-events-none absolute top-1/3 -right-32 w-[500px] h-[500px] rounded-full"
                 style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.04) 0%, transparent 65%)', filter: 'blur(80px)' }} />
 
-            {/* Edge-fade mask */}
+            {/* Edge-fade mask + title shimmer keyframe */}
             <style dangerouslySetInnerHTML={{ __html: `
                 .smq-mask {
                     mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
                     -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+                }
+                @keyframes title-shimmer {
+                    0%   { background-position: 100% 0; }
+                    50%  { background-position: -100% 0; }
+                    100% { background-position: 100% 0; }
                 }
             ` }} />
 
@@ -688,20 +778,22 @@ export default function CinematicShowcase() {
 
                 <h2
                     data-reveal
-                    className="font-extrabold tracking-tight leading-[1.05] text-white mb-6"
+                    className="font-extrabold tracking-tight leading-[1.05] mb-6"
                     style={{ fontSize: 'clamp(2rem, 5vw, 3.25rem)', fontFamily: "'Clash Display', 'DM Sans', sans-serif", opacity: 0 }}
                 >
-                    Eksplorasi Fasilitas{' '}
+                    {/* Seluruh judul = satu sweep shimmer gold, konsisten */}
                     <span
-                        className="inline-block"
                         style={{
                             WebkitBackgroundClip: 'text',
                             WebkitTextFillColor: 'transparent',
                             backgroundClip: 'text',
-                            backgroundImage: 'linear-gradient(135deg, #D4AF37 0%, #F5E098 45%, #D4AF37 100%)',
+                            backgroundImage: 'linear-gradient(110deg, #D4AF37 0%, #F5E098 20%, #fffbe6 38%, #F5E098 50%, #D4AF37 62%, #b8892a 80%, #D4AF37 100%)',
+                            backgroundSize: '300% 100%',
+                            animation: 'title-shimmer 5s ease-in-out infinite',
+                            display: 'inline',
                         }}
                     >
-                        Unggulan.
+                        Eksplorasi Fasilitas Unggulan.
                     </span>
                 </h2>
 
@@ -750,21 +842,23 @@ export default function CinematicShowcase() {
                 </div>
             </div>
 
-            {/* ── Double Marquee ── */}
+            {/* ── Double Marquee — pause saat lightbox aktif ── */}
             <div className="smq-mask flex flex-col gap-7 pb-24">
                 <SeamlessTrack
                     items={row1}
                     direction="left"
-                    duration={70}
+                    duration={120}
                     gap={20}
                     onItemClick={handleItemClick}
+                    lightboxActive={activeIndex !== null}
                 />
                 <SeamlessTrack
                     items={row2}
                     direction="right"
-                    duration={80}
+                    duration={140}
                     gap={20}
                     onItemClick={handleItemClick}
+                    lightboxActive={activeIndex !== null}
                 />
             </div>
 
@@ -774,7 +868,8 @@ export default function CinematicShowcase() {
                     item={activeItem}
                     total={MASTER_DATA.length}
                     currentIdx={currentIdx}
-                    onClose={() => setActiveIndex(null)}
+                    originRect={originRect}
+                    onClose={() => { setActiveIndex(null); setOriginRect(null); }}
                     onNavigate={navigate}
                 />
             )}

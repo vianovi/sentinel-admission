@@ -11,7 +11,7 @@ import HighlightSection from '@/Components/Landing/HighlightSection'
 import FacilitiesSection from '@/Components/Landing/FacilitiesSection'
 import HowToRegisterSection from '@/Components/Landing/HowToRegisterSection'
 import GallerySection from '@/Components/Landing/GallerySection'
-import CinematicShowcase from '@/Components/Landing/CinematicShowcase' // Import Komponen Baru
+import CinematicShowcase from '@/Components/Landing/CinematicShowcase'
 import Footer from '@/Components/Landing/Footer'
 import VideoModal from '@/Components/Landing/VideoModal'
 
@@ -32,8 +32,10 @@ export default function Welcome({ activeWave, auth }: WelcomeProps) {
                 <HighlightSection />
                 <GallerySection />
 
-                {/* ── New Premium Showcase Section ── */}
-                <CinematicShowcase />
+                {/* ── Cinematic Showcase — hanya tampil di layar ≥ 450px ── */}
+                <div className="hidden min-[450px]:block">
+                    <CinematicShowcase />
+                </div>
 
                 <FacilitiesSection />
                 <HowToRegisterSection />

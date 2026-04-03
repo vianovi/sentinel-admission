@@ -3,14 +3,34 @@
 namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Storage;
+use App\Models\AdmissionWave;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class WelcomeController extends Controller
 {
-    public function index()
+    public function index(): Response
     {
-        return Inertia::render('Landing/Welcome');
+        $activeWave = AdmissionWave::where('is_active', true)
+            ->withCount('candidates')
+            ->first();
+
+        return Inertia::render('Landing/Welcome', [
+            'activeWave' => $activeWave ? [
+                'id'                  => $activeWave->id,
+                'title'               => $activeWave->title,
+                'academic_year'       => $activeWave->academic_year,
+                'registration_fee'    => $activeWave->registration_fee,
+                'quota_target'        => $activeWave->quota_target,
+                'candidates_count'    => $activeWave->candidates_count,
+                'start_date'          => $activeWave->start_date,
+                'end_date'            => $activeWave->end_date,
+                'exam_info'           => $activeWave->exam_info,
+                'announcement_info'   => $activeWave->announcement_info,
+                'reregistration_date' => $activeWave->reregistration_date,
+                'is_active'           => $activeWave->is_active,
+            ] : null,
+        ]);
     }
 
     /**
@@ -27,7 +47,6 @@ class WelcomeController extends Controller
      */
     public function serveGallery(string $filename): \Symfony\Component\HttpFoundation\BinaryFileResponse|\Illuminate\Http\Response
     {
-        // Strict whitelist: hanya images/ atau videos/ dengan nama file yang bersih
         if (! preg_match('/^(images|videos)\/[\w\-]+\.(webp|jpg|jpeg|png|mp4)$/i', $filename)) {
             abort(404);
         }
@@ -47,7 +66,6 @@ class WelcomeController extends Controller
         $ext      = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
         $mimeType = $mimeMap[$ext] ?? 'application/octet-stream';
 
-        // Video: stream dengan support range requests (penting untuk scrubbing di browser)
         if ($ext === 'mp4') {
             return response()->file($path, [
                 'Content-Type'  => $mimeType,
