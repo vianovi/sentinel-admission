@@ -24,7 +24,7 @@ Route::get('/', [WelcomeController::class, 'index'])->name('home');
 
 Route::get('/media/gallery/{filename}', [WelcomeController::class, 'serveGallery'])
     ->name('media.gallery')
-    ->where('filename', '.+'); 
+    ->where('filename', '.+');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ADMISSION — Form Wizard & Register (guest only)
@@ -128,7 +128,11 @@ Route::middleware(['auth', RoleMiddleware::class . ':candidate'])
             ->name('pembayaran.create');
         Route::delete('/pembayaran/{payment}', [CandidatePayment::class, 'cancel'])
             ->name('pembayaran.cancel');
-
+        Route::post('/pembayaran/snap-token',   [CandidatePayment::class, 'snapToken'])
+            ->name('pembayaran.snap-token');
+        Route::post('/pembayaran/upload-proof', [CandidatePayment::class, 'uploadProof'])
+            ->name('pembayaran.upload-proof')
+            ->middleware('throttle:upload');
     });
 
 // ─────────────────────────────────────────────────────────────────────────────

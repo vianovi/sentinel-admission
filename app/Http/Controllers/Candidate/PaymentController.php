@@ -1,46 +1,56 @@
 <?php
+// =============================================================================
+// LOKASI FILE: app/Http/Controllers/Candidate/PaymentController.php
+// =============================================================================
+
 
 namespace App\Http\Controllers\Candidate;
 
 use App\Http\Controllers\Controller;
+use App\Models\Candidate;
 use App\Models\Payment;
+use App\Services\PaymentService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
-use Midtrans\Config;
-use Midtrans\Snap;
 
 class PaymentController extends Controller
 {
-    public function __construct()
-    {
-        Config::$serverKey    = config('midtrans.server_key');
-        Config::$isProduction = config('midtrans.is_production');
-        Config::$isSanitized  = true;
-        Config::$is3ds        = true;
-    }
+    public function __construct(
+        private readonly PaymentService $paymentService
+    ) {}
 
-    // =========================================================================
-    // SHOW — GET /dashboard/pembayaran
-    // =========================================================================
+    // ─────────────────────────────────────────────────────────────────────
+    // Index — Halaman Pembayaran Kandidat
+    // ─────────────────────────────────────────────────────────────────────
 
     public function show(Request $request): Response
     {
         $user      = $request->user();
-        $candidate = $user->candidate()->with(['admissionWave', 'payments' => function ($q) {
-            $q->latest()->limit(5);
-        }])->firstOrFail();
+        $candidate = $user->candidate()->with('admissionWave')->first();
 
-        // Gate: hanya kandidat submitted/verified yang boleh akses
-        if (! in_array($candidate->status, ['submitted', 'verified', 'accepted'])) {
-            return Inertia::render('Errors/NotFound', ['comingSoon' => true]);
+        $payment = Payment::where('candidate_id', $candidate->id)
+            ->whereIn('status', [Payment::STATUS_PENDING, Payment::STATUS_PAID])
+            ->latest()
+            ->first();
+
+        $config = $this->paymentService->resolveConfig($candidate->admission_wave_id);
+
+        $proofUrl = null;
+        if ($payment?->isManualChannel() && $payment->proof_path) {
+            $proofUrl = $this->paymentService->getProofTemporaryUrl($payment);
         }
 
-        $wave           = $candidate->admissionWave;
-        $activePayment  = $candidate->payments()->where('status', 'pending')->latest()->first();
-        $paidPayment    = $candidate->payments()->where('status', 'paid')->latest()->first();
+        $whatsappUrl = null;
+        if ($config && $payment?->isManualChannel()) {
+            $whatsappUrl = $config->generateWhatsAppUrl(
+                $candidate->full_name,
+                $candidate->candidate_code
+            );
+        }
 
         return Inertia::render('Dashboard/Candidate/Pembayaran', [
             'user' => [
@@ -49,152 +59,280 @@ class PaymentController extends Controller
                 'initials'   => $user->initials,
             ],
             'candidate' => [
-                'full_name'           => $candidate->full_name,
-                'nisn'                => $candidate->nisn,
-                'nik'                 => $candidate->nik,
-                'gender_label'        => $candidate->genderLabel(),
-                'date_of_birth_label' => $candidate->date_of_birth?->format('d F Y'),
-                'school_origin'       => $candidate->school_origin,
-                'status'              => $candidate->status,
-                'program_choice'      => $candidate->program_choice,
-                'admission_wave'      => $wave ? ['title' => $wave->title] : null,
+                'full_name'      => $candidate->full_name,
+                'candidate_code' => $candidate->candidate_code,
+                'status'         => $candidate->status,
+                'admission_wave' => $candidate->admissionWave?->name,
             ],
-            'wave' => $wave ? [
-                'title'            => $wave->title,
-                'academic_year'    => $wave->academic_year,
-                'registration_fee' => $wave->registration_fee,
-            ] : null,
-            'active_payment' => $activePayment ? [
-                'id'           => $activePayment->id,
-                'order_id'     => $activePayment->order_id,
-                'snap_token'   => $activePayment->snap_token,
-                'amount'       => $activePayment->amount,
-                'status'       => $activePayment->status,
-                'expired_at'   => $activePayment->expired_at?->toIso8601String(),
-                'payment_method' => $activePayment->payment_method,
-            ] : null,
-            'paid_payment' => $paidPayment ? [
-                'order_id'       => $paidPayment->order_id,
-                'amount'         => $paidPayment->amount,
-                'payment_method' => $paidPayment->payment_method,
-                'paid_at'        => $paidPayment->paid_at?->format('d F Y, H:i'),
-            ] : null,
+            'payment'      => $payment ? $this->formatPayment($payment) : null,
+            'config'       => $config ? $this->formatConfig($config) : null,
+            'proof_url'    => $proofUrl,
+            'whatsapp_url' => $whatsappUrl,
+            'base_amount'  => (float) $candidate->admissionWave?->registration_fee,
         ]);
     }
 
-    // =========================================================================
-    // CREATE — POST /dashboard/pembayaran
-    // Buat transaksi baru. Cancel transaksi pending sebelumnya jika ada.
-    // =========================================================================
+    // ─────────────────────────────────────────────────────────────────────
+    // Create Payment
+    // ─────────────────────────────────────────────────────────────────────
 
-    public function create(Request $request)
+    public function create(Request $request): RedirectResponse
     {
-        $user      = $request->user();
-        $candidate = $user->candidate()->with('admissionWave')->firstOrFail();
+        $request->validate([
+            'channel' => ['required', 'in:gateway,transfer,cash'],
+        ]);
 
-        // Gate: hanya submitted
-        if ($candidate->status !== 'submitted') {
-            return back()->withErrors(['payment' => 'Status pendaftaran tidak memenuhi syarat untuk pembayaran.']);
-        }
+        $candidate = $request->user()->candidate()->with('admissionWave')->first();
+        $channel   = $request->input('channel');
 
-        $wave = $candidate->admissionWave;
-        if (! $wave) {
-            return back()->withErrors(['payment' => 'Data gelombang pendaftaran tidak ditemukan.']);
-        }
+        try {
+            // Semua guard + create dalam satu DB transaction dengan row lock
+            // Mencegah race condition double submission
+            DB::transaction(function () use ($candidate, $channel) {
+                // Acquire lock pada row kandidat untuk prevent concurrent requests
+                Candidate::where('id', $candidate->id)->lockForUpdate()->first();
 
-        // Sudah punya pembayaran yang berhasil?
-        if ($candidate->payments()->where('status', 'paid')->exists()) {
-            return back()->withErrors(['payment' => 'Pembayaran sudah berhasil dilakukan.']);
-        }
-
-        DB::transaction(function () use ($candidate, $wave) {
-            // Cancel semua transaksi pending lama ke Midtrans
-            $pendingPayments = $candidate->payments()->where('status', 'pending')->get();
-            foreach ($pendingPayments as $pending) {
-                try {
-                    \Midtrans\Transaction::cancel($pending->order_id);
-                } catch (\Exception $e) {
-                    // Silent — mungkin sudah expired di sisi Midtrans
-                    Log::warning("Midtrans cancel failed for order {$pending->order_id}: " . $e->getMessage());
+                // Guard: re-check setelah lock acquired
+                if (Payment::where('candidate_id', $candidate->id)
+                    ->where('status', Payment::STATUS_PENDING)
+                    ->exists()) {
+                    throw new \RuntimeException('DUPLICATE_PENDING');
                 }
-                $pending->update(['status' => 'cancelled']);
-            }
 
-            // Generate order_id unik
-            $orderId = $candidate->candidate_code . '-' . time();
+                if (Payment::where('candidate_id', $candidate->id)
+                    ->where('status', Payment::STATUS_PAID)
+                    ->exists()) {
+                    throw new \RuntimeException('ALREADY_PAID');
+                }
 
-            // Buat transaksi ke Midtrans — silent kalau gagal (akun sandbox belum aktif)
-            $snapToken = null;
-            try {
-                $snapToken = Snap::getSnapToken([
-                    'transaction_details' => [
-                        'order_id'     => $orderId,
-                        'gross_amount' => (int) $wave->registration_fee,
-                    ],
-                    'customer_details' => [
-                        'first_name' => $candidate->full_name,
-                        'email'      => $candidate->user->email,
-                        'phone'      => $candidate->phone_number ?? $candidate->user->whatsapp_number,
-                    ],
-                    'item_details' => [
-                        [
-                            'id'       => 'reg-fee',
-                            'price'    => (int) $wave->registration_fee,
-                            'quantity' => 1,
-                            'name'     => 'Biaya Pendaftaran ' . $wave->title,
-                        ],
-                    ],
-                    'expiry' => [
-                        'unit'     => 'hours',
-                        'duration' => 24,
-                    ],
-                ]);
-            } catch (\Exception $e) {
-                Log::warning("Midtrans Snap token failed for order {$orderId}: " . $e->getMessage());
-            }
+                if ($channel === Payment::CHANNEL_GATEWAY) {
+                    $this->paymentService->createGatewayPayment($candidate);
+                } else {
+                    $this->paymentService->createManualPayment($candidate, $channel);
+                }
+            });
 
-            // Simpan ke DB
-            Payment::create([
-                'candidate_id'      => $candidate->id,
-                'admission_wave_id' => $wave->id,
-                'candidate_code'    => $candidate->candidate_code,
-                'order_id'          => $orderId,
-                'snap_token'        => $snapToken,
-                'amount'            => $wave->registration_fee,
-                'status'            => 'pending',
-                'expired_at'        => now()->addHours(24),
+            return back()->with('success', 'Transaksi berhasil dibuat.');
+
+        } catch (\RuntimeException $e) {
+            $message = match ($e->getMessage()) {
+                'DUPLICATE_PENDING' => 'Masih ada transaksi yang sedang diproses.',
+                'ALREADY_PAID'      => 'Pembayaran sudah berhasil dilakukan.',
+                default             => 'Sistem sedang mengalami gangguan. Silakan coba beberapa saat lagi.',
+            };
+
+            return back()->withErrors(['channel' => $message]);
+
+        } catch (\Exception $e) {
+            Log::error('PaymentController@store failed', [
+                'candidate_id' => $candidate->id,
+                'channel'      => $channel,
+                'error'        => $e->getMessage(),
             ]);
-        });
 
-        return back()->with('success', 'Transaksi berhasil dibuat.');
+            return back()->withErrors([
+                'channel' => 'Sistem sedang mengalami gangguan. Silakan coba beberapa saat lagi.',
+            ]);
+        }
     }
 
-    // =========================================================================
-    // CANCEL — DELETE /dashboard/pembayaran/{payment}
-    // User batalkan transaksi pending — untuk ganti metode pembayaran
-    // =========================================================================
+    // ─────────────────────────────────────────────────────────────────────
+    // Snap Token — Gateway Only
+    // ─────────────────────────────────────────────────────────────────────
 
-    public function cancel(Request $request, Payment $payment)
+    public function snapToken(Request $request): \Illuminate\Http\JsonResponse
     {
-        $candidate = $request->user()->candidate()->firstOrFail();
+        $candidate = $request->user()->candidate()->with(['admissionWave', 'user'])->first();
 
-        // IDOR protection
-        if ($payment->candidate_id !== $candidate->id) {
-            abort(403);
+        $payment = Payment::where('candidate_id', $candidate->id)
+            ->where('status', Payment::STATUS_PENDING)
+            ->where('payment_channel', Payment::CHANNEL_GATEWAY)
+            ->latest()
+            ->first();
+
+        if (! $payment) {
+            return response()->json(['error' => 'Transaksi tidak ditemukan.'], 404);
         }
 
-        if (! $payment->isCancellable()) {
-            return back()->withErrors(['payment' => 'Transaksi tidak dapat dibatalkan.']);
+        if ($payment->isExpired()) {
+            return response()->json(['error' => 'Transaksi sudah kadaluarsa.'], 422);
         }
 
         try {
-            \Midtrans\Transaction::cancel($payment->order_id);
+            \Midtrans\Config::$serverKey    = config('services.midtrans.server_key');
+            \Midtrans\Config::$isProduction = config('services.midtrans.is_production');
+            \Midtrans\Config::$isSanitized  = true;
+            \Midtrans\Config::$is3ds        = true;
+
+            $params = [
+                'transaction_details' => [
+                    'order_id'     => $payment->order_id,
+                    'gross_amount' => (int) $payment->final_amount,
+                ],
+                'customer_details' => [
+                    'first_name' => $candidate->full_name,
+                    'email'      => $candidate->user->email,
+                    'phone'      => $candidate->phone_number,
+                ],
+                'callbacks' => [
+                    'finish' => route('dashboard.pembayaran'),
+                ],
+            ];
+
+            $snapToken = \Midtrans\Snap::getSnapToken($params);
+
+            $payment->updateQuietly(['snap_token' => $snapToken]);
+
+            return response()->json(['snap_token' => $snapToken]);
+
         } catch (\Exception $e) {
-            Log::warning("Midtrans cancel failed for order {$payment->order_id}: " . $e->getMessage());
+            Log::error('PaymentController@snapToken failed', [
+                'payment_id' => $payment->id,
+                'error'      => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'error' => 'Gagal menghubungi payment gateway. Silakan coba lagi.',
+            ], 500);
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Upload Proof — Manual Channel Only
+    // ─────────────────────────────────────────────────────────────────────
+
+    public function uploadProof(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'proof' => [
+                'required',
+                'file',
+                'mimes:jpeg,jpg,png,pdf',
+                'mimetypes:image/jpeg,image/png,application/pdf',
+                'max:5120',
+            ],
+        ]);
+
+        $candidate = $request->user()->candidate()->first();
+
+        $payment = Payment::where('candidate_id', $candidate->id)
+            ->where('status', Payment::STATUS_PENDING)
+            ->whereIn('payment_channel', [Payment::CHANNEL_TRANSFER, Payment::CHANNEL_CASH])
+            ->latest()
+            ->first();
+
+        if (! $payment) {
+            return back()->withErrors(['proof' => 'Transaksi tidak ditemukan.']);
         }
 
-        $payment->update(['status' => 'cancelled']);
+        if (! $payment->canUploadProof()) {
+            return back()->withErrors(['proof' => 'Status transaksi tidak mengizinkan upload bukti.']);
+        }
 
-        return back()->with('success', 'Transaksi dibatalkan. Silakan buat transaksi baru.');
+        try {
+            $this->paymentService->uploadProof($payment, $request->file('proof'));
+
+            return back()->with('success', 'Bukti pembayaran berhasil diupload. Menunggu verifikasi staff.');
+
+        } catch (\Exception $e) {
+            Log::error('PaymentController@uploadProof failed', [
+                'payment_id'   => $payment->id,
+                'candidate_id' => $candidate->id,
+                'error'        => $e->getMessage(),
+            ]);
+
+            return back()->withErrors([
+                'proof' => 'Sistem sedang mengalami gangguan. Silakan coba beberapa saat lagi.',
+            ]);
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Cancel Payment
+    // ─────────────────────────────────────────────────────────────────────
+
+    public function cancel(Request $request): RedirectResponse
+    {
+        $candidate = $request->user()->candidate()->first();
+
+        $payment = Payment::where('candidate_id', $candidate->id)
+            ->where('status', Payment::STATUS_PENDING)
+            ->latest()
+            ->first();
+
+        if (! $payment || ! $payment->isCancellable()) {
+            return back()->withErrors(['payment' => 'Transaksi tidak bisa dibatalkan.']);
+        }
+
+        try {
+            DB::transaction(function () use ($payment) {
+                $payment->updateQuietly([
+                    'status'        => Payment::STATUS_CANCELLED,
+                    'manual_status' => null,
+                ]);
+            });
+
+            return back()->with('success', 'Transaksi berhasil dibatalkan.');
+
+        } catch (\Exception $e) {
+            Log::error('PaymentController@cancel failed', [
+                'payment_id'   => $payment->id,
+                'candidate_id' => $candidate->id,
+                'error'        => $e->getMessage(),
+            ]);
+
+            return back()->withErrors([
+                'payment' => 'Sistem sedang mengalami gangguan. Silakan coba beberapa saat lagi.',
+            ]);
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Private Formatters
+    // ─────────────────────────────────────────────────────────────────────
+
+    private function formatPayment(Payment $payment): array
+    {
+        return [
+            'id'                      => $payment->id,
+            'order_id'                => $payment->order_id,
+            'payment_channel'         => $payment->payment_channel,
+            'base_amount'             => (float) $payment->base_amount,
+            'fee_amount'              => (float) $payment->fee_amount,
+            'final_amount'            => (float) $payment->final_amount,
+            'status'                  => $payment->status,
+            'manual_status'           => $payment->manual_status,
+            'proof_original_filename' => $payment->proof_original_filename,
+            'proof_uploaded_at'       => $payment->proof_uploaded_at?->toISOString(),
+            'proof_attempt'           => $payment->proof_attempt,
+            'bank_name'               => $payment->bank_name,
+            'account_name'            => $payment->account_name,
+            'transfer_date'           => $payment->transfer_date?->toDateString(),
+            'rejection_reason'        => $payment->rejection_reason,
+            'paid_at'                 => $payment->paid_at?->toISOString(),
+            'expired_at'              => $payment->expired_at?->toISOString(),
+            'is_expired'              => $payment->isExpired(),
+            'can_upload_proof'        => $payment->canUploadProof(),
+            'is_cancellable'          => $payment->isCancellable(),
+        ];
+    }
+
+    private function formatConfig(?\App\Models\PaymentConfig $config): ?array
+    {
+        if (! $config) {
+            return null;
+        }
+
+        return [
+            'gateway_fee_type'       => $config->gateway_fee_type,
+            'gateway_fee_value'      => (float) $config->gateway_fee_value,
+            'gateway_fee_label'      => $config->gateway_fee_label,
+            'bank_name'              => $config->bank_name,
+            'bank_account_number'    => $config->bank_account_number,
+            'bank_account_name'      => $config->bank_account_name,
+            'bank_logo_key'          => $config->bank_logo_key,
+            'bank_logo_label'        => $config->bank_logo_label,
+            'whatsapp_contact_label' => $config->whatsapp_contact_label,
+        ];
     }
 }

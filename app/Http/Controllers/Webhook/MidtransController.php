@@ -1,5 +1,9 @@
 <?php
 
+// =============================================================================
+// LOKASI FILE: app/Http/Controllers/Webhook/MidtransController.php
+// =============================================================================
+
 namespace App\Http\Controllers\Webhook;
 
 use App\Http\Controllers\Controller;
@@ -55,7 +59,17 @@ class MidtransController extends Controller
                 return response()->json(['message' => 'Order not found'], 404);
             }
 
-            // Idempotency — kalau sudah paid, skip
+            // Guard: hanya proses webhook untuk channel gateway
+            // Transfer dan cash tidak akan pernah dapat webhook dari Midtrans
+            if (! $payment->isGateway()) {
+                Log::warning("Midtrans webhook: received for non-gateway payment", [
+                    'order_id'        => $orderId,
+                    'payment_channel' => $payment->payment_channel,
+                ]);
+                return response()->json(['message' => 'OK']);
+            }
+
+            // Idempotency — kalau sudah final, skip
             if ($payment->isPaid()) {
                 return response()->json(['message' => 'Already processed']);
             }
@@ -69,6 +83,7 @@ class MidtransController extends Controller
                 'midtrans_transaction_id' => $transactionId,
                 'paid_at'                 => $newStatus === 'paid' ? now() : null,
                 'metadata'                => $request->all(),
+                // manual_status selalu null untuk gateway — tidak diubah di sini
             ]);
 
             // Kalau paid → log untuk staff
