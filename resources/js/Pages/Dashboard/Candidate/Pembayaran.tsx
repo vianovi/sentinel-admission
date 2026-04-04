@@ -8,7 +8,7 @@ import { Head, router }                from '@inertiajs/react'
 import axios                           from 'axios'
 import Swal                            from 'sweetalert2'
 import DashboardSplitLayout            from '@/Layouts/DashboardSplitLayout'
-import CandidateSidebar                from '@/Components/Dashboard/Candidate/Shared/CandidateSidebar'
+import PaymentSidebar                  from '@/Components/Dashboard/Candidate/Pembayaran/PaymentSidebar'
 import DraftGate                       from '@/Components/Dashboard/Candidate/Pembayaran/DraftGate'
 import ChannelSelection                from '@/Components/Dashboard/Candidate/Pembayaran/ChannelSelection'
 import GatewayCheckout                 from '@/Components/Dashboard/Candidate/Pembayaran/GatewayCheckout'
@@ -25,17 +25,22 @@ type UserData = {
     initials:   string
 }
 
+type WaveInfo = {
+    title:            string
+    academic_year:    string | null
+    registration_fee: number
+    end_date:         string | null
+}
+
 type CandidateData = {
-    full_name:           string
-    nisn:                string
-    nik:                 string
-    gender_label:        string
-    date_of_birth_label: string
-    school_origin:       string
-    status:              string
-    program_choice:      string | null
-    admission_wave:      { title: string } | null
-    candidate_code:      string
+    full_name:      string
+    candidate_code: string
+    status:         string
+    program_choice: string | null
+    nisn:           string | null
+    school_origin:  string | null
+    mother_name:    string | null
+    admission_wave: WaveInfo | null
 }
 
 type PaymentData = {
@@ -101,71 +106,47 @@ const swalDark = Swal.mixin({
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PROGRESS BAR
+// CHECKOUT HEADER — narasi berubah sesuai channel
+// Tampil saat di GatewayCheckout atau ManualCheckout (menggantikan welcome section)
 // ─────────────────────────────────────────────────────────────────────────────
 
-const PROGRESS_STEPS = [
-    { key: 'data_diri',  label: 'Data Diri',  icon: 'fa-solid fa-id-card' },
-    { key: 'kesehatan',  label: 'Kesehatan',   icon: 'fa-solid fa-heart-pulse' },
-    { key: 'wali',       label: 'Wali',        icon: 'fa-solid fa-people-roof' },
-    { key: 'dokumen',    label: 'Dokumen',     icon: 'fa-solid fa-file-lines' },
-    { key: 'pembayaran', label: 'Pembayaran',  icon: 'fa-solid fa-credit-card' },
-]
+const CHECKOUT_NARASI: Record<string, { icon: string; title: string; desc: string; color: string; bg: string }> = {
+    gateway: {
+        icon:  'fa-solid fa-bolt',
+        title: 'Hampir selesai! Selesaikan pembayaran gateway-mu.',
+        desc:  'Klik tombol bayar di bawah. Popup Midtrans akan muncul — pilih metode favoritmu dan selesaikan dalam hitungan menit.',
+        color: 'dark:text-orange-400 text-orange-600',
+        bg:    'dark:border-orange-500/20 border-orange-200/60 dark:bg-orange-500/[0.04] bg-orange-50/60',
+    },
+    transfer: {
+        icon:  'fa-solid fa-building-columns',
+        title: 'Transfer ke rekening sekolah, lalu upload buktinya.',
+        desc:  'Salin nomor rekening dan nominal di bawah. Sertakan berita transfer yang tertera agar pembayaranmu mudah dicocokkan.',
+        color: 'dark:text-blue-400 text-blue-600',
+        bg:    'dark:border-blue-500/20 border-blue-200/60 dark:bg-blue-500/[0.04] bg-blue-50/60',
+    },
+    cash: {
+        icon:  'fa-solid fa-school',
+        title: 'Datang ke sekolah, bayar, dan upload kwitansinya.',
+        desc:  'Sebutkan nama dan kode kandidatmu ke petugas PSB. Setelah bayar, upload foto kwitansi resmi di bawah.',
+        color: 'dark:text-emerald-400 text-emerald-600',
+        bg:    'dark:border-emerald-500/20 border-emerald-200/60 dark:bg-emerald-500/[0.04] bg-emerald-50/60',
+    },
+}
 
-function ProgressStrip({ status }: { status: string }) {
-    const isPaid      = status === 'paid'
-    const isSubmitted = status === 'submitted' || isPaid
-
-    // Kalau submitted berarti 4 step pertama sudah done
-    // Kalau paid berarti semua done
-    const getDoneCount = () => {
-        if (isPaid)      return 5
-        if (isSubmitted) return 4
-        return 0
-    }
-
-    const doneCount = getDoneCount()
-
+function CheckoutNarasi({ channel }: { channel: string }) {
+    const info = CHECKOUT_NARASI[channel] ?? CHECKOUT_NARASI.gateway
     return (
-        <div className="mb-5 p-4 rounded-2xl border dark:border-white/[0.06] border-black/[0.06]
-            dark:bg-white/[0.02] bg-white">
-            <p className="text-[10px] dark:text-slate-600 text-slate-400 uppercase tracking-widest mb-3 font-semibold">
-                Progress Pendaftaran
-            </p>
-            <div className="flex items-center gap-1.5">
-                {PROGRESS_STEPS.map((step, i) => {
-                    const isDone   = i < doneCount
-                    const isActive = i === doneCount && i < 5
-                    return (
-                        <div key={step.key} className="flex-1 flex flex-col items-center gap-1.5">
-                            <div className={`w-full h-1.5 rounded-full transition-all duration-500
-                                ${isDone
-                                    ? 'bg-emerald-500'
-                                    : isActive
-                                        ? 'bg-orange-500'
-                                        : 'dark:bg-white/[0.06] bg-slate-200'
-                                }`} />
-                            <div className="flex flex-col items-center gap-0.5">
-                                <i className={`${step.icon} text-[8px]
-                                    ${isDone
-                                        ? 'dark:text-emerald-500 text-emerald-600'
-                                        : isActive
-                                            ? 'dark:text-orange-400 text-orange-500'
-                                            : 'dark:text-slate-700 text-slate-300'
-                                    }`} />
-                                <span className={`text-[8px] font-medium hidden sm:block
-                                    ${isDone
-                                        ? 'dark:text-emerald-500/70 text-emerald-600/70'
-                                        : isActive
-                                            ? 'dark:text-orange-400/80 text-orange-600/80 font-bold'
-                                            : 'dark:text-slate-700 text-slate-300'
-                                    }`}>
-                                    {step.label}
-                                </span>
-                            </div>
-                        </div>
-                    )
-                })}
+        <div className={`mb-5 p-4 rounded-2xl border relative overflow-hidden ${info.bg}`}>
+            <div className="flex items-start gap-3">
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 text-sm
+                    dark:bg-white/[0.06] bg-white/80 ${info.color}`}>
+                    <i className={info.icon} />
+                </div>
+                <div>
+                    <p className={`text-sm font-bold mb-1 ${info.color}`}>{info.title}</p>
+                    <p className="text-[12px] dark:text-slate-400 text-slate-600 leading-relaxed">{info.desc}</p>
+                </div>
             </div>
         </div>
     )
@@ -184,53 +165,43 @@ export default function PembayaranPage({
     const [cancelling, setCancelling] = useState(false)
     const contentRef                  = useRef<HTMLDivElement>(null)
 
-    // Derive initial page state dari payment data
     const deriveState = (): PageState => {
-        if (!payment) return 'selection'
+        if (!payment || payment.status !== 'pending') return 'selection'
         if (payment.payment_channel === 'gateway') return 'gateway'
         return 'manual'
     }
 
     const [pageState, setPageState] = useState<PageState>(deriveState)
 
-    const isDraft    = candidate.status === 'draft'
-    const isPaid     = payment?.status === 'paid'
+    const isDraft = candidate.status === 'draft'
+    const isPaid  = payment?.status === 'paid'
 
-    // ── Entrance animation ────────────────────────────────────────────────────
+    // ── Entrance animation ────────────────────────────────────────────────
     useEffect(() => {
         if (!contentRef.current) return
         animate(contentRef.current, {
             opacity:    [0, 1],
             translateY: [12, 0],
-            duration:   420,
+            duration:   400,
             ease:       'outExpo',
         })
     }, [pageState])
 
-    // ── Flash handler ─────────────────────────────────────────────────────────
+    // ── Flash ─────────────────────────────────────────────────────────────
     useEffect(() => {
         if (flash?.success) {
             swalDark.fire({
-                icon:              'success',
-                title:             'Berhasil',
-                text:              flash.success,
-                timer:             2500,
-                showConfirmButton: false,
-                toast:             true,
-                position:          'top-end',
-                timerProgressBar:  true,
+                icon: 'success', title: 'Berhasil', text: flash.success,
+                timer: 2500, showConfirmButton: false,
+                toast: true, position: 'top-end', timerProgressBar: true,
             })
         }
         if (flash?.error) {
-            swalDark.fire({
-                icon:  'error',
-                title: 'Terjadi Kesalahan',
-                text:  flash.error,
-            })
+            swalDark.fire({ icon: 'error', title: 'Terjadi Kesalahan', text: flash.error })
         }
     }, [flash])
 
-    // ── Transition helper ─────────────────────────────────────────────────────
+    // ── Transition helper ─────────────────────────────────────────────────
     const transitionTo = (next: PageState, dir: 'forward' | 'back' = 'forward') => {
         const dx = dir === 'forward' ? -20 : 20
         animate(contentRef.current!, {
@@ -239,13 +210,17 @@ export default function PembayaranPage({
             duration:   180,
             ease:       'inQuad',
         })
-        setTimeout(() => {
-            setPageState(next)
-        }, 190)
+        setTimeout(() => setPageState(next), 190)
     }
 
-    // ── Create payment ────────────────────────────────────────────────────────
+    // ── Create payment ────────────────────────────────────────────────────
     const handleSelectChannel = (channel: 'gateway' | 'transfer' | 'cash') => {
+        // Kalau payment aktif untuk channel ini → langsung navigate ke state
+        if (payment?.status === 'pending' && !payment.is_expired) {
+            transitionTo(payment.payment_channel === 'gateway' ? 'gateway' : 'manual')
+            return
+        }
+
         setProcessing(true)
         router.post(route('dashboard.pembayaran.create'), { channel }, {
             onSuccess: () => {
@@ -254,43 +229,37 @@ export default function PembayaranPage({
             },
             onError: () => {
                 setProcessing(false)
-                swalDark.fire({
-                    icon:  'error',
-                    title: 'Gagal',
-                    text:  'Terjadi kesalahan saat membuat transaksi.',
-                })
+                swalDark.fire({ icon: 'error', title: 'Gagal', text: 'Terjadi kesalahan saat membuat transaksi.' })
             },
         })
     }
 
-    // ── Pay via Midtrans Snap ─────────────────────────────────────────────────
+    // ── Pay via Midtrans ──────────────────────────────────────────────────
     const handlePay = async () => {
-        if (!payment?.snap_token) {
-            // Fetch snap token dulu
-            setProcessing(true)
+        setProcessing(true)
+
+        let token = payment?.snap_token
+
+        if (!token) {
             try {
                 const res = await axios.post(route('dashboard.pembayaran.snap-token'), {}, {
                     headers: { Accept: 'application/json' },
                 })
-                const snapToken = res.data.snap_token
-                triggerSnap(snapToken)
+                token = res.data.snap_token
             } catch {
                 setProcessing(false)
                 swalDark.fire({ icon: 'error', title: 'Gagal', text: 'Gagal memuat payment gateway.' })
+                return
             }
-            return
         }
-        triggerSnap(payment.snap_token)
-    }
 
-    const triggerSnap = (token: string) => {
-        setProcessing(true)
         const snap = (window as any).snap
         if (!snap) {
             setProcessing(false)
             swalDark.fire({ icon: 'error', title: 'Error', text: 'Payment gateway belum siap. Coba muat ulang halaman.' })
             return
         }
+
         snap.pay(token, {
             onSuccess: () => { setProcessing(false); router.reload() },
             onPending: () => { setProcessing(false); router.reload() },
@@ -302,32 +271,34 @@ export default function PembayaranPage({
         })
     }
 
-    // ── Upload proof ──────────────────────────────────────────────────────────
+    // ── Upload proof ──────────────────────────────────────────────────────
     const handleUploadProof = (file: File) => {
-        const formData = new FormData()
-        formData.append('proof', file)
         setProcessing(true)
         router.post(route('dashboard.pembayaran.upload-proof'), { proof: file }, {
-            onSuccess:     () => setProcessing(false),
-            onError:       () => {
+            onSuccess: () => setProcessing(false),
+            onError:   () => {
                 setProcessing(false)
-                swalDark.fire({ icon: 'error', title: 'Gagal Upload', text: 'Format atau ukuran file tidak sesuai. Gunakan JPG, PNG, atau PDF maks 5MB.' })
+                swalDark.fire({
+                    icon: 'error', title: 'Gagal Upload',
+                    text: 'Format atau ukuran file tidak sesuai. Gunakan JPG, PNG, atau PDF maks 5MB.',
+                })
             },
         })
     }
 
-    // ── Cancel payment ────────────────────────────────────────────────────────
+    // ── Cancel payment ────────────────────────────────────────────────────
     const handleCancel = async () => {
         if (!payment) return
         const result = await swalDark.fire({
-            icon:              'warning',
-            title:             'Batalkan Transaksi?',
-            text:              'Transaksi ini akan dibatalkan. Kamu bisa membuat transaksi baru dengan metode yang berbeda.',
+            icon: 'warning',
+            title: 'Batalkan Transaksi?',
+            text:  'Transaksi akan dibatalkan. Kamu bisa memilih metode lain setelah ini.',
             showCancelButton:  true,
             confirmButtonText: 'Ya, Batalkan',
             cancelButtonText:  'Tidak',
         })
         if (!result.isConfirmed) return
+
         setCancelling(true)
         router.delete(route('dashboard.pembayaran.cancel', payment.id), {
             onSuccess: () => {
@@ -339,12 +310,7 @@ export default function PembayaranPage({
         })
     }
 
-    // ── Back to selection ─────────────────────────────────────────────────────
     const handleBack = () => transitionTo('selection', 'back')
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // CANDIDATE INFO untuk child components
-    // ─────────────────────────────────────────────────────────────────────────
 
     const candidateInfo = {
         full_name:      candidate.full_name,
@@ -353,17 +319,30 @@ export default function PembayaranPage({
         program_choice: candidate.program_choice,
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
+    const isInCheckout = pageState === 'gateway' || pageState === 'manual'
+
+    // ─────────────────────────────────────────────────────────────────────
     // RENDER
-    // ─────────────────────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────
 
     return (
         <DashboardSplitLayout
             aside={
-                <CandidateSidebar
+                <PaymentSidebar
                     user={user}
-                    candidate={candidate}
-                    completion={candidate.status === 'submitted' || candidate.status === 'paid' ? 100 : 60}
+                    candidateName={candidate.full_name}
+                    candidateCode={candidate.candidate_code}
+                    status={candidate.status}
+                    programChoice={candidate.program_choice}
+                    nisn={candidate.nisn}
+                    schoolOrigin={candidate.school_origin}
+                    motherName={candidate.mother_name}
+                    wave={candidate.admission_wave}
+                    payment={payment}
+                    config={config}
+                    whatsappUrl={whatsapp_url}
+                    baseAmount={base_amount}
+                    isPaid={!!isPaid}
                 />
             }
         >
@@ -383,12 +362,10 @@ export default function PembayaranPage({
                 </div>
             </div>
 
-            {/* Progress strip — selalu tampil */}
-            <ProgressStrip status={isPaid ? 'paid' : candidate.status} />
-
             {/* Content */}
             <div ref={contentRef} style={{ opacity: 0 }}>
-                {/* Gate: status draft */}
+
+                {/* Draft gate */}
                 {isDraft && !isPaid && (
                     <DraftGate candidateName={candidate.full_name} />
                 )}
@@ -409,11 +386,17 @@ export default function PembayaranPage({
                 {/* Submitted + belum paid */}
                 {!isDraft && !isPaid && (
                     <>
-                        {/* Selection — tidak ada payment aktif, atau kembali dari checkout */}
+                        {/* Narasi panduan — tampil saat di checkout, gantikan welcome */}
+                        {isInCheckout && payment && (
+                            <CheckoutNarasi channel={payment.payment_channel} />
+                        )}
+
+                        {/* Selection */}
                         {pageState === 'selection' && (
                             <ChannelSelection
                                 baseAmount={base_amount}
                                 config={config}
+                                payment={payment}
                                 onSelect={handleSelectChannel}
                                 processing={processing}
                                 candidateName={candidate.full_name}

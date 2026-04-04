@@ -11,48 +11,64 @@ type Props = {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// HARDCODED DATA
+// HARDCODED CONTACTS — edit variabel di sini untuk ganti kontak
+// Gunakan format internasional tanpa + untuk nomor WA (628xxxxxxxxx)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const CONTACT_BENDAHARA_NAMA   = 'Silvia Noviana • Bendahara SPMB'
+const CONTACT_BENDAHARA_TELEPON = '6281234567890'
+
+const CONTACT_SEKRETARIS_NAMA   = 'Haura Fatimah Azzahra • Sekertariat SPMB'
+const CONTACT_SEKRETARIS_TELEPON = '6281234567891'
+
+const CONTACT_ADMIN_NAMA   = 'Adiguna Erlangga • Admin SPMB'
+const CONTACT_ADMIN_TELEPON = '6281234567892'
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DERIVED DATA — jangan edit bagian ini
 // ─────────────────────────────────────────────────────────────────────────────
 
 const CONTACTS = [
     {
-        name:     'Bendahara Khusus SPMB',
-        role:     'Konfirmasi & Verifikasi Pembayaran',
-        phone:    '08XXXXXXXXXX',
-        icon:     'fa-solid fa-coins',
-        color:    'dark:text-amber-400 text-amber-600',
-        bgColor:  'dark:bg-amber-500/10 bg-amber-50',
+        name:    CONTACT_BENDAHARA_NAMA,
+        role:    'Konfirmasi & Verifikasi Pembayaran',
+        phone:   CONTACT_BENDAHARA_TELEPON,
+        icon:    'fa-solid fa-coins',
+        color:   'dark:text-amber-400 text-amber-600',
+        bgColor: 'dark:bg-amber-500/10 bg-amber-50',
     },
     {
-        name:     'Sekretaris SPMB',
-        role:     'Informasi Pendaftaran & Dokumen',
-        phone:    '08XXXXXXXXXX',
-        icon:     'fa-solid fa-file-signature',
-        color:    'dark:text-blue-400 text-blue-600',
-        bgColor:  'dark:bg-blue-500/10 bg-blue-50',
+        name:    CONTACT_SEKRETARIS_NAMA,
+        role:    'Informasi Pendaftaran & Dokumen',
+        phone:   CONTACT_SEKRETARIS_TELEPON,
+        icon:    'fa-solid fa-file-signature',
+        color:   'dark:text-blue-400 text-blue-600',
+        bgColor: 'dark:bg-blue-500/10 bg-blue-50',
     },
     {
-        name:     'Admin Sistem',
-        role:     'Kendala Teknis & Bantuan Umum',
-        phone:    '08XXXXXXXXXX',
-        icon:     'fa-solid fa-headset',
-        color:    'dark:text-violet-400 text-violet-600',
-        bgColor:  'dark:bg-violet-500/10 bg-violet-50',
+        name:    CONTACT_ADMIN_NAMA,
+        role:    'Kendala Teknis & Bantuan Umum',
+        phone:   CONTACT_ADMIN_TELEPON,
+        icon:    'fa-solid fa-headset',
+        color:   'dark:text-violet-400 text-violet-600',
+        bgColor: 'dark:bg-violet-500/10 bg-violet-50',
     },
 ]
 
-const ALUR_STEPS = [
+// Alur pembayaran — layout horizontal per channel
+const ALUR_CHANNELS = [
     {
-        channel: 'Gateway (Otomatis)',
+        channel: 'Gateway',
         icon:    'fa-solid fa-bolt',
         color:   'dark:text-orange-400 text-orange-600',
         bg:      'dark:bg-orange-500/10 bg-orange-50',
-        steps: [
-            'Pilih metode "Bayar via Gateway"',
-            'Klik tombol "Bayar Sekarang"',
-            'Pilih metode pembayaran di popup Midtrans',
-            'Selesaikan pembayaran sesuai instruksi',
-            'Status otomatis berubah menjadi "Lunas"',
+        border:  'dark:border-orange-500/20 border-orange-200',
+        steps:   [
+            'Pilih "Bayar via Gateway"',
+            'Klik "Bayar Sekarang"',
+            'Pilih metode di popup Midtrans',
+            'Selesaikan pembayaran',
+            'Status otomatis "Lunas"',
         ],
     },
     {
@@ -60,26 +76,28 @@ const ALUR_STEPS = [
         icon:    'fa-solid fa-building-columns',
         color:   'dark:text-blue-400 text-blue-600',
         bg:      'dark:bg-blue-500/10 bg-blue-50',
-        steps: [
-            'Pilih metode "Transfer Bank"',
-            'Catat nomor rekening & berita transfer',
-            'Transfer sesuai nominal yang tertera',
-            'Upload bukti transfer (foto/screenshot)',
-            'Konfirmasi ke tim PSB via WhatsApp',
-            'Tunggu verifikasi staff (1×24 jam kerja)',
+        border:  'dark:border-blue-500/20 border-blue-200',
+        steps:   [
+            'Pilih "Transfer Bank"',
+            'Catat nomor rekening & berita',
+            'Transfer sesuai nominal',
+            'Upload bukti transfer',
+            'Konfirmasi ke tim PSB via WA',
+            'Tunggu verifikasi staff',
         ],
     },
     {
-        channel: 'Bayar Langsung (Cash)',
+        channel: 'Cash',
         icon:    'fa-solid fa-school',
         color:   'dark:text-emerald-400 text-emerald-600',
         bg:      'dark:bg-emerald-500/10 bg-emerald-50',
-        steps: [
-            'Pilih metode "Bayar Langsung"',
-            'Datang ke kantor sekolah jam kerja',
-            'Bayar ke bendahara/petugas PSB',
+        border:  'dark:border-emerald-500/20 border-emerald-200',
+        steps:   [
+            'Pilih "Bayar Langsung"',
+            'Datang ke kantor sekolah',
+            'Bayar ke petugas PSB',
             'Minta kwitansi resmi',
-            'Upload foto kwitansi di dashboard',
+            'Upload foto kwitansi',
             'Tunggu verifikasi staff',
         ],
     },
@@ -94,7 +112,6 @@ export default function InfoPopup({ type, onClose }: Props) {
     const panelRef   = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
-        // Animate in
         animate(overlayRef.current!, {
             opacity:  [0, 1],
             duration: 200,
@@ -127,7 +144,7 @@ export default function InfoPopup({ type, onClose }: Props) {
 
     const generateWAUrl = (phone: string, name: string) => {
         const msg = `Halo ${name}, saya ingin bertanya mengenai pembayaran pendaftaran SPMB Al-Muntaha School. Mohon bantuannya 🙏`
-        return `https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`
+        return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`
     }
 
     return (
@@ -139,13 +156,14 @@ export default function InfoPopup({ type, onClose }: Props) {
         >
             <div
                 ref={panelRef}
-                className="w-full max-w-lg max-h-[85vh] flex flex-col rounded-2xl border overflow-hidden
+                className="w-full max-w-2xl max-h-[85vh] flex flex-col rounded-2xl border overflow-hidden
                     dark:border-white/[0.08] border-black/[0.08]
                     dark:bg-[#0d1424] bg-white"
                 style={{ opacity: 0 }}
             >
                 {/* Header */}
-                <div className="flex items-center justify-between px-5 py-4 border-b dark:border-white/[0.06] border-black/[0.06] shrink-0">
+                <div className="flex items-center justify-between px-5 py-4 border-b
+                    dark:border-white/[0.06] border-black/[0.06] shrink-0">
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-xl flex items-center justify-center
                             dark:bg-orange-500/15 bg-orange-100 dark:text-orange-400 text-orange-600">
@@ -163,7 +181,8 @@ export default function InfoPopup({ type, onClose }: Props) {
                     <button
                         onClick={handleClose}
                         className="w-8 h-8 rounded-xl flex items-center justify-center
-                            dark:bg-white/[0.05] bg-slate-100 dark:hover:bg-white/[0.1] hover:bg-slate-200
+                            dark:bg-white/[0.05] bg-slate-100
+                            dark:hover:bg-white/[0.1] hover:bg-slate-200
                             dark:text-slate-400 text-slate-500 transition-colors duration-150"
                     >
                         <i className="fa-solid fa-xmark text-xs" />
@@ -173,39 +192,44 @@ export default function InfoPopup({ type, onClose }: Props) {
                 {/* Body — scrollable */}
                 <div className="overflow-y-auto flex-1 p-5">
                     {type === 'alur' ? (
-                        <div className="space-y-5">
-                            {ALUR_STEPS.map((channel) => (
-                                <div key={channel.channel}>
+                        // ── Layout HORIZONTAL — 3 kolom samping-samping ──
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            {ALUR_CHANNELS.map((ch) => (
+                                <div key={ch.channel}
+                                    className={`rounded-xl border p-4 ${ch.border} dark:bg-white/[0.02] bg-slate-50/60`}>
+
                                     {/* Channel header */}
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-[11px] ${channel.bg} ${channel.color}`}>
-                                            <i className={channel.icon} />
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-[11px] ${ch.bg} ${ch.color} shrink-0`}>
+                                            <i className={ch.icon} />
                                         </div>
-                                        <p className={`text-xs font-bold ${channel.color}`}>{channel.channel}</p>
+                                        <p className={`text-xs font-bold ${ch.color}`}>{ch.channel}</p>
                                     </div>
-                                    {/* Steps */}
-                                    <div className="space-y-2 pl-2">
-                                        {channel.steps.map((step, i) => (
-                                            <div key={i} className="flex items-start gap-3">
-                                                <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5
-                                                    dark:bg-white/[0.06] bg-slate-100 dark:text-slate-400 text-slate-500">
+
+                                    {/* Steps vertikal dalam kolom */}
+                                    <div className="space-y-2.5">
+                                        {ch.steps.map((step, i) => (
+                                            <div key={i} className="flex items-start gap-2.5">
+                                                <span className="w-5 h-5 rounded-full flex items-center justify-center
+                                                    text-[10px] font-bold shrink-0 mt-0.5
+                                                    dark:bg-white/[0.06] bg-white dark:text-slate-400 text-slate-500
+                                                    border dark:border-white/[0.06] border-black/[0.06]">
                                                     {i + 1}
                                                 </span>
-                                                <p className="text-[12px] dark:text-slate-400 text-slate-600 leading-relaxed">{step}</p>
+                                                <p className="text-[11px] dark:text-slate-400 text-slate-600 leading-snug">
+                                                    {step}
+                                                </p>
                                             </div>
                                         ))}
                                     </div>
-                                    {/* Divider kecuali terakhir */}
-                                    {channel !== ALUR_STEPS[ALUR_STEPS.length - 1] && (
-                                        <div className="mt-4 border-t dark:border-white/[0.04] border-black/[0.04]" />
-                                    )}
                                 </div>
                             ))}
                         </div>
                     ) : (
+                        // ── Bantuan — kontak staf ──
                         <div className="space-y-3">
                             <p className="text-[12px] dark:text-slate-500 text-slate-500 mb-4">
-                                Tim PSB siap membantu kamu di jam kerja sekolah. Klik tombol WhatsApp untuk langsung terhubung.
+                                Tim PSB siap membantu di jam kerja sekolah. Klik tombol WhatsApp untuk terhubung langsung.
                             </p>
                             {CONTACTS.map((contact) => (
                                 <div key={contact.name}
@@ -227,8 +251,10 @@ export default function InfoPopup({ type, onClose }: Props) {
                                         href={generateWAUrl(contact.phone, contact.name)}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold shrink-0
-                                            bg-emerald-500 hover:bg-emerald-400 text-white transition-colors duration-150"
+                                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl
+                                            text-xs font-semibold shrink-0
+                                            bg-emerald-500 hover:bg-emerald-400 text-white
+                                            transition-colors duration-150"
                                     >
                                         <i className="fa-brands fa-whatsapp" />
                                         WA

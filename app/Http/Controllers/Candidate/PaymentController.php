@@ -3,7 +3,6 @@
 // LOKASI FILE: app/Http/Controllers/Candidate/PaymentController.php
 // =============================================================================
 
-
 namespace App\Http\Controllers\Candidate;
 
 use App\Http\Controllers\Controller;
@@ -24,7 +23,7 @@ class PaymentController extends Controller
     ) {}
 
     // ─────────────────────────────────────────────────────────────────────
-    // Index — Halaman Pembayaran Kandidat
+    // Show — Halaman Pembayaran Kandidat
     // ─────────────────────────────────────────────────────────────────────
 
     public function show(Request $request): Response
@@ -52,6 +51,8 @@ class PaymentController extends Controller
             );
         }
 
+        $wave = $candidate->admissionWave;
+
         return Inertia::render('Dashboard/Candidate/Pembayaran', [
             'user' => [
                 'name'       => $user->name,
@@ -62,13 +63,22 @@ class PaymentController extends Controller
                 'full_name'      => $candidate->full_name,
                 'candidate_code' => $candidate->candidate_code,
                 'status'         => $candidate->status,
-                'admission_wave' => $candidate->admissionWave?->name,
+                'program_choice' => $candidate->program_choice,
+                'nisn'           => $candidate->nisn ?? null,
+                'school_origin'  => $candidate->school_origin ?? null,
+                'mother_name'    => $candidate->guardian?->mother_name ?? null,
+                'admission_wave' => $wave ? [
+                    'title'            => $wave->title,
+                    'academic_year'    => $wave->academic_year ?? null,
+                    'registration_fee' => (float) $wave->registration_fee,
+                    'end_date'         => $wave->end_date?->toDateString() ?? null,
+                ] : null,
             ],
             'payment'      => $payment ? $this->formatPayment($payment) : null,
             'config'       => $config ? $this->formatConfig($config) : null,
             'proof_url'    => $proofUrl,
             'whatsapp_url' => $whatsappUrl,
-            'base_amount'  => (float) $candidate->admissionWave?->registration_fee,
+            'base_amount'  => (float) $wave?->registration_fee,
         ]);
     }
 
@@ -86,13 +96,9 @@ class PaymentController extends Controller
         $channel   = $request->input('channel');
 
         try {
-            // Semua guard + create dalam satu DB transaction dengan row lock
-            // Mencegah race condition double submission
             DB::transaction(function () use ($candidate, $channel) {
-                // Acquire lock pada row kandidat untuk prevent concurrent requests
                 Candidate::where('id', $candidate->id)->lockForUpdate()->first();
 
-                // Guard: re-check setelah lock acquired
                 if (Payment::where('candidate_id', $candidate->id)
                     ->where('status', Payment::STATUS_PENDING)
                     ->exists()) {
@@ -120,16 +126,14 @@ class PaymentController extends Controller
                 'ALREADY_PAID'      => 'Pembayaran sudah berhasil dilakukan.',
                 default             => 'Sistem sedang mengalami gangguan. Silakan coba beberapa saat lagi.',
             };
-
             return back()->withErrors(['channel' => $message]);
 
         } catch (\Exception $e) {
-            Log::error('PaymentController@store failed', [
+            Log::error('PaymentController@create failed', [
                 'candidate_id' => $candidate->id,
                 'channel'      => $channel,
                 'error'        => $e->getMessage(),
             ]);
-
             return back()->withErrors([
                 'channel' => 'Sistem sedang mengalami gangguan. Silakan coba beberapa saat lagi.',
             ]);
@@ -180,7 +184,6 @@ class PaymentController extends Controller
             ];
 
             $snapToken = \Midtrans\Snap::getSnapToken($params);
-
             $payment->updateQuietly(['snap_token' => $snapToken]);
 
             return response()->json(['snap_token' => $snapToken]);
@@ -190,7 +193,6 @@ class PaymentController extends Controller
                 'payment_id' => $payment->id,
                 'error'      => $e->getMessage(),
             ]);
-
             return response()->json([
                 'error' => 'Gagal menghubungi payment gateway. Silakan coba lagi.',
             ], 500);
@@ -231,7 +233,6 @@ class PaymentController extends Controller
 
         try {
             $this->paymentService->uploadProof($payment, $request->file('proof'));
-
             return back()->with('success', 'Bukti pembayaran berhasil diupload. Menunggu verifikasi staff.');
 
         } catch (\Exception $e) {
@@ -240,7 +241,6 @@ class PaymentController extends Controller
                 'candidate_id' => $candidate->id,
                 'error'        => $e->getMessage(),
             ]);
-
             return back()->withErrors([
                 'proof' => 'Sistem sedang mengalami gangguan. Silakan coba beberapa saat lagi.',
             ]);
@@ -251,16 +251,16 @@ class PaymentController extends Controller
     // Cancel Payment
     // ─────────────────────────────────────────────────────────────────────
 
-    public function cancel(Request $request): RedirectResponse
+    public function cancel(Request $request, Payment $payment): RedirectResponse
     {
+        // Pastikan payment milik kandidat yang login
         $candidate = $request->user()->candidate()->first();
 
-        $payment = Payment::where('candidate_id', $candidate->id)
-            ->where('status', Payment::STATUS_PENDING)
-            ->latest()
-            ->first();
+        if ($payment->candidate_id !== $candidate->id) {
+            abort(403);
+        }
 
-        if (! $payment || ! $payment->isCancellable()) {
+        if (! $payment->isCancellable()) {
             return back()->withErrors(['payment' => 'Transaksi tidak bisa dibatalkan.']);
         }
 
@@ -280,7 +280,6 @@ class PaymentController extends Controller
                 'candidate_id' => $candidate->id,
                 'error'        => $e->getMessage(),
             ]);
-
             return back()->withErrors([
                 'payment' => 'Sistem sedang mengalami gangguan. Silakan coba beberapa saat lagi.',
             ]);
@@ -300,6 +299,8 @@ class PaymentController extends Controller
             'base_amount'             => (float) $payment->base_amount,
             'fee_amount'              => (float) $payment->fee_amount,
             'final_amount'            => (float) $payment->final_amount,
+            'snap_token'              => $payment->snap_token,
+            'payment_method'          => $payment->payment_method,
             'status'                  => $payment->status,
             'manual_status'           => $payment->manual_status,
             'proof_original_filename' => $payment->proof_original_filename,
