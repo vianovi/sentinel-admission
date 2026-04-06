@@ -318,7 +318,7 @@ export default function PaymentSidebar({
     ];
 
     return (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 pb-2">
 
             {/* ── Profile card — IDENTIK dengan CandidateSidebar ──────────── */}
             <div className="sidebar-fade opacity-0 relative rounded-2xl overflow-hidden border

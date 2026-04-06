@@ -275,7 +275,7 @@ export default function PembayaranPage({
     const handleUploadProof = (file: File) => {
         setProcessing(true)
         router.post(route('dashboard.pembayaran.upload-proof'), { proof: file }, {
-            onSuccess: () => setProcessing(false),
+            onSuccess: () => { setProcessing(false); router.reload() },
             onError:   () => {
                 setProcessing(false)
                 swalDark.fire({
@@ -327,6 +327,7 @@ export default function PembayaranPage({
 
     return (
         <DashboardSplitLayout
+            asideWidth="300px"
             aside={
                 <PaymentSidebar
                     user={user}
@@ -348,8 +349,10 @@ export default function PembayaranPage({
         >
             <Head title="Pembayaran" />
 
+            <div className="space-y-5 px-4 py-6 sm:px-6">
+
             {/* Header */}
-            <div className="mb-4 flex items-center gap-3">
+            <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0
                     dark:bg-orange-500/15 bg-orange-100 dark:text-orange-400 text-orange-600">
                     <i className="fa-solid fa-credit-card text-sm" />
@@ -363,7 +366,7 @@ export default function PembayaranPage({
             </div>
 
             {/* Content */}
-            <div ref={contentRef} style={{ opacity: 0 }}>
+            <div ref={contentRef} style={{ opacity: 0 }} className="space-y-5">
 
                 {/* Draft gate */}
                 {isDraft && !isPaid && (
@@ -435,6 +438,7 @@ export default function PembayaranPage({
                     </>
                 )}
             </div>
+            </div>{/* end px-4 py-6 sm:px-6 wrapper */}
         </DashboardSplitLayout>
     )
 }
