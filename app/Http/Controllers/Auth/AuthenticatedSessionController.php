@@ -13,7 +13,7 @@ use Inertia\Response;
 class AuthenticatedSessionController extends Controller
 {
     // =============================================
-    // GET /login
+    // GET /login  — Candidate Portal
     // =============================================
     public function create(Request $request): Response
     {
@@ -23,23 +23,74 @@ class AuthenticatedSessionController extends Controller
     }
 
     // =============================================
-    // POST /login
+    // POST /login  — Candidate Portal
     // =============================================
-    public function store(LoginRequest $request): RedirectResponse
+    public function store(LoginRequest $request): Response|RedirectResponse
     {
         $request->authenticate();
 
         // Single session: hapus semua session lain milik user ini
-        // Sehingga login di device baru = logout otomatis di device lama
         Auth::logoutOtherDevices($request->password);
 
         $request->session()->regenerate();
 
+        $role = Auth::user()->role;
+
+        // Staff / admin nyasar ke portal kandidat → logout paksa, tampil WrongPortal
+        if (in_array($role, ['staff', 'admin'])) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return Inertia::render('Errors/WrongPortal', [
+                'from'         => 'candidate',
+                'correctRoute' => route('staff.login'),
+            ]);
+        }
+
+        return redirect()->intended(route('dashboard.index'));
+    }
+
+    // =============================================
+    // GET /staff/login  — Staff & Admin Portal
+    // =============================================
+    public function createStaff(Request $request): Response
+    {
+        return Inertia::render('Auth/StaffLogin', [
+            'status' => session('status'),
+        ]);
+    }
+
+    // =============================================
+    // POST /staff/login  — Staff & Admin Portal
+    // =============================================
+    public function storeStaff(LoginRequest $request): Response|RedirectResponse
+    {
+        $request->authenticate();
+
+        // Single session: hapus semua session lain milik user ini
+        Auth::logoutOtherDevices($request->password);
+
+        $request->session()->regenerate();
+
+        $role = Auth::user()->role;
+
+        // Candidate nyasar ke portal staff → logout paksa, tampil WrongPortal
+        if ($role === 'candidate') {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return Inertia::render('Errors/WrongPortal', [
+                'from'         => 'staff',
+                'correctRoute' => route('login'),
+            ]);
+        }
+
         // Redirect berdasarkan role — mutlak terisolasi
-        return match (Auth::user()->role) {
-            'admin'  => redirect()->intended(route('admin.dashboard')),
-            'staff'  => redirect()->intended(route('staff.dashboard')),
-            default  => redirect()->intended(route('dashboard.index')),
+        return match ($role) {
+            'admin' => redirect()->intended(route('admin.dashboard')),
+            'staff' => redirect()->intended(route('staff.dashboard')),
         };
     }
 

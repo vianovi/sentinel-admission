@@ -19,11 +19,17 @@ Route::middleware('guest')->group(function () {
         Route::post('register', [RegisterController::class, 'store']);
     });
 
-    // Login
+    // ── Candidate Login ───────────────────────────────────────────────────────
     Route::get('login', [AuthenticatedSessionController::class, 'create'])->name('login');
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
 
-    // Forgot & Reset Password
+    // ── Staff & Admin Login ───────────────────────────────────────────────────
+    Route::get('staff/login',  [AuthenticatedSessionController::class, 'createStaff'])
+        ->name('staff.login');
+    Route::post('staff/login', [AuthenticatedSessionController::class, 'storeStaff'])
+        ->name('staff.login.post');
+
+    // Forgot & Reset Password (shared — satu flow untuk semua role)
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
     Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
     Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])->name('password.reset');
