@@ -5,17 +5,18 @@ import { ThemeProvider } from "@/context/ThemeContext";
 import Sidebar from "@/Components/Dashboard/Shared/Sidebar";
 import Topbar from "@/Components/Dashboard/Shared/Topbar";
 import Backdrop from "@/Components/Dashboard/Shared/Backdrop";
+import { useIdleLogout } from "@/hooks/useIdleLogout";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
 // ─────────────────────────────────────────────────────────────────────────────
 
 type Props = {
-    children:     React.ReactNode;
+    children:    React.ReactNode;
     // Slot kolom kanan — isi dengan CandidateSidebar atau component lain
-    aside?:       React.ReactNode;
+    aside?:      React.ReactNode;
     // Lebar kolom kanan — default 280px
-    asideWidth?:  string;
+    asideWidth?: string;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -28,6 +29,9 @@ function LayoutInner({ children, aside, asideWidth = "280px" }: Props) {
 
     const role   = (auth.user.role ?? "candidate") as "candidate" | "staff" | "admin";
     const isWide = isExpanded || isHovered;
+
+    // Auto-logout setelah 30 menit idle — aktif untuk semua role
+    useIdleLogout({ timeoutSeconds: 300, warningSeconds: 60 })
 
     return (
         <div className="min-h-screen bg-light dark:bg-slate-950 font-sans">

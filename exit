@@ -1,0 +1,151 @@
+[33mcommit 779de7fc8d12159be48385dbd9d79ccdfb798e48[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeat/dashboard-polish-v2[m[33m)[m
+Author: vianovi <silviadewinovianaputri@gmail.com>
+Date:   Tue Apr 7 22:05:23 2026 +0700
+
+    feat(auth-backend): implement separate login for staff and admin with error handling for wrong portal access
+
+[33mcommit f0b522e977baf7e532f79fe507729677009b385d[m
+Author: vianovi <silviadewinovianaputri@gmail.com>
+Date:   Mon Apr 6 20:36:03 2026 +0700
+
+    feat(payment): polish & upgrade UI halaman pembayaran V2 — semua channel
+    
+    Frontend — GatewayCheckout:
+    - Redesign layout 2 kolom (xl:col-span-7/5) ala enterprise SaaS
+    - Digital receipt card dengan gold accent line, dotted ticket divider,
+      detail pesanan 2-kolom grid (order ID, tanggal, kandidat, kode, gelombang,
+      program, biaya, fee, total text-5xl kontras)
+    - Ring timer SVG premium dengan glow layer opacity 0.15, warna dinamis
+      hijau→amber→rose sesuai sisa waktu, label 'Habis pada hari/tgl/jam'
+    - Metode pembayaran 12 item dengan logo Clearbit API (GoPay, DANA, OVO,
+      ShopeePay, LinkAja, QRIS, BCA, BRI, Mandiri, BNI, BSI, Kartu Kredit)
+      fallback FA icon bila logo gagal load
+    - CTA button gold sweep hover effect kiri ke kanan
+    - Fix format detik: 34s bukan :34
+    - Fix tombol bayar: hapus guard !payment.snap_token (generate on-demand)
+    - Tombol 'Kembali' bukan 'Pilih Metode Lain'
+    
+    Frontend — ManualCheckout (rebuild total dari base Silvia):
+    - Layout 2 kolom enterprise SaaS identik GatewayCheckout
+    - BSI Bank Card: teal gradient, nomor rekening spasi per-4 digit,
+      nominal putih rata kanan, garis pemisah 1.5px rgba(255,255,255,0.25)
+      jelas terlihat, copy button inline di dalam card
+    - Narasi berita transfer lengkap:
+      'Bayar Pendaftaran {wave} a.n. {nama} kode {kode}'
+    - Upload Zone 3 tahap: drop area → preview file (thumbnail image/PDF info)
+      dengan tombol Ganti File sebelum commit → progress bar animatif saat
+      upload dengan persentase fake → status informatif setelah sukses
+    - ProofStatusBanner: 3 state (proof_uploaded biru pulse / verified hijau /
+      rejected merah) dengan nama file, waktu upload, alasan penolakan
+    - ContactPopup 3 kontak PSB (Silvia Noviana D.P Bendahara, Haura Fatimah
+      Azzahra Sekretariat, Adiguna Erlangga Admin) ganti tombol WA tunggal,
+      dipicu tombol teks kecil bukan tombol besar
+    - Cash steps 4 langkah narasi natural: satpam → staf admin tanpa kode →
+      serahkan tunai + minta kwitansi → foto & upload
+    - Tombol 'Kembali' bukan 'Pilih Metode Lain'
+    
+    Frontend — PaymentSidebar:
+    - Rebuild identik struktur CandidateSidebar (profil card fog layers +
+      accent lines + avatar + status badge)
+    - Progress bar diganti CountdownSection 5 state: lunas / belum bayar /
+      transfer per manual_status (bar bertahap) / gateway countdown live /
+      expired
+    - Ringkasan: NISN, Nama Ibu, Asal Sekolah, Program, Status Bayar,
+      Metode, Gelombang — format garis pemisah per row
+    - Biaya Pendaftaran baris terakhir warna biru bold seperti CandidateSidebar
+    - formatWaveLabel: 'Gelombang 2' + '2026/2027' → 'G2-2026/2027'
+    - Tips pembayaran 4 item ganti tips kelengkapan data
+    - pr-2 di wrapper, pb-2 breathing room
+    
+    Frontend — PaymentSuccess:
+    - Confetti pure canvas 180 partikel, 3 bentuk (rect/circle/ribbon),
+      8 warna brand, fisika gravity + decay + spin, auto cleanup 5 detik
+    - Check icon pop animation scale 0→1.2→1
+    - Content stagger entrance dengan z-index 20 di atas canvas
+    
+    Frontend — useCountdown:
+    - Rebuild dengan useCallback + single state object
+    - Fix bug: useState initial race condition antara timeLeft dan isExpired
+      yang menyebabkan countdown langsung expired padahal belum
+    - clearInterval otomatis saat expired untuk mencegah memory leak
+    
+    Frontend — Pembayaran.tsx:
+    - Wrapper px-4 py-6 sm:px-6 identik DataDokumen standard
+    - router.reload() setelah upload proof agar ProofStatusBanner + tombol
+      WA otomatis muncul tanpa manual refresh
+    - asideWidth='300px' di DashboardSplitLayout
+    - Props sidebar diperluas: user, status, programChoice, nisn,
+      schoolOrigin, motherName
+    - CandidateData type diperluas dengan kolom baru
+    
+    Backend — PaymentController:
+    - Fix config key: services.midtrans.* → midtrans.* (fix error 500 snapToken)
+    - Fix wave: $wave->name → $wave->title (fix data gelombang kosong)
+    - Tambah nisn, school_origin, mother_name ke candidate prop untuk sidebar
+    
+    Seeder:
+    - PaymentConfigSeeder: BSI, fee 2.5%, rekening Yayasan Al-Muntaha,
+      WA Bendahara SPMB, registered di DatabaseSeeder
+
+[33mcommit 559c7b5cc92bdbee907cfc5986cbfa769fcfb3a8[m
+Author: vianovi <silviadewinovianaputri@gmail.com>
+Date:   Sat Apr 4 23:15:05 2026 +0700
+
+    feat(payment): revisi UI halaman pembayaran V2 — sidebar, channel selection, popup
+    
+    Frontend:
+    - Rebuild PaymentSidebar — struktur identik CandidateSidebar (profil card,
+      fog layers, accent lines, avatar, status badge), progress bar diganti
+      CountdownSection (5 state: lunas, belum bayar, transfer/cash per manual_status,
+      gateway countdown live, expired), ringkasan data pembayaran (NISN, nama ibu,
+      asal sekolah, program, status, metode, gelombang), tips khusus pembayaran
+    - Tambah formatWaveLabel — format 'Gelombang 2' + '2026/2027' → 'G2-2026/2027'
+    - Fix ChannelSelection — progress bar ganti bubble pill style, badge 'Recommended'
+      hide teks di mobile, card tidak bisa diklik (hanya tombol CTA), validasi
+      payment aktif dengan alert + redirect, formatDisplayName untuk nama panjang,
+      font size naik 1-2 level, narasi welcome diperbarui
+    - Fix InfoPopup — nama kontak: Silvia Noviana D.P, Haura Fatimah Azzahra,
+      Adiguna Erlangga — pakai variabel di atas file untuk kemudahan edit,
+      alur pembayaran layout horizontal 3 kolom
+    - Update Pembayaran.tsx — pass props baru ke PaymentSidebar (user, status,
+      programChoice, nisn, schoolOrigin, motherName)
+    
+    Backend:
+    - Fix PaymentController — wave->name → wave->title (fix data gelombang kosong),
+      tambah nisn, school_origin, mother_name ke candidate prop,
+      tambah snap_token ke formatPayment
+
+[33mcommit 2b6db14e3b1a5f33993f55b2e1da999b4fb06aae[m
+Author: vianovi <silviadewinovianaputri@gmail.com>
+Date:   Sat Apr 4 21:24:04 2026 +0700
+
+    feat(payment): rebuild payment system V2 — multi-channel + fee config
+    
+    BREAKING CHANGE: payments table rebuilt from scratch (db-reset required)
+    
+    Backend:
+    - Rebuild migration payments table — tambah payment_channel, base_amount,
+      fee_amount, final_amount, manual_status, proof_path, proof_uploaded_at,
+      proof_attempt, verified_by, rejection_reason
+    - Tambah migration + model PaymentConfig — fee gateway configurable per wave,
+      bank transfer info, WA contact, admin-only access
+    - Tambah PaymentService — createGatewayPayment, createManualPayment,
+      uploadProof (Sentinel 4-layer), verifyProof, rejectProof,
+      handleMidtransWebhook, getProofTemporaryUrl
+    - Rebuild PaymentController — show, create, snapToken, uploadProof, cancel
+      dengan race condition protection (lockForUpdate)
+    - Update MidtransController — tambah isGateway() guard untuk webhook
+    
+    Frontend:
+    - Rebuild Pembayaran.tsx — state machine: draft-gate, selection,
+      gateway, manual, success
+    - Tambah ChannelSelection — 3 channel cards dengan animasi stagger,
+      recommended badge pulse, info popup trigger
+    - Tambah GatewayCheckout — order summary detail, countdown timer
+      dengan color shift, Midtrans Snap integration
+    - Tambah ManualCheckout — bank info + Clearbit logo API, catatan
+      transfer pre-filled, drag-and-drop proof upload, WA konfirmasi
+    - Tambah PaymentSuccess — receipt card dengan animasi check pop
+    - Tambah DraftGate — gate untuk status draft dengan step navigator
+    - Tambah InfoPopup — alur pembayaran per channel + kontak bantuan
+    - Tambah useCou
