@@ -1,4 +1,5 @@
 <?php
+// routes/web.php
 
 use App\Http\Controllers\Candidate\DashboardController        as CandidateDashboard;
 use App\Http\Controllers\Candidate\ProfileController          as CandidateProfile;
@@ -9,7 +10,12 @@ use App\Http\Controllers\Candidate\DocumentController         as CandidateDocume
 use App\Http\Controllers\Candidate\PaymentController          as CandidatePayment;
 use App\Http\Controllers\Webhook\MidtransController;
 use App\Http\Controllers\Staff\DashboardController            as StaffDashboard;
+use App\Http\Controllers\Staff\ProfileController              as StaffProfile;
 use App\Http\Controllers\Admin\DashboardController            as AdminDashboard;
+use App\Http\Controllers\Admin\ProfileController              as AdminProfile;
+use App\Http\Controllers\Admin\CandidateController            as AdminCandidate;
+use App\Http\Controllers\Admin\WaveController                 as AdminWave;
+use App\Http\Controllers\Admin\StaffController                as AdminStaffCtrl;
 use App\Http\Controllers\Admission\FormWizardController;
 use App\Http\Controllers\Admission\RegisterController;
 use App\Http\Controllers\Public\WelcomeController;
@@ -121,14 +127,14 @@ Route::middleware(['auth', RoleMiddleware::class . ':candidate'])
         Route::delete('/data-dokumen/{document}', [CandidateDocument::class, 'destroy'])
             ->name('data-dokumen.destroy');
 
-        // ── Pembayaran ────────────────────────────────────────────────
+        // ── Pembayaran ────────────────────────────────────────────────────
         Route::get('/pembayaran', [CandidatePayment::class, 'show'])
             ->name('pembayaran');
         Route::post('/pembayaran', [CandidatePayment::class, 'create'])
             ->name('pembayaran.create');
         Route::delete('/pembayaran/{payment}', [CandidatePayment::class, 'cancel'])
             ->name('pembayaran.cancel');
-        Route::post('/pembayaran/snap-token',   [CandidatePayment::class, 'snapToken'])
+        Route::post('/pembayaran/snap-token', [CandidatePayment::class, 'snapToken'])
             ->name('pembayaran.snap-token');
         Route::post('/pembayaran/upload-proof', [CandidatePayment::class, 'uploadProof'])
             ->name('pembayaran.upload-proof')
@@ -152,14 +158,29 @@ Route::middleware(['auth', RoleMiddleware::class . ':staff'])
     ->name('staff.')
     ->group(function () {
 
+        // ── Dashboard index ───────────────────────────────────────────────
         Route::get('/', [StaffDashboard::class, 'index'])
             ->name('dashboard');
+
+        // ── Candidates ───────────────────────────────────────────────────
+        Route::get('/candidates', [StaffDashboard::class, 'candidates'])
+            ->name('candidates.index');
         Route::get('/candidates/{candidate}', [StaffDashboard::class, 'show'])
             ->name('candidates.show');
-        Route::post('/documents/{document}/verify', [StaffDashboard::class, 'verifyDocument'])
-            ->name('documents.verify');
         Route::post('/candidates/{candidate}/status', [StaffDashboard::class, 'updateStatus'])
             ->name('candidates.status');
+
+        // ── Documents ────────────────────────────────────────────────────
+        Route::post('/documents/{document}/verify', [StaffDashboard::class, 'verifyDocument'])
+            ->name('documents.verify');
+
+        // ── Profile ───────────────────────────────────────────────────────
+        Route::get('/profile', [StaffProfile::class, 'show'])
+            ->name('profile');
+        Route::put('/profile', [StaffProfile::class, 'update'])
+            ->name('profile.update');
+        Route::post('/profile/avatar', [StaffProfile::class, 'updateAvatar'])
+            ->name('profile.avatar.update');
 
     });
 
@@ -172,14 +193,35 @@ Route::middleware(['auth', RoleMiddleware::class . ':admin'])
     ->name('admin.')
     ->group(function () {
 
+        // ── Dashboard index ───────────────────────────────────────────────
         Route::get('/', [AdminDashboard::class, 'index'])
             ->name('dashboard');
-        Route::post('/staff/{user}/toggle', [AdminDashboard::class, 'toggleStaff'])
-            ->name('staff.toggle');
+
+        // ── Candidates ───────────────────────────────────────────────────
+        Route::get('/candidates', [AdminCandidate::class, 'index'])
+            ->name('candidates.index');
         Route::delete('/candidates/{candidate}', [AdminDashboard::class, 'deleteCandidate'])
             ->name('candidates.delete');
+
+        // ── Waves ─────────────────────────────────────────────────────────
+        Route::get('/waves', [AdminWave::class, 'index'])
+            ->name('waves.index');
         Route::post('/waves/{wave}/toggle', [AdminDashboard::class, 'toggleWave'])
             ->name('waves.toggle');
+
+        // ── Staff management ──────────────────────────────────────────────
+        Route::get('/staff-list', [AdminStaffCtrl::class, 'index'])
+            ->name('staff.index');
+        Route::post('/staff/{user}/toggle', [AdminDashboard::class, 'toggleStaff'])
+            ->name('staff.toggle');
+
+        // ── Profile ───────────────────────────────────────────────────────
+        Route::get('/profile', [AdminProfile::class, 'show'])
+            ->name('profile');
+        Route::put('/profile', [AdminProfile::class, 'update'])
+            ->name('profile.update');
+        Route::post('/profile/avatar', [AdminProfile::class, 'updateAvatar'])
+            ->name('profile.avatar.update');
 
     });
 
