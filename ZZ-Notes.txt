@@ -1,4 +1,4 @@
-DORECTORY ROOT PROJECY STRUKTUR (UPDATE 08:53 PM WIB_11-2-2026)
+DORECTORY ROOT PROJECY STRUKTUR (UPDATE 12-2-2026)
 ├── app
 │   ├── Console
 │   │   └── Commands
@@ -131,10 +131,51 @@ DORECTORY ROOT PROJECY STRUKTUR (UPDATE 08:53 PM WIB_11-2-2026)
 │   └── database.sqlite
 ├── docs-ai
 │   ├── compressed
+│   │   ├── 00_core.md
+│   │   ├── 01_project.md
+│   │   ├── 02_status.md
+│   │   ├── 03_skill_base.md
+│   │   ├── 03_skills.md
+│   │   ├── 04_skill_frontend.md
+│   │   ├── 05_skill_backend.md
+│   │   ├── 06_skill_infra.md
+│   │   ├── 07_skill_deep_discussion.md
+│   │   ├── blueprint_auth_staff_admin.md
+│   │   └── blueprint_staff_admin_dashboard.md
+│   ├── granular
+│   │   ├── project
+│   │   ├── skills
+│   │   └── system
+│   └── README.md
 ├── public
 │   ├── assets
 │   │   ├── gallery
+│   │   ├── brosur.jpg
+│   │   ├── brosur.pdf
+│   │   ├── BSI_Branding_Logo.png
+│   │   ├── BSI_Branding_Logo.webp
+│   │   ├── hero-background.webp
+│   │   ├── highlight-asrama.webp
+│   │   ├── highlight-seleksi.webp
+│   │   ├── logo.webp
+│   │   ├── misi-section.webp
+│   │   ├── profile-thumbnail.webp
+│   │   ├── surat-pernyataan-template.docx
+│   │   ├── test-video.mp4
+│   │   └── visi-section.webp
 │   ├── build
+│   │   ├── assets
+│   │   └── manifest.json
+│   ├── apple-touch-icon.png
+│   ├── favicon-16x16.png
+│   ├── favicon-192x192.png
+│   ├── favicon-32x32.png
+│   ├── favicon-48x48.png
+│   ├── favicon-512x512.png
+│   ├── favicon.ico
+│   ├── hot
+│   ├── index.php
+│   └── robots.txt
 ├── resources
 │   ├── css
 │   │   └── app.css
@@ -263,15 +304,6 @@ DORECTORY ROOT PROJECY STRUKTUR (UPDATE 08:53 PM WIB_11-2-2026)
 │   ├── console.php
 │   └── web.php
 ├── source_code
-│   ├── sentinel-patch
-│   │   └── app
-│   │       ├── Http
-│   │       │   └── Controllers
-│   │       │       └── Candidate
-│   │       ├── Observers
-│   │       └── Providers
-│   │           └── AppServiceProvider_snippet.php
-│   └── sentinel-patch.zip
 ├── storage
 │   ├── app
 │   │   ├── private
@@ -283,6 +315,7 @@ DORECTORY ROOT PROJECY STRUKTUR (UPDATE 08:53 PM WIB_11-2-2026)
 │   │   │   │   ├── images
 │   │   │   │   └── videos
 │   │   │   └── payment-proofs
+│   │   └── public
 │   ├── framework
 │   │   ├── cache
 │   │   │   └── data
@@ -315,6 +348,4 @@ DORECTORY ROOT PROJECY STRUKTUR (UPDATE 08:53 PM WIB_11-2-2026)
 ├── README.md
 ├── tailwind.config.js
 ├── tsconfig.json
-└── vite.config.js
-
-125 directories
+├── vite.config.js
