@@ -1,0 +1,320 @@
+DORECTORY ROOT PROJECY STRUKTUR (UPDATE 08:53 PM WIB_11-2-2026)
+├── app
+│   ├── Console
+│   │   └── Commands
+│   │       └── PruneExpiredDrafts.php
+│   ├── Http
+│   │   ├── Controllers
+│   │   │   ├── Admin
+│   │   │   │   └── DashboardController.php
+│   │   │   ├── Admission
+│   │   │   │   ├── FormWizardController.php
+│   │   │   │   └── RegisterController.php
+│   │   │   ├── Auth
+│   │   │   │   ├── AuthenticatedSessionController.php
+│   │   │   │   ├── EmailVerificationController.php
+│   │   │   │   ├── NewPasswordController.php
+│   │   │   │   └── PasswordResetLinkController.php
+│   │   │   ├── Candidate
+│   │   │   │   ├── DashboardController.php
+│   │   │   │   ├── DataDiriController.php
+│   │   │   │   ├── DocumentController.php
+│   │   │   │   ├── GuardianController.php
+│   │   │   │   ├── HealthRecordController.php
+│   │   │   │   ├── PaymentController.php
+│   │   │   │   └── ProfileController.php
+│   │   │   ├── landing
+│   │   │   │   └── WelcomeController.php
+│   │   │   ├── Public
+│   │   │   │   └── WelcomeController.php
+│   │   │   ├── Staff
+│   │   │   │   └── DashboardController.php
+│   │   │   ├── Webhook
+│   │   │   │   └── MidtransController.php
+│   │   │   └── Controller.php
+│   │   ├── Middleware
+│   │   │   ├── HandleInertiaRequests.php
+│   │   │   ├── RoleMiddleware.php
+│   │   │   └── ValidateDraftToken.php
+│   │   └── Requests
+│   │       └── Auth
+│   │           └── LoginRequest.php
+│   ├── Models
+│   │   ├── AdmissionProgram.php
+│   │   ├── AdmissionWave.php
+│   │   ├── CandidateDocument.php
+│   │   ├── CandidateDocumentSecurity.php
+│   │   ├── Candidate.php
+│   │   ├── Extracurricular.php
+│   │   ├── Guardian.php
+│   │   ├── HealthRecord.php
+│   │   ├── PaymentConfig.php
+│   │   ├── Payment.php
+│   │   ├── RegistrationDraft.php
+│   │   └── User.php
+│   ├── Observers
+│   │   ├── CandidateObserver.php
+│   │   ├── GuardianObserver.php
+│   │   └── HealthRecordObserver.php
+│   ├── Providers
+│   │   └── AppServiceProvider.php
+│   └── Services
+│       ├── DocumentSecurityService.php
+│       └── PaymentService.php
+├── auth-system
+│   ├── app
+│   │   └── Http
+│   │       ├── {Controllers
+│   │       │   └── Auth,Middleware}
+│   │       ├── Controllers
+│   │       │   └── Auth
+│   │       │       ├── AuthenticatedSessionController.php
+│   │       │       ├── EmailVerificationController.php
+│   │       │       ├── NewPasswordController.php
+│   │       │       └── PasswordResetLinkController.php
+│   │       └── Middleware
+│   │           └── RoleMiddleware.php
+│   ├── resources
+│   │   └── js
+│   │       └── Pages
+│   │           └── Auth
+│   │               ├── ForgotPassword.tsx
+│   │               ├── Login.tsx
+│   │               ├── ResetPassword.tsx
+│   │               └── VerifyEmail.tsx
+│   └── routes
+│       ├── auth.php
+│       └── web.php
+├── bootstrap
+│   ├── cache
+│   │   ├── packages.php
+│   │   └── services.php
+│   ├── app.php
+│   └── providers.php
+├── config
+│   ├── app.php
+│   ├── auth.php
+│   ├── cache.php
+│   ├── database.php
+│   ├── filesystems.php
+│   ├── logging.php
+│   ├── mail.php
+│   ├── midtrans.php
+│   ├── queue.php
+│   ├── services.php
+│   └── session.php
+├── database
+│   ├── factories
+│   │   └── UserFactory.php
+│   ├── migrations
+│   │   ├── 0001_01_01_000000_create_users_table.php
+│   │   ├── 0001_01_01_000001_create_cache_table.php
+│   │   ├── 0001_01_01_000002_create_jobs_table.php
+│   │   ├── 2026_01_01_000001_create_admission_waves_table.php
+│   │   ├── 2026_01_01_000002_create_registration_drafts_table.php
+│   │   ├── 2026_01_01_000003_create_candidates_table.php
+│   │   ├── 2026_01_01_000004_create_guardians_table.php
+│   │   ├── 2026_01_01_000005_add_candidate_fk_to_registration_drafts.php
+│   │   ├── 2026_01_01_000006_create_health_records_table.php
+│   │   ├── 2026_01_01_000007_create_extracurriculars_table.php
+│   │   ├── 2026_01_01_000008_create_admission_programs_table.php
+│   │   ├── 2026_01_01_000009_create_candidate_documents_table.php
+│   │   ├── 2026_01_01_000010_create_candidate_document_security_table.php
+│   │   ├── 2026_01_01_000011_create_payments_table.php
+│   │   └── 2026_01_01_000012_create_payment_configs_table.php
+│   ├── seeders
+│   │   ├── AdmissionWaveSeeder.php
+│   │   ├── CandidateSeeder.php
+│   │   ├── DatabaseSeeder.php
+│   │   ├── ExtracurricularSeeder.php
+│   │   └── PaymentConfigSeeder.php
+│   └── database.sqlite
+├── docs-ai
+│   ├── compressed
+├── public
+│   ├── assets
+│   │   ├── gallery
+│   ├── build
+├── resources
+│   ├── css
+│   │   └── app.css
+│   ├── js
+│   │   ├── Components
+│   │   │   ├── Dashboard
+│   │   │   │   ├── Candidate
+│   │   │   │   │   ├── DataDiri
+│   │   │   │   │   │   ├── TabAlamat.tsx
+│   │   │   │   │   │   ├── TabIdentitas.tsx
+│   │   │   │   │   │   ├── TabMinat.tsx
+│   │   │   │   │   │   ├── TabProgram.tsx
+│   │   │   │   │   │   └── TabRangkuman.tsx
+│   │   │   │   │   ├── DataDokumen
+│   │   │   │   │   │   ├── DocumentCard.tsx
+│   │   │   │   │   │   └── TabComponents.tsx
+│   │   │   │   │   ├── DataKesehatan
+│   │   │   │   │   │   ├── TabCatatanKhusus.tsx
+│   │   │   │   │   │   ├── TabFisik.tsx
+│   │   │   │   │   │   ├── TabRangkuman.tsx
+│   │   │   │   │   │   ├── TabRiwayat.tsx
+│   │   │   │   │   │   └── TabTimKesehatan.tsx
+│   │   │   │   │   ├── DataWali
+│   │   │   │   │   │   ├── AddressForm.tsx
+│   │   │   │   │   │   ├── PersonForm.tsx
+│   │   │   │   │   │   ├── TabAyah.tsx
+│   │   │   │   │   │   ├── TabIbu.tsx
+│   │   │   │   │   │   ├── TabProfilKeluarga.tsx
+│   │   │   │   │   │   ├── TabRangkuman.tsx
+│   │   │   │   │   │   ├── TabWali.tsx
+│   │   │   │   │   │   └── types.ts
+│   │   │   │   │   ├── Pembayaran
+│   │   │   │   │   │   ├── ChannelSelection.tsx
+│   │   │   │   │   │   ├── DraftGate.tsx
+│   │   │   │   │   │   ├── GatewayCheckout.tsx
+│   │   │   │   │   │   ├── InfoPopup.tsx
+│   │   │   │   │   │   ├── ManualCheckout.tsx
+│   │   │   │   │   │   ├── PaymentSidebar.tsx
+│   │   │   │   │   │   ├── PaymentSuccess.tsx
+│   │   │   │   │   │   └── useCountdown.ts
+│   │   │   │   │   └── Shared
+│   │   │   │   │       └── CandidateSidebar.tsx
+│   │   │   │   └── Shared
+│   │   │   │       ├── Backdrop.tsx
+│   │   │   │       ├── Sidebar.tsx
+│   │   │   │       └── Topbar.tsx
+│   │   │   ├── Landing
+│   │   │   │   ├── CinematicShowcase.tsx
+│   │   │   │   ├── FacilitiesSection.tsx
+│   │   │   │   ├── Footer.tsx
+│   │   │   │   ├── GalleryCard.tsx
+│   │   │   │   ├── GallerySection.tsx
+│   │   │   │   ├── HeroSection.tsx
+│   │   │   │   ├── HighlightSection.tsx
+│   │   │   │   ├── HowToRegisterSection.tsx
+│   │   │   │   ├── Navbar.tsx
+│   │   │   │   ├── ProfileSection.tsx
+│   │   │   │   ├── ScheduleModal.tsx
+│   │   │   │   ├── TopBar.tsx
+│   │   │   │   ├── VideoModal.tsx
+│   │   │   │   ├── VisiMisiSection.tsx
+│   │   │   │   └── WaveCard.tsx
+│   │   │   ├── UI
+│   │   │   │   ├── Field.tsx
+│   │   │   │   ├── FilePreviewModal.tsx
+│   │   │   │   ├── InfoRow.tsx
+│   │   │   │   ├── ProgressRing.tsx
+│   │   │   │   └── selectStyles.ts
+│   │   │   ├── Wizard
+│   │   │   │   ├── ResumeModal.tsx
+│   │   │   │   ├── useWizardStorage.ts
+│   │   │   │   ├── WizardSidebar.tsx
+│   │   │   │   ├── WizardStep1.tsx
+│   │   │   │   ├── WizardStep2.tsx
+│   │   │   │   └── WizardStep3.tsx
+│   │   │   └── GlobalProgressBar.tsx
+│   │   ├── config
+│   │   │   └── navigation.ts
+│   │   ├── context
+│   │   │   ├── SidebarContext.tsx
+│   │   │   └── ThemeContext.tsx
+│   │   ├── hooks
+│   │   │   ├── useIdleLogout.ts
+│   │   │   └── useWizardCleanup.ts
+│   │   ├── Layouts
+│   │   │   ├── DashboardLayout.tsx
+│   │   │   └── DashboardSplitLayout.tsx
+│   │   ├── Pages
+│   │   │   ├── Admission
+│   │   │   │   ├── FormWizard.tsx
+│   │   │   │   └── Register.tsx
+│   │   │   ├── Auth
+│   │   │   │   ├── ForgotPassword.tsx
+│   │   │   │   ├── Login.tsx
+│   │   │   │   ├── ResetPassword.tsx
+│   │   │   │   ├── StaffLogin.tsx
+│   │   │   │   └── VerifyEmail.tsx
+│   │   │   ├── Dashboard
+│   │   │   │   ├── Admin
+│   │   │   │   ├── Candidate
+│   │   │   │   │   ├── DataDiri.tsx
+│   │   │   │   │   ├── DataDokumen.tsx
+│   │   │   │   │   ├── DataKesehatan.tsx
+│   │   │   │   │   ├── DataWali.tsx
+│   │   │   │   │   ├── Pembayaran.tsx
+│   │   │   │   │   └── Profile.tsx
+│   │   │   │   ├── Staff
+│   │   │   │   └── Index.tsx
+│   │   │   ├── Errors
+│   │   │   │   ├── NotFound.tsx
+│   │   │   │   └── WrongPortal.tsx
+│   │   │   └── Landing
+│   │   │       └── Welcome.tsx
+│   │   ├── types
+│   │   │   ├── global.d.ts
+│   │   │   ├── index.d.ts
+│   │   │   ├── landing.ts
+│   │   │   └── vite-env.d.ts
+│   │   ├── app.tsx
+│   │   ├── bootstrap.ts
+│   │   └── ziggy.js
+│   └── views
+│       └── app.blade.php
+├── routes
+│   ├── auth.php
+│   ├── console.php
+│   └── web.php
+├── source_code
+│   ├── sentinel-patch
+│   │   └── app
+│   │       ├── Http
+│   │       │   └── Controllers
+│   │       │       └── Candidate
+│   │       ├── Observers
+│   │       └── Providers
+│   │           └── AppServiceProvider_snippet.php
+│   └── sentinel-patch.zip
+├── storage
+│   ├── app
+│   │   ├── private
+│   │   │   ├── avatars
+│   │   │   ├── candidates
+│   │   │   ├── documents
+│   │   │   ├── health-documents
+│   │   │   ├── Media_Showcase
+│   │   │   │   ├── images
+│   │   │   │   └── videos
+│   │   │   └── payment-proofs
+│   ├── framework
+│   │   ├── cache
+│   │   │   └── data
+│   │   ├── sessions
+│   │   ├── testing
+│   │   └── views
+│   │       ├── 132b834a0a58f1e712afb341f8622879.php
+│   │       ├── be4b983db7afa26600524eadc49be7a1.php
+│   │       └── dd310000961f2d208873a737c27d849a.php
+│   ├── logs
+│   │   └── laravel.log
+│   └── pail
+├── tests
+│   ├── Feature
+│   │   └── ExampleTest.php
+│   ├── Unit
+│   │   └── ExampleTest.php
+│   ├── Pest.php
+│   └── TestCase.php
+├── artisan
+├── composer.json
+├── composer.lock
+├── docker-compose.yml
+├── Dockerfile
+├── exit
+├── package.json
+├── package-lock.json
+├── phpunit.xml
+├── postcss.config.js
+├── README.md
+├── tailwind.config.js
+├── tsconfig.json
+└── vite.config.js
+
+125 directories

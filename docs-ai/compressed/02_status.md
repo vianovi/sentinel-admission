@@ -1,6 +1,6 @@
 # Sentinel Admission — Current Status & Progress
 > This file changes frequently. Update manually after every completed feature or decision.
-> Last updated: Auth Staff-Admin session — StaffLogin, WrongPortal, useIdleLogout, mobile dark view
+> Last updated: Staff & Admin Dashboard — Blueprint session (April 2026)
 
 ---
 
@@ -8,36 +8,41 @@
 > This section is overwritten every session. AI reads this first to restore context instantly.
 
 ```
-Date     : 2026-04-11
-Branch   : feat/staff-admin-dashboard (baru, dari develop)
+Date     : 2026-04-12
+Branch   : feat/staff-admin-dashboard
 
 Did      :
-  - Backend: tambah route staff.login + staff.login.post di auth.php
-  - Backend: modif AuthenticatedSessionController — createStaff(), storeStaff(),
-             store() diupdate dengan WrongPortal redirect untuk salah role
-  - Frontend: StaffLogin.tsx — Command Center vibe, navy + blue/cyan orbs,
-              mobile dark view (identik pattern Login kandidat), no "Ingat saya"
-  - Frontend: Login.tsx — tambah mobile dark view (amber/gold orbs), brand header mobile,
-              tombol beranda flow normal (tidak absolute di mobile)
-  - Frontend: WrongPortal.tsx — standalone dark page, konten dinamis dari prop `from`
-  - Frontend: useIdleLogout.ts — satu timer, countdown di modal, visibilitychange check
-  - Frontend: DashboardLayout + DashboardSplitLayout — mount useIdleLogout (300s/300s testing)
-  - Git: merge feat/dashboard-polish-v2 → develop, push develop
-         rename feat/dashboard-dev → archive/dashboard-dev
-         buat branch feat/staff-admin-dashboard
+  - Audit menyeluruh struktur project (tree 13 layer)
+  - Temukan & catat semua inkonsistensi: field salah di Staff controller,
+    navigation.ts tidak sinkron dengan web.php, Topbar profile link hardcoded
+  - Diskusi & putuskan arsitektur Staff vs Admin dashboard (Opsi B — terpisah)
+  - Putuskan Staff scope kandidat: semua gelombang (filter UI, bukan pembatas akses)
+  - Putuskan menu Verifikasi dihapus dari navigation Staff — jadi filter di halaman Kandidat
+  - Putuskan profile page terpisah per role
+  - Putuskan accent color: Staff = emerald-500 · Admin = rose-500
+  - Baca & audit: CandidateDocument migration, Staff/Admin DashboardController,
+    web.php routes, navigation.ts, Sidebar, Topbar, DashboardLayout, index.d.ts,
+    admission_waves migration
+  - Buat blueprint lengkap: blueprint_staff_admin_dashboard.md (3 phase, 19 file)
 
 Next     :
-  - Build Staff Dashboard (feat/staff-admin-dashboard)
+  - Execute Phase 1 (fixes wajib): fix Staff controller fields, Topbar, navigation.ts, routes
+  - Execute Phase 2: Staff Dashboard pages (Index, Candidates, Show, Profile)
+  - Execute Phase 3: Admin Dashboard pages (Index, Candidates, Waves, Staff, Profile)
   - Setelah staff dashboard selesai & tested: ganti useIdleLogout ke 1200/300 (production)
 
 Decisions:
-  - Opsi B dipilih: login terpisah /login (kandidat) vs /staff/login (staff+admin)
-  - WrongPortal di-render via Inertia::render() langsung — tidak pakai route /wrong-portal
-  - remember=false di StaffLogin — tidak ada "Ingat saya" untuk keamanan
-  - Auto-logout: 1 timer saja, logout dari dalam modal countdown
-  - visibilitychange: cek elapsed time saat user balik ke tab/app
-  - SESSION_LIFETIME server-side: skip — terlalu general
-  - Merge strategy ke depan: pakai --no-ff biar graph bercabang
+  - Staff & Admin dashboard: Opsi B — URL terpisah (/dashboard/staff/* vs /dashboard/admin/*)
+  - Layout reuse: DashboardLayout & DashboardSplitLayout — zero layout baru
+  - Staff scope kandidat: semua gelombang lintas wave
+  - Menu Verifikasi Staff: dihapus, jadi filter "Menunggu Verifikasi" di halaman Kandidat
+  - Profile page: terpisah per role (kandidat/staff/admin — konten berbeda)
+  - Accent color Staff: emerald-500 · Accent color Admin: rose-500
+  - WA notifikasi otomatis (Fonnte): ditunda → future feature v2
+  - Auto-hitung kuota gelombang: ditunda → future feature v2
+  - Staff bisa edit data kandidat (teks) — menghemat waktu operasional
+  - Verifikasi dokumen: per dokumen individual (verified/rejected + rejection_reason)
+  - Notifikasi kandidat: in-app bell icon dulu, urgent via WA manual oleh staff
 ```
 
 > 💡 To update: tell Livi at end of session: **"Session done. Update 02_status.md."**
@@ -73,23 +78,29 @@ Decisions:
 | Backend Security Fix | DocumentSecurityService magic bytes, wantsJson(), CandidateDocumentSecurity model fix |
 | Infrastructure | docker-compose user:1000, filesystems.php private disk serve:true |
 | Security: useIdleLogout | 1 timer, modal countdown, visibilitychange, destroy session ✅ |
+| Blueprint: Staff & Admin Dashboard | blueprint_staff_admin_dashboard.md — 3 phase, 19 file ✅ |
 
 ---
 
 ## Pending / In Progress ⚠️
 
-### 1. Document Upload — Needs Full Test
+### 1. Staff & Admin Dashboard — Phase 1 (Fixes Wajib)
+Blueprint sudah selesai. Belum dieksekusi.
+**Action:** Execute Phase 1 dulu — fix controller fields, Topbar, navigation.ts, routes.
+**File blueprint:** `docs-ai/blueprint_staff_admin_dashboard.md`
+
+### 2. Document Upload — Needs Full Test
 Fix committed but not fully tested (composer dump-autoload pending).
 **Action:** Restart container + `art-clear`, then test upload end-to-end.
 
-### 2. File Preview Private Storage
+### 3. File Preview Private Storage
 Files in `storage/app/private/` can't be accessed via direct URL.
 `temporaryUrl()` unreliable on local Docker disk.
 **Solution:** Build dedicated auth-protected route + controller method.
 **Pattern reference:** `WelcomeController::serveGallery()` — adapt with auth middleware.
 Preview button already exists in `DocumentCard` (placeholder).
 
-### 3. useIdleLogout — Production Values Belum Diset
+### 4. useIdleLogout — Production Values Belum Diset
 Sekarang masih 300s/300s (testing).
 **Action setelah staff dashboard tested:** ganti ke `timeoutSeconds: 1200, warningSeconds: 300`
 di `DashboardLayout.tsx` + `DashboardSplitLayout.tsx`.
@@ -99,18 +110,19 @@ di `DashboardLayout.tsx` + `DashboardSplitLayout.tsx`.
 ## Next Priorities (in order)
 
 ```
-1. Build Staff Dashboard                    (branch: feat/staff-admin-dashboard) ← SEKARANG
-2. Build Halaman Status kandidat            (observer sudah ready)
-3. Fix & verify document upload             (composer dump / restart test)
-4. Fix file preview private storage        (dedicated serve route)
-5. Decide Tab 5 Data Diri content
-6. Auth pages final review & polish        (forgot/reset password)
-7. Fine-tune global tone, contrast, colors (after all pages done)
-8. Kalender SPMB
-9. Informasi page
-10. Admin Dashboard
-11. Set useIdleLogout ke production values (1200/300)
-12. Full audit & polish pass
+1. Execute Phase 1 — fixes wajib (blueprint_staff_admin_dashboard.md) ← SEKARANG
+2. Execute Phase 2 — Staff Dashboard pages (Index, Candidates, Show, Profile)
+3. Execute Phase 3 — Admin Dashboard pages
+4. Build Halaman Status kandidat            (observer sudah ready)
+5. Fix & verify document upload             (composer dump / restart test)
+6. Fix file preview private storage        (dedicated serve route)
+7. Decide Tab 5 Data Diri content
+8. Auth pages final review & polish        (forgot/reset password)
+9. Fine-tune global tone, contrast, colors (after all pages done)
+10. Kalender SPMB
+11. Informasi page
+12. Set useIdleLogout ke production values (1200/300)
+13. Full audit & polish pass
 ```
 
 ---
@@ -123,7 +135,6 @@ di `DashboardLayout.tsx` + `DashboardSplitLayout.tsx`.
 | Halaman Status | What content? Timeline? Result announcement? |
 | CinematicShowcase | Photos & videos are placeholder — needs real school content |
 | Surat Pernyataan template | `public/assets/surat-pernyataan-template.docx` exists — needs real content from school |
-| Staff Dashboard fitur | Belum di-blueprint — perlu diskusi sebelum build |
 
 ---
 
@@ -142,6 +153,27 @@ di `DashboardLayout.tsx` + `DashboardSplitLayout.tsx`.
 
 ---
 
+## Staff & Admin Dashboard — Final Decisions
+
+| Item | Value |
+|---|---|
+| Arsitektur | Opsi B — URL & pages terpisah per role |
+| Staff URL prefix | `/dashboard/staff/*` |
+| Admin URL prefix | `/dashboard/admin/*` |
+| Layout | Reuse DashboardLayout + DashboardSplitLayout — zero layout baru |
+| Staff scope kandidat | Semua gelombang (filter UI ada, bukan pembatas akses) |
+| Menu Verifikasi Staff | Dihapus — jadi filter di halaman Kandidat |
+| Profile page | Terpisah per role — konten berbeda |
+| Accent color Staff | emerald-500 |
+| Accent color Admin | rose-500 |
+| Staff edit data kandidat | Diizinkan (teks) |
+| Verifikasi dokumen | Per dokumen individual: verified / rejected + rejection_reason |
+| Notifikasi kandidat | In-app bell icon · urgent via WA manual staff |
+| WA notifikasi otomatis | Future feature v2 (Fonnte) |
+| Auto-hitung kuota gelombang | Future feature v2 |
+
+---
+
 ## Document Feature — Required Level Policy
 
 | Group | Doc Types | Required Level |
@@ -156,6 +188,18 @@ di `DashboardLayout.tsx` + `DashboardSplitLayout.tsx`.
 | boarding | recommendation_letter | Optional |
 
 > `requiredLevel` is a UI label only — no hard backend block. Candidates can submit without uploading.
+
+---
+
+## Future Features (v2)
+
+```
+- WA notifikasi otomatis via Fonnte
+- Auto-hitung & alert kuota gelombang mendekati penuh
+- Halaman Reports/Laporan Admin (grafik, export PDF/Excel)
+- Halaman Settings Admin (konfigurasi payment, gelombang baru)
+- Kandidat re-upload dokumen setelah rejected
+```
 
 ---
 
