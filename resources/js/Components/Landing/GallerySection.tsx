@@ -1,9 +1,11 @@
+// resources/js/Components/Landing/GallerySection.tsx
+
 import { useEffect, useRef, useState } from 'react'
 import { animate, stagger } from 'animejs'
 
 // ── Daftar foto galeri ────────────────────────────────────────────────────────
 // Letakkan foto di: public/assets/gallery/
-// Lalu ganti nilai src dari URL placehold.co → '/assets/gallery/nama-file.webp'
+// Ganti src dari placehold.co → '/assets/gallery/nama-file.webp'
 //
 // ┌───┬──────────────────────────────┬─────────┬───────────────┬─────────────────────────────────────────────┐
 // │ # │ Nama file                    │  span   │ Ukuran (px)   │ Keterangan                                  │
@@ -20,73 +22,52 @@ import { animate, stagger } from 'animejs'
 // Max ukuran file: 300 KB/foto. Format WebP disarankan.
 
 const photos = [
-    // Baris 1
-    {
-        src: '/assets/gallery/photo-01-600x800-tall.webp',
-        alt: 'Kegiatan santri Al-Muntaha',
-        span: 'tall',   // 600×800px — portrait
-    },
-    {
-        src: '/assets/gallery/photo-02-800x500-wide.webp',
-        alt: 'Upacara bendera',
-        span: 'wide',   // 800×500px — landscape
-    },
-    {
-        src: '/assets/gallery/photo-03-600x600-small.webp',
-        alt: 'Kelas tahfidz',
-        span: 'small',  // 600×600px — square
-    },
-    // Baris 2
-    {
-        src: '/assets/gallery/photo-04-600x600-small.webp',
-        alt: 'Lab komputer',
-        span: 'small',  // 600×600px — square
-    },
-    {
-        src: '/assets/gallery/photo-05-600x600-small.webp',
-        alt: 'Perpustakaan',
-        span: 'small',  // 600×600px — square
-    },
-    {
-        src: '/assets/gallery/photo-06-600x800-tall.webp',
-        alt: 'Masjid sekolah',
-        span: 'tall',   // 600×800px — portrait
-    },
-    // Baris 3
-    {
-        src: '/assets/gallery/photo-07-800x500-wide.webp',
-        alt: 'Lapangan olahraga',
-        span: 'wide',   // 800×500px — landscape
-    },
-    {
-        src: '/assets/gallery/photo-08-600x600-small.webp',
-        alt: 'Asrama putra',
-        span: 'small',  // 600×600px — square
-    },
+    { src: '/assets/gallery/photo-01-600x800-tall.webp',  alt: 'Kegiatan santri Al-Muntaha', span: 'tall'  },
+    { src: '/assets/gallery/photo-02-800x500-wide.webp',  alt: 'Upacara bendera',             span: 'wide'  },
+    { src: '/assets/gallery/photo-03-600x600-small.webp', alt: 'Kelas tahfidz',               span: 'small' },
+    { src: '/assets/gallery/photo-04-600x600-small.webp', alt: 'Lab komputer',                span: 'small' },
+    { src: '/assets/gallery/photo-05-600x600-small.webp', alt: 'Perpustakaan',                span: 'small' },
+    { src: '/assets/gallery/photo-06-600x800-tall.webp',  alt: 'Masjid sekolah',              span: 'tall'  },
+    { src: '/assets/gallery/photo-07-800x500-wide.webp',  alt: 'Lapangan olahraga',           span: 'wide'  },
+    { src: '/assets/gallery/photo-08-600x600-small.webp', alt: 'Asrama putra',                span: 'small' },
 ]
 
-// ── Tailwind class map per span ───────────────────────────────────────────────
-const spanClass: Record<string, string> = {
+const desktopSpanClass: Record<string, string> = {
     tall:  'row-span-2',
     wide:  'col-span-2',
     small: '',
 }
 
-const heightClass: Record<string, string> = {
+const desktopHeightClass: Record<string, string> = {
     tall:  'h-full min-h-[420px]',
     wide:  'h-[220px]',
     small: 'h-[200px]',
 }
 
 export default function GallerySection() {
-    const sectionRef = useRef<HTMLElement>(null)
+    const sectionRef   = useRef<HTMLElement>(null)
+    const touchStartX  = useRef<number | null>(null)
+    const touchStartY  = useRef<number | null>(null)
+    const touchStartMs = useRef<number>(0)
 
-    // ── Lightbox state ────────────────────────────────────────────────────────
-    const [lightbox, setLightbox] = useState<{ src: string; alt: string; index: number } | null>(null)
+    const [lightbox, setLightbox]       = useState<{ src: string; alt: string; index: number } | null>(null)
+    const [swipeHintSeen, setSwipeHintSeen] = useState(false)
+    const [showSwipeHint, setShowSwipeHint] = useState(false)
 
+    // ── Lightbox open/close ───────────────────────────────────────────────────
     const openLightbox = (photo: typeof photos[0], index: number) => {
         setLightbox({ src: photo.src, alt: photo.alt, index })
         document.body.style.overflow = 'hidden'
+
+        // Tampilkan swipe hint sekali saja di mobile
+        if (!swipeHintSeen) {
+            setTimeout(() => setShowSwipeHint(true), 600)
+            setTimeout(() => {
+                setShowSwipeHint(false)
+                setSwipeHintSeen(true)
+            }, 2800)
+        }
+
         setTimeout(() => {
             animate('.lightbox-backdrop', { opacity: [0, 1], duration: 250, ease: 'outQuad' })
             animate('.lightbox-card',     { opacity: [0, 1], scale: [0.92, 1], translateY: [24, 0], duration: 380, ease: 'outExpo' })
@@ -98,54 +79,94 @@ export default function GallerySection() {
         animate('.lightbox-backdrop', { opacity: [1, 0], duration: 220, ease: 'inQuad' })
         setTimeout(() => {
             setLightbox(null)
+            setShowSwipeHint(false)
             document.body.style.overflow = ''
         }, 220)
     }
 
     const navigateLightbox = (dir: 1 | -1) => {
         const next = (lightbox!.index + dir + photos.length) % photos.length
-        animate('.lightbox-card', { opacity: [1, 0], translateX: [0, dir * -40], duration: 180, ease: 'inQuad' })
+        animate('.lightbox-card', { opacity: [1, 0], translateX: [0, dir * -48], duration: 180, ease: 'inQuad' })
         setTimeout(() => {
             setLightbox({ src: photos[next].src, alt: photos[next].alt, index: next })
-            animate('.lightbox-card', { opacity: [0, 1], translateX: [dir * 40, 0], duration: 280, ease: 'outExpo' })
+            animate('.lightbox-card', { opacity: [0, 1], translateX: [dir * 48, 0], duration: 260, ease: 'outExpo' })
         }, 180)
     }
 
-    // Keyboard: Escape = tutup, ArrowLeft/Right = navigasi
+    // ── Touch / swipe handlers ────────────────────────────────────────────────
+    const handleTouchStart = (e: React.TouchEvent) => {
+        touchStartX.current  = e.touches[0].clientX
+        touchStartY.current  = e.touches[0].clientY
+        touchStartMs.current = Date.now()
+    }
+
+    const handleTouchEnd = (e: React.TouchEvent) => {
+        if (touchStartX.current === null || touchStartY.current === null) return
+
+        const deltaX   = e.changedTouches[0].clientX - touchStartX.current
+        const deltaY   = e.changedTouches[0].clientY - touchStartY.current
+        const duration = Date.now() - touchStartMs.current
+
+        // Abaikan jika lebih vertikal (scroll) daripada horizontal (swipe)
+        if (Math.abs(deltaY) > Math.abs(deltaX)) return
+
+        // ✅ Momentum detection:
+        //    - Swipe cepat (< 300ms) → threshold rendah 30px
+        //    - Swipe lambat           → threshold standar 60px
+        const isFast      = duration < 300
+        const threshold   = isFast ? 30 : 60
+        const shouldSwipe = Math.abs(deltaX) > threshold
+
+        if (shouldSwipe) {
+            const dir = deltaX < 0 ? 1 : -1
+            navigateLightbox(dir)
+            // Sembunyikan hint begitu user sudah swipe
+            if (!swipeHintSeen) {
+                setShowSwipeHint(false)
+                setSwipeHintSeen(true)
+            }
+        }
+
+        touchStartX.current = null
+        touchStartY.current = null
+    }
+
+    // Keyboard nav
     useEffect(() => {
         const handleKey = (e: KeyboardEvent) => {
             if (!lightbox) return
-            if (e.key === 'Escape')      closeLightbox()
-            if (e.key === 'ArrowLeft')   navigateLightbox(-1)
-            if (e.key === 'ArrowRight')  navigateLightbox(1)
+            if (e.key === 'Escape')     closeLightbox()
+            if (e.key === 'ArrowLeft')  navigateLightbox(-1)
+            if (e.key === 'ArrowRight') navigateLightbox(1)
         }
         window.addEventListener('keydown', handleKey)
         return () => window.removeEventListener('keydown', handleKey)
     }, [lightbox])
 
+    // ── IntersectionObserver — stagger kiri & kanan ───────────────────────────
     useEffect(() => {
         const observer = new IntersectionObserver((entries) => {
             entries.forEach((entry) => {
                 if (entry.isIntersecting) {
                     animate('.gallery-title', {
-                        opacity:    [0, 1],
-                        translateY: [30, 0],
-                        duration:   900,
-                        ease:       'outExpo',
+                        opacity: [0, 1], translateY: [30, 0],
+                        duration: 900, ease: 'outExpo',
                     })
-                    animate('.gallery-item', {
-                        opacity:    [0, 1],
-                        scale:      [0.95, 1],
-                        duration:   900,
-                        delay:      stagger(100, { start: 200 }),
-                        ease:       'outExpo',
+                    animate('.gallery-item-left', {
+                        opacity: [0, 1], translateX: [-24, 0], scale: [0.96, 1],
+                        duration: 800, delay: stagger(120, { start: 200 }), ease: 'outExpo',
+                    })
+                    animate('.gallery-item-right', {
+                        opacity: [0, 1], translateX: [24, 0], scale: [0.96, 1],
+                        duration: 800, delay: stagger(120, { start: 280 }), ease: 'outExpo',
                     })
                 } else {
-                    animate('.gallery-title', { opacity: 0, translateY: 30, duration: 0 })
-                    animate('.gallery-item',  { opacity: 0, scale: 0.95,   duration: 0 })
+                    animate('.gallery-title',      { opacity: 0, translateY: 30, duration: 0 })
+                    animate('.gallery-item-left',  { opacity: 0, translateX: -24, scale: 0.96, duration: 0 })
+                    animate('.gallery-item-right', { opacity: 0, translateX: 24,  scale: 0.96, duration: 0 })
                 }
             })
-        }, { threshold: 0.1 })
+        }, { threshold: 0.08 })
 
         if (sectionRef.current) observer.observe(sectionRef.current)
         return () => observer.disconnect()
@@ -155,18 +176,16 @@ export default function GallerySection() {
         <>
         <section id="galeri" ref={sectionRef} className="py-24 bg-navy relative overflow-hidden">
 
-            {/* Subtle background pattern */}
-            <div className="absolute inset-0 opacity-[0.04]"
-                style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/cubes.png')" }} />
+            <div className="absolute inset-0 opacity-[0.04] bg-cubes" />
 
-            {/* Wave atas — dari putih/slate Highlight */}
+            {/* Wave atas */}
             <div className="absolute top-0 left-0 right-0 z-10 leading-none rotate-180">
                 <svg viewBox="0 0 1440 72" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full h-[60px] md:h-[72px]">
                     <path d="M0,36 C240,72 480,0 720,36 C960,72 1200,0 1440,36 L1440,72 L0,72 Z" fill="#ffffff" />
                 </svg>
             </div>
 
-            {/* Wave bawah — ke slate-50 FacilitiesSection */}
+            {/* Wave bawah */}
             <div className="absolute bottom-0 left-0 right-0 z-10 leading-none">
                 <svg viewBox="0 0 1440 72" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full h-[60px] md:h-[72px]">
                     <path d="M0,36 C240,0 480,72 720,36 C960,0 1200,72 1440,36 L1440,72 L0,72 Z" fill="#f8fafc" />
@@ -187,35 +206,75 @@ export default function GallerySection() {
                     </p>
                 </div>
 
-                {/* Masonry Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 auto-rows-[200px] gap-4">
-                    {photos.map((photo, i) => (
-                        <div
-                            key={i}
-                            onClick={() => openLightbox(photo, i)}
-                            className={`gallery-item opacity-0 relative overflow-hidden rounded-2xl group cursor-zoom-in
-                                ${spanClass[photo.span] ?? ''}`}
-                        >
-                            <img
-                                src={photo.src}
-                                alt={photo.alt}
-                                className={`w-full object-cover transition duration-700 group-hover:scale-110
-                                    ${heightClass[photo.span]}`}
-                                onError={(e) => { e.currentTarget.src = 'https://placehold.co/600x600/1e293b/d4a017?text=Foto' }}
-                            />
-                            {/* Overlay hover */}
-                            <div className="absolute inset-0 bg-navy/0 group-hover:bg-navy/50 transition duration-500 flex items-end justify-between p-4">
-                                <span className="text-white text-xs font-semibold opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition duration-300 bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20">
-                                    {photo.alt}
-                                </span>
-                                <span className="opacity-0 group-hover:opacity-100 transition duration-300 w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center flex-shrink-0">
-                                    <i className="fa-solid fa-expand text-white text-xs"></i>
-                                </span>
+                {/* ── MOBILE: Pinterest CSS columns ── */}
+                <div className="columns-2 gap-3 md:hidden">
+                    {photos.map((photo, i) => {
+                        const isLeft = i % 2 === 0
+                        return (
+                            <div
+                                key={i}
+                                onClick={() => openLightbox(photo, i)}
+                                className={`
+                                    break-inside-avoid mb-3
+                                    ${isLeft ? 'gallery-item-left' : 'gallery-item-right'}
+                                    opacity-0 relative overflow-hidden rounded-xl
+                                    cursor-zoom-in group
+                                `}
+                                style={{ minHeight: '44px' }}
+                            >
+                                <img
+                                    src={photo.src}
+                                    alt={photo.alt}
+                                    className="w-full h-auto object-cover transition duration-500 group-hover:scale-105 group-active:scale-95"
+                                    loading="lazy"
+                                    decoding="async"
+                                    onError={(e) => { e.currentTarget.src = 'https://placehold.co/600x600/1e293b/d4a017?text=Foto' }}
+                                />
+                                <div className="absolute inset-0 bg-navy/0 group-active:bg-navy/30 transition duration-200 flex items-end p-2.5">
+                                    <span className="text-white text-[10px] font-semibold opacity-0 group-hover:opacity-100 group-active:opacity-100 translate-y-1 group-hover:translate-y-0 transition duration-300 bg-black/50 backdrop-blur-sm px-2 py-1 rounded-full border border-white/20 leading-tight line-clamp-1">
+                                        {photo.alt}
+                                    </span>
+                                </div>
+                                <div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-gold opacity-0 group-hover:opacity-100 group-active:opacity-100 transition duration-300" />
                             </div>
-                            {/* Gold corner accent */}
-                            <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-gold opacity-0 group-hover:opacity-100 transition duration-300" />
-                        </div>
-                    ))}
+                        )
+                    })}
+                </div>
+
+                {/* ── DESKTOP: CSS Grid masonry ── */}
+                <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-4 auto-rows-[200px] gap-4">
+                    {photos.map((photo, i) => {
+                        const isLeft = i % 2 === 0
+                        return (
+                            <div
+                                key={i}
+                                onClick={() => openLightbox(photo, i)}
+                                className={`
+                                    ${isLeft ? 'gallery-item-left' : 'gallery-item-right'}
+                                    opacity-0 relative overflow-hidden rounded-2xl group cursor-zoom-in
+                                    ${desktopSpanClass[photo.span] ?? ''}
+                                `}
+                            >
+                                <img
+                                    src={photo.src}
+                                    alt={photo.alt}
+                                    className={`w-full object-cover transition duration-700 group-hover:scale-110 ${desktopHeightClass[photo.span]}`}
+                                    loading="lazy"
+                                    decoding="async"
+                                    onError={(e) => { e.currentTarget.src = 'https://placehold.co/600x600/1e293b/d4a017?text=Foto' }}
+                                />
+                                <div className="absolute inset-0 bg-navy/0 group-hover:bg-navy/50 transition duration-500 flex items-end justify-between p-4">
+                                    <span className="text-white text-xs font-semibold opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition duration-300 bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20">
+                                        {photo.alt}
+                                    </span>
+                                    <span className="opacity-0 group-hover:opacity-100 transition duration-300 w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center flex-shrink-0">
+                                        <i className="fa-solid fa-expand text-white text-xs"></i>
+                                    </span>
+                                </div>
+                                <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-gold opacity-0 group-hover:opacity-100 transition duration-300" />
+                            </div>
+                        )
+                    })}
                 </div>
 
             </div>
@@ -223,8 +282,11 @@ export default function GallerySection() {
 
         {/* ── Lightbox ── */}
         {lightbox && (
-            <div className="fixed inset-0 z-[999] flex items-center justify-center px-4">
-
+            <div
+                className="fixed inset-0 z-[999] flex items-center justify-center px-4"
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+            >
                 {/* Backdrop */}
                 <div
                     className="lightbox-backdrop opacity-0 absolute inset-0 bg-navy/90 backdrop-blur-md"
@@ -234,45 +296,60 @@ export default function GallerySection() {
                 {/* Card */}
                 <div className="lightbox-card opacity-0 relative z-10 w-full max-w-4xl">
 
-                    {/* Foto */}
                     <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-white/10">
                         <img
                             src={lightbox.src}
                             alt={lightbox.alt}
                             className="w-full max-h-[80vh] object-contain bg-navy/80"
+                            decoding="async"
                             onError={(e) => { e.currentTarget.src = 'https://placehold.co/800x600/1e293b/d4a017?text=Foto' }}
                         />
 
                         {/* Caption */}
                         <div className="absolute bottom-0 left-0 right-0 px-6 py-4 bg-gradient-to-t from-navy/90 to-transparent">
                             <p className="text-white font-semibold text-sm">{lightbox.alt}</p>
-                            <p className="text-gray-400 text-xs mt-0.5">
-                                {lightbox.index + 1} / {photos.length}
-                            </p>
+                            <p className="text-gray-400 text-xs mt-0.5">{lightbox.index + 1} / {photos.length}</p>
                         </div>
 
                         {/* Tombol tutup */}
                         <button
                             onClick={closeLightbox}
                             aria-label="Tutup foto"
-                            className="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/50 text-white hover:bg-black/80 flex items-center justify-center transition backdrop-blur-sm border border-white/20"
+                            className="absolute top-3 right-3 w-11 h-11 rounded-full bg-black/50 text-white hover:bg-black/80 flex items-center justify-center transition backdrop-blur-sm border border-white/20"
                         >
                             <i className="fa-solid fa-times"></i>
                         </button>
                     </div>
 
-                    {/* Navigasi prev / next */}
+                    {/*
+                     * ✅ Swipe hint — muncul sekali saja saat lightbox pertama dibuka.
+                     *    Auto-hide setelah 2.8s atau langsung hilang saat user swipe.
+                     *    Hanya muncul di mobile (sm:hidden).
+                     */}
+                    <div className={`
+                        sm:hidden absolute bottom-16 left-1/2 -translate-x-1/2
+                        flex items-center gap-2 px-4 py-2 rounded-full
+                        bg-black/60 backdrop-blur-sm border border-white/15
+                        transition-all duration-500 pointer-events-none
+                        ${showSwipeHint ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
+                    `}>
+                        <i className="fa-solid fa-arrow-left text-gold text-[10px]"></i>
+                        <span className="text-white/70 text-[10px] font-medium tracking-wide">Geser untuk navigasi</span>
+                        <i className="fa-solid fa-arrow-right text-gold text-[10px]"></i>
+                    </div>
+
+                    {/* Navigasi prev / next — hidden di mobile, pakai swipe */}
                     <button
                         onClick={() => navigateLightbox(-1)}
                         aria-label="Foto sebelumnya"
-                        className="absolute -left-5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 hover:bg-gold text-white border border-white/20 flex items-center justify-center transition duration-300 backdrop-blur-sm"
+                        className="hidden sm:flex absolute -left-5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 hover:bg-gold text-white border border-white/20 items-center justify-center transition duration-300 backdrop-blur-sm"
                     >
                         <i className="fa-solid fa-chevron-left text-sm"></i>
                     </button>
                     <button
                         onClick={() => navigateLightbox(1)}
                         aria-label="Foto berikutnya"
-                        className="absolute -right-5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 hover:bg-gold text-white border border-white/20 flex items-center justify-center transition duration-300 backdrop-blur-sm"
+                        className="hidden sm:flex absolute -right-5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 hover:bg-gold text-white border border-white/20 items-center justify-center transition duration-300 backdrop-blur-sm"
                     >
                         <i className="fa-solid fa-chevron-right text-sm"></i>
                     </button>

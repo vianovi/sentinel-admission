@@ -1,3 +1,5 @@
+// resources/js/Components/Landing/HighlightSection.tsx
+
 import { useEffect, useRef } from 'react'
 import { animate, stagger } from 'animejs'
 
@@ -44,14 +46,22 @@ export default function HighlightSection() {
                             Pelajari Proses Seleksi <i className="fa-solid fa-arrow-right ml-2 text-xs"></i>
                         </a>
                     </div>
+
                     <div className="highlight-animate opacity-0 md:col-span-3">
+                        {/*
+                         * ✅ PERF: Tambah loading="lazy" + decoding="async".
+                         *    Gambar highlight ada di tengah halaman — tidak perlu di-load awal.
+                         */}
                         <img
                             src="/assets/highlight-seleksi.webp"
                             alt="Proses seleksi siswa Al-Muntaha"
                             className="w-full h-[400px] object-cover rounded-2xl shadow-xl transform md:translate-y-8 hover:translate-y-4 transition duration-500"
+                            loading="lazy"
+                            decoding="async"
                             onError={(e) => { e.currentTarget.src = 'https://placehold.co/400x600/f1f5f9/0f172a?text=Seleksi' }}
                         />
                     </div>
+
                     <div className="highlight-animate opacity-0 md:col-span-4 space-y-6">
                         <div className="bg-navy p-8 rounded-2xl text-white text-center shadow-2xl relative overflow-hidden group">
                             <i className="fa-solid fa-list-check absolute top-4 right-4 text-white opacity-5 text-6xl group-hover:opacity-10 transition"></i>
@@ -68,6 +78,8 @@ export default function HighlightSection() {
                             src="/assets/highlight-asrama.webp"
                             alt="Asrama Al-Muntaha Boarding School"
                             className="w-full h-48 object-cover rounded-2xl shadow-lg border-4 border-white"
+                            loading="lazy"
+                            decoding="async"
                             onError={(e) => { e.currentTarget.src = 'https://placehold.co/400x200/f1f5f9/0f172a?text=Asrama' }}
                         />
                     </div>

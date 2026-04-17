@@ -1,3 +1,5 @@
+// resources/js/Components/Landing/VisiMisiSection.tsx
+
 import { useEffect, useRef } from 'react'
 import { animate, stagger } from 'animejs'
 
@@ -25,7 +27,11 @@ export default function VisiMisiSection() {
     }, [])
 
     return (
-        <section id="visi" ref={sectionRef} className="py-20 relative border-y border-gray-200" style={{ backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '20px 20px' }}>
+        /*
+         * ✅ PERF: Ganti inline style backgroundImage ke Tailwind class bg-dotted.
+         *    Didefinisikan sekali di app.css, di-cache browser, tidak di-parse ulang tiap render.
+         */
+        <section id="visi" ref={sectionRef} className="py-20 relative border-y border-gray-200 bg-dotted">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="visimisi-animate opacity-0 text-center mb-12">
                     <span className="text-gold font-bold text-sm tracking-widest uppercase">Komitmen Kami</span>
@@ -36,10 +42,16 @@ export default function VisiMisiSection() {
                     {/* Visi */}
                     <div className="visimisi-animate opacity-0 bg-white rounded-2xl shadow-sm border border-gray-100 p-2 hover:shadow-lg transition duration-300">
                         <div className="h-48 rounded-xl overflow-hidden bg-gray-200 relative">
+                            {/*
+                             * ✅ PERF: Tambah loading="lazy" + decoding="async".
+                             *    Gambar visi/misi ada di bawah fold — tidak perlu di-load awal.
+                             */}
                             <img
                                 src="/assets/visi-section.webp"
                                 alt="Visi Al-Muntaha Boarding School"
                                 className="w-full h-full object-cover"
+                                loading="lazy"
+                                decoding="async"
                                 onError={(e) => { e.currentTarget.src = 'https://placehold.co/600x300/0f172a/ffffff?text=Visi' }}
                             />
                             <div className="absolute inset-0 bg-navy/60 flex items-center justify-center">
@@ -61,6 +73,8 @@ export default function VisiMisiSection() {
                                 src="/assets/misi-section.webp"
                                 alt="Misi Al-Muntaha Boarding School"
                                 className="w-full h-full object-cover"
+                                loading="lazy"
+                                decoding="async"
                                 onError={(e) => { e.currentTarget.src = 'https://placehold.co/600x300/0f172a/ffffff?text=Misi' }}
                             />
                             <div className="absolute inset-0 bg-navy/60 flex items-center justify-center">
