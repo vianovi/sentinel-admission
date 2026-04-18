@@ -27,10 +27,14 @@ interface Props {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const SIZE_WIDTH: Record<NonNullable<GalleryItem['size']>, { mobile: string; desktop: string }> = {
-    narrow: { mobile: '130px', desktop: '180px' },
-    normal: { mobile: '180px', desktop: '260px' },
-    wide:   { mobile: '240px', desktop: '360px' },
+// Tinggi card tetap. Lebar berdasarkan size prop — landscape lebih lebar, portrait lebih sempit.
+// Ini mempertahankan "crop window" feel: gambar terpotong natural di dalam bingkai.
+const CARD_HEIGHT = '230px';
+
+const SIZE_WIDTH: Record<NonNullable<GalleryItem['size']>, string> = {
+    narrow: 'clamp(140px, 12vw, 190px)',  // foto portrait — lebih sempit
+    normal: 'clamp(200px, 17vw, 280px)',  // foto square/landscape standar
+    wide:   'clamp(280px, 24vw, 380px)',  // foto landscape lebar / video
 };
 
 // MAGNETIC_THROTTLE: 50ms → max 20 calls/detik per card (sudah efisien)
@@ -84,9 +88,6 @@ export default function GalleryCard({
 
     const [isHovered, setIsHovered] = useState(false);
     const [isLoaded,  setIsLoaded]  = useState(false);
-
-    const sizeKey   = item.size ?? 'normal';
-    const cardWidth = `clamp(${SIZE_WIDTH[sizeKey].mobile}, 15vw, ${SIZE_WIDTH[sizeKey].desktop})`;
 
     // Reset loaded state saat src berubah
     useEffect(() => { setIsLoaded(false); }, [item.src]);
@@ -234,18 +235,15 @@ export default function GalleryCard({
             style={{
                 position:       'relative',
                 flexShrink:     0,
-                width:          cardWidth,
-                // FIX PERF #6 / CLS: aspect-ratio menggantikan height hardcode
-                // Ini mencegah layout shift karena browser sudah tahu ukuran sebelum gambar load
-                aspectRatio:    '4 / 3',
+                // Tinggi tetap, lebar mengikuti size prop (narrow/normal/wide)
+                // → foto portrait terlihat sempit, landscape terlihat lebar
+                // → semua foto di-crop dengan object-cover, bukan ditampilkan penuh
+                height:         CARD_HEIGHT,
+                width:          SIZE_WIDTH[item.size ?? 'normal'],
                 borderRadius:   '1rem',
                 overflow:       'hidden',
                 cursor:         'pointer',
-                // FIX PERF #1: willChange 'auto' saat lightbox aktif
-                // hemat GPU layer promotion untuk 140 card sekaligus
                 willChange:     lightboxActive ? 'auto' : 'transform',
-                // FIX DEAD CODE: perspective dipindah ke sini (bukan duplikat inline + animejs)
-                // transformStyle preserve-3d tetap diperlukan untuk 3D rotate
                 transformStyle: 'preserve-3d',
                 perspective:    '800px',
             }}

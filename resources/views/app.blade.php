@@ -15,24 +15,22 @@
         <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 
         {{--
-            FIX PERF #4: Ganti all.min.css → solid.min.css (~200KB vs ~1.8MB).
-            Seluruh project hanya menggunakan icon dari family "solid" (fa-solid).
-            Tidak ada icon regular/brands/light yang dipakai — full bundle tidak diperlukan.
-
-            Teknik media="print" dipertahankan: load FA di background (non-blocking),
-            swap ke "all" setelah selesai → icon tetap muncul, tidak delay LCP.
+            Font Awesome — load dengan media="print" trick agar tidak block rendering.
+            Pakai all.min.css: mencakup base font-face + semua icon family (solid, regular, brands).
+            solid.min.css saja tidak cukup karena tidak include font-face declaration
+            yang dibutuhkan browser untuk render glyph icon.
         --}}
         <link
             rel="stylesheet"
-            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/solid.min.css"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
             media="print"
             onload="this.media='all'"
         />
-        {{-- Fallback: jika JavaScript dinonaktifkan, load FA secara langsung --}}
+        {{-- Fallback: jika JavaScript dinonaktifkan --}}
         <noscript>
             <link
                 rel="stylesheet"
-                href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/solid.min.css"
+                href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
             >
         </noscript>
 
@@ -43,16 +41,16 @@
         >
 
         {{--
-            FIX DEAD CODE #5: Favicon disederhanakan.
-            Dihapus: 16x16, 32x32, 48x48 — browser mengambil ukuran ini otomatis dari favicon.ico.
-            Dipertahankan:
-              - favicon.ico   → fallback universal semua browser lama
-              - 180x180       → Apple Touch Icon (iOS/iPadOS home screen)
-              - 192x192       → Android/Chrome PWA
-              - 512x512       → PWA splash screen
+            Favicon — semua ukuran dipertahankan.
+            16x16, 32x32, 48x48 tetap ada karena beberapa browser lama dan
+            aplikasi (Slack, Discord embed, dll) secara eksplisit request ukuran ini.
+            favicon.ico sebagai fallback universal.
         --}}
         <link rel="icon"             type="image/x-icon" href="/favicon.ico">
-        <link rel="apple-touch-icon" sizes="180x180"     href="/apple-touch-icon.png">
+        <link rel="icon"             type="image/png"    sizes="16x16"  href="/favicon-16x16.png">
+        <link rel="icon"             type="image/png"    sizes="32x32"  href="/favicon-32x32.png">
+        <link rel="icon"             type="image/png"    sizes="48x48"  href="/favicon-48x48.png">
+        <link rel="apple-touch-icon" sizes="180x180"                    href="/apple-touch-icon.png">
         <link rel="icon"             type="image/png"    sizes="192x192" href="/favicon-192x192.png">
         <link rel="icon"             type="image/png"    sizes="512x512" href="/favicon-512x512.png">
 

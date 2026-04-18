@@ -3,7 +3,8 @@
 import { useEffect, useState, useMemo, useRef, useCallback, useId } from 'react';
 import { animate, stagger } from 'animejs';
 import { route } from 'ziggy-js';
-import GalleryCard, { GalleryItem } from './GalleryCard';
+import GalleryCard from './GalleryCard';
+import type { GalleryItem } from './GalleryCard';
 
 // FIX DEAD CODE: OriginRect import dihapus — tidak lagi dipakai di handleItemClick
 
@@ -726,70 +727,38 @@ function Lightbox({ item, total, currentIdx, onClose, onNavigate }: LightboxProp
                         </div>
                     </div>
 
-                    {/* ── Panel kanan — media ───────────────────────────────
-                        FIX BUG #3: video tidak lagi gelap.
-                        FIX BUG #5: fog-image cover area hitam dari aspect ratio berbeda.
-
-                        Struktur layer (bottom to top):
-                        1. Fog background (blur tinggi, scale(1.25)) → cover area hitam
-                        2. Overlay navy TIPIS — hanya untuk image (video tidak perlu)
-                        3. Media utama (object-contain) di z-10
-
-                        Hasilnya: tidak ada area hitam, warna terasa warm/natural. */}
+                    {/* ── Panel kanan — media ── */}
                     <div
                         className="w-full lg:w-[62%] flex items-center justify-center overflow-hidden relative"
                         style={{
-                            minHeight: '200px',
-                            maxHeight: '55vh',
-                            flex:      '1 1 auto',
-                            // FIX BUG #3: background lebih netral, bukan navy pekat
-                            // Fog image akan mengisi area ini — background hanya fallback
-                            background: 'rgba(6,10,22,0.98)',
+                            minHeight:  '200px',
+                            height:     '55vh',
+                            flex:       '1 1 auto',
+                            // Background netral — untuk image akan ditimpa fog, untuk video tetap terlihat
+                            background: item.type === 'video' ? '#050810' : 'rgba(6,10,22,0.98)',
                         }}
                     >
-                        {/* ── Layer 1: Fog background
-                            Untuk IMAGE: foto yang sama di-blur, scale(1.25) agar cover semua sudut
-                            Untuk VIDEO: gradient gelap netral (tidak ada thumbnail video)
-                            Tujuan: hilangkan area hitam di kiri/kanan/atas/bawah akibat
-                            aspect ratio foto yang berbeda-beda (portrait, landscape, square). */}
-                        {item.type === 'image' ? (
-                            <img
-                                src={item.src}
-                                alt=""
-                                aria-hidden={true}
-                                className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-                                style={{
-                                    // brightness(0.25) — cukup gelap agar foto utama stand out
-                                    // saturate(1.3) — warna fog tetap terasa warm/natural
-                                    filter:    'blur(50px) saturate(1.3) brightness(0.25)',
-                                    transform: 'scale(1.25)',
-                                }}
-                            />
-                        ) : (
-                            // Video: gradient gelap yang KONSISTEN dengan panel kiri video
-                            // FIX BUG #3 & #4: tidak ada overlay navy ekstra untuk video
-                            <div
-                                className="absolute inset-0 pointer-events-none"
-                                style={{
-                                    background: 'linear-gradient(145deg, rgba(12,18,40,0.98) 0%, rgba(4,8,20,0.99) 100%)',
-                                }}
-                            />
-                        )}
-
-                        {/* ── Layer 2: Overlay tipis HANYA untuk image
-                            FIX BUG #3: dihapus untuk video — ini penyebab video terlalu gelap.
-                            Untuk image, overlay tipis ini membantu kontras foto utama vs fog. */}
+                        {/* Fog background — HANYA untuk image, cover area hitam dari aspect ratio */}
                         {item.type === 'image' && (
-                            <div
-                                className="absolute inset-0 pointer-events-none"
-                                style={{
-                                    background: 'rgba(6,10,22,0.18)',
-                                    zIndex:     1,
-                                }}
-                            />
+                            <>
+                                <img
+                                    src={item.src}
+                                    alt=""
+                                    aria-hidden={true}
+                                    className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                                    style={{
+                                        filter:    'blur(50px) saturate(1.3) brightness(0.25)',
+                                        transform: 'scale(1.25)',
+                                    }}
+                                />
+                                <div
+                                    className="absolute inset-0 pointer-events-none"
+                                    style={{ background: 'rgba(6,10,22,0.18)', zIndex: 1 }}
+                                />
+                            </>
                         )}
 
-                        {/* ── Layer 3: Media utama ────────────────────────── */}
+                        {/* Media utama — video dan image sama-sama di z-10 */}
                         <div className="relative z-10 w-full h-full flex items-center justify-center">
                             {item.type === 'video' ? (
                                 <video
@@ -798,8 +767,15 @@ function Lightbox({ item, total, currentIdx, onClose, onNavigate }: LightboxProp
                                     controls
                                     autoPlay
                                     muted
-                                    className="w-full h-full object-contain"
-                                    style={{ maxHeight: '55vh' }}
+                                    className="w-full h-full"
+                                    style={{
+                                        // object-contain agar video tidak terpotong
+                                        // background transparan — tidak ada layer gelap di atas video
+                                        objectFit:   'contain',
+                                        maxHeight:   '55vh',
+                                        background:  'transparent',
+                                        display:     'block',
+                                    }}
                                 />
                             ) : (
                                 <img
@@ -807,17 +783,14 @@ function Lightbox({ item, total, currentIdx, onClose, onNavigate }: LightboxProp
                                     src={item.src}
                                     alt={item.title}
                                     className="w-full h-full object-contain transition-opacity duration-200 hover:opacity-90"
-                                    style={{
-                                        maxHeight: '55vh',
-                                        cursor:    'zoom-in',
-                                    }}
+                                    style={{ maxHeight: '55vh', cursor: 'zoom-in' }}
                                     onClick={() => setFullSizeSrc(item.src)}
                                     title="Klik untuk melihat ukuran penuh"
                                 />
                             )}
                         </div>
 
-                        {/* ── Hint zoom — hanya untuk image ────────────────── */}
+                        {/* Hint zoom — hanya untuk image */}
                         {item.type === 'image' && (
                             <div
                                 className="absolute bottom-3 right-3 z-10 pointer-events-none"
