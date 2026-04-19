@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Candidate;
+namespace App\Http\Controllers\Dashboard\Candidate;
 
 use App\Http\Controllers\Controller;
 use App\Models\Guardian;
@@ -31,8 +31,6 @@ class GuardianController extends Controller
         return Inertia::render('Dashboard/Candidate/DataWali', [
             'guardian'   => $guardian,
             'completion' => $guardian->completion_percentage,
-
-            // Props untuk CandidateSidebar — sama persis dengan controller lain
             'user' => [
                 'name'       => $user->name,
                 'avatar_url' => $user->avatar_url,
@@ -50,7 +48,6 @@ class GuardianController extends Controller
                 'admission_wave'      => $candidate->admissionWave
                     ? ['title' => $candidate->admissionWave->title]
                     : null,
-                // Untuk fitur "salin alamat kandidat"
                 'province'    => $candidate->province ?? null,
                 'city'        => $candidate->city ?? null,
                 'district'    => $candidate->district ?? null,
@@ -82,14 +79,13 @@ class GuardianController extends Controller
         $shared       = $request->boolean('alamat_shared');
 
         return [
-            // Shared
-            'no_kk'        => ['required', 'digits:16'],
-            'income_type'  => ['required', 'in:separate,combined'],
-            'alamat_shared'=> ['boolean'],
+            'no_kk'         => ['required', 'digits:16'],
+            'income_type'   => ['required', 'in:separate,combined'],
+            'alamat_shared' => ['boolean'],
 
             // ── Ayah ──────────────────────────────────────────────────────
             'father_status'         => ['required', 'in:hidup,meninggal,tidak_diketahui'],
-            'father_name'           => [$fatherAbsent ? 'nullable' : 'nullable', 'string', 'max:100'],
+            'father_name'           => ['nullable', 'string', 'max:100'],
             'father_nik'            => ['nullable', 'digits:16'],
             'father_place_of_birth' => ['nullable', 'string', 'max:100'],
             'father_date_of_birth'  => ['nullable', 'date', 'before:today'],
@@ -114,12 +110,9 @@ class GuardianController extends Controller
             'mother_education'      => ['nullable', 'in:tidak_sekolah,sd_sederajat,smp_sederajat,sma_smk_sederajat,d1,d2,d3,d4_s1,s2,s3'],
             'mother_job_ktp'        => ['nullable', 'string', 'max:100'],
             'mother_job_actual'     => ['nullable', 'string', 'max:100'],
-            'mother_income_range'   => [
-                ($combined ? 'nullable' : 'nullable'),
-                'in:tidak_berpenghasilan,di_bawah_1jt,1jt_2_5jt,2_5jt_3_5jt,3_5jt_5jt,5jt_10jt,di_atas_10jt'
-            ],
+            'mother_income_range'   => ['nullable', 'in:tidak_berpenghasilan,di_bawah_1jt,1jt_2_5jt,2_5jt_3_5jt,3_5jt_5jt,5jt_10jt,di_atas_10jt'],
             'mother_phone'          => ['nullable', 'regex:/^08[0-9]{8,12}$/'],
-            'mother_province'       => [$shared ? 'nullable' : 'nullable', 'string', 'max:100'],
+            'mother_province'       => ['nullable', 'string', 'max:100'],
             'mother_city'           => ['nullable', 'string', 'max:100'],
             'mother_district'       => ['nullable', 'string', 'max:100'],
             'mother_village'        => ['nullable', 'string', 'max:100'],
