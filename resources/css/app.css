@@ -1,3 +1,5 @@
+/* resources/css/app.css */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -30,7 +32,8 @@
     box-shadow: 0 0 0 3px rgba(212, 160, 23, 0.15);
 }
 
-/* ── Error state — persis seperti WizardStep2 ─────────────────────────────── */
+/* ── Error state ─────────────────────────────── */
+
 .input-error {
     border-color: #e11d48 !important;
     background-color: #fff1f2 !important;
@@ -38,7 +41,6 @@
     box-shadow: none !important;
 }
 
-/* Suppress focus ring saat error — tidak ada border biru/gold yang nabrak */
 .input-error:focus,
 .input-error:focus-visible {
     border-color: #e11d48 !important;
@@ -46,7 +48,6 @@
     box-shadow: none !important;
 }
 
-/* Dark mode — background gelap subtle, tidak pink terang */
 .dark .input-error {
     border-color: rgba(244, 63, 94, 0.55) !important;
     background-color: rgba(244, 63, 94, 0.08) !important;
@@ -114,7 +115,6 @@
    SENTINEL — Design Token System
    ============================================================================= */
 
-/* ── Dark mode tokens (default — aktif saat class "dark" ada di <html>) ─────── */
 :root {
     --shell-bg:      #080d18;
     --shell-surface: #0a0f1e;
@@ -127,7 +127,6 @@
     --content-muted:   rgba(255, 255, 255, 0.04);
 }
 
-/* ── Light mode tokens (TODO: implementasi penuh di sesi dedicated) ─────────── */
 :root.light,
 .light {
     --shell-bg:      #f0ebe0;
@@ -139,4 +138,136 @@
     --content-card:    rgba(0, 0, 0, 0.025);
     --content-border:  rgba(0, 0, 0, 0.08);
     --content-muted:   rgba(0, 0, 0, 0.03);
+}
+
+/* =============================================================================
+   LANDING PAGE — Global Styles
+   ============================================================================= */
+
+/* ── Hero shimmer text ──────────────────────────────────────────────────────── */
+
+@keyframes hero-shimmer {
+    0%   { background-position: -200% center; }
+    100% { background-position:  200% center; }
+}
+
+.hero-shimmer-text {
+    background: linear-gradient(
+        90deg,
+        #b5850b 0%,
+        #d4a017 25%,
+        #f5d06a 45%,
+        #fffbe6 50%,
+        #f5d06a 55%,
+        #d4a017 75%,
+        #b5850b 100%
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: hero-shimmer 4s linear infinite;
+    display: inline-block;
+}
+
+/* ── Ticker animation ───────────────────────────────────────────────────────── */
+
+@keyframes ticker {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+.animate-ticker {
+    animation: ticker 40s linear infinite;
+}
+
+.animate-ticker:hover {
+    animation-play-state: paused;
+}
+
+.ticker-wrapper::-webkit-scrollbar {
+    display: none;
+}
+
+/* ── Background patterns ────────────────────────────────────────────────────── */
+
+.bg-cubes {
+    background-image: url('https://www.transparenttextures.com/patterns/cubes.png');
+}
+
+.bg-dotted {
+    background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+/* =============================================================================
+   CINEMATIC SHOWCASE — Global Styles
+   ============================================================================= */
+
+/* ── Edge-fade mask untuk marquee track ─────────────────────────────────────── */
+
+.smq-mask {
+    mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+}
+
+/* ── Title shimmer ──────────────────────────────────────────────────────────── */
+
+@keyframes title-shimmer {
+    0%   { background-position: 100% 0; }
+    50%  { background-position: -100% 0; }
+    100% { background-position: 100% 0; }
+}
+
+.cinematic-title-shimmer {
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    background-image: linear-gradient(
+        110deg,
+        #d4af37 0%,
+        #f5e098 20%,
+        #fffbe6 38%,
+        #f5e098 50%,
+        #d4af37 62%,
+        #b8892a 80%,
+        #d4af37 100%
+    );
+    background-size: 300% 100%;
+    animation: title-shimmer 5s ease-in-out infinite;
+    display: inline;
+}
+
+/* =============================================================================
+   GALLERY CARD — Global Styles
+   ============================================================================= */
+
+/* ── Gold shimmer sweep ─────────────────────────────────────────────────────
+   FIX BUG #1: Hanya SATU shimmer layer — gold sweep.
+   Silver placeholder-sweep DIHAPUS sepenuhnya.
+   Opacity gold dinaikkan agar lebih visible di atas background gelap.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+@keyframes gallery-shimmer {
+    0%   { transform: translateX(-120%) skewX(-20deg); opacity: 0; }
+    10%  { opacity: 1; }
+    90%  { opacity: 1; }
+    100% { transform: translateX(220%) skewX(-20deg); opacity: 0; }
+}
+
+/* FIX BUG #1: gallery-placeholder-sweep DIHAPUS.
+   Class ini dan keyframes placeholder-sweep tidak ada lagi.
+   Skeleton diganti dengan dark gradient solid di GalleryCard.tsx —
+   tidak ada animasi silver yang samar-samar dan tidak berguna. */
+
+/* ── Video badge pulse ring ──────────────────────────────────────────────────── */
+
+@keyframes video-pulse-ring {
+    0%   { transform: scale(1);   opacity: 0.8; }
+    70%  { transform: scale(2.8); opacity: 0;   }
+    100% { transform: scale(1);   opacity: 0;   }
+}
+
+.gallery-video-pulse {
+    animation: video-pulse-ring 2s ease-out infinite;
 }

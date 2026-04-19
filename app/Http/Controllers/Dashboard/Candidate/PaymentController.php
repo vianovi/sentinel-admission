@@ -1,9 +1,6 @@
 <?php
-// =============================================================================
-// LOKASI FILE: app/Http/Controllers/Candidate/PaymentController.php
-// =============================================================================
 
-namespace App\Http\Controllers\Candidate;
+namespace App\Http\Controllers\Dashboard\Candidate;
 
 use App\Http\Controllers\Controller;
 use App\Models\Candidate;
@@ -253,7 +250,6 @@ class PaymentController extends Controller
 
     public function cancel(Request $request, Payment $payment): RedirectResponse
     {
-        // Pastikan payment milik kandidat yang login
         $candidate = $request->user()->candidate()->first();
 
         if ($payment->candidate_id !== $candidate->id) {

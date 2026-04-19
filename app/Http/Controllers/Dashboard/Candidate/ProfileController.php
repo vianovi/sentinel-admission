@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Candidate;
+namespace App\Http\Controllers\Dashboard\Candidate;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -51,7 +51,6 @@ class ProfileController extends Controller
 
     // =========================================================================
     // UPDATE PROFILE — PUT /dashboard/profile
-    // route: dashboard.profile.update
     // =========================================================================
 
     public function update(Request $request)
@@ -79,15 +78,7 @@ class ProfileController extends Controller
 
     // =========================================================================
     // UPDATE AVATAR — POST /dashboard/profile/avatar
-    // route: dashboard.profile.avatar.update
-    //
-    // Security layers:
-    // 1. mimes       — Laravel cek extension whitelist
-    // 2. mimetypes   — Laravel cek MIME type via magic bytes (Symfony)
-    // 3. Magic bytes — cek header file secara manual
-    // 4. Polyglot scan — cek pattern berbahaya di isi file
-    // 5. UUID rename — nama file asli dari client dibuang total
-    // 6. Ext dari magic bytes — bukan dari nama file client
+    // Security: mime → magic bytes → polyglot scan → UUID rename
     // =========================================================================
 
     private const AVATAR_SIGNATURES = [
@@ -163,7 +154,6 @@ class ProfileController extends Controller
 
     // =========================================================================
     // REQUEST GANTI EMAIL — POST /dashboard/profile/email
-    // route: dashboard.profile.email.request
     // =========================================================================
 
     public function requestEmailChange(Request $request)
@@ -189,7 +179,6 @@ class ProfileController extends Controller
 
     // =========================================================================
     // CANCEL REQUEST GANTI EMAIL — DELETE /dashboard/profile/email
-    // route: dashboard.profile.email.cancel
     // =========================================================================
 
     public function cancelEmailChange(Request $request)

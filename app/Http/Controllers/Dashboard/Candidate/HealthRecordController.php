@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Candidate;
+namespace App\Http\Controllers\Dashboard\Candidate;
 
 use App\Http\Controllers\Controller;
 use App\Models\HealthRecord;
@@ -39,7 +39,6 @@ class HealthRecordController extends Controller
 
     // =============================================
     // SHOW — GET /dashboard/data-kesehatan
-    // route: dashboard.data-kesehatan
     // =============================================
 
     public function show()
@@ -54,12 +53,9 @@ class HealthRecordController extends Controller
         $healthRecord = $candidate->healthRecord;
 
         return Inertia::render('Dashboard/Candidate/DataKesehatan', [
-            // Data kesehatan kandidat
             'healthRecord' => $healthRecord
                 ? $this->formatForFrontend($healthRecord)
                 : null,
-
-            // Props untuk CandidateSidebar
             'user' => [
                 'name'       => $user->name,
                 'avatar_url' => $user->avatar_url,
@@ -83,7 +79,6 @@ class HealthRecordController extends Controller
 
     // =============================================
     // SAVE — POST /dashboard/data-kesehatan
-    // route: dashboard.data-kesehatan.save
     // =============================================
 
     public function save(Request $request)
@@ -115,8 +110,6 @@ class HealthRecordController extends Controller
 
     // =============================================
     // UPLOAD DOKUMEN — POST /dashboard/data-kesehatan/dokumen/{docType}
-    // route: dashboard.data-kesehatan.upload
-    // docType: surat_sehat | bpjs_card | vaccine_card | chronic_disease
     // =============================================
 
     public function uploadDocument(Request $request, string $docType)
@@ -163,12 +156,11 @@ class HealthRecordController extends Controller
             return response()->json(['message' => 'Data kandidat tidak ditemukan.'], 422);
         }
 
-        $column  = self::UPLOAD_FIELDS[$docType];
-        $ext     = $this->getExtFromMagicBytes($file);
-        $filename = Str::uuid() . '.' . $ext;
+        $column      = self::UPLOAD_FIELDS[$docType];
+        $ext         = $this->getExtFromMagicBytes($file);
+        $filename    = Str::uuid() . '.' . $ext;
         $storagePath = "health-documents/{$candidate->id}/{$filename}";
 
-        // ── DB Transaction: pastikan file & DB update atomic ─────────────────
         DB::beginTransaction();
         try {
             $healthRecord = HealthRecord::firstOrCreate(
@@ -177,16 +169,13 @@ class HealthRecordController extends Controller
 
             $oldPath = $healthRecord->$column;
 
-            // Simpan file ke private storage
             $file->storeAs("health-documents/{$candidate->id}", $filename, 'private');
 
-            // Update DB
             $healthRecord->$column = $storagePath;
             $healthRecord->save();
 
             DB::commit();
 
-            // Hapus file lama SETELAH commit berhasil — biar tidak orphan
             if ($oldPath && Storage::disk('private')->exists($oldPath)) {
                 Storage::disk('private')->delete($oldPath);
             }
@@ -200,7 +189,6 @@ class HealthRecordController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            // Hapus file yang mungkin sudah terlanjur tersimpan
             if (Storage::disk('private')->exists($storagePath)) {
                 Storage::disk('private')->delete($storagePath);
             }
@@ -217,7 +205,6 @@ class HealthRecordController extends Controller
 
     // =============================================
     // DELETE DOKUMEN — DELETE /dashboard/data-kesehatan/dokumen/{docType}
-    // route: dashboard.data-kesehatan.delete-doc
     // =============================================
 
     public function deleteDocument(string $docType)
@@ -244,7 +231,6 @@ class HealthRecordController extends Controller
 
             DB::commit();
 
-            // Hapus file SETELAH commit
             if ($oldPath && Storage::disk('private')->exists($oldPath)) {
                 Storage::disk('private')->delete($oldPath);
             }
@@ -268,14 +254,9 @@ class HealthRecordController extends Controller
     // PRIVATE HELPERS
     // =============================================
 
-    /**
-     * Format health record untuk dikirim ke frontend via Inertia.
-     * Semua accessor dari Model diekspos di sini — bukan di frontend.
-     */
     private function formatForFrontend(HealthRecord $record): array
     {
         return [
-            // Tab Fisik
             'blood_type'               => $record->blood_type,
             'blood_type_label'         => $record->blood_type_label,
             'rhesus'                   => $record->rhesus,
@@ -293,8 +274,6 @@ class HealthRecordController extends Controller
             'eye_left_value'           => $record->eye_left_value,
             'eye_left_label'           => $record->eye_left_label,
             'eye_condition_since'      => $record->eye_condition_since,
-
-            // Tab Riwayat Kesehatan
             'major_illnesses'          => $record->major_illnesses,
             'last_illness'             => $record->last_illness,
             'allergy_food'             => $record->allergy_food,
@@ -302,24 +281,19 @@ class HealthRecordController extends Controller
             'allergy_condition'        => $record->allergy_condition,
             'physical_disabilities'    => $record->physical_disabilities,
             'chronic_disease_doc_url'  => $record->chronic_disease_doc_url,
-
-            // Tab Catatan Khusus
             'special_notes'            => $record->special_notes,
             'parent_concern_notes'     => $record->parent_concern_notes,
             'surat_sehat_url'          => $record->surat_sehat_url,
             'bpjs_card_url'            => $record->bpjs_card_url,
             'vaccine_card_url'         => $record->vaccine_card_url,
-
-            // Meta
-            'is_complete'           => $record->isComplete(),
-            'completion_percentage' => $record->completionPercentage(),
+            'is_complete'              => $record->isComplete(),
+            'completion_percentage'    => $record->completionPercentage(),
         ];
     }
 
     private function validationRules(): array
     {
         return [
-            // Tab Fisik — nullable untuk partial save, auto-submitted yang jaga gerbang
             'blood_type'               => ['nullable', 'in:A,B,AB,O,unknown'],
             'rhesus'                   => ['nullable', 'in:positive,negative,unknown'],
             'height_cm'                => ['nullable', 'integer', 'min:50', 'max:250'],
@@ -331,14 +305,12 @@ class HealthRecordController extends Controller
             'eye_left_type'            => ['nullable', 'in:normal,minus,plus,silinder,unknown'],
             'eye_left_value'           => ['nullable', 'numeric', 'min:0.25', 'max:20'],
             'eye_condition_since'      => ['nullable', 'integer', 'min:1990', 'max:' . date('Y')],
-            // Tab Riwayat — semua nullable, tidak masuk kriteria auto-submitted
             'major_illnesses'          => ['nullable', 'string', 'max:2000'],
             'last_illness'             => ['nullable', 'string', 'max:2000'],
             'allergy_food'             => ['nullable', 'string', 'max:1000'],
             'allergy_medicine'         => ['nullable', 'string', 'max:1000'],
             'allergy_condition'        => ['nullable', 'string', 'max:1000'],
             'physical_disabilities'    => ['nullable', 'string', 'max:1000'],
-            // Tab Catatan Khusus — semua opsional
             'special_notes'            => ['nullable', 'string', 'max:2000'],
             'parent_concern_notes'     => ['nullable', 'string', 'max:2000'],
         ];
@@ -347,7 +319,6 @@ class HealthRecordController extends Controller
     private function validationMessages(): array
     {
         return [
-            // Format validasi tetap ada — hanya pesan required yang dihapus
             'height_cm.min'           => 'Tinggi badan minimal 50 cm.',
             'height_cm.max'           => 'Tinggi badan maksimal 250 cm.',
             'weight_kg.min'           => 'Berat badan minimal 10 kg.',

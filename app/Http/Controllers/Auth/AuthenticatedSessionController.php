@@ -87,10 +87,10 @@ class AuthenticatedSessionController extends Controller
             ]);
         }
 
-        // Redirect berdasarkan role — mutlak terisolasi
+        // Redirect berdasarkan role — mutlak terisolasi (tanpa intended agar selalu deterministic)
         return match ($role) {
-            'admin' => redirect()->intended(route('admin.dashboard')),
-            'staff' => redirect()->intended(route('staff.dashboard')),
+            'admin' => redirect()->route('admin.dashboard'),
+            'staff' => redirect()->route('staff.dashboard'),
         };
     }
 

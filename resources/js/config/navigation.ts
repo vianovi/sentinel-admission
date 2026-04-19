@@ -40,40 +40,40 @@ export const navigationConfig: Record<string, NavGroup[]> = {
         {
             group: "Menu",
             items: [
-                { label: "Dashboard",     href: "/dashboard",           icon: "fa-solid fa-house",          exact: true },
-                { label: "Kalender SPMB", href: "/dashboard/calendar",  icon: "fa-solid fa-calendar-days" }, // ⏳ belum aktif
-                { label: "Informasi",     href: "/dashboard/info",      icon: "fa-solid fa-circle-info" },   // ⏳ belum aktif
+                { label: "Dashboard",     href: "/dashboard",          icon: "fa-solid fa-house",          exact: true },
+                { label: "Kalender SPMB", href: "/dashboard/calendar", icon: "fa-solid fa-calendar-days" }, // ⏳ belum aktif
+                { label: "Informasi",     href: "/dashboard/info",     icon: "fa-solid fa-circle-info" },   // ⏳ belum aktif
             ],
         },
         {
             group: "Pendaftaran",
             items: [
-                { label: "Data Diri",      href: "/dashboard/data-diri",      icon: "fa-solid fa-id-card" },        // ✅ aktif
-                { label: "Data Kesehatan", href: "/dashboard/data-kesehatan", icon: "fa-solid fa-heart-pulse" },    // ✅ aktif
-                { label: "Data Wali",      href: "/dashboard/data-wali",      icon: "fa-solid fa-people-roof" },    // ✅ aktif
-                { label: "Dokumen",        href: "/dashboard/data-dokumen",   icon: "fa-solid fa-file-lines" },     // ✅ aktif
-                { label: "Pembayaran",     href: "/dashboard/pembayaran",     icon: "fa-solid fa-credit-card" },    // ✅ aktif
+                { label: "Data Diri",      href: "/dashboard/data-diri",      icon: "fa-solid fa-id-card" },
+                { label: "Data Kesehatan", href: "/dashboard/data-kesehatan", icon: "fa-solid fa-heart-pulse" },
+                { label: "Data Wali",      href: "/dashboard/data-wali",      icon: "fa-solid fa-people-roof" },
+                { label: "Dokumen",        href: "/dashboard/data-dokumen",   icon: "fa-solid fa-file-lines" },
+                { label: "Pembayaran",     href: "/dashboard/pembayaran",     icon: "fa-solid fa-credit-card" },
                 { label: "Status",         href: "/dashboard/status",         icon: "fa-solid fa-clock-rotate-left" }, // ⏳ belum aktif
             ],
         },
         {
             group: "Akun",
             items: [
-                { label: "Profil", href: "/dashboard/profile", icon: "fa-solid fa-circle-user" }, // ✅ aktif
+                { label: "Profil", href: "/dashboard/profile", icon: "fa-solid fa-circle-user" },
             ],
         },
     ],
 
     // =========================================================================
     // STAFF — Petugas verifikasi
+    // Verifikasi dilakukan via filter di halaman Kandidat — tidak ada menu terpisah.
     // =========================================================================
     staff: [
         {
             group: "Menu",
             items: [
-                { label: "Dashboard",  href: "/dashboard/staff",            icon: "fa-solid fa-house",        exact: true },
-                { label: "Kandidat",   href: "/dashboard/staff/candidates", icon: "fa-solid fa-users" },
-                { label: "Verifikasi", href: "/dashboard/staff/verify",     icon: "fa-solid fa-shield-halved" },
+                { label: "Dashboard", href: "/dashboard/staff",            icon: "fa-solid fa-house",  exact: true },
+                { label: "Kandidat",  href: "/dashboard/staff/candidates", icon: "fa-solid fa-users" },
             ],
         },
         {
@@ -94,14 +94,13 @@ export const navigationConfig: Record<string, NavGroup[]> = {
                 { label: "Dashboard", href: "/dashboard/admin",            icon: "fa-solid fa-house",       exact: true },
                 { label: "Kandidat",  href: "/dashboard/admin/candidates", icon: "fa-solid fa-users" },
                 { label: "Gelombang", href: "/dashboard/admin/waves",      icon: "fa-solid fa-layer-group" },
-                { label: "Staff",     href: "/dashboard/admin/staff",      icon: "fa-solid fa-user-tie" },
-                { label: "Laporan",   href: "/dashboard/admin/reports",    icon: "fa-solid fa-chart-line" },
+                { label: "Staff",     href: "/dashboard/admin/staff-list", icon: "fa-solid fa-user-tie" },
             ],
         },
         {
-            group: "Sistem",
+            group: "Akun",
             items: [
-                { label: "Pengaturan", href: "/dashboard/admin/settings", icon: "fa-solid fa-gear" },
+                { label: "Profil", href: "/dashboard/admin/profile", icon: "fa-solid fa-circle-user" },
             ],
         },
     ],

@@ -1,3 +1,5 @@
+// resources/js/Components/Landing/ProfileSection.tsx
+
 import { useEffect, useRef } from 'react'
 import { animate, stagger } from 'animejs'
 
@@ -40,11 +42,14 @@ export default function ProfileSection({ onOpenVideo }: ProfileSectionProps) {
     return (
         <section ref={sectionRef} className="py-24 pb-36 bg-navy text-white relative overflow-hidden">
 
-            {/* Background pattern */}
-            <div className="absolute inset-0 opacity-10"
-                style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/cubes.png')" }} />
+            {/*
+             * ✅ PERF: Ganti inline style backgroundImage ke Tailwind class.
+             *    Inline style tidak bisa di-purge Tailwind & tidak ter-cache browser.
+             *    Pattern ini cukup pakai class bg-cubes yang didefinisikan di app.css.
+             */}
+            <div className="absolute inset-0 opacity-10 bg-cubes" />
 
-            {/* Wave divider bawah — navy → white (VisiMisiSection) */}
+            {/* Wave divider bawah */}
             <div className="absolute bottom-0 left-0 right-0 z-10 leading-none">
                 <svg viewBox="0 0 1440 72" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full h-[60px] md:h-[72px]">
                     <path d="M0,36 C240,0 480,72 720,36 C960,0 1200,72 1440,36 L1440,72 L0,72 Z" fill="#ffffff" />
@@ -96,10 +101,17 @@ export default function ProfileSection({ onOpenVideo }: ProfileSectionProps) {
                             aria-label="Tonton video profil sekolah"
                             className="w-full rounded-2xl overflow-hidden shadow-2xl border-4 border-white/10 relative group cursor-pointer block"
                         >
+                            {/*
+                             * ✅ PERF: Tambah loading="lazy" + decoding="async".
+                             *    Thumbnail video ada di bawah fold — tidak perlu di-load
+                             *    sebelum user scroll ke sini.
+                             */}
                             <img
                                 src="/assets/profile-thumbnail.webp"
                                 className="w-full object-cover object-center transform group-hover:scale-105 transition duration-700 ease-in-out h-[400px]"
                                 alt="Thumbnail video profil Al-Muntaha Boarding School"
+                                loading="lazy"
+                                decoding="async"
                                 onError={(e) => { e.currentTarget.src = 'https://placehold.co/800x400/1e293b/d4a017?text=Video+Profil+Al-Muntaha' }}
                             />
                             <div className="absolute inset-0 bg-slate-900/40 group-hover:bg-slate-900/20 transition duration-500 flex items-center justify-center">

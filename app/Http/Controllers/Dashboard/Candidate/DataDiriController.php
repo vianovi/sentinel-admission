@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Candidate;
+namespace App\Http\Controllers\Dashboard\Candidate;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -55,9 +55,6 @@ class DataDiriController extends Controller
                 'family_card_number'         => $candidate->family_card_number,
                 'program_choice'             => $candidate->program_choice,
                 'major_choice'               => $candidate->major_choice,
-                // ── is_transfer ───────────────────────────────────────────
-                // true  = kandidat pindahan → transfer_letter muncul di halaman Dokumen
-                // false = kandidat reguler (default)
                 'is_transfer'                => (bool) $candidate->is_transfer,
                 // ── Status & change request ───────────────────────────────
                 'status'              => $candidate->status,
@@ -65,9 +62,9 @@ class DataDiriController extends Controller
                 'data_change_request' => $candidate->data_change_request,
                 // ── Admission wave ────────────────────────────────────────
                 'admission_wave' => $candidate->admissionWave ? [
-                    'title'          => $candidate->admissionWave->title,
-                    'academic_year'  => $candidate->admissionWave->academic_year,
-                    'majors_enabled' => $candidate->admissionWave->majors_enabled,
+                    'title'            => $candidate->admissionWave->title,
+                    'academic_year'    => $candidate->admissionWave->academic_year,
+                    'majors_enabled'   => $candidate->admissionWave->majors_enabled,
                     'available_majors' => $candidate->admissionWave->available_majors ?? [],
                     'programs' => $candidate->admissionWave->programs
                         ->where('is_active', true)
@@ -111,7 +108,6 @@ class DataDiriController extends Controller
             'family_card_number'          => ['nullable', 'digits:16'],
             'program_choice'              => ['nullable', 'string', 'max:100'],
             'major_choice'                => ['nullable', 'string', 'max:100'],
-            // is_transfer: boolean, kandidat boleh ubah sendiri
             'is_transfer'                 => ['nullable', 'boolean'],
         ], [
             'email.regex'               => 'Email harus berupa Gmail. Contoh: nama@gmail.com',
@@ -123,7 +119,7 @@ class DataDiriController extends Controller
 
         // Validasi program_choice harus dari programs aktif di gelombang
         if ($request->filled('program_choice') && $candidate->admissionWave) {
-            $wave           = $candidate->admissionWave;
+            $wave            = $candidate->admissionWave;
             $waveTotalFilled = $wave->totalFilled();
 
             $program = $wave->programs

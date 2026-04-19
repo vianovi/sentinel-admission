@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Http\Controllers\Candidate;
+namespace App\Http\Controllers\Dashboard\Candidate;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class DashboardController extends Controller
+class IndexController extends Controller
 {
     // =========================================================================
     // DASHBOARD INDEX — GET /dashboard

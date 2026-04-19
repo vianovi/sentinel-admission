@@ -1,8 +1,11 @@
+// resources/js/Components/Dashboard/Shared/Topbar.tsx
+
 import { useState, useRef, useEffect } from "react";
 import { Link, router, usePage } from "@inertiajs/react";
 import { animate } from "animejs";
 import { useSidebar } from "@/context/SidebarContext";
 import { useTheme } from "@/context/ThemeContext";
+import { PageProps } from "@/types";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -27,10 +30,19 @@ type Props = {
 export default function Topbar({ user }: Props) {
     const { isExpanded, isHovered, toggleSidebar, toggleMobileSidebar } = useSidebar();
     const { theme, toggleTheme } = useTheme();
+    const { props } = usePage<PageProps>();
+
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [notifOpen, setNotifOpen]       = useState(false);
     const userMenuRef = useRef<HTMLDivElement>(null);
     const notifRef    = useRef<HTMLDivElement>(null);
+
+    // ── Profile href — dinamis per role ──────────────────────────────────────
+    const role = props.auth?.user?.role ?? "candidate";
+    const profileHref =
+        role === "staff" ? "/dashboard/staff/profile" :
+        role === "admin" ? "/dashboard/admin/profile" :
+        "/dashboard/profile";
 
     // ── Close dropdowns on outside click ─────────────────────────────────────
     useEffect(() => {
@@ -200,7 +212,7 @@ export default function Topbar({ user }: Props) {
                                    rounded-xl hover:bg-slate-100 dark:hover:bg-white/5
                                    transition group"
                     >
-                        {/* Avatar — foto kalau ada, fallback initials */}
+                        {/* Avatar */}
                         <div className="w-8 h-8 rounded-xl overflow-hidden bg-gold flex items-center justify-center shrink-0">
                             {user.avatar_url ? (
                                 <img
@@ -238,7 +250,7 @@ export default function Topbar({ user }: Props) {
                             {/* Menu items */}
                             <div className="p-1.5">
                                 <Link
-                                    href="/dashboard/profile"
+                                    href={profileHref}
                                     className="flex items-center gap-2.5 px-3 py-2 rounded-xl
                                                text-sm text-slate-700 dark:text-slate-300
                                                hover:bg-slate-100 dark:hover:bg-white/5
