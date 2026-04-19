@@ -1,3 +1,5 @@
+// resources/js/Components/Landing/HeroSection.tsx
+
 import { useEffect, useRef, useState } from 'react'
 import { Link } from '@inertiajs/react'
 import { animate, stagger } from 'animejs'
@@ -32,42 +34,48 @@ export default function HeroSection({ activeWave, onOpenVideo }: HeroSectionProp
         })
     }, [])
 
+    /*
+     * ✅ PERF: <style> inline dihapus sepenuhnya.
+     *    hero-shimmer-text & @keyframes hero-shimmer
+     *    sudah dipindah ke resources/css/app.css — di-cache browser,
+     *    tidak di-parse ulang setiap render.
+     */
+
     return (
         <>
-            <style>{`
-                @keyframes hero-shimmer {
-                    0%   { background-position: -200% center; }
-                    100% { background-position:  200% center; }
-                }
-                .hero-shimmer-text {
-                    background: linear-gradient(
-                        90deg,
-                        #b5850b 0%,
-                        #d4a017 25%,
-                        #f5d06a 45%,
-                        #fffbe6 50%,
-                        #f5d06a 55%,
-                        #d4a017 75%,
-                        #b5850b 100%
-                    );
-                    background-size: 200% auto;
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                    background-clip: text;
-                    animation: hero-shimmer 4s linear infinite;
-                    display: inline-block;
-                }
-            `}</style>
-
             <header id="home" className="relative min-h-[90vh] flex items-center pt-10 pb-20">
+
                 {/* Background image + dark overlay */}
                 <div className="absolute inset-0 z-0">
-                    <img
-                        src="/assets/hero-background.webp"
-                        alt="Lingkungan Al-Muntaha Boarding School"
-                        className="w-full h-full object-cover"
-                        onError={(e) => { e.currentTarget.style.display = 'none' }}
-                    />
+                    {/*
+                     * ✅ PERF: Pakai <picture> untuk serve gambar berbeda per device.
+                     *    - Mobile (≤768px) → hero-background-mobile.webp (18KB)
+                     *    - Desktop (>768px) → hero-background.webp (68KB)
+                     *    - fetchPriority="high" → LCP element, prioritas tertinggi
+                     *    - loading="eager"     → jangan lazy, langsung load
+                     *    - decoding="async"    → decode di background thread
+                     */}
+                    <picture>
+                        <source
+                            media="(max-width: 768px)"
+                            srcSet="/assets/hero-background-mobile.webp"
+                            type="image/webp"
+                        />
+                        <source
+                            media="(min-width: 769px)"
+                            srcSet="/assets/hero-background.webp"
+                            type="image/webp"
+                        />
+                        <img
+                            src="/assets/hero-background.webp"
+                            alt="Lingkungan Al-Muntaha Boarding School"
+                            className="w-full h-full object-cover"
+                            fetchPriority="high"
+                            loading="eager"
+                            decoding="async"
+                            onError={(e) => { e.currentTarget.style.display = 'none' }}
+                        />
+                    </picture>
                     <div className="absolute inset-0 bg-gradient-to-r from-navy/85 via-navy/60 to-navy/20 lg:to-navy/10" />
                 </div>
 
@@ -89,6 +97,7 @@ export default function HeroSection({ activeWave, onOpenVideo }: HeroSectionProp
                             <h1 className="hero-animate opacity-0 text-4xl lg:text-6xl font-display font-bold leading-tight">
                                 <span className="text-white">Membangun Generasi</span>
                                 <br />
+                                {/* ✅ Class hero-shimmer-text sekarang dari app.css */}
                                 <span className="hero-shimmer-text">Cerdas &amp; Beradab</span>
                             </h1>
 
@@ -143,7 +152,7 @@ export default function HeroSection({ activeWave, onOpenVideo }: HeroSectionProp
                     </div>
                 </div>
 
-                {/* Wave SVG Divider — transisi hero gelap ke section terang */}
+                {/* Wave SVG Divider */}
                 <div className="absolute bottom-0 left-0 right-0 z-10 leading-none">
                     <svg
                         viewBox="0 0 1440 72"

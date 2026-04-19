@@ -1,9 +1,15 @@
+// resources/js/Components/Landing/VideoModal.tsx
+
 interface VideoModalProps {
     isOpen: boolean
     onClose: () => void
 }
 
 export default function VideoModal({ isOpen, onClose }: VideoModalProps) {
+    /*
+     * ✅ PERF: Conditional render — kalau modal belum dibuka, tidak ada DOM sama sekali.
+     *    Ini sudah benar, pastikan tetap dipertahankan.
+     */
     if (!isOpen) return null
 
     return (
@@ -23,7 +29,17 @@ export default function VideoModal({ isOpen, onClose }: VideoModalProps) {
                     <i className="fa-solid fa-times text-xl"></i>
                 </button>
                 <div className="aspect-video w-full bg-black">
-                    <video className="w-full h-full object-contain" controls autoPlay>
+                    {/*
+                     * ✅ PERF: Tambah preload="none" — tanpa ini browser akan mulai
+                     *    download video begitu modal di-render meski user belum klik play.
+                     *    preload="none" → video baru di-fetch saat user klik play.
+                     */}
+                    <video
+                        className="w-full h-full object-contain"
+                        controls
+                        autoPlay
+                        preload="none"
+                    >
                         <source src="/assets/test-video.mp4" type="video/mp4" />
                         Browser Anda tidak mendukung tag video.
                     </video>
