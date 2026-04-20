@@ -176,12 +176,18 @@ class IndexController extends Controller
 
     public function updateStatus(Request $request, Candidate $candidate): RedirectResponse
     {
-        $request->validate([
+        $validated = $request->validate([
             'status' => ['required', 'in:accepted,rejected'],
-            'reason' => ['nullable', 'string', 'max:500'],
+            'reason' => ['nullable', 'required_if:status,rejected', 'string', 'max:500'],
         ]);
 
-        $candidate->update(['status' => $request->status]);
+        if ($candidate->status !== 'verified') {
+            return back()->withErrors([
+                'status' => 'Status kandidat hanya bisa diubah setelah kandidat berstatus terverifikasi.',
+            ]);
+        }
+
+        $candidate->update(['status' => $validated['status']]);
 
         return back()->with('success', 'Status kandidat berhasil diperbarui.');
     }
