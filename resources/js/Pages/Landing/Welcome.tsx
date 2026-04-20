@@ -32,12 +32,10 @@ export default function Welcome({ activeWave, auth }: WelcomeProps) {
     return (
         <>
             {/*
-             * ✅ PERF: Preload hero image agar browser langsung fetch
-             *    sebelum React selesai render — kunci nurunin LCP.
-             *    - Mobile (≤768px) → preload versi mobile (18KB)
-             *    - Desktop (>768px) → preload versi full (68KB)
+             * ✅ PERF: Preload hero image + SEO Meta → LCP + SEO score
              */}
-            <Head title={app.name}>
+            <Head title={`${app.name} - Penerimaan Siswa Baru ${new Date().getFullYear()}/${new Date().getFullYear() + 1}`}>
+                {/* Preload hero */}
                 <link
                     rel="preload"
                     as="image"
@@ -52,6 +50,24 @@ export default function Welcome({ activeWave, auth }: WelcomeProps) {
                     media="(min-width: 769px)"
                     fetchPriority="high"
                 />
+
+                {/* SEO Meta - Boost SEO score 90+ */}
+                <meta name="description" content="Al-Muntaha Islamic Boarding School - Pendaftaran Siswa Baru Online. Gelombang aktif sekarang. Kuota terbatas." />
+                <meta property="og:title" content={`${app.name} - PSB ${new Date().getFullYear()}/${new Date().getFullYear() + 1}`} />
+                <meta property="og:description" content="Daftar sekarang di sistem penerimaan siswa baru Al-Muntaha School. Gelombang aktif, kuota terbatas." />
+                <meta property="og:image" content="/assets/hero-background.webp" />
+                <meta property="og:image:width" content="1920" />
+                <meta property="og:image:height" content="1080" />
+                <meta property="og:type" content="website" />
+                <meta property="og:url" content={window.location.origin} />
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content={`${app.name} - PSB ${new Date().getFullYear()}/${new Date().getFullYear() + 1}`} />
+                <meta name="twitter:description" content="Pendaftaran Siswa Baru Al-Muntaha Islamic Boarding School" />
+                <meta name="twitter:image" content="/assets/hero-background.webp" />
+
+                {/* Mobile SEO */}
+                <meta name="theme-color" content="#0f172a" />
+                <link rel="canonical" href={window.location.href} />
             </Head>
 
             <div className="font-sans text-navy bg-light antialiased scroll-smooth selection:bg-gold/30 selection:text-gold">
