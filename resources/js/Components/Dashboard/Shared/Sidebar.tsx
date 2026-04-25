@@ -17,8 +17,8 @@ const roleLabel: Record<string, string> = {
 
 const roleBadgeClass: Record<string, string> = {
     candidate: "bg-gold/10 text-gold border-gold/20",
-    staff:     "bg-blue-500/10 text-blue-400 border-blue-500/20",
-    admin:     "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+    staff:     "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+    admin:     "bg-rose-500/10 text-rose-400 border-rose-500/20",
 };
 
 export default function Sidebar({ role }: Props) {

@@ -55,6 +55,13 @@
         <link rel="icon"             type="image/png"    sizes="512x512" href="/favicon-512x512.png">
 
         {{--
+            PERF: DNS Prefetch — percepat koneksi ke CDN eksternal
+        --}}
+        <link rel="dns-prefetch" href="//fonts.googleapis.com">
+        <link rel="dns-prefetch" href="//fonts.gstatic.com">
+        <link rel="dns-prefetch" href="//cdnjs.cloudflare.com">
+
+        {{--
             Midtrans Snap.js — hanya di-load di halaman Pembayaran.
             Pola ini sudah benar, pertahankan untuk semua script pihak ketiga.
         --}}
@@ -67,7 +74,7 @@
 
         @routes
         @viteReactRefresh
-        @vite(['resources/js/app.tsx', "resources/js/Pages/{$page['component']}.tsx"])
+        @vite(['resources/css/app.css', 'resources/js/app.tsx'])
         @inertiaHead
     </head>
     <body class="font-sans antialiased">

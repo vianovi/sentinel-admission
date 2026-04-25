@@ -1,11 +1,10 @@
 <?php
-// app/Http/Controllers/Staff/DashboardController.php
 
-namespace App\Http\Controllers\Staff;
+namespace App\Http\Controllers\Dashboard\Staff;
 
 use App\Http\Controllers\Controller;
-use App\Models\Candidate;
 use App\Models\AdmissionWave;
+use App\Models\Candidate;
 use App\Models\CandidateDocument;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,11 +12,12 @@ use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class DashboardController extends Controller
+class IndexController extends Controller
 {
     // =============================================
     // GET /dashboard/staff
     // =============================================
+
     public function index(): Response
     {
         return Inertia::render('Dashboard/Staff/Index', [
@@ -47,8 +47,8 @@ class DashboardController extends Controller
 
     // =============================================
     // GET /dashboard/staff/candidates
-    // List semua kandidat dengan filter & paginate
     // =============================================
+
     public function candidates(Request $request): Response
     {
         $search = $request->input('search', '');
@@ -90,8 +90,8 @@ class DashboardController extends Controller
 
     // =============================================
     // GET /dashboard/staff/candidates/{candidate}
-    // Detail kandidat untuk verifikasi
     // =============================================
+
     public function show(Candidate $candidate): Response
     {
         $candidate->load(['user', 'admissionWave', 'documents.verifiedBy', 'guardian', 'healthRecord', 'payments']);
@@ -145,6 +145,7 @@ class DashboardController extends Controller
     // =============================================
     // POST /dashboard/staff/documents/{document}/verify
     // =============================================
+
     public function verifyDocument(Request $request, CandidateDocument $document): RedirectResponse
     {
         $request->validate([
@@ -172,14 +173,21 @@ class DashboardController extends Controller
     // =============================================
     // POST /dashboard/staff/candidates/{candidate}/status
     // =============================================
+
     public function updateStatus(Request $request, Candidate $candidate): RedirectResponse
     {
-        $request->validate([
+        $validated = $request->validate([
             'status' => ['required', 'in:accepted,rejected'],
-            'reason' => ['nullable', 'string', 'max:500'],
+            'reason' => ['nullable', 'required_if:status,rejected', 'string', 'max:500'],
         ]);
 
-        $candidate->update(['status' => $request->status]);
+        if ($candidate->status !== 'verified') {
+            return back()->withErrors([
+                'status' => 'Status kandidat hanya bisa diubah setelah kandidat berstatus terverifikasi.',
+            ]);
+        }
+
+        $candidate->update(['status' => $validated['status']]);
 
         return back()->with('success', 'Status kandidat berhasil diperbarui.');
     }

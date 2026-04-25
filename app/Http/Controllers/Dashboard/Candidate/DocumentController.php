@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Candidate;
+namespace App\Http\Controllers\Dashboard\Candidate;
 
 use App\Http\Controllers\Controller;
 use App\Models\CandidateDocument;
@@ -29,15 +29,13 @@ class DocumentController extends Controller
         $user      = $request->user();
         $candidate = $user->candidate()->with('admissionWave')->firstOrFail();
 
-        // Load semua dokumen kandidat (tanpa join ke security — performa)
         $documents = CandidateDocument::where('candidate_id', $candidate->id)
             ->whereNull('deleted_at')
             ->get(['id', 'doc_type', 'doc_group', 'original_filename',
                    'status', 'rejection_reason', 'created_at', 'updated_at'])
-            ->keyBy('doc_type')  // key by doc_type untuk lookup O(1) di frontend
+            ->keyBy('doc_type')
             ->toArray();
 
-        // Achievement bisa multi — override keyBy dengan grouped array
         $achievementTypes = CandidateDocument::MULTI_UPLOAD_TYPES;
         $achievementDocs  = CandidateDocument::where('candidate_id', $candidate->id)
             ->whereIn('doc_type', $achievementTypes)
@@ -46,13 +44,11 @@ class DocumentController extends Controller
             ->groupBy('doc_type')
             ->toArray();
 
-        // Gabungkan: hapus achievement dari single-key map, pakai grouped map
         foreach ($achievementTypes as $type) {
             unset($documents[$type]);
         }
 
         return Inertia::render('Dashboard/Candidate/DataDokumen', [
-            // ── CandidateSidebar props (WAJIB sama persis di semua controller) ──
             'user' => [
                 'name'       => $user->name,
                 'avatar_url' => $user->avatar_url,
@@ -71,11 +67,10 @@ class DocumentController extends Controller
                     ? ['title' => $candidate->admissionWave->title]
                     : null,
             ],
-            // ── Document-specific props ──
-            'documents'        => $documents,
-            'achievementDocs'  => $achievementDocs,
-            'isTransfer'       => (bool) $candidate->is_transfer,
-            'completion'       => $this->calculateCompletion($candidate->id, (bool) $candidate->is_transfer),
+            'documents'       => $documents,
+            'achievementDocs' => $achievementDocs,
+            'isTransfer'      => (bool) $candidate->is_transfer,
+            'completion'      => $this->calculateCompletion($candidate->id, (bool) $candidate->is_transfer),
         ]);
     }
 
@@ -87,8 +82,7 @@ class DocumentController extends Controller
     {
         $isJson = $request->wantsJson();
 
-        // ── Validasi doc_type ─────────────────────────────────────
-        if (!CandidateDocument::isValidDocType($docType)) {
+        if (! CandidateDocument::isValidDocType($docType)) {
             if ($isJson) return response()->json(['errors' => ['file' => 'Jenis dokumen tidak valid.']], 422);
             return back()->withErrors(['file' => 'Jenis dokumen tidak valid.']);
         }
@@ -96,14 +90,13 @@ class DocumentController extends Controller
         $user      = $request->user();
         $candidate = $user->candidate()->firstOrFail();
 
-        // ── Layer 3A: Laravel validation ─────────────────────────
         $validated = $request->validate([
             'file' => [
                 'required',
                 'file',
                 'mimes:jpeg,jpg,png,pdf',
                 'mimetypes:image/jpeg,image/png,application/pdf',
-                'max:5120', // 5MB
+                'max:5120',
             ],
         ]);
 
@@ -111,16 +104,14 @@ class DocumentController extends Controller
         $uploadIp  = $request->ip();
         $userAgent = $request->userAgent() ?? '';
 
-        // ── Layer 3B + 3C: Magic bytes + Polyglot scan ───────────
         $securityResult = $this->security->runAll($file, $uploadIp, $userAgent);
 
-        if (!$this->security->isSafeToStore($securityResult)) {
+        if (! $this->security->isSafeToStore($securityResult)) {
             $msg = 'Format file tidak didukung. Pastikan file berupa JPEG, PNG, atau PDF yang valid.';
             if ($isJson) return response()->json(['errors' => ['file' => $msg]], 422);
             return back()->withErrors(['file' => $msg]);
         }
 
-        // ── Layer 4: UUID rename + private storage ────────────────
         $storedFilename = $this->security->generateStoredFilename(
             $securityResult['detected_mime']
         );
@@ -128,8 +119,7 @@ class DocumentController extends Controller
 
         DB::beginTransaction();
         try {
-            // Jika non-achievement: hapus file lama (soft delete)
-            if (!CandidateDocument::allowsMultiple($docType)) {
+            if (! CandidateDocument::allowsMultiple($docType)) {
                 CandidateDocument::where('candidate_id', $candidate->id)
                     ->where('doc_type', $docType)
                     ->whereNull('deleted_at')
@@ -139,7 +129,6 @@ class DocumentController extends Controller
                     });
             }
 
-            // Simpan file ke private storage
             if (config('sentinel.layer_private_storage', true)) {
                 $file->storeAs(
                     "candidates/{$candidate->candidate_code}",
@@ -155,7 +144,6 @@ class DocumentController extends Controller
                 );
             }
 
-            // Insert ke candidate_documents
             $document = CandidateDocument::create([
                 'candidate_id'      => $candidate->id,
                 'candidate_code'    => $candidate->candidate_code,
@@ -169,7 +157,6 @@ class DocumentController extends Controller
                 'status'            => 'pending',
             ]);
 
-            // Insert audit trail ke candidate_document_security (1-to-1)
             CandidateDocumentSecurity::create(array_merge(
                 ['document_id' => $document->id],
                 $securityResult
@@ -206,12 +193,10 @@ class DocumentController extends Controller
         $user      = $request->user();
         $candidate = $user->candidate()->firstOrFail();
 
-        // Pastikan dokumen ini milik kandidat yang sedang login (cegah IDOR)
         $document = CandidateDocument::where('id', $documentId)
             ->where('candidate_id', $candidate->id)
             ->firstOrFail();
 
-        // Kandidat tidak bisa hapus dokumen yang sudah verified
         if ($document->status === 'verified') {
             return back()->withErrors(['file' => 'Dokumen yang sudah terverifikasi tidak dapat dihapus.']);
         }
@@ -219,7 +204,7 @@ class DocumentController extends Controller
         DB::beginTransaction();
         try {
             Storage::disk('private')->delete($document->file_path);
-            $document->delete(); // SoftDelete — data tetap ada untuk audit
+            $document->delete();
 
             DB::commit();
             return back()->with('success', 'Dokumen berhasil dihapus.');
@@ -244,16 +229,14 @@ class DocumentController extends Controller
         $user      = $request->user();
         $candidate = $user->candidate()->firstOrFail();
 
-        // Pastikan dokumen ini milik kandidat yang sedang login (cegah IDOR)
         $document = CandidateDocument::where('id', $documentId)
             ->where('candidate_id', $candidate->id)
             ->firstOrFail();
 
-        if (!Storage::disk('private')->exists($document->file_path)) {
+        if (! Storage::disk('private')->exists($document->file_path)) {
             abort(404, 'File tidak ditemukan.');
         }
 
-        // Force download — tidak pernah render di browser
         if (config('sentinel.layer_force_download', true)) {
             return Storage::disk('private')->download(
                 $document->file_path,
@@ -262,7 +245,6 @@ class DocumentController extends Controller
             );
         }
 
-        // LAB-HACK: serve inline (buka di browser — membuka celah PDF XSS)
         Log::warning('[LAB-HACK] Force download DISABLED — serving inline', [
             'user_id'     => $user->id,
             'document_id' => $documentId,
@@ -282,7 +264,6 @@ class DocumentController extends Controller
             ->unique()
             ->toArray();
 
-        // Filter doc_types yang seharusnya tampil (conditional)
         $allTypes = collect(CandidateDocument::DOC_TYPES)
             ->filter(function ($meta, $type) use ($isTransfer) {
                 if (isset($meta['conditional']) && $meta['conditional'] === true) {

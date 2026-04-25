@@ -30,8 +30,9 @@ function LayoutInner({ children, aside, asideWidth = "280px" }: Props) {
     const role   = (auth.user.role ?? "candidate") as "candidate" | "staff" | "admin";
     const isWide = isExpanded || isHovered;
 
-    // Auto-logout setelah 30 menit idle — aktif untuk semua role
-    useIdleLogout({ timeoutSeconds: 300, warningSeconds: 60 })
+    // Auto-logout testing value (disamakan dengan DashboardLayout)
+    // NOTE: production value akan di-set setelah staff dashboard selesai & tested
+    useIdleLogout({ timeoutSeconds: 300, warningSeconds: 300 })
 
     return (
         <div className="min-h-screen bg-light dark:bg-slate-950 font-sans">

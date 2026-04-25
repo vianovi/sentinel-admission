@@ -1,21 +1,21 @@
 <?php
 // routes/web.php
 
-use App\Http\Controllers\Candidate\DashboardController        as CandidateDashboard;
-use App\Http\Controllers\Candidate\ProfileController          as CandidateProfile;
-use App\Http\Controllers\Candidate\DataDiriController         as CandidateDataDiri;
-use App\Http\Controllers\Candidate\HealthRecordController     as CandidateHealthRecord;
-use App\Http\Controllers\Candidate\GuardianController         as CandidateGuardian;
-use App\Http\Controllers\Candidate\DocumentController         as CandidateDocument;
-use App\Http\Controllers\Candidate\PaymentController          as CandidatePayment;
+use App\Http\Controllers\Dashboard\Candidate\IndexController      as CandidateDashboard;
+use App\Http\Controllers\Dashboard\Candidate\ProfileController    as CandidateProfile;
+use App\Http\Controllers\Dashboard\Candidate\DataDiriController   as CandidateDataDiri;
+use App\Http\Controllers\Dashboard\Candidate\HealthRecordController as CandidateHealthRecord;
+use App\Http\Controllers\Dashboard\Candidate\GuardianController   as CandidateGuardian;
+use App\Http\Controllers\Dashboard\Candidate\DocumentController   as CandidateDocument;
+use App\Http\Controllers\Dashboard\Candidate\PaymentController    as CandidatePayment;
+use App\Http\Controllers\Dashboard\Staff\IndexController          as StaffDashboard;
+use App\Http\Controllers\Dashboard\Staff\ProfileController        as StaffProfile;
+use App\Http\Controllers\Dashboard\Admin\IndexController          as AdminDashboard;
+use App\Http\Controllers\Dashboard\Admin\ProfileController        as AdminProfile;
+use App\Http\Controllers\Dashboard\Admin\CandidateController      as AdminCandidate;
+use App\Http\Controllers\Dashboard\Admin\WaveController           as AdminWave;
+use App\Http\Controllers\Dashboard\Admin\StaffController          as AdminStaffCtrl;
 use App\Http\Controllers\Webhook\MidtransController;
-use App\Http\Controllers\Staff\DashboardController            as StaffDashboard;
-use App\Http\Controllers\Staff\ProfileController              as StaffProfile;
-use App\Http\Controllers\Admin\DashboardController            as AdminDashboard;
-use App\Http\Controllers\Admin\ProfileController              as AdminProfile;
-use App\Http\Controllers\Admin\CandidateController            as AdminCandidate;
-use App\Http\Controllers\Admin\WaveController                 as AdminWave;
-use App\Http\Controllers\Admin\StaffController                as AdminStaffCtrl;
 use App\Http\Controllers\Admission\FormWizardController;
 use App\Http\Controllers\Admission\RegisterController;
 use App\Http\Controllers\Public\WelcomeController;
