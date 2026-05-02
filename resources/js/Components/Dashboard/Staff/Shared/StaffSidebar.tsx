@@ -1,5 +1,5 @@
 import { Link } from "@inertiajs/react";
-
+// reresources/js/Components/Dashboard/Staff/Shared/StaffSidebar.tsx
 type UserMini = {
     name:       string;
     avatar_url: string | null;
