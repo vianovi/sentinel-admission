@@ -7,6 +7,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CandidateDocumentSecurity extends Model
 {
+    // Override auto-pluralization: Laravel would resolve to 'candidate_document_securities'
+    // but the actual table name is 'candidate_document_security' (matches migration)
+    protected $table = 'candidate_document_security';
+
+    // Migration tidak mendefinisikan timestamps() — scanned_at dipakai sebagai pengganti
+    public $timestamps = false;
+
     protected $fillable = [
         'document_id',
         'magic_bytes_result',
