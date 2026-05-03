@@ -1,6 +1,6 @@
 # Sentinel Admission — Current Status & Progress
 > This file changes frequently. Update manually after every completed feature or decision.
-> Last updated: Staff & Admin Dashboard — Blueprint session (April 2026)
+> Last updated: Staff Dashboard — Full Build & Refactor session (May 2026)
 
 ---
 
@@ -8,41 +8,40 @@
 > This section is overwritten every session. AI reads this first to restore context instantly.
 
 ```
-Date     : 2026-04-12
-Branch   : feat/staff-admin-dashboard
+Date     : 2026-05-03
+Branch   : feat/staf-dashboard (renamed dari feat/staff-admin-dashboard, fokus staff dulu)
 
 Did      :
-  - Audit menyeluruh struktur project (tree 13 layer)
-  - Temukan & catat semua inkonsistensi: field salah di Staff controller,
-    navigation.ts tidak sinkron dengan web.php, Topbar profile link hardcoded
-  - Diskusi & putuskan arsitektur Staff vs Admin dashboard (Opsi B — terpisah)
-  - Putuskan Staff scope kandidat: semua gelombang (filter UI, bukan pembatas akses)
-  - Putuskan menu Verifikasi dihapus dari navigation Staff — jadi filter di halaman Kandidat
-  - Putuskan profile page terpisah per role
-  - Putuskan accent color: Staff = emerald-500 · Admin = rose-500
-  - Baca & audit: CandidateDocument migration, Staff/Admin DashboardController,
-    web.php routes, navigation.ts, Sidebar, Topbar, DashboardLayout, index.d.ts,
-    admission_waves migration
-  - Buat blueprint lengkap: blueprint_staff_admin_dashboard.md (3 phase, 19 file)
+  - Audit Phase 1 — semua sudah bersih SEBELUM session ini dimulai:
+    IndexController.php (Staff) fields sudah benar, Topbar.tsx sudah dinamis per role,
+    navigation.ts Staff sudah benar (no Verifikasi menu), web.php routes sudah lengkap
+  - Upgrade IndexController.php — tambah submission_trend query (7 hari, fill missing days = 0)
+  - Build Staff Dashboard Index.tsx — premium UI dengan Recharts charts, gradient icons,
+    glow effects, spring animations (lazy load charts dengan Suspense)
+  - Build Staff Profile.tsx — DashboardLayout (tanpa sidebar), gradient avatar, badge role
+  - Refactor semua Staff pages ke component-based architecture:
+    Candidates.tsx → CandidateFilters, CandidateTable, CandidatePagination
+    Show.tsx → TabIdentitas, TabDokumen (lazy), TabWali, TabKesehatan
+    Index.tsx → StatsGrid, StatusDistributionChart (lazy), SubmissionTrendChart (lazy), RecentSubmissionsList
+    Profile.tsx → AvatarSection, ProfileEditForm
+  - Semua file lolos audit internal: animejs V4, no dynamic dark class,
+    lazy+Suspense untuk charts & TabDokumen, no :any, touch targets 44px+
 
 Next     :
-  - Execute Phase 1 (fixes wajib): fix Staff controller fields, Topbar, navigation.ts, routes
-  - Execute Phase 2: Staff Dashboard pages (Index, Candidates, Show, Profile)
-  - Execute Phase 3: Admin Dashboard pages (Index, Candidates, Waves, Staff, Profile)
-  - Setelah staff dashboard selesai & tested: ganti useIdleLogout ke 1200/300 (production)
+  - Test seluruh Staff Dashboard di browser (login staff@spmb.com)
+  - Lanjut Phase 3: Admin Dashboard (Index, Candidates, Waves, Staff, Profile)
+  - Setelah admin dashboard selesai & tested: ganti useIdleLogout ke 1200/300 (production)
 
 Decisions:
-  - Staff & Admin dashboard: Opsi B — URL terpisah (/dashboard/staff/* vs /dashboard/admin/*)
-  - Layout reuse: DashboardLayout & DashboardSplitLayout — zero layout baru
-  - Staff scope kandidat: semua gelombang lintas wave
-  - Menu Verifikasi Staff: dihapus, jadi filter "Menunggu Verifikasi" di halaman Kandidat
-  - Profile page: terpisah per role (kandidat/staff/admin — konten berbeda)
-  - Accent color Staff: emerald-500 · Accent color Admin: rose-500
-  - WA notifikasi otomatis (Fonnte): ditunda → future feature v2
-  - Auto-hitung kuota gelombang: ditunda → future feature v2
-  - Staff bisa edit data kandidat (teks) — menghemat waktu operasional
-  - Verifikasi dokumen: per dokumen individual (verified/rejected + rejection_reason)
-  - Notifikasi kandidat: in-app bell icon dulu, urgent via WA manual oleh staff
+  - Branch renamed: feat/staf-dashboard (fokus staff dulu, admin belakangan)
+  - Component architecture: Pages = thin orchestrator, logic & UI di Components/
+  - Charts pakai Recharts (bukan Chart.js) — lebih smooth, modern 2026
+  - SubmissionTrendChart pakai AreaChart (bukan LineChart) — lebih visual
+  - IndexController submission_trend: real data (bukan mock), fill missing days = 0
+  - Growth % di stat cards: mock static dulu — real growth butuh historical snapshot table (future)
+  - Profile.tsx Staff: DashboardLayout tanpa sidebar (lebih natural untuk profile page)
+  - TabDokumen: lazy loaded — form-heavy, tidak perlu eager load
+  - npm install recharts diperlukan sebelum build
 ```
 
 > 💡 To update: tell Livi at end of session: **"Session done. Update 02_status.md."**
@@ -50,7 +49,7 @@ Decisions:
 ---
 
 ## Active Branch
-`feat/staff-admin-dashboard`
+`feat/staf-dashboard`
 
 ---
 
@@ -79,30 +78,42 @@ Decisions:
 | Infrastructure | docker-compose user:1000, filesystems.php private disk serve:true |
 | Security: useIdleLogout | 1 timer, modal countdown, visibilitychange, destroy session ✅ |
 | Blueprint: Staff & Admin Dashboard | blueprint_staff_admin_dashboard.md — 3 phase, 19 file ✅ |
+| Staff Dashboard: Phase 1 Fixes | Controller fields, Topbar, navigation.ts, routes — semua bersih ✅ |
+| Staff Dashboard: IndexController | +submission_trend real data query ✅ |
+| Staff Dashboard: Index.tsx | Premium UI, Recharts (AreaChart + BarChart), lazy load, animations ✅ |
+| Staff Dashboard: Candidates.tsx | Modular: CandidateFilters, CandidateTable, CandidatePagination ✅ |
+| Staff Dashboard: Show.tsx | Modular: TabIdentitas, TabDokumen (lazy), TabWali, TabKesehatan ✅ |
+| Staff Dashboard: Profile.tsx | DashboardLayout, modular: AvatarSection, ProfileEditForm ✅ |
+| Staff Dashboard: StaffSidebar.tsx | Shared sidebar untuk Show & Profile ✅ |
 
 ---
 
 ## Pending / In Progress ⚠️
 
-### 1. Staff & Admin Dashboard — Phase 1 (Fixes Wajib)
-Blueprint sudah selesai. Belum dieksekusi.
-**Action:** Execute Phase 1 dulu — fix controller fields, Topbar, navigation.ts, routes.
-**File blueprint:** `docs-ai/blueprint_staff_admin_dashboard.md`
+### 1. Admin Dashboard — Phase 3 (Belum Dibangun)
+**Next setelah test Staff Dashboard.**
+File yang perlu dibangun:
+- Backend: `Admin/ProfileController.php`, `Admin/CandidateController.php`, `Admin/WaveController.php`, `Admin/StaffController.php`
+- Frontend (Pages): `Admin/Index.tsx`, `Admin/Candidates.tsx`, `Admin/Waves.tsx`, `Admin/Staff.tsx`, `Admin/Profile.tsx`
+- Frontend (Components): pecah sesuai pattern Staff Dashboard
+- Accent color: **rose-500**
 
-### 2. Document Upload — Needs Full Test
+### 2. Staff Dashboard — Belum Tested di Browser
+Build selesai, belum dicoba login staff@spmb.com dan test flow lengkap.
+**Action:** `npm install recharts` → `build` → login → test semua halaman staff.
+
+### 3. Document Upload — Needs Full Test
 Fix committed but not fully tested (composer dump-autoload pending).
 **Action:** Restart container + `art-clear`, then test upload end-to-end.
 
-### 3. File Preview Private Storage
+### 4. File Preview Private Storage
 Files in `storage/app/private/` can't be accessed via direct URL.
-`temporaryUrl()` unreliable on local Docker disk.
 **Solution:** Build dedicated auth-protected route + controller method.
 **Pattern reference:** `WelcomeController::serveGallery()` — adapt with auth middleware.
-Preview button already exists in `DocumentCard` (placeholder).
 
-### 4. useIdleLogout — Production Values Belum Diset
+### 5. useIdleLogout — Production Values Belum Diset
 Sekarang masih 300s/300s (testing).
-**Action setelah staff dashboard tested:** ganti ke `timeoutSeconds: 1200, warningSeconds: 300`
+**Action setelah admin dashboard tested:** ganti ke `timeoutSeconds: 1200, warningSeconds: 300`
 di `DashboardLayout.tsx` + `DashboardSplitLayout.tsx`.
 
 ---
@@ -110,19 +121,18 @@ di `DashboardLayout.tsx` + `DashboardSplitLayout.tsx`.
 ## Next Priorities (in order)
 
 ```
-1. Execute Phase 1 — fixes wajib (blueprint_staff_admin_dashboard.md) ← SEKARANG
-2. Execute Phase 2 — Staff Dashboard pages (Index, Candidates, Show, Profile)
-3. Execute Phase 3 — Admin Dashboard pages
-4. Build Halaman Status kandidat            (observer sudah ready)
-5. Fix & verify document upload             (composer dump / restart test)
-6. Fix file preview private storage        (dedicated serve route)
-7. Decide Tab 5 Data Diri content
-8. Auth pages final review & polish        (forgot/reset password)
-9. Fine-tune global tone, contrast, colors (after all pages done)
-10. Kalender SPMB
-11. Informasi page
-12. Set useIdleLogout ke production values (1200/300)
-13. Full audit & polish pass
+1. npm install recharts → build → test Staff Dashboard di browser ← SEKARANG
+2. Execute Phase 3 — Admin Dashboard (Index, Candidates, Waves, Staff, Profile)
+3. Build Halaman Status kandidat            (observer sudah ready)
+4. Fix & verify document upload             (composer dump / restart test)
+5. Fix file preview private storage        (dedicated serve route)
+6. Decide Tab 5 Data Diri content
+7. Auth pages final review & polish        (forgot/reset password)
+8. Fine-tune global tone, contrast, colors (after all pages done)
+9. Kalender SPMB
+10. Informasi page
+11. Set useIdleLogout ke production values (1200/300)
+12. Full audit & polish pass
 ```
 
 ---
@@ -135,6 +145,7 @@ di `DashboardLayout.tsx` + `DashboardSplitLayout.tsx`.
 | Halaman Status | What content? Timeline? Result announcement? |
 | CinematicShowcase | Photos & videos are placeholder — needs real school content |
 | Surat Pernyataan template | `public/assets/surat-pernyataan-template.docx` exists — needs real content from school |
+| Growth % stat cards | Sekarang mock static — real growth butuh historical snapshot table, decide kapan build |
 
 ---
 
@@ -171,6 +182,47 @@ di `DashboardLayout.tsx` + `DashboardSplitLayout.tsx`.
 | Notifikasi kandidat | In-app bell icon · urgent via WA manual staff |
 | WA notifikasi otomatis | Future feature v2 (Fonnte) |
 | Auto-hitung kuota gelombang | Future feature v2 |
+| Chart library | Recharts (bukan Chart.js) — lebih smooth & modern |
+| Component architecture | Pages = thin orchestrator · Logic & UI di Components/ |
+
+---
+
+## Staff Dashboard — File Structure (Completed)
+
+```
+app/Http/Controllers/Dashboard/Staff/
+├── IndexController.php    ← index(), candidates(), show(), verifyDocument(), updateStatus()
+│                             + submission_trend real data query
+└── ProfileController.php  ← show(), update(), updateAvatar()
+
+resources/js/
+├── Pages/Dashboard/Staff/
+│   ├── Index.tsx          ← Thin orchestrator
+│   ├── Candidates.tsx     ← Thin orchestrator
+│   ├── Show.tsx           ← Thin orchestrator (state + handlers)
+│   └── Profile.tsx        ← Thin orchestrator
+│
+└── Components/Dashboard/Staff/
+    ├── Index/
+    │   ├── StatsGrid.tsx               ← 4 premium gradient cards + animations
+    │   ├── StatusDistributionChart.tsx ← Bar chart (lazy)
+    │   ├── SubmissionTrendChart.tsx    ← Area chart (lazy)
+    │   └── RecentSubmissionsList.tsx   ← List dengan gradient avatars
+    ├── Candidates/
+    │   ├── CandidateFilters.tsx        ← Search + status + wave filter + reset
+    │   ├── CandidateTable.tsx          ← Table rows + empty state
+    │   └── CandidatePagination.tsx     ← Pagination controls
+    ├── Show/
+    │   ├── TabIdentitas.tsx            ← Grid info kandidat
+    │   ├── TabDokumen.tsx              ← Doc list + verify form + status form (lazy)
+    │   ├── TabWali.tsx                 ← Grid info wali (ayah/ibu/wali)
+    │   └── TabKesehatan.tsx            ← Grid info kesehatan + BMI computed
+    ├── Profile/
+    │   ├── AvatarSection.tsx           ← Avatar upload + badges
+    │   └── ProfileEditForm.tsx         ← Form nama/WA/password
+    └── Shared/
+        └── StaffSidebar.tsx            ← Sidebar untuk Show & Profile
+```
 
 ---
 
@@ -199,6 +251,7 @@ di `DashboardLayout.tsx` + `DashboardSplitLayout.tsx`.
 - Halaman Reports/Laporan Admin (grafik, export PDF/Excel)
 - Halaman Settings Admin (konfigurasi payment, gelombang baru)
 - Kandidat re-upload dokumen setelah rejected
+- Real growth % di stat cards (butuh historical snapshot table)
 ```
 
 ---
