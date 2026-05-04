@@ -1,6 +1,6 @@
 // resources/js/Components/Dashboard/Candidate/DataKesehatan/TabRangkuman.tsx
 
-import { useEffect }        from "react";
+import { memo, useEffect }        from "react";
 import { animate, stagger } from "animejs";
 import FilePreviewModal      from "@/Components/UI/FilePreviewModal";
 
@@ -152,7 +152,7 @@ function Row({ label, value, valueClass }: {
 // COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function TabRangkuman({
+export default memo(function TabRangkuman({
     healthRecord, bmi, bmiCategory, formState,
     emptyRequiredFields, progressGradient, completion,
     submitting, onNavigateToTab, onSubmitAll,
@@ -422,4 +422,4 @@ export default function TabRangkuman({
 
         </div>
     );
-}
+});

@@ -1,6 +1,6 @@
 // resources/js/Components/Dashboard/Candidate/DataKesehatan/TabRiwayat.tsx
 
-import { useEffect }          from "react";
+import { memo, useEffect }          from "react";
 import { animate, stagger }   from "animejs";
 import Field, { textareaCls } from "@/Components/UI/Field";
 
@@ -24,7 +24,7 @@ type Props = {
 // COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function TabRiwayat({
+export default memo(function TabRiwayat({
     majorIllnesses, setMajorIllnesses,
     lastIllness,    setLastIllness,
     allergyFood,    setAllergyFood,
@@ -224,4 +224,4 @@ export default function TabRiwayat({
 
         </div>
     );
-}
+});

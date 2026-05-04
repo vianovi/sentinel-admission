@@ -1,6 +1,6 @@
 // resources/js/Components/Dashboard/Candidate/DataKesehatan/TabFisik.tsx
 
-import { useEffect }            from "react";
+import { memo, useEffect }            from "react";
 import { animate, stagger }     from "animejs";
 import Select                   from "react-select";
 import Field, { inputCls, textareaCls } from "@/Components/UI/Field";
@@ -77,7 +77,7 @@ const eyeHasAbnormality = (rightType: string, leftType: string) =>
 // COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function TabFisik({
+export default memo(function TabFisik({
     bloodType, setBloodType,
     rhesus, setRhesus,
     heightCm, setHeightCm,
@@ -421,4 +421,4 @@ export default function TabFisik({
 
         </div>
     );
-}
+});

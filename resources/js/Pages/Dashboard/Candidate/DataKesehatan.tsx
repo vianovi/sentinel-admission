@@ -2,44 +2,25 @@
 
 // ─────────────────────────────────────────────────────────────────────────────
 // KRITERIA AUTO-SUBMITTED (untuk CandidateObserver)
-// Field berikut WAJIB diisi agar status kandidat bisa berubah ke "submitted":
-//
-// Tab Fisik:
-//   - blood_type               (required)
-//   - rhesus                   (required)
-//   - height_cm                (required)
-//   - weight_kg                (required)
-//   - general_health_condition (required)
-//   - eye_right_type           (required)
-//   - eye_left_type            (required)
-//
-// Tab Riwayat:
-//   - major_illnesses          (required)
-//   - last_illness             (required)
-//   - allergy_food             (required)
-//   - allergy_medicine         (required)
-//   - allergy_condition        (required)
-//   - physical_disabilities    (required)
-//
-// Field OPSIONAL (tidak masuk kriteria submitted):
-//   - mental_health_notes
-//   - eye_right_value / eye_left_value / eye_condition_since
-//   - special_notes / parent_concern_notes
-//   - surat_sehat / bpjs_card / vaccine_card (upload dokumen)
-//   - chronic_disease_doc
+// Tab Fisik:   blood_type, rhesus, height_cm, weight_kg,
+//              general_health_condition, eye_right_type, eye_left_type
+// Tab Riwayat: major_illnesses, last_illness, allergy_food,
+//              allergy_medicine, allergy_condition, physical_disabilities
+// OPSIONAL:    mental_health_notes, eye_right/left_value, eye_condition_since,
+//              special_notes, parent_concern_notes, uploads, chronic_disease_doc
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useEffect, useRef, useState }  from "react";
-import { animate, stagger }             from "animejs";
-import { Head, router }                 from "@inertiajs/react";
-import Swal                             from "sweetalert2";
-import DashboardSplitLayout             from "@/Layouts/DashboardSplitLayout";
-import CandidateSidebar                 from "@/Components/Dashboard/Candidate/Shared/CandidateSidebar";
-import TabRangkuman                     from "@/Components/Dashboard/Candidate/DataKesehatan/TabRangkuman";
-import TabFisik                         from "@/Components/Dashboard/Candidate/DataKesehatan/TabFisik";
-import TabRiwayat                       from "@/Components/Dashboard/Candidate/DataKesehatan/TabRiwayat";
-import TabCatatanKhusus                 from "@/Components/Dashboard/Candidate/DataKesehatan/TabCatatanKhusus";
-import TabTimKesehatan                  from "@/Components/Dashboard/Candidate/DataKesehatan/TabTimKesehatan";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { animate, stagger }                                   from "animejs";
+import { Head, router }                                       from "@inertiajs/react";
+import Swal                                                   from "sweetalert2";
+import DashboardSplitLayout                                   from "@/Layouts/DashboardSplitLayout";
+import CandidateSidebar                                       from "@/Components/Dashboard/Candidate/Shared/CandidateSidebar";
+import TabRangkuman                                           from "@/Components/Dashboard/Candidate/DataKesehatan/TabRangkuman";
+import TabFisik                                               from "@/Components/Dashboard/Candidate/DataKesehatan/TabFisik";
+import TabRiwayat                                             from "@/Components/Dashboard/Candidate/DataKesehatan/TabRiwayat";
+import TabCatatanKhusus                                       from "@/Components/Dashboard/Candidate/DataKesehatan/TabCatatanKhusus";
+import TabTimKesehatan                                        from "@/Components/Dashboard/Candidate/DataKesehatan/TabTimKesehatan";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -107,23 +88,23 @@ type Props = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const TABS = [
-    { id: "fisik",         label: "Fisik",          icon: "fa-solid fa-heart-pulse" },
+    { id: "fisik",         label: "Fisik",          icon: "fa-solid fa-heart-pulse"       },
     { id: "riwayat",       label: "Riwayat",        icon: "fa-solid fa-clock-rotate-left" },
-    { id: "catatan",       label: "Catatan Khusus", icon: "fa-solid fa-note-sticky" },
-    { id: "tim-kesehatan", label: "Tim Kesehatan",  icon: "fa-solid fa-user-doctor" },
-    { id: "rangkuman",     label: "Rangkuman",      icon: "fa-solid fa-chart-pie" },
+    { id: "catatan",       label: "Catatan Khusus", icon: "fa-solid fa-note-sticky"       },
+    { id: "tim-kesehatan", label: "Tim Kesehatan",  icon: "fa-solid fa-user-doctor"       },
+    { id: "rangkuman",     label: "Rangkuman",      icon: "fa-solid fa-chart-pie"         },
 ] as const;
 
 type TabId = typeof TABS[number]["id"];
 
 const REQUIRED_FIELDS: EmptyField[] = [
-    { key: "bloodType",        label: "Golongan Darah",          tab: "fisik" },
-    { key: "rhesus",           label: "Rhesus",                  tab: "fisik" },
-    { key: "heightCm",         label: "Tinggi Badan",            tab: "fisik" },
-    { key: "weightKg",         label: "Berat Badan",             tab: "fisik" },
-    { key: "generalHealth",    label: "Kondisi Kesehatan Umum",  tab: "fisik" },
-    { key: "eyeRightType",     label: "Kondisi Mata Kanan",      tab: "fisik" },
-    { key: "eyeLeftType",      label: "Kondisi Mata Kiri",       tab: "fisik" },
+    { key: "bloodType",        label: "Golongan Darah",          tab: "fisik"   },
+    { key: "rhesus",           label: "Rhesus",                  tab: "fisik"   },
+    { key: "heightCm",         label: "Tinggi Badan",            tab: "fisik"   },
+    { key: "weightKg",         label: "Berat Badan",             tab: "fisik"   },
+    { key: "generalHealth",    label: "Kondisi Kesehatan Umum",  tab: "fisik"   },
+    { key: "eyeRightType",     label: "Kondisi Mata Kanan",      tab: "fisik"   },
+    { key: "eyeLeftType",      label: "Kondisi Mata Kiri",       tab: "fisik"   },
     { key: "majorIllnesses",   label: "Riwayat Penyakit Berat",  tab: "riwayat" },
     { key: "lastIllness",      label: "Sakit Terakhir",          tab: "riwayat" },
     { key: "allergyFood",      label: "Alergi Makanan",          tab: "riwayat" },
@@ -132,19 +113,12 @@ const REQUIRED_FIELDS: EmptyField[] = [
     { key: "physicalDisab",    label: "Disabilitas Fisik",       tab: "riwayat" },
 ];
 
-// Field wajib per tab — validasi sebelum simpan & pindah tab
 const REQUIRED_BY_TAB: Record<string, string[]> = {
-    fisik: [
-        "blood_type", "rhesus", "height_cm", "weight_kg",
-        "general_health_condition", "eye_right_type", "eye_left_type",
-    ],
-    riwayat: [
-        "major_illnesses", "last_illness", "allergy_food",
-        "allergy_medicine", "allergy_condition", "physical_disabilities",
-    ],
-    catatan:         [], // semua opsional
-    "tim-kesehatan": [], // read-only
-    rangkuman:       [], // submit all
+    fisik:           ["blood_type","rhesus","height_cm","weight_kg","general_health_condition","eye_right_type","eye_left_type"],
+    riwayat:         ["major_illnesses","last_illness","allergy_food","allergy_medicine","allergy_condition","physical_disabilities"],
+    catatan:         [],
+    "tim-kesehatan": [],
+    rangkuman:       [],
 };
 
 const swalDark = Swal.mixin({
@@ -194,43 +168,55 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
     const [specialNotes,  setSpecialNotes]  = useState(healthRecord?.special_notes        ?? "");
     const [parentConcern, setParentConcern] = useState(healthRecord?.parent_concern_notes ?? "");
 
-    // ── BMI realtime ──────────────────────────────────────────────────────────
-    const bmi = (() => {
+    // ── BMI realtime — memoized ───────────────────────────────────────────────
+    const bmi = useMemo(() => {
         const h = parseFloat(heightCm);
         const w = parseFloat(weightKg);
         if (!h || !w || h < 50) return null;
         return Math.round((w / ((h / 100) ** 2)) * 10) / 10;
-    })();
+    }, [heightCm, weightKg]);
 
-    const bmiCategory = (() => {
+    const bmiCategory = useMemo(() => {
         if (!bmi) return null;
         if (bmi < 18.5) return "Kurus";
         if (bmi < 25)   return "Normal";
         if (bmi < 30)   return "Gemuk";
         return "Obesitas";
-    })();
+    }, [bmi]);
 
-    // ── Completion & empty fields ─────────────────────────────────────────────
-    const formSnapshot: Record<string, string> = {
+    // ── Completion & empty fields — memoized ──────────────────────────────────
+    const formSnapshot = useMemo<Record<string, string>>(() => ({
         bloodType, rhesus, heightCm, weightKg, generalHealth,
         eyeRightType, eyeLeftType,
         majorIllnesses, lastIllness,
-        allergyFood, allergyMedicine, allergyCondition,
-        physicalDisab,
-    };
+        allergyFood, allergyMedicine, allergyCondition, physicalDisab,
+    }), [
+        bloodType, rhesus, heightCm, weightKg, generalHealth,
+        eyeRightType, eyeLeftType,
+        majorIllnesses, lastIllness,
+        allergyFood, allergyMedicine, allergyCondition, physicalDisab,
+    ]);
 
-    const emptyRequiredFields = REQUIRED_FIELDS.filter(f => !formSnapshot[f.key]);
-    const hasEmptyRequired    = emptyRequiredFields.length > 0;
-    const completion          = Math.round(
-        ((REQUIRED_FIELDS.length - emptyRequiredFields.length) / REQUIRED_FIELDS.length) * 100
+    const emptyRequiredFields = useMemo(
+        () => REQUIRED_FIELDS.filter(f => !formSnapshot[f.key]),
+        [formSnapshot],
     );
 
-    const progressGradient = (() => {
+    const hasEmptyRequired = emptyRequiredFields.length > 0;
+
+    const completion = useMemo(
+        () => Math.round(
+            ((REQUIRED_FIELDS.length - emptyRequiredFields.length) / REQUIRED_FIELDS.length) * 100
+        ),
+        [emptyRequiredFields.length],
+    );
+
+    const progressGradient = useMemo(() => {
         if (completion < 50)  return "linear-gradient(to right, #c0392b, #e74c3c)";
         if (completion < 75)  return "linear-gradient(to right, #d35400, #f39c12)";
         if (completion < 100) return "linear-gradient(to right, #2980b9, #7aa2f7)";
         return "linear-gradient(to right, #1e8449, #27ae60)";
-    })();
+    }, [completion]);
 
     // ── Entrance animation ────────────────────────────────────────────────────
     useEffect(() => {
@@ -246,21 +232,15 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
     // ── Flash messages ────────────────────────────────────────────────────────
     useEffect(() => {
         if (flash?.success) {
-            swalDark.fire({
-                icon:  "success",
-                title: "Tersimpan!",
-                text:  flash.success,
-                timer: 2500,
-                showConfirmButton: false,
-            });
+            swalDark.fire({ icon: "success", title: "Tersimpan!", text: flash.success, timer: 2500, showConfirmButton: false });
         }
         if (flash?.error) {
             swalDark.fire({ icon: "error", title: "Gagal", text: flash.error });
         }
     }, [flash]);
 
-    // ── Tab transition ────────────────────────────────────────────────────────
-    const handleTabChange = (tabId: TabId) => {
+    // ── Tab transition — useCallback ──────────────────────────────────────────
+    const handleTabChange = useCallback((tabId: TabId) => {
         if (tabId === activeTab) return;
 
         const currentIdx = TABS.findIndex(t => t.id === activeTab);
@@ -268,296 +248,174 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
         const dir        = nextIdx > currentIdx ? 1 : -1;
 
         if (tabContentRef.current) {
-            animate(tabContentRef.current, {
-                opacity:    [1, 0],
-                translateX: [0, dir * -20],
-                duration:   180,
-                ease:       "inQuad",
-            });
+            animate(tabContentRef.current, { opacity: [1, 0], translateX: [0, dir * -20], duration: 180, ease: "inQuad" });
         }
 
         setTimeout(() => {
             setActiveTab(tabId);
             if (tabContentRef.current) {
-                animate(tabContentRef.current, {
-                    opacity:    [0, 1],
-                    translateX: [dir * 20, 0],
-                    duration:   350,
-                    ease:       "outExpo",
-                });
+                animate(tabContentRef.current, { opacity: [0, 1], translateX: [dir * 20, 0], duration: 350, ease: "outExpo" });
             }
         }, 190);
-    };
+    }, [activeTab]);
 
-    // ── Clear single error (dipanggil saat user mulai mengetik) ──────────────
-    const clearError = (field: string) => {
+    // ── Clear single error — useCallback ─────────────────────────────────────
+    const clearError = useCallback((field: string) => {
         setErrors(prev => {
             if (!prev[field]) return prev;
             const next = { ...prev };
             delete next[field];
             return next;
         });
-    };
+    }, []);
 
-    // ── Validate inline field (onBlur) ────────────────────────────────────────
-    const validateField = (field: string, value: string) => {
-        const newErrors = { ...errors };
-        if (field === "height_cm") {
-            const v = parseInt(value);
-            if (!value) newErrors.height_cm = "Tinggi badan wajib diisi.";
-            else if (v < 50 || v > 250) newErrors.height_cm = "Tinggi badan harus 50–250 cm.";
-            else delete newErrors.height_cm;
-        }
-        if (field === "weight_kg") {
-            const v = parseInt(value);
-            if (!value) newErrors.weight_kg = "Berat badan wajib diisi.";
-            else if (v < 10 || v > 300) newErrors.weight_kg = "Berat badan harus 10–300 kg.";
-            else delete newErrors.weight_kg;
-        }
-        if (field === "eye_condition_since") {
-            const v = parseInt(value);
-            if (value && (v < 1990 || v > new Date().getFullYear())) {
-                newErrors.eye_condition_since = "Tahun tidak valid.";
-            } else {
-                delete newErrors.eye_condition_since;
+    // ── Validate inline field — useCallback ───────────────────────────────────
+    const validateField = useCallback((field: string, value: string) => {
+        setErrors(prev => {
+            const next = { ...prev };
+            if (field === "height_cm") {
+                const v = parseInt(value);
+                if (!value) next.height_cm = "Tinggi badan wajib diisi.";
+                else if (v < 50 || v > 250) next.height_cm = "Tinggi badan harus 50–250 cm.";
+                else delete next.height_cm;
             }
-        }
-        setErrors(newErrors);
-    };
+            if (field === "weight_kg") {
+                const v = parseInt(value);
+                if (!value) next.weight_kg = "Berat badan wajib diisi.";
+                else if (v < 10 || v > 300) next.weight_kg = "Berat badan harus 10–300 kg.";
+                else delete next.weight_kg;
+            }
+            if (field === "eye_condition_since") {
+                const v = parseInt(value);
+                if (value && (v < 1990 || v > new Date().getFullYear())) next.eye_condition_since = "Tahun tidak valid.";
+                else delete next.eye_condition_since;
+            }
+            return next;
+        });
+    }, []);
 
-    // ── Validate per-tab (sebelum submit tab) ─────────────────────────────────
-    const validateTab = (tabId: TabId): boolean => {
+    // ── Validate per-tab — useCallback ────────────────────────────────────────
+    const validateTab = useCallback((tabId: TabId): boolean => {
         const required = REQUIRED_BY_TAB[tabId] ?? [];
         if (required.length === 0) return true;
 
-        const currentValues: Record<string, string> = {
-            blood_type:               bloodType,
-            rhesus,
-            height_cm:                heightCm,
-            weight_kg:                weightKg,
-            general_health_condition: generalHealth,
-            eye_right_type:           eyeRightType,
-            eye_left_type:            eyeLeftType,
-            major_illnesses:          majorIllnesses,
-            last_illness:             lastIllness,
-            allergy_food:             allergyFood,
-            allergy_medicine:         allergyMedicine,
-            allergy_condition:        allergyCondition,
-            physical_disabilities:    physicalDisab,
+        const vals: Record<string, string> = {
+            blood_type: bloodType, rhesus, height_cm: heightCm, weight_kg: weightKg,
+            general_health_condition: generalHealth, eye_right_type: eyeRightType, eye_left_type: eyeLeftType,
+            major_illnesses: majorIllnesses, last_illness: lastIllness, allergy_food: allergyFood,
+            allergy_medicine: allergyMedicine, allergy_condition: allergyCondition,
+            physical_disabilities: physicalDisab,
         };
 
         const newErrors: Record<string, string> = {};
-        required.forEach(field => {
-            if (!currentValues[field]) {
-                newErrors[field] = "Field ini wajib diisi.";
-            }
-        });
+        required.forEach(f => { if (!vals[f]) newErrors[f] = "Field ini wajib diisi."; });
 
-        // Validasi tambahan untuk numerik
         if (tabId === "fisik") {
-            const h = parseInt(heightCm);
-            const w = parseInt(weightKg);
+            const h = parseInt(heightCm); const w = parseInt(weightKg);
             if (heightCm && (h < 50 || h > 250)) newErrors.height_cm = "Tinggi badan harus 50–250 cm.";
             if (weightKg && (w < 10 || w > 300)) newErrors.weight_kg = "Berat badan harus 10–300 kg.";
-            if (eyeSince) {
-                const v = parseInt(eyeSince);
-                if (v < 1990 || v > new Date().getFullYear()) newErrors.eye_condition_since = "Tahun tidak valid.";
-            }
+            if (eyeSince) { const v = parseInt(eyeSince); if (v < 1990 || v > new Date().getFullYear()) newErrors.eye_condition_since = "Tahun tidak valid."; }
         }
 
         if (Object.keys(newErrors).length > 0) {
             setErrors(prev => ({ ...prev, ...newErrors }));
-            // Shake semua input error di tab aktif
-            setTimeout(() => {
-                animate(".input-error", {
-                    translateX: [0, -6, 6, -4, 4, 0],
-                    duration:   380,
-                    ease:       "outExpo",
-                });
-            }, 50);
-            // Toast pojok kanan — data belum terisi
-            swalDark.fire({
-                toast:             true,
-                position:          "top-end",
-                icon:              "warning",
-                title:             "Data belum terisi",
-                text:              "Lengkapi field yang ditandai merah terlebih dahulu.",
-                showConfirmButton: false,
-                timer:             3000,
-                timerProgressBar:  true,
-            });
+            setTimeout(() => { animate(".input-error", { translateX: [0, -6, 6, -4, 4, 0], duration: 380, ease: "outExpo" }); }, 50);
+            swalDark.fire({ toast: true, position: "top-end", icon: "warning", title: "Data belum terisi", text: "Lengkapi field yang ditandai merah terlebih dahulu.", showConfirmButton: false, timer: 3000, timerProgressBar: true });
             return false;
         }
-
         return true;
-    };
+    }, [bloodType, rhesus, heightCm, weightKg, generalHealth, eyeRightType, eyeLeftType, eyeSince, majorIllnesses, lastIllness, allergyFood, allergyMedicine, allergyCondition, physicalDisab]);
 
-    // ── Submit per-tab + auto pindah ke tab berikutnya ──────────────────────
-    const handleTabSubmit = (tabId: TabId) => {
+    // ── Submit per-tab — useCallback ──────────────────────────────────────────
+    const handleTabSubmit = useCallback((tabId: TabId) => {
         if (!validateTab(tabId)) return;
-
         setSubmitting(true);
 
         type Payload = Record<string, string | number | boolean | null>;
         const payloads: Record<string, Payload> = {
             fisik: {
-                blood_type:               bloodType,
-                rhesus,
-                height_cm:                heightCm,
-                weight_kg:                weightKg,
-                general_health_condition: generalHealth,
-                mental_health_notes:      mentalNotes || null,
-                eye_right_type:           eyeRightType,
-                eye_right_value:          eyeRightValue || null,
-                eye_left_type:            eyeLeftType,
-                eye_left_value:           eyeLeftValue || null,
-                eye_condition_since:      eyeSince || null,
+                blood_type: bloodType, rhesus, height_cm: heightCm, weight_kg: weightKg,
+                general_health_condition: generalHealth, mental_health_notes: mentalNotes || null,
+                eye_right_type: eyeRightType, eye_right_value: eyeRightValue || null,
+                eye_left_type: eyeLeftType, eye_left_value: eyeLeftValue || null, eye_condition_since: eyeSince || null,
             },
             riwayat: {
-                major_illnesses:       majorIllnesses,
-                last_illness:          lastIllness,
-                allergy_food:          allergyFood,
-                allergy_medicine:      allergyMedicine,
-                allergy_condition:     allergyCondition,
-                physical_disabilities: physicalDisab,
+                major_illnesses: majorIllnesses, last_illness: lastIllness, allergy_food: allergyFood,
+                allergy_medicine: allergyMedicine, allergy_condition: allergyCondition, physical_disabilities: physicalDisab,
             },
-            catatan: {
-                special_notes:        specialNotes || null,
-                parent_concern_notes: parentConcern || null,
-            },
+            catatan: { special_notes: specialNotes || null, parent_concern_notes: parentConcern || null },
         };
 
         router.post(route("dashboard.data-kesehatan.save"), (payloads[tabId] ?? {}) as Payload, {
             onError: (errs) => {
                 setErrors(prev => ({ ...prev, ...errs }));
                 setSubmitting(false);
-                setTimeout(() => {
-                    animate(".input-error", {
-                        translateX: [0, -6, 6, -4, 4, 0],
-                        duration:   380,
-                        ease:       "outExpo",
-                    });
-                }, 50);
+                setTimeout(() => { animate(".input-error", { translateX: [0, -6, 6, -4, 4, 0], duration: 380, ease: "outExpo" }); }, 50);
             },
             onSuccess: () => {
                 setSubmitting(false);
-                // Clear error field tab ini
                 const tabFields = REQUIRED_BY_TAB[tabId] ?? [];
-                setErrors(prev => {
-                    const next = { ...prev };
-                    tabFields.forEach(f => delete next[f]);
-                    return next;
-                });
-
-                // Toast sukses — hanya kalau ada payload yang dikirim
+                setErrors(prev => { const next = { ...prev }; tabFields.forEach(f => delete next[f]); return next; });
                 const payload = payloads[tabId] ?? {};
-                const hasData = Object.values(payload).some(v => v !== null && v !== "");
-                if (hasData) {
-                    swalDark.fire({
-                        toast:             true,
-                        position:          "top-end",
-                        icon:              "success",
-                        title:             "Tersimpan!",
-                        showConfirmButton: false,
-                        timer:             2000,
-                        timerProgressBar:  true,
-                    });
+                if (Object.values(payload).some(v => v !== null && v !== "")) {
+                    swalDark.fire({ toast: true, position: "top-end", icon: "success", title: "Tersimpan!", showConfirmButton: false, timer: 2000, timerProgressBar: true });
                 }
-
-                // Auto pindah ke tab berikutnya
                 const currentIdx = TABS.findIndex(t => t.id === tabId);
                 const nextTab    = TABS[currentIdx + 1];
                 if (nextTab) handleTabChange(nextTab.id);
             },
             preserveScroll: true,
         });
-    };
+    }, [validateTab, handleTabChange, bloodType, rhesus, heightCm, weightKg, generalHealth, mentalNotes, eyeRightType, eyeRightValue, eyeLeftType, eyeLeftValue, eyeSince, majorIllnesses, lastIllness, allergyFood, allergyMedicine, allergyCondition, physicalDisab, specialNotes, parentConcern]);
 
-    // ── Submit semua (dari Rangkuman) — konfirmasi 2 langkah ────────────────
-    const handleSubmitAll = async () => {
-        // Validasi fisik & riwayat sebelum kirim semua
+    // ── Submit semua (dari Rangkuman) ─────────────────────────────────────────
+    const handleSubmitAll = useCallback(async () => {
         const fisikValid   = validateTab("fisik");
         const riwayatValid = validateTab("riwayat");
 
         if (!fisikValid || !riwayatValid) {
-            if (!fisikValid) handleTabChange("fisik");
-            else handleTabChange("riwayat");
-            swalDark.fire({
-                icon:              "warning",
-                title:             "Ada yang perlu dilengkapi",
-                text:              "Silakan periksa kembali isian yang ditandai merah.",
-                confirmButtonText: "OK",
-            });
+            if (!fisikValid) handleTabChange("fisik"); else handleTabChange("riwayat");
+            swalDark.fire({ icon: "warning", title: "Ada yang perlu dilengkapi", text: "Silakan periksa kembali isian yang ditandai merah.", confirmButtonText: "OK" });
             return;
         }
 
-        // Langkah 1 — konfirmasi apakah data sudah sesuai
         const confirm1 = await swalDark.fire({
-            icon:              "question",
-            title:             "Data sudah sesuai?",
-            text:              "Pastikan semua informasi yang kamu isi sudah benar sebelum dikirim.",
-            showCancelButton:  true,
+            icon: "question", title: "Data sudah sesuai?",
+            text: "Pastikan semua informasi yang kamu isi sudah benar sebelum dikirim.",
+            showCancelButton: true,
             confirmButtonText: "<i class='fa-solid fa-paper-plane mr-2'></i> Tetap Kirim",
             cancelButtonText:  "<i class='fa-solid fa-arrow-left mr-2'></i> Cek Lagi",
-            reverseButtons:    true,
+            reverseButtons: true,
         });
 
-        if (!confirm1.isConfirmed) {
-            // Kembali ke tab fisik untuk cek ulang
-            handleTabChange("fisik");
-            return;
-        }
+        if (!confirm1.isConfirmed) { handleTabChange("fisik"); return; }
 
         setSubmitting(true);
-
         router.post(route("dashboard.data-kesehatan.save"), {
-            blood_type:               bloodType,
-            rhesus,
-            height_cm:                heightCm,
-            weight_kg:                weightKg,
-            general_health_condition: generalHealth,
-            mental_health_notes:      mentalNotes       || null,
-            eye_right_type:           eyeRightType,
-            eye_right_value:          eyeRightValue      || null,
-            eye_left_type:            eyeLeftType,
-            eye_left_value:           eyeLeftValue       || null,
-            eye_condition_since:      eyeSince           || null,
-            major_illnesses:          majorIllnesses,
-            last_illness:             lastIllness,
-            allergy_food:             allergyFood,
-            allergy_medicine:         allergyMedicine,
-            allergy_condition:        allergyCondition,
-            physical_disabilities:    physicalDisab,
-            special_notes:            specialNotes       || null,
-            parent_concern_notes:     parentConcern      || null,
+            blood_type: bloodType, rhesus, height_cm: heightCm, weight_kg: weightKg,
+            general_health_condition: generalHealth, mental_health_notes: mentalNotes || null,
+            eye_right_type: eyeRightType, eye_right_value: eyeRightValue || null,
+            eye_left_type: eyeLeftType, eye_left_value: eyeLeftValue || null, eye_condition_since: eyeSince || null,
+            major_illnesses: majorIllnesses, last_illness: lastIllness, allergy_food: allergyFood,
+            allergy_medicine: allergyMedicine, allergy_condition: allergyCondition, physical_disabilities: physicalDisab,
+            special_notes: specialNotes || null, parent_concern_notes: parentConcern || null,
         }, {
             onError: (errs) => {
-                setErrors(errs);
-                setSubmitting(false);
-                // Navigasi ke tab yang error
-                const fisikFields   = ["blood_type","rhesus","height_cm","weight_kg",
-                                       "general_health_condition","eye_right_type","eye_left_type"];
-                const riwayatFields = ["major_illnesses","last_illness","allergy_food",
-                                       "allergy_medicine","allergy_condition","physical_disabilities"];
+                setErrors(errs); setSubmitting(false);
+                const fisikFields   = ["blood_type","rhesus","height_cm","weight_kg","general_health_condition","eye_right_type","eye_left_type"];
+                const riwayatFields = ["major_illnesses","last_illness","allergy_food","allergy_medicine","allergy_condition","physical_disabilities"];
                 const errKeys = Object.keys(errs);
                 if      (errKeys.some(k => fisikFields.includes(k)))   handleTabChange("fisik");
                 else if (errKeys.some(k => riwayatFields.includes(k))) handleTabChange("riwayat");
                 else handleTabChange("catatan");
             },
             onSuccess: () => {
-                setSubmitting(false);
-                setErrors({});
-                // Langkah 2 — konfirmasi data telah tersimpan
-                swalDark.fire({
-                    icon:              "success",
-                    title:             "Data Tersimpan!",
-                    text:              "Semua data kesehatan kamu telah berhasil dikirim.",
-                    confirmButtonText: "Oke, Terima Kasih!",
-                });
+                setSubmitting(false); setErrors({});
+                swalDark.fire({ icon: "success", title: "Data Tersimpan!", text: "Semua data kesehatan kamu telah berhasil dikirim.", confirmButtonText: "Oke, Terima Kasih!" });
             },
             preserveScroll: true,
         });
-    };
+    }, [validateTab, handleTabChange, bloodType, rhesus, heightCm, weightKg, generalHealth, mentalNotes, eyeRightType, eyeRightValue, eyeLeftType, eyeLeftValue, eyeSince, majorIllnesses, lastIllness, allergyFood, allergyMedicine, allergyCondition, physicalDisab, specialNotes, parentConcern]);
 
     // ─────────────────────────────────────────────────────────────────────────
     // RENDER
@@ -603,8 +461,9 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
                     </div>
                 </div>
 
-                {/* ── Tab navigation — pill style ──────────────────────────── */}
+                {/* ── Tab navigation ───────────────────────────────────────── */}
                 <div className="kesehatan-card">
+                    {/* Tab bar — icon-only di mobile, icon+label di sm+ */}
                     <div className="flex overflow-x-auto rounded-xl
                                     border dark:border-content-border border-black/[0.08]
                                     dark:bg-content-card bg-slate-50
@@ -617,28 +476,41 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
                                     key={tab.id}
                                     type="button"
                                     onClick={() => handleTabChange(tab.id)}
+                                    title={tab.label}
                                     className={[
-                                        "relative flex flex-1 items-center justify-center gap-1.5 rounded-lg",
-                                        "whitespace-nowrap px-3 py-2 text-xs font-semibold",
-                                        "transition-all duration-200 min-w-[72px] min-h-[36px]",
+                                        "relative flex flex-1 items-center justify-center rounded-lg",
+                                        "transition-all duration-200",
+                                        // Mobile: kotak 44px — touch target standar
+                                        "h-[44px] min-w-[44px]",
+                                        // Desktop: row dengan label & padding horizontal
+                                        "sm:gap-1.5 sm:px-3 sm:h-[36px]",
                                         isActive
                                             ? "dark:bg-cyan-500 bg-cyan-500 text-white shadow-sm"
                                             : "dark:text-slate-400 text-slate-500 dark:hover:bg-content-muted hover:bg-black/[0.04] dark:hover:text-slate-300 hover:text-slate-700",
                                     ].join(" ")}
                                 >
-                                    <i className={`${tab.icon} text-xs`} />
-                                    <span className="hidden sm:inline">{tab.label}</span>
-                                    <span className="sm:hidden">{tab.label.split(" ")[0]}</span>
+                                    {/* Icon — selalu tampil di semua ukuran */}
+                                    <i className={`${tab.icon} text-sm sm:text-xs`} />
 
-                                    {/* Dot amber — Rangkuman kalau ada field kosong */}
+                                    {/* Label — hidden di mobile, visible di sm+ */}
+                                    <span className="hidden sm:inline text-xs font-semibold whitespace-nowrap">
+                                        {tab.label}
+                                    </span>
+
+                                    {/* Dot amber — rangkuman kalau ada field kosong */}
                                     {isRangkuman && hasEmptyRequired && !isActive && (
-                                        <span className="absolute -right-0.5 -top-0.5
-                                                         h-2 w-2 rounded-full bg-amber-400" />
+                                        <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-amber-400" />
                                     )}
                                 </button>
                             );
                         })}
                     </div>
+
+                    {/* Label aktif — hanya di mobile, bawah tab bar */}
+                    <p className="sm:hidden text-center text-[11px] font-semibold
+                                  dark:text-slate-400 text-slate-500 mt-2 tracking-wide">
+                        {TABS.find(t => t.id === activeTab)?.label}
+                    </p>
                 </div>
 
                 {/* ── Tab content ───────────────────────────────────────────── */}
@@ -657,7 +529,7 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
                             weightKg={weightKg}             setWeightKg={setWeightKg}
                             bmi={bmi}                       bmiCategory={bmiCategory}
                             generalHealth={generalHealth}   setGeneralHealth={setGeneralHealth}
-                            mentalNotes={mentalNotes}        setMentalNotes={setMentalNotes}
+                            mentalNotes={mentalNotes}       setMentalNotes={setMentalNotes}
                             eyeRightType={eyeRightType}     setEyeRightType={setEyeRightType}
                             eyeRightValue={eyeRightValue}   setEyeRightValue={setEyeRightValue}
                             eyeLeftType={eyeLeftType}       setEyeLeftType={setEyeLeftType}
@@ -671,8 +543,8 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
 
                     {activeTab === "riwayat" && (
                         <TabRiwayat
-                            majorIllnesses={majorIllnesses}     setMajorIllnesses={setMajorIllnesses}
-                            lastIllness={lastIllness}            setLastIllness={setLastIllness}
+                            majorIllnesses={majorIllnesses}       setMajorIllnesses={setMajorIllnesses}
+                            lastIllness={lastIllness}             setLastIllness={setLastIllness}
                             allergyFood={allergyFood}             setAllergyFood={setAllergyFood}
                             allergyMedicine={allergyMedicine}     setAllergyMedicine={setAllergyMedicine}
                             allergyCondition={allergyCondition}   setAllergyCondition={setAllergyCondition}
@@ -693,9 +565,7 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
                         />
                     )}
 
-                    {activeTab === "tim-kesehatan" && (
-                        <TabTimKesehatan />
-                    )}
+                    {activeTab === "tim-kesehatan" && <TabTimKesehatan />}
 
                     {activeTab === "rangkuman" && (
                         <TabRangkuman
@@ -722,7 +592,7 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
                     )}
                 </div>
 
-                {/* ── Navigasi tab — Kembali & Simpan & Lanjut / Kirim Semua ── */}
+                {/* ── Navigasi tab ─────────────────────────────────────────── */}
                 {(() => {
                     const currentIdx  = TABS.findIndex(t => t.id === activeTab);
                     const prevTab     = TABS[currentIdx - 1];
@@ -732,7 +602,6 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
 
                     return (
                         <div className="kesehatan-card flex items-center justify-between gap-3">
-                            {/* Tombol Kembali — semua tab kecuali tab pertama */}
                             {prevTab ? (
                                 <button
                                     type="button"
@@ -742,19 +611,14 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
                                                dark:hover:bg-white/[0.08] hover:bg-slate-200
                                                dark:text-slate-300 text-slate-600
                                                text-sm font-semibold
-                                               transition-all duration-200 active:scale-95
-                                               min-h-[44px]"
+                                               transition-all duration-200 active:scale-95 min-h-[44px]"
                                 >
                                     <i className="fa-solid fa-arrow-left text-xs"></i>
                                     <span>Kembali</span>
                                 </button>
-                            ) : (
-                                <div />
-                            )}
+                            ) : <div />}
 
-                            {/* Tombol kanan — kontekstual per tab */}
                             {isFormTab ? (
-                                /* Form tab — Simpan & Lanjut */
                                 <button
                                     onClick={() => handleTabSubmit(activeTab)}
                                     disabled={submitting}
@@ -762,8 +626,7 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
                                                bg-cyan-500 hover:bg-cyan-400
                                                text-white text-sm font-semibold
                                                transition-all duration-200 active:scale-95
-                                               disabled:opacity-60 disabled:cursor-not-allowed
-                                               min-h-[44px]"
+                                               disabled:opacity-60 disabled:cursor-not-allowed min-h-[44px]"
                                 >
                                     {submitting
                                         ? <><i className="fa-solid fa-spinner fa-spin"></i> Menyimpan...</>
@@ -773,7 +636,6 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
                                     }
                                 </button>
                             ) : (
-                                /* Tim Kesehatan — hanya Lanjut */
                                 nextTab ? (
                                     <button
                                         type="button"
@@ -781,8 +643,7 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
                                         className="flex items-center gap-2 px-6 py-2.5 rounded-xl
                                                    bg-cyan-500 hover:bg-cyan-400
                                                    text-white text-sm font-semibold
-                                                   transition-all duration-200 active:scale-95
-                                                   min-h-[44px]"
+                                                   transition-all duration-200 active:scale-95 min-h-[44px]"
                                     >
                                         <span>Lanjut</span>
                                         <i className="fa-solid fa-arrow-right text-xs"></i>
