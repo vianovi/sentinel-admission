@@ -120,6 +120,10 @@ Route::middleware(['auth', RoleMiddleware::class . ':candidate'])
         Route::get('/data-dokumen/download/{document}', [CandidateDocument::class, 'download'])
             ->name('data-dokumen.download');
 
+        // ⚠️preview HARUS sebelum store/{docType} — cegah 'preview' tertangkap sebagai docType
+        Route::get('/data-dokumen/preview/{document}', [CandidateDocument::class, 'preview'])
+            ->name('data-dokumen.preview');
+
         Route::post('/data-dokumen/{docType}', [CandidateDocument::class, 'store'])
             ->name('data-dokumen.store')
             ->middleware('throttle:upload');

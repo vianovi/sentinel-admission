@@ -45,6 +45,7 @@
         "flatpickr": "^4.6.13",
         "react-pdf": "^10.4.1",
         "react-select": "^5.10.2",
+        "recharts": "^3.8.1",
         "sweetalert2": "^11.26.23",
         "yet-another-react-lightbox": "^3.29.2",
         "ziggy-js": "^2.6.2"

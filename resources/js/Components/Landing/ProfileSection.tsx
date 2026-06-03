@@ -42,11 +42,6 @@ export default function ProfileSection({ onOpenVideo }: ProfileSectionProps) {
     return (
         <section ref={sectionRef} className="py-24 pb-36 bg-navy text-white relative overflow-hidden">
 
-            {/*
-             * ✅ PERF: Ganti inline style backgroundImage ke Tailwind class.
-             *    Inline style tidak bisa di-purge Tailwind & tidak ter-cache browser.
-             *    Pattern ini cukup pakai class bg-cubes yang didefinisikan di app.css.
-             */}
             <div className="absolute inset-0 opacity-10 bg-cubes" />
 
             {/* Wave divider bawah */}
@@ -61,36 +56,35 @@ export default function ProfileSection({ onOpenVideo }: ProfileSectionProps) {
 
                     <div className="lg:w-1/2 space-y-6 text-center lg:text-left">
                         <span className="profile-animate opacity-0 block text-gold font-bold tracking-widest text-sm uppercase">
-                            Kenapa Al-Muntaha?
+                            Komunitas Pembelajar Unggul
                         </span>
                         <h2 className="profile-animate opacity-0 text-4xl lg:text-5xl font-display font-bold leading-tight text-white">
-                            Mendidik dengan Hati, <br /> Membentuk Karakter Sejati.
+                            Meraih Puncak Prestasi, <br /> Membentuk Kemuliaan Hati.
                         </h2>
                         <p className="profile-animate opacity-0 text-gray-400 leading-relaxed text-lg">
-                            Di Al-Muntaha, setiap siswa bukan sekadar belajar — mereka bertumbuh.
-                            Program boarding kami memastikan pembinaan karakter Islami yang kuat,
-                            beriringan dengan penguasaan ilmu dan teknologi modern.
+                            Bersama Al-Muntaha, setiap santri dibimbing untuk mengejar mimpi setinggi angkasa,
+                            namun tetap membumi dengan akhlak mulia melalui ekosistem pendidikan yang holistik.
                         </p>
                         <div className="profile-animate opacity-0 grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4">
                             <div className="bg-white/5 p-4 rounded-xl border border-white/10 hover:bg-white/10 hover:-translate-y-0.5 transition duration-300">
-                                <i className="fa-solid fa-book-quran text-gold text-2xl mb-3"></i>
-                                <h4 className="font-bold text-white">Pembinaan Karakter</h4>
-                                <p className="text-xs text-gray-400 mt-1">Akhlak Islami sebagai pondasi utama.</p>
+                                <i className="fa-solid fa-award text-gold text-2xl mb-3"></i>
+                                <h4 className="font-bold text-white">Adab Terpuji</h4>
+                                <p className="text-xs text-gray-400 mt-1">Membentuk karakter Islami yang teruji.</p>
                             </div>
                             <div className="bg-white/5 p-4 rounded-xl border border-white/10 hover:bg-white/10 hover:-translate-y-0.5 transition duration-300">
-                                <i className="fa-solid fa-laptop-code text-gold text-2xl mb-3"></i>
-                                <h4 className="font-bold text-white">Teknologi &amp; Sains</h4>
-                                <p className="text-xs text-gray-400 mt-1">Kurikulum modern berorientasi masa depan.</p>
+                                <i className="fa-solid fa-atom text-gold text-2xl mb-3"></i>
+                                <h4 className="font-bold text-white">Ilmu Mumpuni</h4>
+                                <p className="text-xs text-gray-400 mt-1">Kurikulum adaptif berbasis inovasi terkini.</p>
                             </div>
                             <div className="bg-white/5 p-4 rounded-xl border border-white/10 hover:bg-white/10 hover:-translate-y-0.5 transition duration-300">
-                                <i className="fa-solid fa-house-chimney text-gold text-2xl mb-3"></i>
-                                <h4 className="font-bold text-white">Asrama Nyaman</h4>
-                                <p className="text-xs text-gray-400 mt-1">Lingkungan boarding yang aman dan kondusif.</p>
+                                <i className="fa-solid fa-house-user text-gold text-2xl mb-3"></i>
+                                <h4 className="font-bold text-white">Asrama Teduh</h4>
+                                <p className="text-xs text-gray-400 mt-1">Lingkungan nyaman untuk belajar tangguh.</p>
                             </div>
                             <div className="bg-white/5 p-4 rounded-xl border border-white/10 hover:bg-white/10 hover:-translate-y-0.5 transition duration-300">
-                                <i className="fa-solid fa-users text-gold text-2xl mb-3"></i>
-                                <h4 className="font-bold text-white">Pendampingan Penuh</h4>
-                                <p className="text-xs text-gray-400 mt-1">Guru &amp; pembimbing hadir 24 jam.</p>
+                                <i className="fa-solid fa-hand-holding-heart text-gold text-2xl mb-3"></i>
+                                <h4 className="font-bold text-white">Cinta Mendidik</h4>
+                                <p className="text-xs text-gray-400 mt-1">Guru ahli yang membimbing sepenuh hati.</p>
                             </div>
                         </div>
                     </div>
@@ -98,18 +92,13 @@ export default function ProfileSection({ onOpenVideo }: ProfileSectionProps) {
                     <div className="profile-video-animate opacity-0 lg:w-1/2 relative w-full">
                         <button
                             onClick={onOpenVideo}
-                            aria-label="Tonton video profil sekolah"
+                            aria-label="Intip kehidupan santri Al-Muntaha"
                             className="w-full rounded-2xl overflow-hidden shadow-2xl border-4 border-white/10 relative group cursor-pointer block"
                         >
-                            {/*
-                             * ✅ PERF: Tambah loading="lazy" + decoding="async".
-                             *    Thumbnail video ada di bawah fold — tidak perlu di-load
-                             *    sebelum user scroll ke sini.
-                             */}
                             <img
                                 src="/assets/profile-thumbnail.webp"
                                 className="w-full object-cover object-center transform group-hover:scale-105 transition duration-700 ease-in-out h-[400px]"
-                                alt="Thumbnail video profil Al-Muntaha Boarding School"
+                                alt="Eksplorasi Kehidupan Santri Al-Muntaha Boarding School"
                                 loading="lazy"
                                 decoding="async"
                                 onError={(e) => { e.currentTarget.src = 'https://placehold.co/800x400/1e293b/d4a017?text=Video+Profil+Al-Muntaha' }}
@@ -121,7 +110,7 @@ export default function ProfileSection({ onOpenVideo }: ProfileSectionProps) {
                             </div>
                             <div className="absolute bottom-4 left-4">
                                 <span className="px-4 py-2 bg-black/60 backdrop-blur-md text-white text-xs rounded-full border border-white/20">
-                                    <i className="fa-solid fa-circle-play mr-2 text-gold"></i>Tonton Video Profil
+                                    <i className="fa-solid fa-clapperboard mr-2 text-gold"></i>Intip Kehidupan Santri
                                 </span>
                             </div>
                         </button>

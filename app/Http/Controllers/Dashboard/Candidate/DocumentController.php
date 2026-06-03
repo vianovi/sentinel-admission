@@ -253,6 +253,32 @@ class DocumentController extends Controller
     }
 
     // =============================================
+    // PREVIEW — Serve file inline (untuk lightbox & PDF viewer)
+    // =============================================
+
+    public function preview(Request $request, int $documentId)
+    {
+        $user      = $request->user();
+        $candidate = $user->candidate()->firstOrFail();
+
+        $document = CandidateDocument::where('id', $documentId)
+            ->where('candidate_id', $candidate->id)
+            ->firstOrFail();
+
+        if (! Storage::disk('private')->exists($document->file_path)) {
+            abort(404, 'File tidak ditemukan.');
+        }
+
+        // Serve inline — Content-Disposition: inline agar browser render langsung
+        // (gambar di lightbox, PDF di tab baru) tanpa trigger download
+        return Storage::disk('private')->response(
+            $document->file_path,
+            $document->original_filename,
+            ['Content-Disposition' => 'inline']
+        );
+    }
+
+    // =============================================
     // PRIVATE: COMPLETION CALCULATION
     // =============================================
 

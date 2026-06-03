@@ -1,6 +1,5 @@
 // resources/js/Components/Landing/HeroSection.tsx
-
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { Link } from '@inertiajs/react'
 import { animate, stagger } from 'animejs'
 import { AdmissionWaveData } from '@/types/landing'
@@ -8,64 +7,53 @@ import WaveCard from './WaveCard'
 import ScheduleModal from './ScheduleModal'
 
 interface HeroSectionProps {
-    activeWave:   AdmissionWaveData | null
-    onOpenVideo:  () => void
+    activeWave: AdmissionWaveData | null
+    onOpenVideo: () => void
 }
 
 export default function HeroSection({ activeWave, onOpenVideo }: HeroSectionProps) {
-    const currentYear = new Date().getFullYear()
     const heroRef = useRef<HTMLDivElement>(null)
     const [scheduleModalOpen, setScheduleModalOpen] = useState(false)
 
-    useEffect(() => {
-        animate('.hero-animate', {
-            opacity:    [0, 1],
-            translateY: [40, 0],
-            duration:   1200,
-            delay:      stagger(180, { start: 200 }),
-            ease:       'outExpo',
-        })
-        animate('.wave-card-animate', {
-            opacity:    [0, 1],
-            translateX: [60, 0],
-            duration:   1300,
-            delay:      600,
-            ease:       'outExpo',
-        })
-    }, [])
+    // Memoize callback untuk menghindari re-render tidak berguna pada WaveCard
+    const handleOpenSchedule = useCallback(() => {
+        setScheduleModalOpen(true)
+    },[])
 
-    /*
-     * ✅ PERF: <style> inline dihapus sepenuhnya.
-     *    hero-shimmer-text & @keyframes hero-shimmer
-     *    sudah dipindah ke resources/css/app.css — di-cache browser,
-     *    tidak di-parse ulang setiap render.
-     */
+    useEffect(() => {
+        // Strict Anime.js V4 approach dengan instance capture
+        const textAnim = animate('.hero-text-anim', {
+            opacity: [0, 1],
+            translateY: [30, 0],
+            duration: 1100,
+            delay: stagger(150, { start: 100 }),
+            ease: 'outExpo',
+        })
+
+        const cardAnim = animate('.hero-card-anim', {
+            opacity: [0, 1],
+            translateX: [40, 0],
+            duration: 1200,
+            delay: 500,
+            ease: 'outExpo',
+        })
+
+        // Cleanup function (Anti-Memory Leak Policy)
+        return () => {
+            if (textAnim) textAnim.cancel()
+            if (cardAnim) cardAnim.cancel()
+        }
+    },[])
 
     return (
         <>
-            <header id="home" className="relative min-h-[90vh] flex items-center pt-10 pb-20">
+            <header id="home" className="relative min-h-[80vh] flex items-center pt-24 pb-20 overflow-hidden bg-navy">
 
-                {/* Background image + dark overlay */}
+                {/* BACKGROUND: Bersih dari filter blend yang mengotori warna */}
                 <div className="absolute inset-0 z-0">
-                    {/*
-                     * ✅ PERF: Pakai <picture> untuk serve gambar berbeda per device.
-                     *    - Mobile (≤768px) → hero-background-mobile.webp (18KB)
-                     *    - Desktop (>768px) → hero-background.webp (68KB)
-                     *    - fetchPriority="high" → LCP element, prioritas tertinggi
-                     *    - loading="eager"     → jangan lazy, langsung load
-                     *    - decoding="async"    → decode di background thread
-                     */}
                     <picture>
-                        <source
-                            media="(max-width: 768px)"
-                            srcSet="/assets/hero-background-mobile.webp"
-                            type="image/webp"
-                        />
-                        <source
-                            media="(min-width: 769px)"
-                            srcSet="/assets/hero-background.webp"
-                            type="image/webp"
-                        />
+                        <source media="(max-width: 768px)" srcSet="/assets/hero-background-mobile.webp" type="image/webp" />
+                        <source media="(min-width: 769px)" srcSet="/assets/hero-background.webp" type="image/webp" />
                         <img
                             src="/assets/hero-background.webp"
                             alt="Lingkungan Al-Muntaha Boarding School"
@@ -73,97 +61,85 @@ export default function HeroSection({ activeWave, onOpenVideo }: HeroSectionProp
                             fetchPriority="high"
                             loading="eager"
                             decoding="async"
-                            onError={(e) => { e.currentTarget.style.display = 'none' }}
                         />
                     </picture>
-                    <div className="absolute inset-0 bg-gradient-to-r from-navy/85 via-navy/60 to-navy/20 lg:to-navy/10" />
+                    {/* Gradien Deep Navy yang mengembalikan nyawa biru pada gambar */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-navy/90 via-navy/60 to-navy/20 lg:to-navy/10" />
                 </div>
 
-                {/* Content */}
+                {/* CONTENT CONTAINER */}
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
-                    <div className="grid lg:grid-cols-2 gap-12 items-center">
-                        <div ref={heroRef} className="space-y-6 text-center lg:text-left">
+                    <div className="grid lg:grid-cols-12 gap-10 lg:gap-16 items-center">
 
-                            {/* Badge PSB */}
-                            <div className="hero-animate opacity-0 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-white/90 text-xs font-bold uppercase tracking-wider backdrop-blur-sm">
-                                <span className="relative flex h-2 w-2 mr-1">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-400"></span>
-                                </span>
-                                Penerimaan Siswa Baru {currentYear}/{currentYear + 1}
+                        {/* LEFT: Cinematic Copywriting */}
+                        <div ref={heroRef} className="lg:col-span-7 space-y-7 text-center lg:text-left">
+
+                            {/* Elite Branding Tags */}
+                            <div className="hero-text-anim opacity-0 flex flex-wrap items-center justify-center lg:justify-start gap-2.5">
+                                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/15 border border-gold/30 text-white font-bold text-[10px] sm:text-xs tracking-wide backdrop-blur-md shadow-sm">
+                                    <i className="fa-solid fa-star text-gold"></i>
+                                    <span>Akreditasi A (Unggul)</span>
+                                </div>
+                                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 border border-white/20 text-slate-100 font-semibold text-[10px] sm:text-xs tracking-wide backdrop-blur-md shadow-sm">
+                                    <i className="fa-solid fa-award text-emerald-400"></i>
+                                    <span>Tahfidz & Adab Focused</span>
+                                </div>
+                                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 border border-white/20 text-slate-100 font-semibold text-[10px] sm:text-xs tracking-wide backdrop-blur-md shadow-sm">
+                                    <i className="fa-solid fa-earth-asia text-blue-300"></i>
+                                    <span>Global Leadership</span>
+                                </div>
                             </div>
 
-                            {/* Headline */}
-                            <h1 className="hero-animate opacity-0 text-4xl lg:text-6xl font-display font-bold leading-tight">
+                            {/* Headline: Fluid & Immersive */}
+                            <h1 className="hero-text-anim opacity-0 text-4xl sm:text-5xl lg:text-6xl font-display font-extrabold leading-[1.1] tracking-tight">
                                 <span className="text-white">Membangun Generasi</span>
                                 <br />
-                                {/* ✅ Class hero-shimmer-text sekarang dari app.css */}
-                                <span className="hero-shimmer-text">Cerdas &amp; Beradab</span>
+                                <span className="hero-shimmer-text mt-1 block">
+                                    Cerdas & Beradab
+                                </span>
                             </h1>
 
-                            {/* Subtext */}
-                            <p className="hero-animate opacity-0 text-slate-300 text-lg leading-relaxed max-w-lg mx-auto lg:mx-0">
-                                Al-Muntaha Islamic Boarding School — tempat tumbuhnya generasi unggul
-                                yang berilmu, berkarakter, dan siap menghadapi tantangan zaman.
+                            {/* Subtext: SEO Restored & Balanced Contrast */}
+                            <p className="hero-text-anim opacity-0 text-slate-300 text-base sm:text-lg leading-relaxed max-w-xl mx-auto lg:mx-0">
+                                <strong className="text-white font-semibold">Al-Muntaha Islamic Boarding School -</strong> adalah tempat di mana potensi tertinggi setiap santri diasah. Kami memadukan keunggulan akademik global dengan kedalaman spiritual untuk membentuk pemimpin masa depan yang bertaqwa.
                             </p>
 
-                            {/* CTA Buttons */}
-                            <div className="hero-animate flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
+                            {/* CTA Actions */}
+                            <div className="hero-text-anim opacity-0 flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start pt-2">
                                 <Link
                                     href="/daftar"
-                                    className="w-full sm:w-auto px-8 py-3.5 bg-gold rounded-xl font-semibold shadow-xl hover:-translate-y-1 transition duration-300 text-center"
-                                    style={{ color: '#0f172a' }}
+                                    className="w-full sm:w-auto px-8 py-3.5 bg-gold text-slate-900 rounded-xl font-bold shadow-lg shadow-gold/20 hover:-translate-y-1 hover:shadow-gold/40 transition-all duration-300 text-center text-sm sm:text-base"
                                 >
-                                    Daftar Gelombang Ini
+                                    Amankan Kursi Sekarang
                                 </Link>
                                 <button
                                     onClick={onOpenVideo}
-                                    aria-label="Tonton video profil sekolah"
-                                    className="w-full sm:w-auto px-6 py-3.5 border border-white/30 text-white rounded-xl font-medium hover:bg-white/10 transition flex items-center justify-center gap-2 group backdrop-blur-sm"
+                                    aria-label="Tonton Profil Sekolah"
+                                    className="w-full sm:w-auto px-6 py-3.5 border border-white/20 text-white rounded-xl font-semibold hover:bg-white/10 transition-all duration-300 flex items-center justify-center gap-2.5 group backdrop-blur-md text-sm sm:text-base"
                                 >
-                                    <i className="fa-solid fa-play-circle text-gold text-xl group-hover:scale-110 transition"></i>
-                                    Tonton Profil
+                                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/10 group-hover:bg-gold/20 transition-colors duration-300">
+                                        <i className="fa-solid fa-play text-gold text-xs ml-0.5"></i>
+                                    </div>
+                                    Intip Fasilitas Kami
                                 </button>
                             </div>
-
-                            {/* Badges */}
-                            <div className="hero-animate pt-6 flex items-center gap-3 justify-center lg:justify-start flex-wrap">
-                                <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gold/15 border border-gold/40 text-white font-bold text-xs shadow-sm backdrop-blur-sm">
-                                    <i className="fa-solid fa-medal text-gold text-sm"></i>
-                                    <span>Akreditasi <span className="text-gold">A</span></span>
-                                </div>
-                                <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/10 border border-white/20 text-white font-bold text-xs shadow-sm backdrop-blur-sm">
-                                    <i className="fa-solid fa-check-shield text-white/80 text-sm"></i>
-                                    <span>Kemdikbud</span>
-                                </div>
-                                <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/10 border border-white/20 text-white font-bold text-xs shadow-sm backdrop-blur-sm">
-                                    <i className="fa-solid fa-mosque text-white/80 text-sm"></i>
-                                    <span>Islamic Boarding</span>
-                                </div>
-                            </div>
                         </div>
 
-                        <div className="wave-card-animate opacity-0">
+                        {/* RIGHT: Compact WaveCard */}
+                        <div className="hero-card-anim opacity-0 lg:col-span-5 w-full">
                             <WaveCard
                                 activeWave={activeWave}
-                                onOpenSchedule={() => setScheduleModalOpen(true)}
+                                onOpenSchedule={handleOpenSchedule}
                             />
                         </div>
+
                     </div>
                 </div>
 
-                {/* Wave SVG Divider */}
-                <div className="absolute bottom-0 left-0 right-0 z-10 leading-none">
-                    <svg
-                        viewBox="0 0 1440 72"
-                        xmlns="http://www.w3.org/2000/svg"
-                        preserveAspectRatio="none"
-                        className="w-full h-[60px] md:h-[72px]"
-                    >
-                        <path
-                            d="M0,36 C240,72 480,0 720,36 C960,72 1200,0 1440,36 L1440,72 L0,72 Z"
-                            fill="#f8fafc"
-                        />
+                {/* Dynamic SVG Divider */}
+                <div className="absolute bottom-0 left-0 right-0 z-10 leading-none pointer-events-none translate-y-[1px]">
+                    <svg viewBox="0 0 1440 72" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full h-[40px] md:h-[72px]">
+                        <path d="M0,36 C240,72 480,0 720,36 C960,72 1200,0 1440,36 L1440,72 L0,72 Z" fill="currentColor" className="text-slate-900 dark:text-navy" />
                     </svg>
                 </div>
             </header>

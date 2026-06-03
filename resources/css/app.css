@@ -255,11 +255,6 @@
     100% { transform: translateX(220%) skewX(-20deg); opacity: 0; }
 }
 
-/* FIX BUG #1: gallery-placeholder-sweep DIHAPUS.
-   Class ini dan keyframes placeholder-sweep tidak ada lagi.
-   Skeleton diganti dengan dark gradient solid di GalleryCard.tsx —
-   tidak ada animasi silver yang samar-samar dan tidak berguna. */
-
 /* ── Video badge pulse ring ──────────────────────────────────────────────────── */
 
 @keyframes video-pulse-ring {

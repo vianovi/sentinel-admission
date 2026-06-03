@@ -9,6 +9,7 @@ use App\Models\CandidateDocument;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -20,28 +21,59 @@ class IndexController extends Controller
 
     public function index(): Response
     {
+        // ── Stats per status ─────────────────────────────────────────────────
+        $stats = [
+            'total'     => Candidate::count(),
+            'draft'     => Candidate::where('status', 'draft')->count(),
+            'submitted' => Candidate::where('status', 'submitted')->count(),
+            'verified'  => Candidate::where('status', 'verified')->count(),
+            'accepted'  => Candidate::where('status', 'accepted')->count(),
+            'rejected'  => Candidate::where('status', 'rejected')->count(),
+        ];
+
+        // ── Submission trend 7 hari terakhir ─────────────────────────────────
+        $submissionTrend = Candidate::where('status', '!=', 'draft')
+            ->whereBetween('created_at', [now()->subDays(6)->startOfDay(), now()])
+            ->select(DB::raw('DATE(created_at) as date'), DB::raw('COUNT(*) as count'))
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get()
+            ->map(fn ($item) => [
+                'date'  => \Carbon\Carbon::parse($item->date)->format('d M'),
+                'count' => $item->count,
+            ]);
+
+        // Fill missing days dengan 0
+        $trendFilled = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i);
+            $formatted = $date->format('d M');
+            $existing = $submissionTrend->firstWhere('date', $formatted);
+            $trendFilled[] = [
+                'date'  => $formatted,
+                'count' => $existing ? $existing['count'] : 0,
+            ];
+        }
+
+        // ── Recent submissions ───────────────────────────────────────────────
+        $recentSubmissions = Candidate::with('admissionWave')
+            ->where('status', 'submitted')
+            ->latest()
+            ->take(5)
+            ->get()
+            ->map(fn ($c) => [
+                'id'             => $c->id,
+                'candidate_code' => $c->candidate_code,
+                'full_name'      => $c->full_name,
+                'school_origin'  => $c->school_origin,
+                'admission_wave' => $c->admissionWave?->title,
+                'created_at'     => $c->created_at->format('d M Y'),
+            ]);
+
         return Inertia::render('Dashboard/Staff/Index', [
-            'stats' => [
-                'total'     => Candidate::count(),
-                'draft'     => Candidate::where('status', 'draft')->count(),
-                'submitted' => Candidate::where('status', 'submitted')->count(),
-                'verified'  => Candidate::where('status', 'verified')->count(),
-                'accepted'  => Candidate::where('status', 'accepted')->count(),
-                'rejected'  => Candidate::where('status', 'rejected')->count(),
-            ],
-            'recent_submissions' => Candidate::with('admissionWave')
-                ->where('status', 'submitted')
-                ->latest()
-                ->take(5)
-                ->get()
-                ->map(fn ($c) => [
-                    'id'             => $c->id,
-                    'candidate_code' => $c->candidate_code,
-                    'full_name'      => $c->full_name,
-                    'school_origin'  => $c->school_origin,
-                    'admission_wave' => $c->admissionWave?->title,
-                    'created_at'     => $c->created_at->format('d M Y'),
-                ]),
+            'stats'               => $stats,
+            'submission_trend'    => $trendFilled,
+            'recent_submissions'  => $recentSubmissions,
         ]);
     }
 
