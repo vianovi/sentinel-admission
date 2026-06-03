@@ -171,12 +171,26 @@ Route::middleware(['auth', RoleMiddleware::class . ':staff'])
             ->name('candidates.index');
         Route::get('/candidates/{candidate}', [StaffDashboard::class, 'show'])
             ->name('candidates.show');
+        Route::get('/candidates/{candidate}/health-documents/{docType}', [StaffDashboard::class, 'previewHealthDocument'])
+            ->where('docType', 'chronic-disease|surat-sehat|bpjs-card|vaccine-card')
+            ->name('health-documents.preview');
+        Route::get('/candidates/{candidate}/{section}', [StaffDashboard::class, 'show'])
+            ->where('section', 'data-diri|data-kesehatan|data-wali|dokumen|pembayaran')
+            ->name('candidates.section');
         Route::post('/candidates/{candidate}/status', [StaffDashboard::class, 'updateStatus'])
             ->name('candidates.status');
 
         // ── Documents ────────────────────────────────────────────────────
         Route::post('/documents/{document}/verify', [StaffDashboard::class, 'verifyDocument'])
             ->name('documents.verify');
+        Route::get('/documents/{document}/preview', [StaffDashboard::class, 'previewDocument'])
+            ->name('documents.preview');
+
+        // ── Payments ─────────────────────────────────────────────────────
+        Route::post('/payments/{payment}/verify', [StaffDashboard::class, 'verifyPayment'])
+            ->name('payments.verify');
+        Route::get('/payments/{payment}/proof', [StaffDashboard::class, 'previewPaymentProof'])
+            ->name('payments.proof');
 
         // ── Profile ───────────────────────────────────────────────────────
         Route::get('/profile', [StaffProfile::class, 'show'])

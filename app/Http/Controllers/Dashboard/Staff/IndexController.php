@@ -6,15 +6,48 @@ use App\Http\Controllers\Controller;
 use App\Models\AdmissionWave;
 use App\Models\Candidate;
 use App\Models\CandidateDocument;
+use App\Models\Payment;
+use App\Services\PaymentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class IndexController extends Controller
 {
+    private const STAFF_SECTIONS = ['data-diri', 'data-kesehatan', 'data-wali', 'dokumen', 'pembayaran'];
+
+    private const HEALTH_DOC_FIELDS = [
+        'chronic-disease' => [
+            'column' => 'chronic_disease_doc_path',
+            'label'  => 'Dokumen Hasil Lab / CT Scan / USG',
+            'icon'   => 'fa-solid fa-file-waveform',
+        ],
+        'surat-sehat' => [
+            'column' => 'surat_sehat_path',
+            'label'  => 'Surat Keterangan Sehat',
+            'icon'   => 'fa-solid fa-file-medical',
+        ],
+        'bpjs-card' => [
+            'column' => 'bpjs_card_path',
+            'label'  => 'Kartu BPJS / JKN',
+            'icon'   => 'fa-solid fa-id-card',
+        ],
+        'vaccine-card' => [
+            'column' => 'vaccine_card_path',
+            'label'  => 'Kartu Vaksin / Imunisasi',
+            'icon'   => 'fa-solid fa-syringe',
+        ],
+    ];
+
+    public function __construct(
+        private readonly PaymentService $paymentService
+    ) {}
+
     // =============================================
     // GET /dashboard/staff
     // =============================================
@@ -124,26 +157,26 @@ class IndexController extends Controller
     // GET /dashboard/staff/candidates/{candidate}
     // =============================================
 
-    public function show(Candidate $candidate): Response
+    public function show(Candidate $candidate, string $section = 'data-diri'): Response
     {
-        $candidate->load(['user', 'admissionWave', 'documents.verifiedBy', 'guardian', 'healthRecord', 'payments']);
+        abort_unless(in_array($section, self::STAFF_SECTIONS, true), 404);
+
+        $candidate->load([
+            'user',
+            'admissionWave.programs',
+            'documents.verifiedBy',
+            'guardian',
+            'healthRecord',
+        ]);
+
+        $payment = $candidate->payments()
+            ->with('verifiedBy')
+            ->latest()
+            ->first();
 
         return Inertia::render('Dashboard/Staff/Show', [
-            'candidate' => [
-                'id'             => $candidate->id,
-                'candidate_code' => $candidate->candidate_code,
-                'full_name'      => $candidate->full_name,
-                'nisn'           => $candidate->nisn,
-                'nik'            => $candidate->nik,
-                'gender_label'   => $candidate->genderLabel(),
-                'place_of_birth' => $candidate->place_of_birth,
-                'date_of_birth'  => $candidate->date_of_birth?->format('d F Y'),
-                'school_origin'  => $candidate->school_origin,
-                'status'         => $candidate->status,
-                'program_choice' => $candidate->program_choice,
-                'email'          => $candidate->user?->email,
-                'admission_wave' => $candidate->admissionWave?->title,
-            ],
+            'active_section' => $section,
+            'candidate' => $this->formatCandidate($candidate),
             'documents' => $candidate->documents->map(fn ($d) => [
                 'id'                => $d->id,
                 'doc_type'          => $d->doc_type,
@@ -154,23 +187,11 @@ class IndexController extends Controller
                 'rejection_reason'  => $d->rejection_reason,
                 'verified_by'       => $d->verifiedBy?->name,
                 'verified_at'       => $d->verified_at?->format('d M Y H:i'),
+                'preview_url'       => route('staff.documents.preview', $d),
             ])->values(),
-            'guardian' => $candidate->guardian ? [
-                'father_name'    => $candidate->guardian->father_name,
-                'father_phone'   => $candidate->guardian->father_phone,
-                'mother_name'    => $candidate->guardian->mother_name,
-                'mother_phone'   => $candidate->guardian->mother_phone,
-                'guardian_name'  => $candidate->guardian->guardian_name,
-                'guardian_phone' => $candidate->guardian->guardian_phone,
-                'no_kk'          => $candidate->guardian->no_kk,
-            ] : null,
-            'health_record' => $candidate->healthRecord ? [
-                'blood_type'               => $candidate->healthRecord->blood_type,
-                'rhesus'                   => $candidate->healthRecord->rhesus,
-                'height_cm'                => $candidate->healthRecord->height_cm,
-                'weight_kg'                => $candidate->healthRecord->weight_kg,
-                'general_health_condition' => $candidate->healthRecord->general_health_condition,
-            ] : null,
+            'guardian'      => $this->formatGuardian($candidate),
+            'health_record' => $this->formatHealthRecord($candidate),
+            'payment'       => $this->formatPayment($payment),
         ]);
     }
 
@@ -203,6 +224,102 @@ class IndexController extends Controller
     }
 
     // =============================================
+    // GET /dashboard/staff/documents/{document}/preview
+    // =============================================
+
+    public function previewDocument(CandidateDocument $document)
+    {
+        if (! Storage::disk('private')->exists($document->file_path)) {
+            abort(404);
+        }
+
+        return Storage::disk('private')->response(
+            $document->file_path,
+            $document->original_filename,
+            ['Content-Disposition' => 'inline']
+        );
+    }
+
+    // =============================================
+    // GET /dashboard/staff/candidates/{candidate}/health-documents/{docType}
+    // =============================================
+
+    public function previewHealthDocument(Candidate $candidate, string $docType)
+    {
+        $config = self::HEALTH_DOC_FIELDS[$docType] ?? null;
+        abort_unless($config, 404);
+
+        $healthRecord = $candidate->healthRecord;
+        $path = $healthRecord?->{$config['column']};
+
+        if (! $path || ! Storage::disk('private')->exists($path)) {
+            abort(404);
+        }
+
+        $extension = pathinfo($path, PATHINFO_EXTENSION);
+        $filename = $candidate->candidate_code . '-' . $docType . ($extension ? ".{$extension}" : '');
+
+        return Storage::disk('private')->response(
+            $path,
+            $filename,
+            ['Content-Disposition' => 'inline']
+        );
+    }
+
+    // =============================================
+    // POST /dashboard/staff/payments/{payment}/verify
+    // =============================================
+
+    public function verifyPayment(Request $request, Payment $payment): RedirectResponse
+    {
+        $validated = $request->validate([
+            'status'           => ['required', 'in:verified,rejected'],
+            'rejection_reason' => ['nullable', 'required_if:status,rejected', 'string', 'max:500'],
+        ]);
+
+        try {
+            if ($validated['status'] === 'verified') {
+                $this->paymentService->verifyProof($payment, Auth::id());
+            } else {
+                $this->paymentService->rejectProof(
+                    $payment,
+                    Auth::id(),
+                    $validated['rejection_reason'] ?? ''
+                );
+            }
+
+            return back()->with('success', 'Status pembayaran berhasil diperbarui.');
+        } catch (\Throwable $e) {
+            Log::error('Staff payment verification failed', [
+                'staff_id'   => Auth::id(),
+                'payment_id' => $payment->id,
+                'error'      => $e->getMessage(),
+            ]);
+
+            return back()->withErrors([
+                'payment' => 'Pembayaran belum bisa diverifikasi. Pastikan bukti sudah diunggah.',
+            ]);
+        }
+    }
+
+    // =============================================
+    // GET /dashboard/staff/payments/{payment}/proof
+    // =============================================
+
+    public function previewPaymentProof(Payment $payment)
+    {
+        if (! $payment->proof_path || ! Storage::disk('private')->exists($payment->proof_path)) {
+            abort(404);
+        }
+
+        return Storage::disk('private')->response(
+            $payment->proof_path,
+            $payment->proof_original_filename ?? 'bukti-pembayaran',
+            ['Content-Disposition' => 'inline']
+        );
+    }
+
+    // =============================================
     // POST /dashboard/staff/candidates/{candidate}/status
     // =============================================
 
@@ -222,5 +339,161 @@ class IndexController extends Controller
         $candidate->update(['status' => $validated['status']]);
 
         return back()->with('success', 'Status kandidat berhasil diperbarui.');
+    }
+
+    private function formatCandidate(Candidate $candidate): array
+    {
+        return [
+            'id'                         => $candidate->id,
+            'candidate_code'             => $candidate->candidate_code,
+            'full_name'                  => $candidate->full_name,
+            'nisn'                       => $candidate->nisn,
+            'nik'                        => $candidate->nik,
+            'gender'                     => $candidate->gender,
+            'gender_label'               => $candidate->genderLabel(),
+            'place_of_birth'             => $candidate->place_of_birth,
+            'date_of_birth'              => $candidate->date_of_birth?->format('Y-m-d'),
+            'date_of_birth_label'        => $candidate->date_of_birth?->format('d F Y'),
+            'address_full'               => $candidate->address_full,
+            'address_detail'             => $candidate->address_detail,
+            'school_origin'              => $candidate->school_origin,
+            'email'                      => $candidate->email ?? $candidate->user?->email,
+            'account_email'              => $candidate->user?->email,
+            'phone_number'               => $candidate->phone_number,
+            'religion'                   => $candidate->religion,
+            'child_order'                => $candidate->child_order,
+            'siblings_count'             => $candidate->siblings_count,
+            'hobbies'                    => $candidate->hobbies,
+            'ambitions'                  => $candidate->ambitions,
+            'habits'                     => $candidate->habits,
+            'extracurricular_interests'  => $candidate->extracurricular_interests ?? [],
+            'postal_code'                => $candidate->postal_code,
+            'school_npsn'                => $candidate->school_npsn,
+            'certificate_number'         => $candidate->certificate_number,
+            'birth_certificate_number'   => $candidate->birth_certificate_number,
+            'family_card_number'         => $candidate->family_card_number,
+            'program_choice'             => $candidate->program_choice,
+            'major_choice'               => $candidate->major_choice,
+            'is_transfer'                => (bool) $candidate->is_transfer,
+            'status'                     => $candidate->status,
+            'has_pending_change'         => $candidate->hasPendingChangeRequest(),
+            'data_change_request'        => $candidate->data_change_request,
+            'admission_wave'             => $candidate->admissionWave ? [
+                'title'            => $candidate->admissionWave->title,
+                'academic_year'    => $candidate->admissionWave->academic_year,
+                'majors_enabled'   => $candidate->admissionWave->majors_enabled,
+                'available_majors' => $candidate->admissionWave->available_majors ?? [],
+                'programs'         => $candidate->admissionWave->programs
+                    ->where('is_active', true)
+                    ->sortBy('priority')
+                    ->values()
+                    ->map(fn ($p) => [
+                        'name'          => $p->name,
+                        'quota_zone'    => $p->quotaZone(),
+                        'warning'       => $p->warningMessage('staff'),
+                        'is_open_quota' => $p->is_open_quota,
+                    ])
+                    ->all(),
+            ] : null,
+        ];
+    }
+
+    private function formatGuardian(Candidate $candidate): ?array
+    {
+        $guardian = $candidate->guardian;
+
+        if (! $guardian) {
+            return null;
+        }
+
+        $data = $guardian->toArray();
+        $data['completion_percentage'] = $guardian->completion_percentage;
+        $data['father_date_of_birth'] = $guardian->father_date_of_birth?->format('Y-m-d');
+        $data['mother_date_of_birth'] = $guardian->mother_date_of_birth?->format('Y-m-d');
+        $data['guardian_date_of_birth'] = $guardian->guardian_date_of_birth?->format('Y-m-d');
+
+        return $data;
+    }
+
+    private function formatHealthRecord(Candidate $candidate): ?array
+    {
+        $record = $candidate->healthRecord;
+
+        if (! $record) {
+            return null;
+        }
+
+        $documents = collect(self::HEALTH_DOC_FIELDS)
+            ->map(fn ($config, $docType) => [
+                'key'         => $docType,
+                'label'       => $config['label'],
+                'icon'        => $config['icon'],
+                'is_required' => $docType === 'bpjs-card',
+                'has_file'    => ! empty($record->{$config['column']}),
+                'preview_url' => ! empty($record->{$config['column']})
+                    ? route('staff.health-documents.preview', [$candidate, $docType])
+                    : null,
+            ])
+            ->values();
+
+        return [
+            'blood_type'               => $record->blood_type,
+            'blood_type_label'         => $record->blood_type_label,
+            'rhesus'                   => $record->rhesus,
+            'rhesus_label'             => $record->rhesus_label,
+            'height_cm'                => $record->height_cm,
+            'weight_kg'                => $record->weight_kg,
+            'bmi'                      => $record->bmi,
+            'bmi_category'             => $record->bmi_category,
+            'general_health_condition' => $record->general_health_condition,
+            'mental_health_notes'      => $record->mental_health_notes,
+            'eye_right_type'           => $record->eye_right_type,
+            'eye_right_value'          => $record->eye_right_value,
+            'eye_right_label'          => $record->eye_right_label,
+            'eye_left_type'            => $record->eye_left_type,
+            'eye_left_value'           => $record->eye_left_value,
+            'eye_left_label'           => $record->eye_left_label,
+            'eye_condition_since'      => $record->eye_condition_since,
+            'major_illnesses'          => $record->major_illnesses,
+            'last_illness'             => $record->last_illness,
+            'allergy_food'             => $record->allergy_food,
+            'allergy_medicine'         => $record->allergy_medicine,
+            'allergy_condition'        => $record->allergy_condition,
+            'physical_disabilities'    => $record->physical_disabilities,
+            'special_notes'            => $record->special_notes,
+            'parent_concern_notes'     => $record->parent_concern_notes,
+            'completion_percentage'    => $record->completionPercentage(),
+            'documents'                => $documents,
+        ];
+    }
+
+    private function formatPayment(?Payment $payment): ?array
+    {
+        if (! $payment) {
+            return null;
+        }
+
+        return [
+            'id'                      => $payment->id,
+            'order_id'                => $payment->order_id,
+            'payment_channel'         => $payment->payment_channel,
+            'base_amount'             => (float) $payment->base_amount,
+            'fee_amount'              => (float) $payment->fee_amount,
+            'final_amount'            => (float) $payment->final_amount,
+            'payment_method'          => $payment->payment_method,
+            'status'                  => $payment->status,
+            'manual_status'           => $payment->manual_status,
+            'proof_original_filename' => $payment->proof_original_filename,
+            'proof_uploaded_at'       => $payment->proof_uploaded_at?->format('d M Y H:i'),
+            'proof_attempt'           => $payment->proof_attempt,
+            'proof_url'               => $payment->proof_path ? route('staff.payments.proof', $payment) : null,
+            'rejection_reason'        => $payment->rejection_reason,
+            'verified_by'             => $payment->verifiedBy?->name,
+            'verified_at'             => $payment->verified_at?->format('d M Y H:i'),
+            'paid_at'                 => $payment->paid_at?->format('d M Y H:i'),
+            'expired_at'              => $payment->expired_at?->format('d M Y H:i'),
+            'is_expired'              => $payment->isExpired(),
+            'can_verify'              => $payment->isManualChannel() && $payment->isProofUploaded(),
+        ];
     }
 }

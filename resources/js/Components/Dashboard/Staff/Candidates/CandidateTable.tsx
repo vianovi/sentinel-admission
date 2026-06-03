@@ -106,6 +106,11 @@ export default function CandidateTable({ candidates }: Props) {
                         <li key={c.id} className="candidate-row opacity-0">
                             <Link
                                 href={`/dashboard/staff/candidates/${c.id}`}
+                                onClick={() => {
+                                    if (typeof window !== "undefined") {
+                                        window.localStorage.setItem("staff:selectedCandidateId", String(c.id));
+                                    }
+                                }}
                                 className="flex flex-col lg:grid
                                            lg:grid-cols-[1fr_140px_160px_110px_90px_48px]
                                            items-start lg:items-center

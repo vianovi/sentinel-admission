@@ -18,6 +18,14 @@ export type NavItem = {
     href:   string;
     icon:   string;    // Font Awesome class — contoh: "fa-solid fa-house"
     exact?: boolean;   // true = match exact URL, false/undefined = startsWith
+    children?: NavSubItem[];
+};
+
+export type NavSubItem = {
+    label: string;
+    icon:  string;
+    href?: string;
+    staffCandidateSection?: "data-diri" | "data-kesehatan" | "data-wali" | "dokumen" | "pembayaran";
 };
 
 export type NavGroup = {
@@ -73,7 +81,18 @@ export const navigationConfig: Record<string, NavGroup[]> = {
             group: "Menu",
             items: [
                 { label: "Dashboard", href: "/dashboard/staff",            icon: "fa-solid fa-house",  exact: true },
-                { label: "Kandidat",  href: "/dashboard/staff/candidates", icon: "fa-solid fa-users" },
+                {
+                    label: "Kandidat",
+                    href:  "/dashboard/staff/candidates",
+                    icon:  "fa-solid fa-users",
+                    children: [
+                        { label: "Data Diri",      icon: "fa-solid fa-id-card",      staffCandidateSection: "data-diri" },
+                        { label: "Data Kesehatan", icon: "fa-solid fa-heart-pulse",   staffCandidateSection: "data-kesehatan" },
+                        { label: "Data Wali",      icon: "fa-solid fa-people-roof",   staffCandidateSection: "data-wali" },
+                        { label: "Dokumen",        icon: "fa-solid fa-file-lines",    staffCandidateSection: "dokumen" },
+                        { label: "Pembayaran",     icon: "fa-solid fa-credit-card",   staffCandidateSection: "pembayaran" },
+                    ],
+                },
             ],
         },
         {

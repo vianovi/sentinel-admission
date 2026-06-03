@@ -101,6 +101,11 @@ export default function RecentSubmissionsList({ items, submittedCount }: Props) 
                             <li key={item.id} className="recent-row opacity-0">
                                 <Link
                                     href={`/dashboard/staff/candidates/${item.id}`}
+                                    onClick={() => {
+                                        if (typeof window !== "undefined") {
+                                            window.localStorage.setItem("staff:selectedCandidateId", String(item.id));
+                                        }
+                                    }}
                                     className="flex items-center gap-4 px-6 py-4
                                                hover:bg-slate-50 dark:hover:bg-white/[0.03]
                                                transition-colors duration-150 group"
