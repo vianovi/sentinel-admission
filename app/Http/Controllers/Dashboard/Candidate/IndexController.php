@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard\Candidate;
 
 use App\Http\Controllers\Controller;
+use App\Support\CandidateRequestPresenter;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -16,9 +17,12 @@ class IndexController extends Controller
     public function index(Request $request): Response
     {
         $user      = $request->user();
+        $user->loadMissing('pendingEmailReviewer');
         $candidate = $user->candidate()
             ->with(['admissionWave', 'documents', 'payments'])
             ->first();
+        $emailChangeRequest = CandidateRequestPresenter::formatEmailChangeRequest($user);
+        $dataChangeResult = CandidateRequestPresenter::formatDataChangeResult($candidate?->data_change_request);
 
         if (! $candidate) {
             return Inertia::render('Dashboard/Index', [
@@ -26,6 +30,12 @@ class IndexController extends Controller
                 'documents'      => [],
                 'payment'        => null,
                 'email_verified' => $user->hasVerifiedEmail(),
+                'email_change_request' => $emailChangeRequest,
+                'data_change_request_result' => $dataChangeResult,
+                'flash' => [
+                    'success' => $request->session()->get('success'),
+                    'error' => $request->session()->get('error'),
+                ],
             ]);
         }
 
@@ -70,6 +80,12 @@ class IndexController extends Controller
                 'admin_note'       => $payment->admin_note,
             ] : null,
             'email_verified' => $user->hasVerifiedEmail(),
+            'email_change_request' => $emailChangeRequest,
+            'data_change_request_result' => $dataChangeResult,
+            'flash' => [
+                'success' => $request->session()->get('success'),
+                'error' => $request->session()->get('error'),
+            ],
         ]);
     }
 }

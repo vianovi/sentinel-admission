@@ -2,22 +2,47 @@ import { useEffect, useRef, useState } from "react";
 import { animate, stagger } from "animejs";
 import { Head, router } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
+import RequestStatusBanner from "@/Components/Dashboard/Candidate/Shared/RequestStatusBanner";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
 // ─────────────────────────────────────────────────────────────────────────────
 
 type UserData = {
-    id:                 number;
-    name:               string;
-    email:              string;
-    avatar_url:         string | null;
-    initials:           string;
-    whatsapp_number:    string | null;
-    has_pending_email:  boolean;
-    pending_email:      string | null;
-    email_verified:     boolean;
+    id: number;
+    name: string;
+    email: string;
+    avatar_url: string | null;
+    initials: string;
+    whatsapp_number: string | null;
+    email_verified: boolean;
 };
+
+type EmailChangeRequest = {
+    status: "pending" | "approved" | "rejected";
+    current_email: string;
+    pending_email: string;
+    requested_at: string | null;
+    reviewed_by_name: string | null;
+    reviewed_at: string | null;
+    rejection_reason: string | null;
+    can_apply: boolean;
+    can_cancel: boolean;
+} | null;
+
+type DataChangeRequestResult = {
+    field: string;
+    field_label: string;
+    old_value: string;
+    new_value: string;
+    reason: string | null;
+    status: "approved" | "rejected";
+    reviewed_by: number | null;
+    reviewed_by_name: string | null;
+    reviewed_at: string | null;
+    rejection_reason: string | null;
+    review_note: string | null;
+} | null;
 
 type CandidateData = {
     full_name:      string;
@@ -29,9 +54,11 @@ type CandidateData = {
 } | null;
 
 type Props = {
-    user:      UserData;
+    user: UserData;
     candidate: CandidateData;
-    flash?:    { success?: string };
+    email_change_request: EmailChangeRequest;
+    data_change_request_result: DataChangeRequestResult;
+    flash?: { success?: string; error?: string };
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -59,6 +86,8 @@ const statusLabel = (status: string) => {
     };
     return map[status] ?? status;
 };
+
+const reviewedByLabel = (name: string | null | undefined) => name ?? "petugas";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SUB-COMPONENTS
@@ -117,7 +146,13 @@ function FormInput({
 // PAGE COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function ProfilePage({ user, candidate, flash }: Props) {
+export default function ProfilePage({
+    user,
+    candidate,
+    email_change_request,
+    data_change_request_result,
+    flash,
+}: Props) {
     const avatarRef = useRef<HTMLInputElement>(null);
 
     // ── Form state ────────────────────────────────────────────────────────────
@@ -130,6 +165,7 @@ export default function ProfilePage({ user, candidate, flash }: Props) {
     const [processing, setProcessing]           = useState(false);
     const [avatarProcessing, setAvatarProcessing] = useState(false);
     const [emailProcessing, setEmailProcessing]   = useState(false);
+    const [applyEmailProcessing, setApplyEmailProcessing] = useState(false);
 
     // ── Entrance animation ────────────────────────────────────────────────────
     useEffect(() => {
@@ -205,8 +241,21 @@ export default function ProfilePage({ user, candidate, flash }: Props) {
 
     // ── Cancel ganti email ────────────────────────────────────────────────────
     const handleCancelEmail = () => {
-        router.delete(route("dashboard.profile.email.cancel"));
+        router.delete(route("dashboard.profile.email.cancel"), {
+            preserveScroll: true,
+        });
     };
+
+    const handleApplyApprovedEmail = () => {
+        setApplyEmailProcessing(true);
+
+        router.post(route("dashboard.profile.email.apply"), {}, {
+            preserveScroll: true,
+            onFinish: () => setApplyEmailProcessing(false),
+        });
+    };
+
+    const canShowEmailForm = !email_change_request || email_change_request.status === "rejected";
 
     return (
         <DashboardLayout>
@@ -219,6 +268,50 @@ export default function ProfilePage({ user, candidate, flash }: Props) {
                     <div className="card-item opacity-0 bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-3.5 flex items-center gap-3">
                         <i className="fa-solid fa-circle-check text-emerald-500"></i>
                         <p className="text-sm font-semibold text-emerald-700">{flash.success}</p>
+                    </div>
+                )}
+                {flash?.error && (
+                    <div className="card-item opacity-0 bg-red-50 border border-red-200 rounded-2xl px-5 py-3.5 flex items-center gap-3">
+                        <i className="fa-solid fa-circle-exclamation text-red-500"></i>
+                        <p className="text-sm font-semibold text-red-700">{flash.error}</p>
+                    </div>
+                )}
+
+                {data_change_request_result && (
+                    <div className="card-item opacity-0">
+                        <RequestStatusBanner
+                            tone={data_change_request_result.status === "approved" ? "emerald" : "red"}
+                            icon={data_change_request_result.status === "approved" ? "fa-solid fa-file-circle-check" : "fa-solid fa-file-circle-xmark"}
+                            title={data_change_request_result.status === "approved" ? "Permintaan perubahan data disetujui" : "Permintaan perubahan data ditolak"}
+                            description={
+                                data_change_request_result.status === "approved"
+                                    ? `Permintaan perubahan data ${data_change_request_result.field_label.toLowerCase()} disetujui oleh ${reviewedByLabel(data_change_request_result.reviewed_by_name)}. Data kamu sudah diperbarui.`
+                                    : `Permintaan perubahan data ditolak oleh ${reviewedByLabel(data_change_request_result.reviewed_by_name)}.${data_change_request_result.rejection_reason ? ` Alasan: ${data_change_request_result.rejection_reason}.` : ""}`
+                            }
+                            meta={data_change_request_result.reviewed_at ? `Ditinjau ${data_change_request_result.reviewed_at}` : null}
+                        />
+                    </div>
+                )}
+
+                {email_change_request && email_change_request.status !== "pending" && (
+                    <div className="card-item opacity-0">
+                        <RequestStatusBanner
+                            tone={email_change_request.status === "approved" ? "amber" : "red"}
+                            icon={email_change_request.status === "approved" ? "fa-solid fa-envelope-circle-check" : "fa-solid fa-envelope-circle-xmark"}
+                            title={email_change_request.status === "approved" ? "Perubahan email siap diterapkan" : "Permintaan perubahan email ditolak"}
+                            description={
+                                email_change_request.status === "approved"
+                                    ? `Perubahan email ke ${email_change_request.pending_email} telah disetujui oleh ${reviewedByLabel(email_change_request.reviewed_by_name)}. Login masih menggunakan email lama sampai kamu menerapkannya sendiri.`
+                                    : `Permintaan perubahan email ditolak oleh ${reviewedByLabel(email_change_request.reviewed_by_name)}.${email_change_request.rejection_reason ? ` Alasan: ${email_change_request.rejection_reason}.` : ""}`
+                            }
+                            meta={email_change_request.reviewed_at ? `Ditinjau ${email_change_request.reviewed_at}` : null}
+                            actions={email_change_request.can_apply ? [{
+                                label: "Terapkan Email Baru",
+                                icon: applyEmailProcessing ? "fa-solid fa-spinner fa-spin" : "fa-solid fa-check",
+                                onClick: handleApplyApprovedEmail,
+                                disabled: applyEmailProcessing,
+                            }] : []}
+                        />
                     </div>
                 )}
 
@@ -407,7 +500,7 @@ export default function ProfilePage({ user, candidate, flash }: Props) {
                     </div>
 
                     {/* Sudah ada request pending */}
-                    {user.has_pending_email ? (
+                    {email_change_request?.status === "pending" ? (
                         <div className="flex flex-col gap-3">
                             <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl p-4 flex items-start gap-3">
                                 <i className="fa-solid fa-clock text-amber-500 mt-0.5 shrink-0"></i>
@@ -416,11 +509,12 @@ export default function ProfilePage({ user, candidate, flash }: Props) {
                                         Menunggu Persetujuan Staff
                                     </p>
                                     <p className="text-xs text-amber-600 dark:text-amber-500 mt-0.5">
-                                        Request ganti email ke <span className="font-semibold">{user.pending_email}</span> sedang diproses.
+                                        Request ganti email ke <span className="font-semibold">{email_change_request.pending_email}</span> sedang diproses.
                                     </p>
                                 </div>
                             </div>
                             <button
+                                type="button"
                                 onClick={handleCancelEmail}
                                 className="self-start text-xs font-semibold text-red-500 hover:text-red-700 transition flex items-center gap-1.5"
                             >
@@ -429,34 +523,77 @@ export default function ProfilePage({ user, candidate, flash }: Props) {
                             </button>
                         </div>
                     ) : (
-                        <form onSubmit={handleEmailRequest} className="flex flex-col gap-4">
-                            <div className="bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-3 flex items-start gap-2">
-                                <i className="fa-solid fa-circle-info text-slate-400 mt-0.5 text-xs shrink-0"></i>
-                                <p className="text-xs text-slate-500 dark:text-slate-400">
-                                    Permintaan ganti email memerlukan persetujuan staff terlebih dahulu sebelum diproses.
-                                </p>
-                            </div>
+                        <div className="flex flex-col gap-4">
+                            {email_change_request?.status === "approved" && (
+                                <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-xl p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                    <div className="flex items-start gap-3">
+                                        <i className="fa-solid fa-shield-check text-blue-500 mt-0.5 shrink-0"></i>
+                                        <div>
+                                            <p className="text-sm font-semibold text-blue-800 dark:text-blue-300">
+                                                Email baru sudah disetujui
+                                            </p>
+                                            <p className="text-xs text-blue-700 dark:text-blue-200 mt-0.5">
+                                                Login tetap memakai email lama sampai kamu menekan tombol terapkan untuk <span className="font-semibold">{email_change_request.pending_email}</span>.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={handleApplyApprovedEmail}
+                                        disabled={applyEmailProcessing}
+                                        className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+                                    >
+                                        <i className={`${applyEmailProcessing ? "fa-solid fa-spinner fa-spin" : "fa-solid fa-check"} text-xs`}></i>
+                                        Terapkan Email Baru
+                                    </button>
+                                </div>
+                            )}
 
-                            <FormInput
-                                label="Email Baru"
-                                type="email"
-                                value={newEmail}
-                                onChange={setNewEmail}
-                                error={errors.new_email}
-                                placeholder="email@baru.com"
-                            />
+                            {email_change_request?.status === "rejected" && (
+                                <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl p-4 flex items-start gap-3">
+                                    <i className="fa-solid fa-circle-exclamation text-red-500 mt-0.5 shrink-0"></i>
+                                    <div>
+                                        <p className="text-sm font-semibold text-red-700 dark:text-red-300">
+                                            Ajukan email baru jika diperlukan
+                                        </p>
+                                        <p className="text-xs text-red-600 dark:text-red-200 mt-0.5">
+                                            Request sebelumnya tidak diproses ke email login. Kamu bisa mengirim permintaan baru dari form di bawah.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
 
-                            <button
-                                type="submit"
-                                disabled={emailProcessing || !newEmail}
-                                className="self-start bg-navy hover:bg-navy/90 disabled:opacity-50 text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition hover:-translate-y-0.5 active:scale-95 flex items-center gap-2"
-                            >
-                                {emailProcessing
-                                    ? <><i className="fa-solid fa-spinner fa-spin"></i> Mengirim...</>
-                                    : <><i className="fa-solid fa-paper-plane"></i> Kirim Request</>
-                                }
-                            </button>
-                        </form>
+                            {canShowEmailForm && (
+                                <form onSubmit={handleEmailRequest} className="flex flex-col gap-4">
+                                    <div className="bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-3 flex items-start gap-2">
+                                        <i className="fa-solid fa-circle-info text-slate-400 mt-0.5 text-xs shrink-0"></i>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                                            Permintaan ganti email memerlukan persetujuan staff terlebih dahulu. Email login lama tetap aktif sampai kamu menerapkan email baru yang sudah disetujui.
+                                        </p>
+                                    </div>
+
+                                    <FormInput
+                                        label="Email Baru"
+                                        type="email"
+                                        value={newEmail}
+                                        onChange={setNewEmail}
+                                        error={errors.new_email}
+                                        placeholder="email@baru.com"
+                                    />
+
+                                    <button
+                                        type="submit"
+                                        disabled={emailProcessing || !newEmail}
+                                        className="self-start bg-navy hover:bg-navy/90 disabled:opacity-50 text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition hover:-translate-y-0.5 active:scale-95 flex items-center gap-2"
+                                    >
+                                        {emailProcessing
+                                            ? <><i className="fa-solid fa-spinner fa-spin"></i> Mengirim...</>
+                                            : <><i className="fa-solid fa-paper-plane"></i> Kirim Request</>
+                                        }
+                                    </button>
+                                </form>
+                            )}
+                        </div>
                     )}
                 </div>
 

@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Dashboard\Candidate;
 
 use App\Http\Controllers\Controller;
+use App\Support\CandidateRequestPresenter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -21,7 +23,10 @@ class ProfileController extends Controller
     public function show(Request $request): Response
     {
         $user      = $request->user();
+        $user->loadMissing('pendingEmailReviewer');
         $candidate = $user->candidate()->with('admissionWave')->first();
+        $emailChangeRequest = CandidateRequestPresenter::formatEmailChangeRequest($user);
+        $dataChangeResult = CandidateRequestPresenter::formatDataChangeResult($candidate?->data_change_request);
 
         return Inertia::render('Dashboard/Candidate/Profile', [
             'user' => [
@@ -31,8 +36,6 @@ class ProfileController extends Controller
                 'avatar_url'        => $user->avatar_url,
                 'initials'          => $user->initials,
                 'whatsapp_number'   => $user->whatsapp_number,
-                'has_pending_email' => $user->hasPendingEmailRequest(),
-                'pending_email'     => $user->pending_email,
                 'email_verified'    => $user->hasVerifiedEmail(),
             ],
             'candidate' => $candidate ? [
@@ -46,6 +49,12 @@ class ProfileController extends Controller
                     'academic_year' => $candidate->admissionWave->academic_year,
                 ] : null,
             ] : null,
+            'email_change_request' => $emailChangeRequest,
+            'data_change_request_result' => $dataChangeResult,
+            'flash' => [
+                'success' => $request->session()->get('success'),
+                'error' => $request->session()->get('error'),
+            ],
         ]);
     }
 
@@ -160,6 +169,10 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
+        if (! $user->canRequestEmailChange()) {
+            return back()->with('error', 'Masih ada permintaan perubahan email yang harus diselesaikan terlebih dahulu.');
+        }
+
         $request->validate([
             'new_email' => [
                 'required', 'email', 'max:255',
@@ -171,6 +184,10 @@ class ProfileController extends Controller
         $user->update([
             'pending_email'              => $request->new_email,
             'pending_email_token'        => Str::random(64),
+            'pending_email_status'       => 'pending',
+            'pending_email_reviewed_by'  => null,
+            'pending_email_reviewed_at'  => null,
+            'pending_email_rejection_reason' => null,
             'pending_email_requested_at' => now(),
         ]);
 
@@ -183,12 +200,62 @@ class ProfileController extends Controller
 
     public function cancelEmailChange(Request $request)
     {
-        $request->user()->update([
+        $user = $request->user();
+
+        if (! $user->hasPendingEmailRequest()) {
+            return back()->with('error', 'Hanya permintaan email yang masih pending yang bisa dibatalkan.');
+        }
+
+        $user->update([
             'pending_email'              => null,
             'pending_email_token'        => null,
+            'pending_email_status'       => null,
+            'pending_email_reviewed_by'  => null,
+            'pending_email_reviewed_at'  => null,
+            'pending_email_rejection_reason' => null,
             'pending_email_requested_at' => null,
         ]);
 
         return back()->with('success', 'Permintaan ganti email dibatalkan.');
+    }
+
+    public function applyApprovedEmailChange(Request $request)
+    {
+        $user = $request->user();
+
+        if (! $user->canApplyApprovedEmailChange()) {
+            return back()->with('error', 'Belum ada perubahan email yang siap diterapkan.');
+        }
+
+        $pendingEmail = trim((string) $user->pending_email);
+
+        $validator = Validator::make([
+            'pending_email' => $pendingEmail,
+        ], [
+            'pending_email' => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->ignore($user->id),
+                Rule::unique('users', 'pending_email')->ignore($user->id),
+            ],
+        ]);
+
+        if ($validator->fails()) {
+            return back()->with('error', $validator->errors()->first('pending_email'));
+        }
+
+        $user->forceFill([
+            'email' => $pendingEmail,
+            'pending_email' => null,
+            'pending_email_token' => null,
+            'pending_email_status' => null,
+            'pending_email_reviewed_by' => null,
+            'pending_email_reviewed_at' => null,
+            'pending_email_rejection_reason' => null,
+            'pending_email_requested_at' => null,
+        ])->save();
+
+        return back()->with('success', 'Email login berhasil diperbarui. Gunakan email baru ini untuk login berikutnya.');
     }
 }

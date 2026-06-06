@@ -8,6 +8,7 @@ use App\Http\Controllers\Dashboard\Candidate\HealthRecordController as Candidate
 use App\Http\Controllers\Dashboard\Candidate\GuardianController   as CandidateGuardian;
 use App\Http\Controllers\Dashboard\Candidate\DocumentController   as CandidateDocument;
 use App\Http\Controllers\Dashboard\Candidate\PaymentController    as CandidatePayment;
+use App\Http\Controllers\Dashboard\ChangeRequestController;
 use App\Http\Controllers\Dashboard\Staff\IndexController          as StaffDashboard;
 use App\Http\Controllers\Dashboard\Staff\ProfileController        as StaffProfile;
 use App\Http\Controllers\Dashboard\Admin\IndexController          as AdminDashboard;
@@ -85,6 +86,8 @@ Route::middleware(['auth', RoleMiddleware::class . ':candidate'])
             ->name('profile.email.request');
         Route::delete('/profile/email', [CandidateProfile::class, 'cancelEmailChange'])
             ->name('profile.email.cancel');
+        Route::post('/profile/email/apply', [CandidateProfile::class, 'applyApprovedEmailChange'])
+            ->name('profile.email.apply');
 
         // ── Data Diri ─────────────────────────────────────────────────────
         Route::get('/data-diri', [CandidateDataDiri::class, 'show'])
@@ -180,6 +183,18 @@ Route::middleware(['auth', RoleMiddleware::class . ':staff'])
         Route::post('/candidates/{candidate}/status', [StaffDashboard::class, 'updateStatus'])
             ->name('candidates.status');
 
+        // ── Change requests ──────────────────────────────────────────────
+        Route::get('/change-requests', [ChangeRequestController::class, 'index'])
+            ->name('change-requests.index');
+        Route::post('/change-requests/data/{candidate}/approve', [ChangeRequestController::class, 'approveData'])
+            ->name('change-requests.data.approve');
+        Route::post('/change-requests/data/{candidate}/reject', [ChangeRequestController::class, 'rejectData'])
+            ->name('change-requests.data.reject');
+        Route::post('/change-requests/email/{candidate}/approve', [ChangeRequestController::class, 'approveEmail'])
+            ->name('change-requests.email.approve');
+        Route::post('/change-requests/email/{candidate}/reject', [ChangeRequestController::class, 'rejectEmail'])
+            ->name('change-requests.email.reject');
+
         // ── Documents ────────────────────────────────────────────────────
         Route::post('/documents/{document}/verify', [StaffDashboard::class, 'verifyDocument'])
             ->name('documents.verify');
@@ -232,6 +247,18 @@ Route::middleware(['auth', RoleMiddleware::class . ':admin'])
             ->name('staff.index');
         Route::post('/staff/{user}/toggle', [AdminDashboard::class, 'toggleStaff'])
             ->name('staff.toggle');
+
+        // ── Change requests ──────────────────────────────────────────────
+        Route::get('/change-requests', [ChangeRequestController::class, 'index'])
+            ->name('change-requests.index');
+        Route::post('/change-requests/data/{candidate}/approve', [ChangeRequestController::class, 'approveData'])
+            ->name('change-requests.data.approve');
+        Route::post('/change-requests/data/{candidate}/reject', [ChangeRequestController::class, 'rejectData'])
+            ->name('change-requests.data.reject');
+        Route::post('/change-requests/email/{candidate}/approve', [ChangeRequestController::class, 'approveEmail'])
+            ->name('change-requests.email.approve');
+        Route::post('/change-requests/email/{candidate}/reject', [ChangeRequestController::class, 'rejectEmail'])
+            ->name('change-requests.email.reject');
 
         // ── Profile ───────────────────────────────────────────────────────
         Route::get('/profile', [AdminProfile::class, 'show'])

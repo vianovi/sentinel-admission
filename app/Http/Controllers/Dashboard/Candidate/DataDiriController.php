@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard\Candidate;
 
 use App\Http\Controllers\Controller;
+use App\Support\CandidateRequestPresenter;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -17,6 +18,7 @@ class DataDiriController extends Controller
     {
         $user      = $request->user();
         $candidate = $user->candidate()->with(['admissionWave.programs'])->first();
+        $dataChangeResult = CandidateRequestPresenter::formatDataChangeResult($candidate?->data_change_request);
 
         return Inertia::render('Dashboard/Candidate/DataDiri', [
             'user' => [
@@ -76,8 +78,13 @@ class DataDiriController extends Controller
                             'warning'       => $p->warningMessage('candidate'),
                             'is_open_quota' => $p->is_open_quota,
                         ])->all(),
-                ] : null,
+                    ] : null,
             ] : null,
+            'data_change_request_result' => $dataChangeResult,
+            'flash' => [
+                'success' => $request->session()->get('success'),
+                'error' => $request->session()->get('error'),
+            ],
         ]);
     }
 
@@ -173,7 +180,7 @@ class DataDiriController extends Controller
         $candidate->update([
             'data_change_request' => [
                 'field'        => $validated['field'],
-                'old_value'    => (string) $candidate->{$validated['field']},
+                'old_value'    => $this->formatChangeRequestOldValue($candidate, $validated['field']),
                 'new_value'    => $validated['new_value'],
                 'reason'       => $validated['reason'],
                 'status'       => 'pending',
@@ -194,5 +201,31 @@ class DataDiriController extends Controller
         $candidate->update(['data_change_request' => null]);
 
         return back()->with('success', 'Pengajuan perubahan data dibatalkan.');
+    }
+
+    private function formatChangeRequestOldValue($candidate, string $field): string
+    {
+        if ($field !== 'address_detail') {
+            return (string) $candidate->{$field};
+        }
+
+        if ($candidate->address_full) {
+            return $candidate->address_full;
+        }
+
+        $detail = is_array($candidate->address_detail) ? $candidate->address_detail : [];
+        $rtRw = trim(implode('/', array_filter([
+            $detail['rt'] ?? '',
+            $detail['rw'] ?? '',
+        ])));
+
+        return implode(', ', array_filter([
+            $detail['jalan'] ?? '',
+            $rtRw ? 'RT/RW ' . $rtRw : null,
+            $detail['kelurahan'] ?? '',
+            ($detail['kecamatan'] ?? '') ? 'Kec. ' . $detail['kecamatan'] : null,
+            $detail['kabupaten'] ?? '',
+            $detail['provinsi'] ?? '',
+        ]));
     }
 }

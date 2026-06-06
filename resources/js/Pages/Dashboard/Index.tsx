@@ -1,7 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { animate, stagger } from "animejs";
-import { Head } from "@inertiajs/react";
+import { Head, router } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
+import RequestStatusBanner from "@/Components/Dashboard/Candidate/Shared/RequestStatusBanner";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -46,11 +47,40 @@ type Payment = {
     admin_note:       string | null;
 } | null;
 
+type EmailChangeRequest = {
+    status: "pending" | "approved" | "rejected";
+    current_email: string;
+    pending_email: string;
+    requested_at: string | null;
+    reviewed_by_name: string | null;
+    reviewed_at: string | null;
+    rejection_reason: string | null;
+    can_apply: boolean;
+    can_cancel: boolean;
+} | null;
+
+type DataChangeRequestResult = {
+    field: string;
+    field_label: string;
+    old_value: string;
+    new_value: string;
+    reason: string | null;
+    status: "approved" | "rejected";
+    reviewed_by: number | null;
+    reviewed_by_name: string | null;
+    reviewed_at: string | null;
+    rejection_reason: string | null;
+    review_note: string | null;
+} | null;
+
 type Props = {
     candidate:      Candidate;
     documents:      Document[];
     payment:        Payment;
     email_verified: boolean;
+    email_change_request: EmailChangeRequest;
+    data_change_request_result: DataChangeRequestResult;
+    flash?: { success?: string; error?: string };
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -120,9 +150,21 @@ const docTypeLabel = (type: string) => {
     return map[type] ?? type;
 };
 
+const reviewedByLabel = (name: string | null | undefined) => name ?? "petugas";
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export default function CandidateDashboard({ candidate, documents, payment, email_verified }: Props) {
+export default function CandidateDashboard({
+    candidate,
+    documents,
+    payment,
+    email_verified,
+    email_change_request,
+    data_change_request_result,
+    flash,
+}: Props) {
+    const [applyEmailProcessing, setApplyEmailProcessing] = useState(false);
+
     useEffect(() => {
         animate(".card-item", {
             opacity:    [0, 1],
@@ -132,6 +174,15 @@ export default function CandidateDashboard({ candidate, documents, payment, emai
             ease:       "outExpo",
         });
     }, []);
+
+    const handleApplyApprovedEmail = () => {
+        setApplyEmailProcessing(true);
+
+        router.post(route("dashboard.profile.email.apply"), {}, {
+            preserveScroll: true,
+            onFinish: () => setApplyEmailProcessing(false),
+        });
+    };
 
     // ── Null candidate state ──────────────────────────────────────────────────
     if (!candidate) {
@@ -167,6 +218,20 @@ export default function CandidateDashboard({ candidate, documents, payment, emai
 
             <div className="flex flex-col gap-6">
 
+                {flash?.success && (
+                    <div className="card-item opacity-0 bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-4 flex items-start gap-3">
+                        <i className="fa-solid fa-circle-check text-emerald-500 mt-0.5 flex-shrink-0"></i>
+                        <p className="text-sm font-semibold text-emerald-700">{flash.success}</p>
+                    </div>
+                )}
+
+                {flash?.error && (
+                    <div className="card-item opacity-0 bg-red-50 border border-red-200 rounded-2xl px-5 py-4 flex items-start gap-3">
+                        <i className="fa-solid fa-circle-exclamation text-red-500 mt-0.5 flex-shrink-0"></i>
+                        <p className="text-sm font-semibold text-red-700">{flash.error}</p>
+                    </div>
+                )}
+
                 {/* ── Email verification banner ── */}
                 {!email_verified && (
                     <div className="card-item opacity-0 bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4 flex items-start gap-3">
@@ -183,6 +248,44 @@ export default function CandidateDashboard({ candidate, documents, payment, emai
                         >
                             Verifikasi →
                         </a>
+                    </div>
+                )}
+
+                {data_change_request_result && (
+                    <div className="card-item opacity-0">
+                        <RequestStatusBanner
+                            tone={data_change_request_result.status === "approved" ? "emerald" : "red"}
+                            icon={data_change_request_result.status === "approved" ? "fa-solid fa-file-circle-check" : "fa-solid fa-file-circle-xmark"}
+                            title={data_change_request_result.status === "approved" ? "Permintaan perubahan data disetujui" : "Permintaan perubahan data ditolak"}
+                            description={
+                                data_change_request_result.status === "approved"
+                                    ? `Permintaan perubahan data ${data_change_request_result.field_label.toLowerCase()} disetujui oleh ${reviewedByLabel(data_change_request_result.reviewed_by_name)}. Data kamu sudah diperbarui.`
+                                    : `Permintaan perubahan data ditolak oleh ${reviewedByLabel(data_change_request_result.reviewed_by_name)}.${data_change_request_result.rejection_reason ? ` Alasan: ${data_change_request_result.rejection_reason}.` : ""}`
+                            }
+                            meta={data_change_request_result.reviewed_at ? `Ditinjau ${data_change_request_result.reviewed_at}` : null}
+                        />
+                    </div>
+                )}
+
+                {email_change_request && email_change_request.status !== "pending" && (
+                    <div className="card-item opacity-0">
+                        <RequestStatusBanner
+                            tone={email_change_request.status === "approved" ? "amber" : "red"}
+                            icon={email_change_request.status === "approved" ? "fa-solid fa-envelope-circle-check" : "fa-solid fa-envelope-circle-xmark"}
+                            title={email_change_request.status === "approved" ? "Perubahan email siap diterapkan" : "Permintaan perubahan email ditolak"}
+                            description={
+                                email_change_request.status === "approved"
+                                    ? `Perubahan email ke ${email_change_request.pending_email} telah disetujui oleh ${reviewedByLabel(email_change_request.reviewed_by_name)}. Login masih memakai email lama sampai kamu menekan Terapkan Email Baru.`
+                                    : `Permintaan perubahan email ditolak oleh ${reviewedByLabel(email_change_request.reviewed_by_name)}.${email_change_request.rejection_reason ? ` Alasan: ${email_change_request.rejection_reason}.` : ""}`
+                            }
+                            meta={email_change_request.reviewed_at ? `Ditinjau ${email_change_request.reviewed_at}` : null}
+                            actions={email_change_request.can_apply ? [{
+                                label: "Terapkan Email Baru",
+                                icon: applyEmailProcessing ? "fa-solid fa-spinner fa-spin" : "fa-solid fa-check",
+                                onClick: handleApplyApprovedEmail,
+                                disabled: applyEmailProcessing,
+                            }] : []}
+                        />
                     </div>
                 )}
 

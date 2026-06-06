@@ -14,10 +14,14 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type NavItem = {
-    label:  string;
-    href:   string;
-    icon:   string;    // Font Awesome class — contoh: "fa-solid fa-house"
-    exact?: boolean;   // true = match exact URL, false/undefined = startsWith
+    label: string;
+    href: string;
+    icon: string;    // Font Awesome class — contoh: "fa-solid fa-house"
+    exact?: boolean; // true = match exact URL, false/undefined = startsWith
+    disabled?: boolean;
+    comingSoon?: boolean;
+    staffCandidateHome?: boolean;
+    staffCandidateSection?: "data-diri" | "data-kesehatan" | "data-wali" | "dokumen" | "pembayaran";
     children?: NavSubItem[];
 };
 
@@ -49,8 +53,8 @@ export const navigationConfig: Record<string, NavGroup[]> = {
             group: "Menu",
             items: [
                 { label: "Dashboard",     href: "/dashboard",          icon: "fa-solid fa-house",          exact: true },
-                { label: "Kalender SPMB", href: "/dashboard/calendar", icon: "fa-solid fa-calendar-days" }, // ⏳ belum aktif
-                { label: "Informasi",     href: "/dashboard/info",     icon: "fa-solid fa-circle-info" },   // ⏳ belum aktif
+                { label: "Kalender SPMB", href: "/dashboard/calendar", icon: "fa-solid fa-calendar-days", disabled: true, comingSoon: true },
+                { label: "Informasi",     href: "/dashboard/info",     icon: "fa-solid fa-circle-info",   disabled: true, comingSoon: true },
             ],
         },
         {
@@ -61,7 +65,7 @@ export const navigationConfig: Record<string, NavGroup[]> = {
                 { label: "Data Wali",      href: "/dashboard/data-wali",      icon: "fa-solid fa-people-roof" },
                 { label: "Dokumen",        href: "/dashboard/data-dokumen",   icon: "fa-solid fa-file-lines" },
                 { label: "Pembayaran",     href: "/dashboard/pembayaran",     icon: "fa-solid fa-credit-card" },
-                { label: "Status",         href: "/dashboard/status",         icon: "fa-solid fa-clock-rotate-left" }, // ⏳ belum aktif
+                { label: "Status",         href: "/dashboard/status",         icon: "fa-solid fa-clock-rotate-left", disabled: true, comingSoon: true },
             ],
         },
         {
@@ -78,25 +82,40 @@ export const navigationConfig: Record<string, NavGroup[]> = {
     // =========================================================================
     staff: [
         {
-            group: "Menu",
+            group: "MENU",
             items: [
                 { label: "Dashboard", href: "/dashboard/staff",            icon: "fa-solid fa-house",  exact: true },
                 {
                     label: "Kandidat",
-                    href:  "/dashboard/staff/candidates",
-                    icon:  "fa-solid fa-users",
+                    href: "/dashboard/staff/candidates",
+                    icon: "fa-solid fa-users",
+                    staffCandidateHome: true,
                     children: [
-                        { label: "Data Diri",      icon: "fa-solid fa-id-card",      staffCandidateSection: "data-diri" },
-                        { label: "Data Kesehatan", icon: "fa-solid fa-heart-pulse",   staffCandidateSection: "data-kesehatan" },
-                        { label: "Data Wali",      icon: "fa-solid fa-people-roof",   staffCandidateSection: "data-wali" },
-                        { label: "Dokumen",        icon: "fa-solid fa-file-lines",    staffCandidateSection: "dokumen" },
-                        { label: "Pembayaran",     icon: "fa-solid fa-credit-card",   staffCandidateSection: "pembayaran" },
+                        { label: "Data Diri", icon: "fa-solid fa-id-card", staffCandidateSection: "data-diri" },
+                        { label: "Data Kesehatan", icon: "fa-solid fa-heart-pulse", staffCandidateSection: "data-kesehatan" },
+                        { label: "Data Wali", icon: "fa-solid fa-people-roof", staffCandidateSection: "data-wali" },
                     ],
                 },
+                { label: "Permintaan Perubahan", href: "/dashboard/staff/change-requests", icon: "fa-solid fa-arrows-rotate" },
+                { label: "Seleksi & Status", href: "/dashboard/staff/selection-status", icon: "fa-solid fa-list-check", disabled: true, comingSoon: true },
+                { label: "Laporan Umum", href: "/dashboard/staff/reports", icon: "fa-solid fa-chart-line", disabled: true, comingSoon: true },
             ],
         },
         {
-            group: "Akun",
+            group: "ADMINISTRASI",
+            items: [
+                { label: "Dokumen", href: "/dashboard/staff/candidates", icon: "fa-solid fa-file-lines", staffCandidateSection: "dokumen" },
+            ],
+        },
+        {
+            group: "PEMBAYARAN",
+            items: [
+                { label: "Pembayaran", href: "/dashboard/staff/candidates", icon: "fa-solid fa-credit-card", staffCandidateSection: "pembayaran" },
+                { label: "Rekap Pembayaran", href: "/dashboard/staff/payment-recap", icon: "fa-solid fa-receipt", disabled: true, comingSoon: true },
+            ],
+        },
+        {
+            group: "AKUN",
             items: [
                 { label: "Profil", href: "/dashboard/staff/profile", icon: "fa-solid fa-circle-user" },
             ],
@@ -108,18 +127,41 @@ export const navigationConfig: Record<string, NavGroup[]> = {
     // =========================================================================
     admin: [
         {
-            group: "Menu",
+            group: "MENU",
             items: [
                 { label: "Dashboard", href: "/dashboard/admin",            icon: "fa-solid fa-house",       exact: true },
-                { label: "Kandidat",  href: "/dashboard/admin/candidates", icon: "fa-solid fa-users" },
-                { label: "Gelombang", href: "/dashboard/admin/waves",      icon: "fa-solid fa-layer-group" },
-                { label: "Staff",     href: "/dashboard/admin/staff-list", icon: "fa-solid fa-user-tie" },
+                { label: "Kandidat",  href: "/dashboard/admin/candidates", icon: "fa-solid fa-users", disabled: true, comingSoon: true },
+                { label: "Permintaan Perubahan", href: "/dashboard/admin/change-requests", icon: "fa-solid fa-arrows-rotate" },
+                { label: "Seleksi & Status", href: "/dashboard/admin/selection-status", icon: "fa-solid fa-list-check", disabled: true, comingSoon: true },
+                { label: "Laporan Umum", href: "/dashboard/admin/reports", icon: "fa-solid fa-chart-line", disabled: true, comingSoon: true },
             ],
         },
         {
-            group: "Akun",
+            group: "ADMINISTRASI",
             items: [
-                { label: "Profil", href: "/dashboard/admin/profile", icon: "fa-solid fa-circle-user" },
+                { label: "Dokumen", href: "/dashboard/admin/documents", icon: "fa-solid fa-file-lines", disabled: true, comingSoon: true },
+            ],
+        },
+        {
+            group: "PEMBAYARAN",
+            items: [
+                { label: "Pembayaran", href: "/dashboard/admin/payments", icon: "fa-solid fa-credit-card", disabled: true, comingSoon: true },
+                { label: "Rekap Pembayaran", href: "/dashboard/admin/payment-recap", icon: "fa-solid fa-receipt", disabled: true, comingSoon: true },
+            ],
+        },
+        {
+            group: "PENGATURAN ADMIN",
+            items: [
+                { label: "Gelombang", href: "/dashboard/admin/waves", icon: "fa-solid fa-layer-group", disabled: true, comingSoon: true },
+                { label: "Program / Jalur", href: "/dashboard/admin/programs", icon: "fa-solid fa-diagram-project", disabled: true, comingSoon: true },
+                { label: "Staff", href: "/dashboard/admin/staff-list", icon: "fa-solid fa-user-tie", disabled: true, comingSoon: true },
+                { label: "Pengaturan Sistem", href: "/dashboard/admin/settings", icon: "fa-solid fa-sliders", disabled: true, comingSoon: true },
+            ],
+        },
+        {
+            group: "AKUN",
+            items: [
+                { label: "Profil", href: "/dashboard/admin/profile", icon: "fa-solid fa-circle-user", disabled: true, comingSoon: true },
             ],
         },
     ],

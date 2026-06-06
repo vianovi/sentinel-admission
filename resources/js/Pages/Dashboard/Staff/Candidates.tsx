@@ -70,6 +70,7 @@ export default function StaffCandidates({ candidates, waves, filters }: Props) {
                     lastPage={candidates.last_page}
                     total={candidates.total}
                     links={candidates.links}
+                    filters={filters}
                 />
 
             </div>

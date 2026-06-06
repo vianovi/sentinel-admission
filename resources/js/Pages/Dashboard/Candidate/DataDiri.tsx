@@ -23,6 +23,7 @@ import { Head, router }                 from "@inertiajs/react";
 import Swal                             from "sweetalert2";
 import DashboardSplitLayout             from "@/Layouts/DashboardSplitLayout";
 import CandidateSidebar                 from "@/Components/Dashboard/Candidate/Shared/CandidateSidebar";
+import RequestStatusBanner              from "@/Components/Dashboard/Candidate/Shared/RequestStatusBanner";
 import TabIdentitas                     from "@/Components/Dashboard/Candidate/DataDiri/TabIdentitas";
 import TabAlamat                        from "@/Components/Dashboard/Candidate/DataDiri/TabAlamat";
 import TabMinat                         from "@/Components/Dashboard/Candidate/DataDiri/TabMinat";
@@ -81,10 +82,25 @@ type UserData = {
     name: string; avatar_url: string | null; initials: string;
 };
 
+type DataChangeRequestResult = {
+    field: string;
+    field_label: string;
+    old_value: string;
+    new_value: string;
+    reason: string | null;
+    status: "approved" | "rejected";
+    reviewed_by: number | null;
+    reviewed_by_name: string | null;
+    reviewed_at: string | null;
+    rejection_reason: string | null;
+    review_note: string | null;
+} | null;
+
 type Props = {
-    user:      UserData;
+    user: UserData;
     candidate: CandidateData | null;
-    flash?:    { success?: string; error?: string };
+    data_change_request_result: DataChangeRequestResult;
+    flash?: { success?: string; error?: string };
 };
 
 // EmptyField — untuk TabRangkuman nanti
@@ -155,7 +171,9 @@ const formatHP = (val: string): string => {
 // PAGE COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function DataDiriPage({ user, candidate, flash }: Props) {
+const reviewedByLabel = (name: string | null | undefined) => name ?? "petugas";
+
+export default function DataDiriPage({ user, candidate, data_change_request_result, flash }: Props) {
     const [activeTab,    setActiveTab]    = useState<TabId>("identitas");
     const [submitting,   setSubmitting]   = useState(false);
     const [errors,       setErrors]       = useState<Record<string, string>>({});
@@ -577,6 +595,22 @@ export default function DataDiriPage({ user, candidate, flash }: Props) {
                         </div>
                     </div>
                 </div>
+
+                {data_change_request_result && (
+                    <div className="datadiri-card">
+                        <RequestStatusBanner
+                            tone={data_change_request_result.status === "approved" ? "emerald" : "red"}
+                            icon={data_change_request_result.status === "approved" ? "fa-solid fa-file-circle-check" : "fa-solid fa-file-circle-xmark"}
+                            title={data_change_request_result.status === "approved" ? "Permintaan perubahan data disetujui" : "Permintaan perubahan data ditolak"}
+                            description={
+                                data_change_request_result.status === "approved"
+                                    ? `Permintaan perubahan data ${data_change_request_result.field_label.toLowerCase()} disetujui oleh ${reviewedByLabel(data_change_request_result.reviewed_by_name)}. Data kamu sudah diperbarui.`
+                                    : `Permintaan perubahan data ditolak oleh ${reviewedByLabel(data_change_request_result.reviewed_by_name)}.${data_change_request_result.rejection_reason ? ` Alasan: ${data_change_request_result.rejection_reason}.` : ""}`
+                            }
+                            meta={data_change_request_result.reviewed_at ? `Ditinjau ${data_change_request_result.reviewed_at}` : null}
+                        />
+                    </div>
+                )}
 
                 {/* ── Tab navigation — pill style ──────────────────────────── */}
                 <div className="datadiri-card">

@@ -23,6 +23,20 @@ type Props = {
     waves:   Wave[];
 };
 
+export function buildCandidateListQuery(filters: Partial<Filters>, page?: number) {
+    const search = (filters.search ?? "").trim();
+    const status = (filters.status ?? "").trim();
+    const wave = (filters.wave ?? "").trim();
+    const query: Record<string, string | number> = {};
+
+    if (search) query.search = search;
+    if (status) query.status = status;
+    if (wave) query.wave = wave;
+    if (page && page > 1) query.page = page;
+
+    return query;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // CONSTANTS
 // ─────────────────────────────────────────────────────────────────────────────
@@ -53,7 +67,7 @@ export default function CandidateFilters({ filters, waves }: Props) {
     const applyFilter = useCallback((patch: Partial<Filters>) => {
         router.get(
             "/dashboard/staff/candidates",
-            { ...filters, ...patch, page: 1 },
+            buildCandidateListQuery({ ...filters, ...patch }),
             { preserveState: true, preserveScroll: true, replace: true }
         );
     }, [filters]);

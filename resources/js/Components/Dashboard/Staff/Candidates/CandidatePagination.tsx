@@ -1,6 +1,7 @@
 // resources/js/Components/Dashboard/Staff/Candidates/CandidatePagination.tsx
 
 import { router } from "@inertiajs/react";
+import { buildCandidateListQuery, type Filters } from "@/Components/Dashboard/Staff/Candidates/CandidateFilters";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -17,18 +18,27 @@ type Props = {
     lastPage:    number;
     total:       number;
     links:       PaginationLink[];
+    filters:     Filters;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function CandidatePagination({ currentPage, lastPage, total, links }: Props) {
+export default function CandidatePagination({ currentPage, lastPage, total, links, filters }: Props) {
     if (lastPage <= 1) return null;
 
     const handlePage = (url: string | null) => {
         if (!url) return;
-        router.get(url, {}, { preserveState: true, preserveScroll: false });
+
+        const pageValue = new URL(url, "http://localhost").searchParams.get("page");
+        const page = pageValue ? Number(pageValue) : 1;
+
+        router.get(
+            "/dashboard/staff/candidates",
+            buildCandidateListQuery(filters, Number.isFinite(page) ? page : 1),
+            { preserveState: true, preserveScroll: false }
+        );
     };
 
     return (

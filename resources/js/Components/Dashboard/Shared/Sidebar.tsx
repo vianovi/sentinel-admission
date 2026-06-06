@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, usePage } from "@inertiajs/react";
 import { animate, stagger } from "animejs";
 import { useSidebar } from "@/context/SidebarContext";
-import { navigationConfig, NavGroup, NavSubItem } from "@/config/navigation";
+import { navigationConfig, NavGroup, NavItem, NavSubItem } from "@/config/navigation";
 import { PageProps } from "@/types";
 
 type Props = {
@@ -65,6 +65,25 @@ export default function Sidebar({ role }: Props) {
         return url.startsWith(href);
     };
 
+    const isStaffSectionActive = (section: NonNullable<NavItem["staffCandidateSection"]>) => {
+        if (section === "data-diri" && /^\/dashboard\/staff\/candidates\/\d+$/.test(url)) {
+            return true;
+        }
+
+        return url.endsWith(`/${section}`) && url.includes("/dashboard/staff/candidates/");
+    };
+
+    const getItemHref = (item: NavItem) => {
+        if (item.staffCandidateHome) {
+            if (!activeStaffCandidateId) return item.href;
+            return `/dashboard/staff/candidates/${activeStaffCandidateId}`;
+        }
+
+        if (!item.staffCandidateSection) return item.href;
+        if (!activeStaffCandidateId) return item.href;
+        return `/dashboard/staff/candidates/${activeStaffCandidateId}/${item.staffCandidateSection}`;
+    };
+
     const getSubItemHref = (subItem: NavSubItem) => {
         if (!subItem.staffCandidateSection) return subItem.href ?? "#";
         if (!activeStaffCandidateId) return "/dashboard/staff/candidates";
@@ -73,11 +92,7 @@ export default function Sidebar({ role }: Props) {
 
     const isSubItemActive = (subItem: NavSubItem) => {
         if (!subItem.staffCandidateSection) return subItem.href ? isActive(subItem.href) : false;
-        if (subItem.staffCandidateSection === "data-diri" && /^\/dashboard\/staff\/candidates\/\d+$/.test(url)) {
-            return true;
-        }
-        return url.endsWith(`/${subItem.staffCandidateSection}`)
-            && url.includes("/dashboard/staff/candidates/");
+        return isStaffSectionActive(subItem.staffCandidateSection);
     };
 
     const isChildrenActive = (children?: NavSubItem[]) => {
@@ -165,14 +180,31 @@ export default function Sidebar({ role }: Props) {
                         <ul className="flex flex-col gap-0.5 px-2">
                             {group.items.map((item) => {
                                 const hasChildren = !!item.children?.length;
-                                const active = isActive(item.href, item.exact) || isChildrenActive(item.children);
+                                const itemHref = getItemHref(item);
+                                const waitingForCandidate = !!item.staffCandidateSection && !activeStaffCandidateId;
+                                const active = !item.disabled
+                                    && ((item.staffCandidateSection
+                                        ? isStaffSectionActive(item.staffCandidateSection)
+                                        : isActive(item.href, item.exact))
+                                        || isChildrenActive(item.children));
                                 const childOpen = hasChildren && isVisible && (openMenus[item.href] || active);
+                                const baseItemClass = `
+                                    flex items-center gap-3 rounded-xl px-3 py-2.5
+                                    text-sm font-semibold transition-all duration-150
+                                    ${active
+                                        ? "bg-gold text-navy shadow-glow"
+                                        : item.disabled
+                                            ? "cursor-not-allowed text-slate-400/55 dark:text-slate-500/80"
+                                            : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white"
+                                    }
+                                    ${!isVisible ? "justify-center" : ""}
+                                `;
 
                                 return (
                                     <li
                                         key={item.href}
                                         className="sidebar-nav-item opacity-0"
-                                        onMouseEnter={() => hasChildren && setOpenMenus(prev => ({ ...prev, [item.href]: true }))}
+                                        onMouseEnter={() => hasChildren && !item.disabled && setOpenMenus(prev => ({ ...prev, [item.href]: true }))}
                                         onMouseLeave={() => {
                                             if (hasChildren && !active) {
                                                 setOpenMenus(prev => ({ ...prev, [item.href]: false }));
@@ -192,20 +224,49 @@ export default function Sidebar({ role }: Props) {
                                                 `}
                                                 title={!isVisible ? item.label : undefined}
                                             >
-                                                <Link
-                                                    href={item.href}
-                                                    className={`
-                                                        flex min-w-0 flex-1 items-center gap-3 px-3 py-2.5
-                                                        ${!isVisible ? "justify-center" : ""}
-                                                    `}
-                                                >
-                                                    <i className={`${item.icon} text-[15px] shrink-0 ${active ? "text-navy" : ""}`}></i>
-                                                    {isVisible && (
-                                                        <span className="truncate">{item.label}</span>
-                                                    )}
-                                                </Link>
+                                                {item.disabled ? (
+                                                    <div
+                                                        className={`
+                                                            flex min-w-0 flex-1 items-center gap-3 px-3 py-2.5
+                                                            ${!isVisible ? "justify-center" : ""}
+                                                        `}
+                                                        title="Segera hadir"
+                                                        aria-disabled="true"
+                                                    >
+                                                        <i className={`${item.icon} text-[15px] shrink-0 ${active ? "text-navy" : ""}`}></i>
+                                                        {isVisible && (
+                                                            <>
+                                                                <span className="truncate">{item.label}</span>
+                                                                {item.comingSoon && (
+                                                                    <span className="ml-auto rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-500">
+                                                                        Soon
+                                                                    </span>
+                                                                )}
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <Link
+                                                        href={itemHref}
+                                                        className={`
+                                                            flex min-w-0 flex-1 items-center gap-3 px-3 py-2.5
+                                                            ${!isVisible ? "justify-center" : ""}
+                                                        `}
+                                                        title={waitingForCandidate ? "Pilih kandidat dulu" : undefined}
+                                                    >
+                                                        <i className={`${item.icon} text-[15px] shrink-0 ${active ? "text-navy" : ""}`}></i>
+                                                        {isVisible && (
+                                                            <>
+                                                                <span className="truncate">{item.label}</span>
+                                                                {waitingForCandidate && (
+                                                                    <i className="fa-solid fa-circle-info ml-auto text-[10px] text-slate-400"></i>
+                                                                )}
+                                                            </>
+                                                        )}
+                                                    </Link>
+                                                )}
 
-                                                {isVisible && (
+                                                {isVisible && !item.disabled && (
                                                     <button
                                                         type="button"
                                                         onClick={() => toggleSubmenu(item.href)}
@@ -221,27 +282,44 @@ export default function Sidebar({ role }: Props) {
                                                 )}
                                             </div>
                                         ) : (
-                                            <Link
-                                                href={item.href}
-                                                className={`
-                                                    flex items-center gap-3 rounded-xl px-3 py-2.5
-                                                    text-sm font-semibold transition-all duration-150
-                                                    ${active
-                                                        ? "bg-gold text-navy shadow-glow"
-                                                        : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white"
-                                                    }
-                                                    ${!isVisible ? "justify-center" : ""}
-                                                `}
-                                                title={!isVisible ? item.label : undefined}
-                                            >
-                                                <i className={`${item.icon} text-[15px] shrink-0 ${active ? "text-navy" : ""}`}></i>
-                                                {isVisible && (
-                                                    <span className="truncate">{item.label}</span>
-                                                )}
-                                                {!isVisible && active && (
-                                                    <span className="absolute right-2 w-1.5 h-1.5 rounded-full bg-gold" />
-                                                )}
-                                            </Link>
+                                            item.disabled ? (
+                                                <div
+                                                    className={baseItemClass}
+                                                    title={!isVisible ? item.label : "Segera hadir"}
+                                                    aria-disabled="true"
+                                                >
+                                                    <i className={`${item.icon} text-[15px] shrink-0 ${active ? "text-navy" : ""}`}></i>
+                                                    {isVisible && (
+                                                        <>
+                                                            <span className="truncate">{item.label}</span>
+                                                            {item.comingSoon && (
+                                                                <span className="ml-auto rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-500">
+                                                                    Soon
+                                                                </span>
+                                                            )}
+                                                        </>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <Link
+                                                    href={itemHref}
+                                                    className={baseItemClass}
+                                                    title={!isVisible ? item.label : waitingForCandidate ? "Pilih kandidat dulu" : undefined}
+                                                >
+                                                    <i className={`${item.icon} text-[15px] shrink-0 ${active ? "text-navy" : ""}`}></i>
+                                                    {isVisible && (
+                                                        <>
+                                                            <span className="truncate">{item.label}</span>
+                                                            {waitingForCandidate && (
+                                                                <i className="fa-solid fa-circle-info ml-auto text-[10px] text-slate-400"></i>
+                                                            )}
+                                                        </>
+                                                    )}
+                                                    {!isVisible && active && (
+                                                        <span className="absolute right-2 w-1.5 h-1.5 rounded-full bg-gold" />
+                                                    )}
+                                                </Link>
+                                            )
                                         )}
 
                                         {hasChildren && isVisible && (

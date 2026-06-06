@@ -21,6 +21,10 @@ class User extends Authenticatable implements MustVerifyEmail
         'avatar',
         'pending_email',
         'pending_email_token',
+        'pending_email_status',
+        'pending_email_reviewed_by',
+        'pending_email_reviewed_at',
+        'pending_email_rejection_reason',
         'pending_email_requested_at',
         'is_active',
     ];
@@ -36,6 +40,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at'          => 'datetime',
             'pending_email_requested_at' => 'datetime',
+            'pending_email_reviewed_at'  => 'datetime',
             'password'                   => 'hashed',
             'is_active'                  => 'boolean',
         ];
@@ -61,7 +66,30 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function hasPendingEmailRequest(): bool
     {
-        return ! is_null($this->pending_email);
+        return ! is_null($this->pending_email) &&
+            (($this->pending_email_status ?? 'pending') === 'pending');
+    }
+
+    public function hasApprovedEmailChangeRequest(): bool
+    {
+        return ! is_null($this->pending_email) &&
+            $this->pending_email_status === 'approved';
+    }
+
+    public function hasRejectedEmailChangeRequest(): bool
+    {
+        return ! is_null($this->pending_email) &&
+            $this->pending_email_status === 'rejected';
+    }
+
+    public function canRequestEmailChange(): bool
+    {
+        return is_null($this->pending_email) || $this->hasRejectedEmailChangeRequest();
+    }
+
+    public function canApplyApprovedEmailChange(): bool
+    {
+        return $this->hasApprovedEmailChangeRequest();
     }
 
     /**
@@ -112,5 +140,10 @@ class User extends Authenticatable implements MustVerifyEmail
     public function candidate()
     {
         return $this->hasOne(Candidate::class);
+    }
+
+    public function pendingEmailReviewer()
+    {
+        return $this->belongsTo(User::class, 'pending_email_reviewed_by');
     }
 }
