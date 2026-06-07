@@ -1,84 +1,201 @@
-// resources/js/Components/Landing/TopBar.tsx
+import { memo, useMemo, useEffect, useRef, useState } from 'react';
 
-import { AdmissionWaveData, formatDate, remainingQuota } from '@/types/landing'
+import { AdmissionWaveData, formatDate, remainingQuota } from '@/types/landing';
 
 interface TopBarProps {
-    activeWave: AdmissionWaveData | null
+    activeWave: AdmissionWaveData | null;
 }
 
-export default function TopBar({ activeWave }: TopBarProps) {
+interface SocialLink {
+    ariaLabel: string;
+    href: string;
+    iconClassName: string;
+    title: string;
+}
 
-    // ── Susun teks running dari data activeWave ───────────────────────────────
-    const buildTickerItems = (): string[] => {
-        if (!activeWave) {
-            return [
-                '🏫 Selamat datang di Al-Muntaha School',
-                '📢 Informasi pendaftaran akan segera dibuka',
-                '✉️ Hubungi kami di admin@almuntaha.sch.id',
-            ]
+// ── KONSTANTA INFORMASI ───────────────────────────────────────────────────────
+const EMAIL_ADDRESS = 'admin@almuntaha.sch.id';
+const PHONE_NUMBER = '+62 851-8500-1661';
+const DISCORD_USERNAME = 'noviana0515';
+const DISCORD_URL = 'https://discord.com/app';
+
+// Kecepatan pixel per detik
+const TICKER_SPEED_PX_PER_SECOND = 40;
+
+const FALLBACK_TICKER_ITEMS = [
+    'Selamat datang di portal penerimaan santri baru Al-Muntaha',
+    'Informasi pendaftaran akan segera dibuka',
+    'Hubungi layanan admin untuk konsultasi dan bantuan pendaftaran',
+];
+
+const SOCIAL_LINKS: SocialLink[] = [
+    {
+        ariaLabel: 'TikTok',
+        href: 'https://www.tiktok.com/@sillvia_noviana27',
+        iconClassName: 'fa-brands fa-tiktok',
+        title: 'Kunjungi TikTok',
+    },
+    {
+        ariaLabel: 'Discord',
+        href: DISCORD_URL,
+        iconClassName: 'fa-brands fa-discord',
+        title: `Hubungi via Discord: ${DISCORD_USERNAME}`,
+    },
+    {
+        ariaLabel: 'YouTube',
+        href: 'https://youtube.com/@silvia_dewi3211',
+        iconClassName: 'fa-brands fa-youtube',
+        title: 'Kunjungi YouTube',
+    },
+];
+
+// ── HELPER FUNCTIONS ──────────────────────────────────────────────────────────
+function buildTickerItems(activeWave: AdmissionWaveData | null): string[] {
+    if (!activeWave) return FALLBACK_TICKER_ITEMS;
+
+    const remainingSeats = remainingQuota(
+        activeWave.quota_target,
+        activeWave.candidates_count,
+    );
+
+    const items = [
+        `Pendaftaran ${activeWave.title} · Tahun Ajaran ${activeWave.academic_year} kini dibuka`,
+        `Periode: ${formatDate(activeWave.start_date)} s/d ${formatDate(activeWave.end_date)}`,
+        `Sisa kuota: ${remainingSeats.toLocaleString('id-ID')} kursi tersedia`,
+    ];
+
+    if (activeWave.exam_info) items.push(`Tes seleksi: ${activeWave.exam_info}`);
+    // Info pengumuman
+    if (activeWave.announcement_info) items.push(`Info: ${activeWave.announcement_info}`);
+
+    items.push('Daftar sekarang dan amankan peluang terbaikmu');
+
+    return items;
+}
+
+// Komponen pemisah estetik
+const Divider = () => <span className="mx-3 text-white/10 select-none">|</span>;
+// Margin (mx) dikurangi agar spasi tidak terlalu jauh/kepanjangan
+const TickerDot = () => <span className="mx-3 text-gold/60 select-none text-[9px]">✦</span>;
+
+
+// ── KOMPONEN UTAMA ────────────────────────────────────────────────────────────
+function TopBar({ activeWave }: TopBarProps) {
+    const tickerRef = useRef<HTMLDivElement>(null);
+    const [animationDuration, setAnimationDuration] = useState<number>(30);
+
+    const tickerTextArray = useMemo(() => buildTickerItems(activeWave), [activeWave]);
+
+    useEffect(() => {
+        if (tickerRef.current) {
+            const contentWidth = tickerRef.current.scrollWidth / 2;
+            const durationInSeconds = contentWidth / TICKER_SPEED_PX_PER_SECOND;
+            setAnimationDuration(durationInSeconds);
         }
-
-        const sisa = remainingQuota(activeWave.quota_target, activeWave.candidates_count)
-        const items = [
-            `🎓 Pendaftaran ${activeWave.title} · Tahun Ajaran ${activeWave.academic_year} Kini Dibuka!`,
-            `📅 Periode: ${formatDate(activeWave.start_date)} s/d ${formatDate(activeWave.end_date)}`,
-            `🪑 Sisa Kuota: ${sisa.toLocaleString('id-ID')} Kursi Tersedia — Segera Amankan Posisimu!`,
-        ]
-
-        if (activeWave.exam_info) {
-            items.push(`📝 Tes Seleksi: ${activeWave.exam_info}`)
-        }
-        if (activeWave.announcement_info) {
-            items.push(`📣 Pengumuman: ${activeWave.announcement_info}`)
-        }
-
-        items.push('🌟 Daftar Sekarang di Al-Muntaha School — Menuju Puncak Ilmu & Akhlak!')
-
-        return items
-    }
-
-    const tickerText = buildTickerItems().join('   ✦   ')
+    }, [tickerTextArray]);
 
     return (
-        <div className="bg-navy text-gray-300 text-xs py-2.5 border-b border-white/5 hidden md:block overflow-hidden">
-            <div className="max-w-7xl mx-auto px-4 flex items-center justify-between gap-6">
+        <>
+            <style>{`
+                @keyframes smooth-marquee {
+                    0% { transform: translate3d(0, 0, 0); }
+                    100% { transform: translate3d(-50%, 0, 0); }
+                }
+                .animate-smooth-marquee {
+                    animation: smooth-marquee var(--marquee-duration) linear infinite;
+                    will-change: transform;
+                }
+                .animate-smooth-marquee:hover {
+                    animation-play-state: paused;
+                }
+            `}</style>
 
-                {/* KIRI — Kontak */}
-                <div className="flex items-center gap-5 flex-shrink-0 border-r border-gray-700 pr-5">
-                    <span className="flex items-center gap-2 cursor-default whitespace-nowrap">
-                        <i className="fa-solid fa-phone text-gold text-xs"></i>
-                        +62 821-0000-1234
-                    </span>
-                    <a href="mailto:admin@almuntaha.sch.id" className="flex items-center gap-2 whitespace-nowrap hover:text-white transition">
-                        <i className="fa-solid fa-envelope text-gold text-xs"></i>
-                        admin@almuntaha.sch.id
-                    </a>
-                </div>
+            <div className="w-full border-b border-white/5 bg-navy py-2.5 font-sans text-xs text-gray-300">
+                <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 sm:gap-6 lg:px-8">
 
-                {/* TENGAH — Running Text */}
-                <div className="flex-1 min-w-0 overflow-hidden relative flex items-center">
-                    <div className="absolute left-0 top-0 h-full w-12 bg-gradient-to-r from-navy to-transparent z-10 pointer-events-none" />
-                    <div className="absolute right-0 top-0 h-full w-12 bg-gradient-to-l from-navy to-transparent z-10 pointer-events-none" />
-                    <div className="ticker-wrapper flex whitespace-nowrap w-full overflow-hidden">
-                        {/*
-                         * ✅ PERF: Animasi ticker dipindah ke app.css sebagai global style.
-                         *    Inline <style> di-parse ulang setiap render — buang ke CSS global
-                         *    supaya di-cache browser dan tidak block rendering.
-                         */}
-                        <span className="ticker-content text-gray-300 font-medium animate-ticker inline-block">
-                            {tickerText}   ✦   {tickerText}
-                        </span>
+                    {/* KIRI: Kontak (Email & Telepon) */}
+                    <div className="hidden shrink-0 items-center border-r border-white/5 pr-4 md:flex">
+                        <a
+                            href={`mailto:${EMAIL_ADDRESS}`}
+                            className="group flex items-center gap-2 transition-colors duration-300 hover:text-white"
+                            aria-label={`Kirim email ke ${EMAIL_ADDRESS}`}
+                        >
+                            <i className="fa-solid fa-envelope text-[11px] text-gold transition-transform duration-300 group-hover:-translate-y-0.5" aria-hidden="true" />
+                            <span className="font-medium tracking-wide">{EMAIL_ADDRESS}</span>
+                        </a>
+
+                        <Divider />
+
+                        <a
+                            href={`tel:${PHONE_NUMBER.replace(/[^\d+]/g, '')}`}
+                            className="group flex items-center gap-2 transition-colors duration-300 hover:text-white"
+                            aria-label={`Hubungi ${PHONE_NUMBER}`}
+                        >
+                            <i className="fa-solid fa-phone text-[10px] text-gold transition-transform duration-300 group-hover:-translate-y-0.5" aria-hidden="true" />
+                            <span className="font-medium tracking-wide">{PHONE_NUMBER}</span>
+                        </a>
                     </div>
-                </div>
 
-                {/* KANAN — Sosmed */}
-                <div className="flex items-center gap-4 flex-shrink-0 border-l border-gray-700 pl-5">
-                    <span className="font-medium text-gray-500 text-[11px] whitespace-nowrap">Ikuti Kami:</span>
-                    <a href="#" aria-label="TikTok" className="text-sm hover:text-gold transition hover:-translate-y-0.5 transform"><i className="fa-brands fa-tiktok"></i></a>
-                    <a href="#" aria-label="Instagram" className="text-sm hover:text-gold transition hover:-translate-y-0.5 transform"><i className="fa-brands fa-instagram"></i></a>
-                    <a href="#" aria-label="YouTube" className="text-sm hover:text-gold transition hover:-translate-y-0.5 transform"><i className="fa-brands fa-youtube"></i></a>
+                    {/* TENGAH: Infinite Running Text */}
+                    <div className="relative flex min-w-0 flex-1 items-center overflow-hidden">
+                        <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-8 bg-gradient-to-r from-navy to-transparent md:w-16" />
+                        <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-8 bg-gradient-to-l from-navy to-transparent md:w-16" />
+
+                        <div className="w-full overflow-hidden">
+                            <div
+                                ref={tickerRef}
+                                className="animate-smooth-marquee flex w-max cursor-default items-center"
+                                style={{ '--marquee-duration': `${animationDuration}s` } as React.CSSProperties}
+                            >
+                                {/* Set 1 */}
+                                <div className="flex items-center">
+                                    {tickerTextArray.map((text, idx) => (
+                                        <span key={`set1-${idx}`} className="flex items-center">
+                                            <span className="whitespace-nowrap font-medium tracking-wide text-gray-300/90">{text}</span>
+                                            <TickerDot />
+                                        </span>
+                                    ))}
+                                </div>
+                                {/* Set 2 */}
+                                <div className="flex items-center" aria-hidden="true">
+                                    {tickerTextArray.map((text, idx) => (
+                                        <span key={`set2-${idx}`} className="flex items-center">
+                                            <span className="whitespace-nowrap font-medium tracking-wide text-gray-300/90">{text}</span>
+                                            <TickerDot />
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* KANAN: Sosial Media */}
+                    <div className="hidden shrink-0 items-center gap-4 border-l border-white/5 pl-4 md:flex">
+                        {/* Diubah jadi Title Case & ukuran font sedikit disesuaikan agar rapi */}
+                        <span className="whitespace-nowrap text-[11px] font-medium tracking-wide text-gray-400/90">
+                            Tetap Terhubung :
+                        </span>
+                        <div className="flex items-center gap-3.5">
+                            {SOCIAL_LINKS.map((link) => (
+                                <a
+                                    key={link.ariaLabel}
+                                    href={link.href}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    aria-label={link.ariaLabel}
+                                    title={link.title}
+                                    className="group relative flex items-center justify-center text-gray-400 transition-all duration-300 hover:text-gold hover:drop-shadow-glow"
+                                >
+                                    <i className={`${link.iconClassName} text-[13px] transform transition-transform duration-300 group-hover:-translate-y-0.5`} aria-hidden="true" />
+                                </a>
+                            ))}
+                        </div>
+                    </div>
+
                 </div>
             </div>
-        </div>
-    )
+        </>
+    );
 }
+
+export default memo(TopBar);
