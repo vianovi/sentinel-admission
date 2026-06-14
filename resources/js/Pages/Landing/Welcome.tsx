@@ -39,14 +39,14 @@ export default function Welcome({ activeWave, auth }: WelcomeProps) {
                 <link
                     rel="preload"
                     as="image"
-                    href="/assets/hero-background-mobile.webp"
+                    href="/assets/landing/hero/background-mobile.webp"
                     media="(max-width: 768px)"
                     fetchPriority="high"
                 />
                 <link
                     rel="preload"
                     as="image"
-                    href="/assets/hero-background.webp"
+                    href="/assets/landing/hero/background.webp"
                     media="(min-width: 769px)"
                     fetchPriority="high"
                 />
@@ -55,7 +55,7 @@ export default function Welcome({ activeWave, auth }: WelcomeProps) {
                 <meta name="description" content="Al-Muntaha Islamic Boarding School - Pendaftaran Siswa Baru Online. Gelombang aktif sekarang. Kuota terbatas." />
                 <meta property="og:title" content={`${app.name} - PSB ${new Date().getFullYear()}/${new Date().getFullYear() + 1}`} />
                 <meta property="og:description" content="Daftar sekarang di sistem penerimaan siswa baru Al-Muntaha School. Gelombang aktif, kuota terbatas." />
-                <meta property="og:image" content="/assets/hero-background.webp" />
+                <meta property="og:image" content="/assets/landing/hero/background.webp" />
                 <meta property="og:image:width" content="1920" />
                 <meta property="og:image:height" content="1080" />
                 <meta property="og:type" content="website" />
@@ -63,7 +63,7 @@ export default function Welcome({ activeWave, auth }: WelcomeProps) {
                 <meta name="twitter:card" content="summary_large_image" />
                 <meta name="twitter:title" content={`${app.name} - PSB ${new Date().getFullYear()}/${new Date().getFullYear() + 1}`} />
                 <meta name="twitter:description" content="Pendaftaran Siswa Baru Al-Muntaha Islamic Boarding School" />
-                <meta name="twitter:image" content="/assets/hero-background.webp" />
+                <meta name="twitter:image" content="/assets/landing/hero/background.webp" />
 
                 {/* Mobile SEO */}
                 <meta name="theme-color" content="#0f172a" />

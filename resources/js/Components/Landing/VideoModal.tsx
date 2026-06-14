@@ -40,7 +40,7 @@ export default function VideoModal({ isOpen, onClose }: VideoModalProps) {
                         autoPlay
                         preload="none"
                     >
-                        <source src="/assets/test-video.mp4" type="video/mp4" />
+                        <source src="/assets/landing/video/profile.mp4" type="video/mp4" />
                         Browser Anda tidak mendukung tag video.
                     </video>
                 </div>

@@ -96,7 +96,7 @@ export default function ProfileSection({ onOpenVideo }: ProfileSectionProps) {
                             className="w-full rounded-2xl overflow-hidden shadow-2xl border-4 border-white/10 relative group cursor-pointer block"
                         >
                             <img
-                                src="/assets/profile-thumbnail.webp"
+                                src="/assets/landing/profile/thumbnail.webp"
                                 className="w-full object-cover object-center transform group-hover:scale-105 transition duration-700 ease-in-out h-[400px]"
                                 alt="Eksplorasi Kehidupan Santri Al-Muntaha Boarding School"
                                 loading="lazy"

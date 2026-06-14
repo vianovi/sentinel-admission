@@ -242,6 +242,7 @@ function BSIBankCard({ config, finalAmount }: { config: Config | null; finalAmou
     const accName = config?.bank_account_name ?? 'Yayasan Al-Muntaha'
     const accNum  = config?.bank_account_number ?? ''
     const accFmt  = accNum.replace(/(.{4})/g, '$1 ').trim()
+    const bankLogo = `/assets/icons/banks/${config?.bank_logo_key ?? 'bsi'}.webp`
 
     return (
         <div className="relative w-full rounded-[2rem] overflow-hidden p-7 sm:p-8 shadow-xl shadow-teal-900/10 transition-transform hover:scale-[1.01] duration-500"
@@ -258,9 +259,14 @@ function BSIBankCard({ config, finalAmount }: { config: Config | null; finalAmou
                 {/* Header: Logo + label */}
                 <div className="flex justify-between items-start">
                     <div className="flex items-center gap-2">
-                        {/* BSI wordmark inline */}
                         <div className="px-2 py-1 rounded-lg" style={{ background: 'rgba(255,255,255,0.15)' }}>
-                            <span className="text-xl font-black text-white tracking-tight">BSI</span>
+                            <img
+                                src={bankLogo}
+                                alt={config?.bank_name ?? 'Logo bank'}
+                                className="h-7 w-auto object-contain"
+                                loading="lazy"
+                                decoding="async"
+                            />
                         </div>
                         <div className="text-left">
                             <p className="text-[9px] font-bold text-teal-200 uppercase tracking-widest leading-tight">Bank Syariah</p>

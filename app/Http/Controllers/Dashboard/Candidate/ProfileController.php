@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Dashboard\Candidate;
 
 use App\Http\Controllers\Controller;
 use App\Support\CandidateRequestPresenter;
+use App\Support\SentinelStoragePaths;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -135,13 +136,20 @@ class ProfileController extends Controller
 
         $user = $request->user();
 
-        if ($user->avatar && Storage::disk('private')->exists($user->avatar)) {
-            Storage::disk('private')->delete($user->avatar);
+        $candidate = $user->candidate()->firstOrFail();
+        $oldPath = $user->avatar;
+        $directory = SentinelStoragePaths::candidateAvatarDirectory($candidate->candidate_code);
+        $path = $directory . '/' . Str::uuid() . '.' . $detected['ext'];
+
+        if (! Storage::disk('private')->put($path, file_get_contents($file->getRealPath()))) {
+            return back()->withErrors(['avatar' => 'Gagal menyimpan avatar. Silakan coba lagi.']);
         }
 
-        $path = 'avatars/' . $user->id . '/' . Str::uuid() . '.' . $detected['ext'];
-        Storage::disk('private')->put($path, file_get_contents($file->getRealPath()));
         $user->update(['avatar' => $path]);
+
+        if ($oldPath && $oldPath !== $path && Storage::disk('private')->exists($oldPath)) {
+            Storage::disk('private')->delete($oldPath);
+        }
 
         return back()->with('success', 'Avatar berhasil diperbarui.');
     }

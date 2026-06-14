@@ -36,7 +36,7 @@ class HandleInertiaRequests extends Middleware
             'app' => [
                 'name'    => config('app.name'),
                 'tagline' => env('APP_TAGLINE', 'Sistem SPMB'),
-                'logo'    => env('APP_LOGO', null),
+                'logo'    => env('APP_LOGO', '/assets/icons/brand/logo.webp'),
             ],
         ];
     }

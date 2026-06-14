@@ -411,7 +411,7 @@ export const TabAdministrasi = memo(function TabAdministrasi({ documents }: TabP
                         document={documents['parent_statement'] ?? null}
                         requiredLevel="required"
                         showTemplate
-                        templateUrl="/assets/surat-pernyataan-template.docx"
+                        templateUrl="/assets/templates/surat-pernyataan-template.docx"
                     />
                     <DocumentCard
                         docType="recommendation_letter"

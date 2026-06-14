@@ -34,7 +34,7 @@ class WelcomeController extends Controller
     }
 
     /**
-     * Serve gallery media (images & videos) from private storage.
+     * Serve public gallery media. Safe landing assets live under public/assets/landing.
      *
      * Accepts paths like:
      *   /media/gallery/images/photo-01.webp
@@ -51,7 +51,7 @@ class WelcomeController extends Controller
             abort(404);
         }
 
-        $path = storage_path('app/private/Media_Showcase/' . $filename);
+        $path = public_path('assets/landing/showcase/' . $filename);
 
         abort_if(! file_exists($path), 404);
 

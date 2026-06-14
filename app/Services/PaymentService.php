@@ -9,6 +9,7 @@ namespace App\Services;
 use App\Models\Payment;
 use App\Models\PaymentConfig;
 use App\Models\Candidate;
+use App\Support\SentinelStoragePaths;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -146,13 +147,14 @@ class PaymentService
 
 
         $storedFilename = $this->securityService->generateStoredFilename($magicResult['detected_mime']);
-        $storedPath     = "payment-proofs/{$payment->candidate_code}/{$storedFilename}";
+        $storageDirectory = SentinelStoragePaths::paymentProofDirectory($payment->candidate_code);
+        $storedPath     = "{$storageDirectory}/{$storedFilename}";
 
         $oldPath = $payment->proof_path;
 
         try {
             $file->storeAs(
-                "payment-proofs/{$payment->candidate_code}",
+                $storageDirectory,
                 $storedFilename,
                 'private'
             );

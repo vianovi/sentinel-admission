@@ -225,6 +225,8 @@ Route::middleware(['auth', RoleMiddleware::class . ':staff'])
             ->name('profile');
         Route::put('/profile', [StaffProfile::class, 'update'])
             ->name('profile.update');
+        Route::get('/profile/avatar', [StaffProfile::class, 'serveAvatar'])
+            ->name('profile.avatar');
         Route::post('/profile/avatar', [StaffProfile::class, 'updateAvatar'])
             ->name('profile.avatar.update');
 
@@ -290,6 +292,8 @@ Route::middleware(['auth', RoleMiddleware::class . ':admin'])
             ->name('profile');
         Route::put('/profile', [AdminProfile::class, 'update'])
             ->name('profile.update');
+        Route::get('/profile/avatar', [AdminProfile::class, 'serveAvatar'])
+            ->name('profile.avatar');
         Route::post('/profile/avatar', [AdminProfile::class, 'updateAvatar'])
             ->name('profile.avatar.update');
 

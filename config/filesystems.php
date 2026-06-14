@@ -35,10 +35,7 @@ return [
             'report'     => false,
         ],
 
-        // ── Private disk — untuk dokumen & avatar yang tidak boleh diakses publik
-        // Semua file di sini hanya bisa diakses via controller dengan auth check
-        // serve: true  → aktifkan temporaryUrl() untuk local driver
-        // url          → base URL untuk generate signed temporary URL
+        // Private disk untuk sensitive uploads. Access must stay controller-gated.
         'private' => [
             'driver'     => 'local',
             'root'       => storage_path('app/private'),

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Dashboard\Candidate;
 
 use App\Http\Controllers\Controller;
 use App\Models\HealthRecord;
+use App\Support\SentinelStoragePaths;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -159,7 +160,11 @@ class HealthRecordController extends Controller
         $column      = self::UPLOAD_FIELDS[$docType];
         $ext         = $this->getExtFromMagicBytes($file);
         $filename    = Str::uuid() . '.' . $ext;
-        $storagePath = "health-documents/{$candidate->id}/{$filename}";
+        $storageDirectory = SentinelStoragePaths::candidateHealthDirectory(
+            $candidate->candidate_code,
+            $docType
+        );
+        $storagePath = "{$storageDirectory}/{$filename}";
 
         DB::beginTransaction();
         try {
@@ -169,7 +174,7 @@ class HealthRecordController extends Controller
 
             $oldPath = $healthRecord->$column;
 
-            $file->storeAs("health-documents/{$candidate->id}", $filename, 'private');
+            $file->storeAs($storageDirectory, $filename, 'private');
 
             $healthRecord->$column = $storagePath;
             $healthRecord->save();

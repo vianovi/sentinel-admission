@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CandidateDocument;
 use App\Models\CandidateDocumentSecurity;
 use App\Services\DocumentSecurityService;
+use App\Support\SentinelStoragePaths;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -115,7 +116,13 @@ class DocumentController extends Controller
         $storedFilename = $this->security->generateStoredFilename(
             $securityResult['detected_mime']
         );
-        $storagePath = "candidates/{$candidate->candidate_code}/{$storedFilename}";
+        $docGroup = CandidateDocument::getGroupForDocType($docType) ?? 'general';
+        $storageDirectory = SentinelStoragePaths::candidateDocumentDirectory(
+            $candidate->candidate_code,
+            $docGroup,
+            $docType
+        );
+        $storagePath = "{$storageDirectory}/{$storedFilename}";
 
         $oldPaths = collect();
 
@@ -135,7 +142,7 @@ class DocumentController extends Controller
             }
 
             $file->storeAs(
-                "candidates/{$candidate->candidate_code}",
+                $storageDirectory,
                 $storedFilename,
                 'private'
             );
@@ -144,7 +151,7 @@ class DocumentController extends Controller
                 'candidate_id'      => $candidate->id,
                 'candidate_code'    => $candidate->candidate_code,
                 'doc_type'          => $docType,
-                'doc_group'         => CandidateDocument::getGroupForDocType($docType),
+                'doc_group'         => $docGroup,
                 'original_filename' => $file->getClientOriginalName(),
                 'stored_filename'   => $storedFilename,
                 'file_path'         => $storagePath,
