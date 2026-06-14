@@ -1,6 +1,6 @@
 // resources/js/Pages/Dashboard/Staff/Candidates.tsx
 
-import { Head } from "@inertiajs/react";
+import { Head, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import CandidateFilters from "@/Components/Dashboard/Staff/Candidates/CandidateFilters";
 import CandidateTable from "@/Components/Dashboard/Staff/Candidates/CandidateTable";
@@ -8,6 +8,7 @@ import CandidatePagination from "@/Components/Dashboard/Staff/Candidates/Candida
 import type { Filters, Wave } from "@/Components/Dashboard/Staff/Candidates/CandidateFilters";
 import type { CandidateRow } from "@/Components/Dashboard/Staff/Candidates/CandidateTable";
 import type { PaginationLink } from "@/Components/Dashboard/Staff/Candidates/CandidatePagination";
+import type { PageProps } from "@/types";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -33,6 +34,8 @@ type Props = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function StaffCandidates({ candidates, waves, filters }: Props) {
+    const { flash } = usePage<PageProps>().props;
+
     return (
         <DashboardLayout>
             <Head title="Kandidat — Staff" />
@@ -57,6 +60,12 @@ export default function StaffCandidates({ candidates, waves, filters }: Props) {
                         </p>
                     </div>
                 </div>
+
+                {flash.error && (
+                    <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200">
+                        {flash.error}
+                    </div>
+                )}
 
                 {/* ── Filters ──────────────────────────────────────────────── */}
                 <CandidateFilters filters={filters} waves={waves} />

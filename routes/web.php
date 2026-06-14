@@ -183,14 +183,20 @@ Route::middleware(['auth', RoleMiddleware::class . ':staff'])
         Route::get('/candidates', [StaffDashboard::class, 'candidates'])
             ->name('candidates.index');
         Route::get('/candidates/{candidate}', [StaffDashboard::class, 'show'])
-            ->name('candidates.show');
+            ->name('candidates.show')
+            ->missing(fn () => redirect()
+                ->route('staff.candidates.index')
+                ->with('error', 'Kandidat yang dipilih tidak ditemukan atau sudah tidak tersedia.'));
         Route::get('/candidates/{candidate}/health-documents/{docType}', [SecureFileController::class, 'staffHealthDocumentPreview'])
             ->where('docType', 'chronic-disease|surat-sehat|bpjs-card|vaccine-card')
             ->middleware('throttle:sensitive-file')
             ->name('health-documents.preview');
         Route::get('/candidates/{candidate}/{section}', [StaffDashboard::class, 'show'])
             ->where('section', 'data-diri|data-kesehatan|data-wali|dokumen|pembayaran')
-            ->name('candidates.section');
+            ->name('candidates.section')
+            ->missing(fn () => redirect()
+                ->route('staff.candidates.index')
+                ->with('error', 'Kandidat yang dipilih tidak ditemukan atau sudah tidak tersedia.'));
         Route::post('/candidates/{candidate}/status', [StaffDashboard::class, 'updateStatus'])
             ->name('candidates.status');
 

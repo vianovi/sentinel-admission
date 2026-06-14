@@ -32,6 +32,10 @@ class HandleInertiaRequests extends Middleware
                     'initials'        => $user->initials,
                 ] : null,
             ],
+            'flash' => [
+                'success' => fn () => $request->session()->get('success'),
+                'error'   => fn () => $request->session()->get('error'),
+            ],
             // ── Global app config ──────────────────────────────────────────
             'app' => [
                 'name'    => config('app.name'),
