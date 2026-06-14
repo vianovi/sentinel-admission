@@ -9,6 +9,7 @@ use App\Http\Controllers\Dashboard\Candidate\GuardianController   as CandidateGu
 use App\Http\Controllers\Dashboard\Candidate\DocumentController   as CandidateDocument;
 use App\Http\Controllers\Dashboard\Candidate\PaymentController    as CandidatePayment;
 use App\Http\Controllers\Dashboard\ChangeRequestController;
+use App\Http\Controllers\Dashboard\SecureFileController;
 use App\Http\Controllers\Dashboard\Staff\IndexController          as StaffDashboard;
 use App\Http\Controllers\Dashboard\Staff\ProfileController        as StaffProfile;
 use App\Http\Controllers\Dashboard\Admin\IndexController          as AdminDashboard;
@@ -106,6 +107,10 @@ Route::middleware(['auth', RoleMiddleware::class . ':candidate'])
             ->name('data-kesehatan.save');
         Route::post('/data-kesehatan/dokumen/{docType}', [CandidateHealthRecord::class, 'uploadDocument'])
             ->name('data-kesehatan.upload');
+        Route::get('/data-kesehatan/dokumen/{docType}/preview', [SecureFileController::class, 'candidateHealthDocumentPreview'])
+            ->where('docType', 'chronic_disease|chronic-disease|surat_sehat|surat-sehat|bpjs_card|bpjs-card|vaccine_card|vaccine-card')
+            ->middleware('throttle:sensitive-file')
+            ->name('data-kesehatan.preview');
         Route::delete('/data-kesehatan/dokumen/{docType}', [CandidateHealthRecord::class, 'deleteDocument'])
             ->name('data-kesehatan.delete-doc');
 
@@ -120,11 +125,13 @@ Route::middleware(['auth', RoleMiddleware::class . ':candidate'])
             ->name('data-dokumen.index');
 
         // ⚠️ download HARUS sebelum store/{docType} — cegah 'download' tertangkap sebagai docType
-        Route::get('/data-dokumen/download/{document}', [CandidateDocument::class, 'download'])
+        Route::get('/data-dokumen/download/{document}', [SecureFileController::class, 'candidateDocumentDownload'])
+            ->middleware('throttle:sensitive-file')
             ->name('data-dokumen.download');
 
         // ⚠️preview HARUS sebelum store/{docType} — cegah 'preview' tertangkap sebagai docType
-        Route::get('/data-dokumen/preview/{document}', [CandidateDocument::class, 'preview'])
+        Route::get('/data-dokumen/preview/{document}', [SecureFileController::class, 'candidateDocumentPreview'])
+            ->middleware('throttle:sensitive-file')
             ->name('data-dokumen.preview');
 
         Route::post('/data-dokumen/{docType}', [CandidateDocument::class, 'store'])
@@ -143,6 +150,9 @@ Route::middleware(['auth', RoleMiddleware::class . ':candidate'])
             ->name('pembayaran.cancel');
         Route::post('/pembayaran/snap-token', [CandidatePayment::class, 'snapToken'])
             ->name('pembayaran.snap-token');
+        Route::get('/pembayaran/proof/{payment}', [SecureFileController::class, 'candidatePaymentProofPreview'])
+            ->middleware('throttle:sensitive-file')
+            ->name('pembayaran.proof');
         Route::post('/pembayaran/upload-proof', [CandidatePayment::class, 'uploadProof'])
             ->name('pembayaran.upload-proof')
             ->middleware('throttle:upload');
@@ -174,8 +184,9 @@ Route::middleware(['auth', RoleMiddleware::class . ':staff'])
             ->name('candidates.index');
         Route::get('/candidates/{candidate}', [StaffDashboard::class, 'show'])
             ->name('candidates.show');
-        Route::get('/candidates/{candidate}/health-documents/{docType}', [StaffDashboard::class, 'previewHealthDocument'])
+        Route::get('/candidates/{candidate}/health-documents/{docType}', [SecureFileController::class, 'staffHealthDocumentPreview'])
             ->where('docType', 'chronic-disease|surat-sehat|bpjs-card|vaccine-card')
+            ->middleware('throttle:sensitive-file')
             ->name('health-documents.preview');
         Route::get('/candidates/{candidate}/{section}', [StaffDashboard::class, 'show'])
             ->where('section', 'data-diri|data-kesehatan|data-wali|dokumen|pembayaran')
@@ -198,13 +209,15 @@ Route::middleware(['auth', RoleMiddleware::class . ':staff'])
         // ── Documents ────────────────────────────────────────────────────
         Route::post('/documents/{document}/verify', [StaffDashboard::class, 'verifyDocument'])
             ->name('documents.verify');
-        Route::get('/documents/{document}/preview', [StaffDashboard::class, 'previewDocument'])
+        Route::get('/documents/{document}/preview', [SecureFileController::class, 'staffDocumentPreview'])
+            ->middleware('throttle:sensitive-file')
             ->name('documents.preview');
 
         // ── Payments ─────────────────────────────────────────────────────
         Route::post('/payments/{payment}/verify', [StaffDashboard::class, 'verifyPayment'])
             ->name('payments.verify');
-        Route::get('/payments/{payment}/proof', [StaffDashboard::class, 'previewPaymentProof'])
+        Route::get('/payments/{payment}/proof', [SecureFileController::class, 'staffPaymentProofPreview'])
+            ->middleware('throttle:sensitive-file')
             ->name('payments.proof');
 
         // ── Profile ───────────────────────────────────────────────────────
@@ -233,8 +246,20 @@ Route::middleware(['auth', RoleMiddleware::class . ':admin'])
         // ── Candidates ───────────────────────────────────────────────────
         Route::get('/candidates', [AdminCandidate::class, 'index'])
             ->name('candidates.index');
+        Route::get('/candidates/{candidate}/health-documents/{docType}', [SecureFileController::class, 'adminHealthDocumentPreview'])
+            ->where('docType', 'chronic-disease|surat-sehat|bpjs-card|vaccine-card')
+            ->middleware('throttle:sensitive-file')
+            ->name('health-documents.preview');
         Route::delete('/candidates/{candidate}', [AdminDashboard::class, 'deleteCandidate'])
             ->name('candidates.delete');
+
+        // ── Sensitive file access ────────────────────────────────────────
+        Route::get('/documents/{document}/preview', [SecureFileController::class, 'adminDocumentPreview'])
+            ->middleware('throttle:sensitive-file')
+            ->name('documents.preview');
+        Route::get('/payments/{payment}/proof', [SecureFileController::class, 'adminPaymentProofPreview'])
+            ->middleware('throttle:sensitive-file')
+            ->name('payments.proof');
 
         // ── Waves ─────────────────────────────────────────────────────────
         Route::get('/waves', [AdminWave::class, 'index'])

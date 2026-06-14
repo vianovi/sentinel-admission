@@ -182,7 +182,7 @@ class HealthRecordController extends Controller
 
             return response()->json([
                 'message'  => 'Dokumen berhasil diunggah.',
-                'file_url' => Storage::disk('private')->url($storagePath),
+                'file_url' => route('dashboard.data-kesehatan.preview', ['docType' => $docType]),
                 'column'   => $column,
             ]);
 

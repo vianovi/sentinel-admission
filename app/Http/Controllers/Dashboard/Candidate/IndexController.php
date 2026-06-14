@@ -66,7 +66,6 @@ class IndexController extends Controller
                 'document_owner' => $d->document_owner,
                 'status'         => $d->status,
                 'admin_note'     => $d->admin_note,
-                'file_path'      => $d->file_path,
                 'created_at'     => $d->created_at->diffForHumans(),
             ])->values(),
             'payment' => $payment ? [

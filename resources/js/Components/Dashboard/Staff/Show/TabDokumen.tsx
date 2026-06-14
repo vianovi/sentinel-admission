@@ -11,7 +11,6 @@ export type DocumentItem = {
     doc_type:          string;
     doc_group:         string | null;
     original_filename: string;
-    file_path:         string;
     status:            "pending" | "verified" | "rejected";
     rejection_reason:  string | null;
     verified_by:       string | null;

@@ -37,7 +37,7 @@ class PaymentController extends Controller
 
         $proofUrl = null;
         if ($payment?->isManualChannel() && $payment->proof_path) {
-            $proofUrl = $this->paymentService->getProofTemporaryUrl($payment);
+            $proofUrl = $this->paymentService->getProofAccessUrl($payment);
         }
 
         $whatsappUrl = null;

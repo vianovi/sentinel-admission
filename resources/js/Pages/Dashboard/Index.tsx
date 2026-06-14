@@ -32,7 +32,6 @@ type Document = {
     document_owner: string;
     status:         "pending" | "valid" | "invalid";
     admin_note:     string | null;
-    file_path:      string | null;
     created_at:     string;
 };
 
