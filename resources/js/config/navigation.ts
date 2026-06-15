@@ -53,7 +53,7 @@ export const navigationConfig: Record<string, NavGroup[]> = {
             group: "Menu",
             items: [
                 { label: "Dashboard",     href: "/dashboard",          icon: "fa-solid fa-house",          exact: true },
-                { label: "Kalender SPMB", href: "/dashboard/calendar", icon: "fa-solid fa-calendar-days", disabled: true, comingSoon: true },
+                { label: "Kalender SPMB", href: "/dashboard/calendar", icon: "fa-solid fa-calendar-days" },
                 { label: "Informasi",     href: "/dashboard/info",     icon: "fa-solid fa-circle-info",   disabled: true, comingSoon: true },
             ],
         },

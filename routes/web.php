@@ -4,6 +4,7 @@
 use App\Http\Controllers\Dashboard\Candidate\IndexController      as CandidateDashboard;
 use App\Http\Controllers\Dashboard\Candidate\ProfileController    as CandidateProfile;
 use App\Http\Controllers\Dashboard\Candidate\DataDiriController   as CandidateDataDiri;
+use App\Http\Controllers\Dashboard\Candidate\CalendarController   as CandidateCalendar;
 use App\Http\Controllers\Dashboard\Candidate\HealthRecordController as CandidateHealthRecord;
 use App\Http\Controllers\Dashboard\Candidate\GuardianController   as CandidateGuardian;
 use App\Http\Controllers\Dashboard\Candidate\DocumentController   as CandidateDocument;
@@ -72,6 +73,16 @@ Route::middleware(['auth', RoleMiddleware::class . ':candidate'])
         // ── Index ─────────────────────────────────────────────────────────
         Route::get('/', [CandidateDashboard::class, 'index'])
             ->name('index');
+
+        // ── Kalender SPMB ────────────────────────────────────────────────
+        Route::get('/calendar', [CandidateCalendar::class, 'show'])
+            ->name('calendar');
+        Route::get('/calendar/events', [CandidateCalendar::class, 'events'])
+            ->name('calendar.events');
+        Route::post('/calendar/agenda', [CandidateCalendar::class, 'store'])
+            ->name('calendar.agenda.store');
+        Route::patch('/calendar/settings', [CandidateCalendar::class, 'updateSettings'])
+            ->name('calendar.settings.update');
 
         // ── Profile ───────────────────────────────────────────────────────
         Route::get('/profile', [CandidateProfile::class, 'show'])
