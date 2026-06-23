@@ -19,23 +19,22 @@ class ValidateDraftToken
                 ->with('error', 'Sesi pendaftaran tidak ditemukan. Silakan mulai dari awal.');
         }
 
-        $draft = RegistrationDraft::where('secret_token', $token)
-            ->whereNull('deleted_at')
-            ->first();
+        $draft = RegistrationDraft::where('secret_token', $token)->first();
 
         if (!$draft) {
-            // Token tidak dikenal → hapus cookie
             Cookie::queue(Cookie::forget('draft_token'));
             return redirect()->route('daftar')
-                ->with('error', 'Token tidak valid. Silakan mulai dari awal.');
+                ->with('error', 'Sesi pendaftaran tidak dapat dilanjutkan. Silakan mulai kembali.');
         }
 
-        if ($draft->expires_at && $draft->expires_at->isPast()) {
-            // Expired → hapus PERMANEN semua data draft + cookie
-            $draft->forceDelete();
+        if (!$draft->isValid()) {
+            if (!$draft->trashed()) {
+                $draft->delete();
+            }
+
             Cookie::queue(Cookie::forget('draft_token'));
             return redirect()->route('daftar')
-                ->with('error', 'Sesi pendaftaran telah kadaluarsa. Semua data telah dihapus. Silakan isi formulir kembali.');
+                ->with('error', 'Sesi pendaftaran tidak dapat dilanjutkan. Silakan mulai kembali.');
         }
 
         $request->merge(['_draft' => $draft]);

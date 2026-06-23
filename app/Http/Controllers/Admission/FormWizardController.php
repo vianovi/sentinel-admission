@@ -7,7 +7,6 @@ use App\Models\AdmissionWave;
 use App\Models\RegistrationDraft;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -43,14 +42,9 @@ class FormWizardController extends Controller
             'draft_id' => ['required', 'integer'],
         ]);
 
-        $draft = RegistrationDraft::whereNull('deleted_at')
-            ->find($request->draft_id);
+        $draft = $this->ownedDraft($request, $request->integer('draft_id'));
 
         if (!$draft) {
-            return response()->json(['valid' => false]);
-        }
-
-        if ($draft->expires_at && $draft->expires_at->isPast()) {
             return response()->json(['valid' => false]);
         }
 
@@ -110,19 +104,21 @@ class FormWizardController extends Controller
             return response()->json(['found' => false]);
         }
 
-        if ($currentDraftId && $draft->id === $currentDraftId) {
+        $ownsDraft = $draft->isOwnedBy($request->cookie('draft_token'));
+
+        if ($currentDraftId && $draft->id === $currentDraftId && $ownsDraft) {
             return response()->json(['found' => false]);
         }
 
         return response()->json([
-            'found'  => true,
-            'status' => 'draft',
-            'data'   => [
-                'name'       => $maskName($draft->full_name ?? ''),
+            'found'      => true,
+            'status'     => 'draft',
+            'can_resume' => $ownsDraft,
+            'data'       => [
+                'name'       => $ownsDraft ? $maskName($draft->full_name ?? '') : 'Data dilindungi',
                 'nisn'       => $maskNisn($nisn),
                 'nik'        => $maskNik($nik),
-                'draft_id'   => $draft->id,
-                'updated_at' => $draft->updated_at->diffForHumans(),
+                'updated_at' => $ownsDraft ? $draft->updated_at->diffForHumans() : null,
             ],
         ]);
     }
@@ -155,43 +151,33 @@ class FormWizardController extends Controller
         $activeWave = AdmissionWave::where('is_active', true)->first();
 
         if (!empty($validated['draft_id'])) {
-            $existing = RegistrationDraft::whereNull('deleted_at')
-                ->find($validated['draft_id']);
+            $existing = $this->ownedDraft($request, (int) $validated['draft_id']);
 
-            if ($existing && $existing->isValid()) {
-                $existing->update([
-                    'nisn'           => $validated['nisn'],
-                    'nik'            => $validated['nik'],
-                    'full_name'      => $validated['full_name'],
-                    'gender'         => $validated['gender'],
-                    'place_of_birth' => $validated['place_of_birth'],
-                    'date_of_birth'  => $validated['date_of_birth'],
-                ]);
-
-                return response()->json([
-                    'draft_id'     => $existing->id,
-                    'current_step' => $existing->current_step,
-                ]);
+            if (!$existing) {
+                return $this->invalidDraftResponse();
             }
-        }
 
-        // ── Cleanup: soft delete draft lama dengan NISN/NIK sama ────────────────
-        // Mencegah duplikat draft di DB saat user klik "Mulai Baru" di ResumeModal.
-        // Hanya hapus draft yang belum jadi akun (tidak ada di tabel candidates).
-        RegistrationDraft::whereNull('deleted_at')
-            ->where(function ($q) use ($validated) {
-                $q->where('nisn', $validated['nisn'])
-                  ->orWhere('nik', $validated['nik']);
-            })
-            ->whereDoesntHave('candidate')
-            ->delete();
+            $existing->update([
+                'nisn'           => $validated['nisn'],
+                'nik'            => $validated['nik'],
+                'full_name'      => $validated['full_name'],
+                'gender'         => $validated['gender'],
+                'place_of_birth' => $validated['place_of_birth'],
+                'date_of_birth'  => $validated['date_of_birth'],
+            ]);
+
+            return response()->json([
+                'draft_id'     => $existing->id,
+                'current_step' => $existing->current_step,
+            ]);
+        }
 
         $draft = RegistrationDraft::createFromStep1($validated, $activeWave?->id);
 
         return response()->json([
             'draft_id'     => $draft->id,
             'current_step' => 1,
-        ]);
+        ])->withCookie($this->draftCookie($draft));
     }
 
     // =============================================
@@ -204,10 +190,13 @@ class FormWizardController extends Controller
             'nik'  => ['required', 'digits:16'],
         ]);
 
-        $draft = RegistrationDraft::findActive($request->nisn, $request->nik);
+        $draft = RegistrationDraft::where('nisn', $request->nisn)
+            ->where('nik', $request->nik)
+            ->latest()
+            ->first();
 
-        if (!$draft) {
-            return response()->json(['error' => 'Draft tidak ditemukan.'], 404);
+        if (!$draft || !$draft->isValid() || !$draft->isOwnedBy($request->cookie('draft_token'))) {
+            return $this->invalidDraftResponse();
         }
 
         return response()->json([
@@ -243,8 +232,14 @@ class FormWizardController extends Controller
     // =============================================
     // PUT /daftar/step2/{draft}
     // =============================================
-    public function updateStep2(Request $request, RegistrationDraft $draft)
+    public function updateStep2(Request $request, int $draft)
     {
+        $draft = $this->ownedDraft($request, $draft);
+
+        if (!$draft) {
+            return $this->invalidDraftResponse();
+        }
+
         $validated = $request->validate([
             'mother_name'     => ['required', 'string', 'max:255'],
             'whatsapp_number' => ['required', 'string', 'min:10', 'max:14'],
@@ -283,15 +278,14 @@ class FormWizardController extends Controller
     // =============================================
     // PUT /daftar/step3/init/{draft}
     // Dipanggil otomatis saat step 3 mount
-    // Generate registration_code + secret_token (1x, skip kalau sudah ada)
-    // Set cookie draft_token (durasi = sisa waktu expires_at)
+    // Generate registration_code (1x, skip kalau sudah ada)
     // =============================================
     public function initStep3(Request $request, int $draft)
     {
-        $draft = RegistrationDraft::withTrashed()->find($draft);
+        $draft = $this->ownedDraft($request, $draft);
 
-        if (!$draft || !$draft->isValid()) {
-            return response()->json(['error' => 'Draft tidak valid atau sudah kadaluarsa.'], 422);
+        if (!$draft) {
+            return $this->invalidDraftResponse();
         }
 
         if (empty($draft->registration_code)) {
@@ -300,37 +294,25 @@ class FormWizardController extends Controller
             ]);
         }
 
-        if (empty($draft->secret_token)) {
-            $draft->update([
-                'secret_token' => Str::uuid()->toString(),
-            ]);
-        }
-
         $draft->refresh();
-
-        $minutesLeft = max((int) now()->diffInMinutes($draft->expires_at, false), 1);
-
-        $cookie = Cookie::make(
-            name:     'draft_token',
-            value:    $draft->secret_token,
-            minutes:  $minutesLeft,
-            path:     '/',
-            secure:   app()->isProduction(),
-            httpOnly: true,
-            sameSite: 'Lax',
-        );
 
         return response()->json([
             'registration_code' => $draft->registration_code,
-        ])->withCookie($cookie);
+        ]);
     }
 
     // =============================================
     // PUT /daftar/step3/{draft}
     // Hanya simpan school_origin + validasi agreement
     // =============================================
-    public function updateStep3(Request $request, RegistrationDraft $draft)
+    public function updateStep3(Request $request, int $draft)
     {
+        $draft = $this->ownedDraft($request, $draft);
+
+        if (!$draft) {
+            return $this->invalidDraftResponse();
+        }
+
         $validated = $request->validate([
             'school_origin' => ['required', 'string', 'max:255'],
             'agreement'     => ['accepted'],
@@ -345,5 +327,46 @@ class FormWizardController extends Controller
         ]);
 
         return response()->json(['success' => true]);
+    }
+
+    private function ownedDraft(Request $request, int $draftId): ?RegistrationDraft
+    {
+        $draft = RegistrationDraft::find($draftId);
+
+        if (!$draft) {
+            return null;
+        }
+
+        if (!$draft->isValid()) {
+            if (!$draft->trashed()) {
+                $draft->delete();
+            }
+
+            return null;
+        }
+
+        return $draft->isOwnedBy($request->cookie('draft_token')) ? $draft : null;
+    }
+
+    private function invalidDraftResponse()
+    {
+        return response()->json([
+            'message' => 'Sesi pendaftaran tidak dapat dilanjutkan. Silakan mulai dari browser ini.',
+        ], 403);
+    }
+
+    private function draftCookie(RegistrationDraft $draft)
+    {
+        $minutesLeft = max((int) now()->diffInMinutes($draft->expires_at, false), 1);
+
+        return Cookie::make(
+            name: 'draft_token',
+            value: $draft->secret_token,
+            minutes: $minutesLeft,
+            path: '/',
+            secure: app()->isProduction(),
+            httpOnly: true,
+            sameSite: 'Lax',
+        );
     }
 }

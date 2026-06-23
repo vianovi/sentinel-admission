@@ -4,7 +4,8 @@
  * Hook untuk auto-save & restore wizard state ke/dari localStorage.
  * Data disimpan per-field dengan debounce agar tidak terlalu sering write.
  *
- * Key: 'wizard_step1', 'wizard_step2', 'wizard_step3', 'wizard_draft_id'
+ * Draft ID di localStorage hanya penunjuk internal. Bukti ownership disimpan
+ * backend dalam cookie HttpOnly `draft_token` untuk browser pembuat draft.
  */
 
 import { useCallback, useEffect, useRef } from 'react'

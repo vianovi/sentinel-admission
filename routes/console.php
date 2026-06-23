@@ -2,5 +2,5 @@
 
 use Illuminate\Support\Facades\Schedule;
 
-// Hard delete expired registration drafts — jalan setiap hari jam 02:00
+// Soft delete expired drafts, then hard delete drafts trashed for over 30 days.
 Schedule::command('drafts:prune')->dailyAt('02:00');

@@ -15,8 +15,11 @@ Route::middleware('guest')->group(function () {
 
     // Register via wizard draft token
     Route::middleware(ValidateDraftToken::class)->group(function () {
-        Route::get('register', [RegisterController::class, 'show'])->name('register');
-        Route::post('register', [RegisterController::class, 'store']);
+        Route::get('register', [RegisterController::class, 'show'])
+            ->middleware('throttle:15,1')
+            ->name('register');
+        Route::post('register', [RegisterController::class, 'store'])
+            ->middleware('throttle:5,1');
     });
 
     // ── Candidate Login ───────────────────────────────────────────────────────

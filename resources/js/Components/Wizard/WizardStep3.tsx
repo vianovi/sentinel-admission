@@ -91,9 +91,9 @@ export default function WizardStep3({
                     }, 50)
                 }, remaining)
             } catch (err: any) {
-                // 422 = draft tidak valid (sudah jadi akun / expired)
+                // 403 = cookie ownership tidak valid, draft expired, atau draft tidak ada.
                 // → clear localStorage + kembali ke step 1
-                if (err.response?.status === 422) {
+                if (err.response?.status === 403) {
                     onInvalidDraft()
                     return
                 }
@@ -165,6 +165,10 @@ export default function WizardStep3({
 
         } catch (err: any) {
             setFinalizing(false)
+            if (err.response?.status === 403) {
+                onInvalidDraft()
+                return
+            }
             const errs = err.response?.data?.errors as Record<string, string[]> | undefined
             const msg  = err.response?.data?.message as string | undefined
             if (errs) {
