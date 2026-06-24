@@ -16,7 +16,7 @@ interface WizardStep1Props {
     data: Step1Data
     onChange: (data: Step1Data) => void
     onNext: (draftId: string) => void
-    onDuplicateFound: (status: 'draft' | 'registered', data: { name: string; nisn: string; nik: string; draft_id?: number; updated_at?: string }) => void
+    onDuplicateFound: (status: 'draft' | 'registered', data: { name: string; nisn: string; nik: string; updated_at?: string; can_resume?: boolean }) => void
     currentDraftId?: string
 }
 
@@ -77,7 +77,10 @@ export default function WizardStep1({ data, onChange, onNext, onDuplicateFound, 
 
             if (check.found) {
                 setSubmitting(false)
-                onDuplicateFound(check.status, check.data)
+                onDuplicateFound(check.status, {
+                    ...check.data,
+                    can_resume: check.can_resume,
+                })
                 return
             }
 

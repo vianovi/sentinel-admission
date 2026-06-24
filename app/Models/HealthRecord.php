@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 
 class HealthRecord extends Model
 {
@@ -152,28 +151,28 @@ class HealthRecord extends Model
     public function getSuratSehatUrlAttribute(): ?string
     {
         return $this->surat_sehat_path
-            ? Storage::disk('private')->temporaryUrl($this->surat_sehat_path, now()->addMinutes(5))
+            ? route('dashboard.data-kesehatan.preview', ['docType' => 'surat_sehat'])
             : null;
     }
 
     public function getBpjsCardUrlAttribute(): ?string
     {
         return $this->bpjs_card_path
-            ? Storage::disk('private')->temporaryUrl($this->bpjs_card_path, now()->addMinutes(5))
+            ? route('dashboard.data-kesehatan.preview', ['docType' => 'bpjs_card'])
             : null;
     }
 
     public function getVaccineCardUrlAttribute(): ?string
     {
         return $this->vaccine_card_path
-            ? Storage::disk('private')->temporaryUrl($this->vaccine_card_path, now()->addMinutes(5))
+            ? route('dashboard.data-kesehatan.preview', ['docType' => 'vaccine_card'])
             : null;
     }
 
     public function getChronicDiseaseDocUrlAttribute(): ?string
     {
         return $this->chronic_disease_doc_path
-            ? Storage::disk('private')->temporaryUrl($this->chronic_disease_doc_path, now()->addMinutes(5))
+            ? route('dashboard.data-kesehatan.preview', ['docType' => 'chronic_disease'])
             : null;
     }
 

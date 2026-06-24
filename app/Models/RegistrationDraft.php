@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
-use Carbon\Carbon;
 
 class RegistrationDraft extends Model
 {
@@ -46,8 +45,9 @@ class RegistrationDraft extends Model
     {
         return self::create([
             'admission_wave_id' => $waveId,
+            'secret_token'      => Str::random(64),
             'current_step'      => 1,
-            'expires_at'        => Carbon::now()->addDays(2),
+            'expires_at'        => now()->addDays(2),
             'nisn'              => $data['nisn'],
             'nik'               => $data['nik'],
             'full_name'         => $data['full_name'],
@@ -146,6 +146,15 @@ class RegistrationDraft extends Model
     {
         return is_null($this->deleted_at) &&
                (is_null($this->expires_at) || $this->expires_at->isFuture());
+    }
+
+    public function isOwnedBy(?string $token): bool
+    {
+        return is_string($token) &&
+               $token !== '' &&
+               is_string($this->secret_token) &&
+               $this->secret_token !== '' &&
+               hash_equals($this->secret_token, $token);
     }
 
     // =============================================

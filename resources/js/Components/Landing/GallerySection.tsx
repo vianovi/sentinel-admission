@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 import { animate, stagger } from 'animejs'
 
 // ── Daftar foto galeri ────────────────────────────────────────────────────────
-// Letakkan foto di: public/assets/gallery/
-// Ganti src dari placehold.co → '/assets/gallery/nama-file.webp'
+// Letakkan foto di: public/assets/landing/gallery/
+// Ganti src dari placehold.co -> '/assets/landing/gallery/nama-file.webp'
 //
 // ┌───┬──────────────────────────────┬─────────┬───────────────┬─────────────────────────────────────────────┐
 // │ # │ Nama file                    │  span   │ Ukuran (px)   │ Keterangan                                  │
@@ -22,14 +22,14 @@ import { animate, stagger } from 'animejs'
 // Max ukuran file: 300 KB/foto. Format WebP disarankan.
 
 const photos = [
-    { src: '/assets/gallery/photo-01-600x800-tall.webp',  alt: 'Kegiatan santri Al-Muntaha', span: 'tall'  },
-    { src: '/assets/gallery/photo-02-800x500-wide.webp',  alt: 'Upacara bendera',             span: 'wide'  },
-    { src: '/assets/gallery/photo-03-600x600-small.webp', alt: 'Kelas tahfidz',               span: 'small' },
-    { src: '/assets/gallery/photo-04-600x600-small.webp', alt: 'Lab komputer',                span: 'small' },
-    { src: '/assets/gallery/photo-05-600x600-small.webp', alt: 'Perpustakaan',                span: 'small' },
-    { src: '/assets/gallery/photo-06-600x800-tall.webp',  alt: 'Masjid sekolah',              span: 'tall'  },
-    { src: '/assets/gallery/photo-07-800x500-wide.webp',  alt: 'Lapangan olahraga',           span: 'wide'  },
-    { src: '/assets/gallery/photo-08-600x600-small.webp', alt: 'Asrama putra',                span: 'small' },
+    { src: '/assets/landing/gallery/photo-01-600x800-tall.webp',  alt: 'Kegiatan santri Al-Muntaha', span: 'tall'  },
+    { src: '/assets/landing/gallery/photo-02-800x500-wide.webp',  alt: 'Upacara bendera',             span: 'wide'  },
+    { src: '/assets/landing/gallery/photo-03-600x600-small.webp', alt: 'Kelas tahfidz',               span: 'small' },
+    { src: '/assets/landing/gallery/photo-04-600x600-small.webp', alt: 'Lab komputer',                span: 'small' },
+    { src: '/assets/landing/gallery/photo-05-600x600-small.webp', alt: 'Perpustakaan',                span: 'small' },
+    { src: '/assets/landing/gallery/photo-06-600x800-tall.webp',  alt: 'Masjid sekolah',              span: 'tall'  },
+    { src: '/assets/landing/gallery/photo-07-800x500-wide.webp',  alt: 'Lapangan olahraga',           span: 'wide'  },
+    { src: '/assets/landing/gallery/photo-08-600x600-small.webp', alt: 'Asrama putra',                span: 'small' },
 ]
 
 const desktopSpanClass: Record<string, string> = {

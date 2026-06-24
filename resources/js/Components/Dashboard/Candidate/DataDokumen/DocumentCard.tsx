@@ -114,7 +114,7 @@ export default function DocumentCard({
     multiple      = false,
     requiredLevel = 'required',
     showTemplate  = false,
-    templateUrl   = '/assets/surat-pernyataan-template.pdf',
+    templateUrl   = '/assets/templates/surat-pernyataan-template.docx',
 }: Props) {
     const [isUploading,    setIsUploading]    = useState(false)
     const [uploadProgress, setUploadProgress] = useState(0)

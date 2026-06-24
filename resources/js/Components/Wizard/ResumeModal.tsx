@@ -6,8 +6,8 @@ interface MaskedData {
     name: string
     nisn: string
     nik: string
-    draft_id?: number
     updated_at?: string
+    can_resume?: boolean
 }
 
 interface ResumeModalProps {
@@ -21,6 +21,7 @@ interface ResumeModalProps {
 export default function ResumeModal({ status, data, onResume, onStartNew, onClose }: ResumeModalProps) {
     const overlayRef = useRef<HTMLDivElement>(null)
     const cardRef    = useRef<HTMLDivElement>(null)
+    const canResume  = data.can_resume !== false
 
     useEffect(() => {
         animate(overlayRef.current!, { opacity: [0, 1], duration: 300, ease: 'outQuad' })
@@ -108,10 +109,14 @@ export default function ResumeModal({ status, data, onResume, onStartNew, onClos
                         </div>
                         <div>
                             <h3 className="font-display font-bold text-slate-900 text-lg leading-tight">Pendaftaran Belum Selesai</h3>
-                            <p className="text-xs text-slate-500 mt-1">NISN atau NIK ini ditemukan dengan status belum terdaftar.</p>
+                            <p className="text-xs text-slate-500 mt-1">
+                                {canResume
+                                    ? 'Draft aktif ditemukan di browser ini.'
+                                    : 'Draft aktif ditemukan untuk data tersebut.'}
+                            </p>
                         </div>
                     </div>
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-2">
+                    {canResume && <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-2">
                         <div className="flex items-center justify-between mb-3">
                             <span className="inline-flex items-center gap-1.5 bg-amber-100 text-amber-700 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full">
                                 <i className="fa-solid fa-clock text-[9px]"></i> Belum Terdaftar
@@ -123,21 +128,36 @@ export default function ResumeModal({ status, data, onResume, onStartNew, onClos
                             <DataRow label="NISN" value={data.nisn} />
                             <DataRow label="NIK"  value={data.nik}  />
                         </div>
-                    </div>
+                    </div>}
                     <div className="flex items-start gap-2 text-[11px] text-slate-400 mb-4 px-1">
                         <i className="fa-solid fa-shield-halved mt-0.5 flex-shrink-0"></i>
-                        <span>Data ditampilkan sebagian untuk keamanan. Draft dihapus otomatis jika melewati batas waktu.</span>
+                        <span>
+                            {canResume
+                                ? 'Data ditampilkan sebagian untuk keamanan. Draft dihapus otomatis jika melewati batas waktu.'
+                                : 'Draft hanya dapat dilanjutkan dari browser yang membuatnya. Data draft tetap dilindungi.'}
+                        </span>
                     </div>
-                    <p className="text-sm text-slate-600 mb-5 font-medium">Apakah ini milikmu? Lanjutkan atau mulai pendaftaran baru.</p>
+                    <p className="text-sm text-slate-600 mb-5 font-medium">
+                        {canResume
+                            ? 'Lanjutkan draft ini atau mulai pendaftaran baru.'
+                            : 'Silakan gunakan browser asal atau mulai pendaftaran baru.'}
+                    </p>
                     <div className="flex flex-col sm:flex-row gap-3">
                         <button type="button" onClick={() => dismiss('new')}
                             className="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition active:scale-95">
                             Mulai Baru
                         </button>
-                        <button type="button" onClick={() => dismiss('resume')}
-                            className="flex-1 px-4 py-2.5 rounded-xl bg-gold text-slate-900 text-sm font-bold shadow-md shadow-amber-200/50 hover:shadow-lg hover:-translate-y-0.5 transition active:scale-95">
-                            <i className="fa-solid fa-rotate-right mr-1.5"></i> Lanjutkan
-                        </button>
+                        {canResume ? (
+                            <button type="button" onClick={() => dismiss('resume')}
+                                className="flex-1 px-4 py-2.5 rounded-xl bg-gold text-slate-900 text-sm font-bold shadow-md shadow-amber-200/50 hover:shadow-lg hover:-translate-y-0.5 transition active:scale-95">
+                                <i className="fa-solid fa-rotate-right mr-1.5"></i> Lanjutkan
+                            </button>
+                        ) : (
+                            <button type="button" onClick={() => dismiss('close')}
+                                className="flex-1 px-4 py-2.5 rounded-xl bg-navy text-white text-sm font-bold shadow-md hover:bg-navy/90 transition active:scale-95">
+                                Tutup
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>

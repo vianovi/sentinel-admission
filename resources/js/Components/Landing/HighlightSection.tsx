@@ -53,7 +53,7 @@ export default function HighlightSection() {
                          *    Gambar highlight ada di tengah halaman — tidak perlu di-load awal.
                          */}
                         <img
-                            src="/assets/highlight-seleksi.webp"
+                            src="/assets/landing/highlights/seleksi.webp"
                             alt="Proses seleksi siswa Al-Muntaha"
                             className="w-full h-[400px] object-cover rounded-2xl shadow-xl transform md:translate-y-8 hover:translate-y-4 transition duration-500"
                             loading="lazy"
@@ -75,7 +75,7 @@ export default function HighlightSection() {
                             </p>
                         </div>
                         <img
-                            src="/assets/highlight-asrama.webp"
+                            src="/assets/landing/highlights/asrama.webp"
                             alt="Asrama Al-Muntaha Boarding School"
                             className="w-full h-48 object-cover rounded-2xl shadow-lg border-4 border-white"
                             loading="lazy"

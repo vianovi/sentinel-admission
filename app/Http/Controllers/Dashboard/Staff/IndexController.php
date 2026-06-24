@@ -13,7 +13,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -182,7 +181,6 @@ class IndexController extends Controller
                 'doc_type'          => $d->doc_type,
                 'doc_group'         => $d->doc_group,
                 'original_filename' => $d->original_filename,
-                'file_path'         => $d->file_path,
                 'status'            => $d->status,
                 'rejection_reason'  => $d->rejection_reason,
                 'verified_by'       => $d->verifiedBy?->name,
@@ -224,49 +222,6 @@ class IndexController extends Controller
     }
 
     // =============================================
-    // GET /dashboard/staff/documents/{document}/preview
-    // =============================================
-
-    public function previewDocument(CandidateDocument $document)
-    {
-        if (! Storage::disk('private')->exists($document->file_path)) {
-            abort(404);
-        }
-
-        return Storage::disk('private')->response(
-            $document->file_path,
-            $document->original_filename,
-            ['Content-Disposition' => 'inline']
-        );
-    }
-
-    // =============================================
-    // GET /dashboard/staff/candidates/{candidate}/health-documents/{docType}
-    // =============================================
-
-    public function previewHealthDocument(Candidate $candidate, string $docType)
-    {
-        $config = self::HEALTH_DOC_FIELDS[$docType] ?? null;
-        abort_unless($config, 404);
-
-        $healthRecord = $candidate->healthRecord;
-        $path = $healthRecord?->{$config['column']};
-
-        if (! $path || ! Storage::disk('private')->exists($path)) {
-            abort(404);
-        }
-
-        $extension = pathinfo($path, PATHINFO_EXTENSION);
-        $filename = $candidate->candidate_code . '-' . $docType . ($extension ? ".{$extension}" : '');
-
-        return Storage::disk('private')->response(
-            $path,
-            $filename,
-            ['Content-Disposition' => 'inline']
-        );
-    }
-
-    // =============================================
     // POST /dashboard/staff/payments/{payment}/verify
     // =============================================
 
@@ -300,23 +255,6 @@ class IndexController extends Controller
                 'payment' => 'Pembayaran belum bisa diverifikasi. Pastikan bukti sudah diunggah.',
             ]);
         }
-    }
-
-    // =============================================
-    // GET /dashboard/staff/payments/{payment}/proof
-    // =============================================
-
-    public function previewPaymentProof(Payment $payment)
-    {
-        if (! $payment->proof_path || ! Storage::disk('private')->exists($payment->proof_path)) {
-            abort(404);
-        }
-
-        return Storage::disk('private')->response(
-            $payment->proof_path,
-            $payment->proof_original_filename ?? 'bukti-pembayaran',
-            ['Content-Disposition' => 'inline']
-        );
     }
 
     // =============================================

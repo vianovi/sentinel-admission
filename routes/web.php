@@ -10,6 +10,7 @@ use App\Http\Controllers\Dashboard\Candidate\GuardianController   as CandidateGu
 use App\Http\Controllers\Dashboard\Candidate\DocumentController   as CandidateDocument;
 use App\Http\Controllers\Dashboard\Candidate\PaymentController    as CandidatePayment;
 use App\Http\Controllers\Dashboard\ChangeRequestController;
+use App\Http\Controllers\Dashboard\SecureFileController;
 use App\Http\Controllers\Dashboard\Staff\IndexController          as StaffDashboard;
 use App\Http\Controllers\Dashboard\Staff\ProfileController        as StaffProfile;
 use App\Http\Controllers\Dashboard\Admin\IndexController          as AdminDashboard;
@@ -43,20 +44,27 @@ Route::middleware('guest')->group(function () {
     Route::get('/daftar', [FormWizardController::class, 'show'])
         ->name('daftar');
     Route::post('/daftar/check-draft', [FormWizardController::class, 'checkDraft'])
+        ->middleware('throttle:30,1')
         ->name('daftar.check-draft');
     Route::post('/daftar/check-duplicate', [FormWizardController::class, 'checkDuplicate'])
+        ->middleware('throttle:10,1')
         ->name('daftar.check-duplicate');
     Route::post('/daftar/resume', [FormWizardController::class, 'resume'])
+        ->middleware('throttle:5,1')
         ->name('daftar.resume');
     Route::post('/daftar/step1', [FormWizardController::class, 'storeStep1'])
+        ->middleware('throttle:10,1')
         ->name('daftar.step1');
     Route::put('/daftar/step2/{draft}', [FormWizardController::class, 'updateStep2'])
+        ->middleware('throttle:15,1')
         ->name('daftar.step2');
 
     // ⚠️ initStep3 HARUS sebelum step3 agar Laravel tidak salah tangkap {draft}
     Route::put('/daftar/step3/init/{draft}', [FormWizardController::class, 'initStep3'])
+        ->middleware('throttle:15,1')
         ->name('daftar.step3.init');
     Route::put('/daftar/step3/{draft}', [FormWizardController::class, 'updateStep3'])
+        ->middleware('throttle:10,1')
         ->name('daftar.step3');
 
 });
@@ -117,6 +125,10 @@ Route::middleware(['auth', RoleMiddleware::class . ':candidate'])
             ->name('data-kesehatan.save');
         Route::post('/data-kesehatan/dokumen/{docType}', [CandidateHealthRecord::class, 'uploadDocument'])
             ->name('data-kesehatan.upload');
+        Route::get('/data-kesehatan/dokumen/{docType}/preview', [SecureFileController::class, 'candidateHealthDocumentPreview'])
+            ->where('docType', 'chronic_disease|chronic-disease|surat_sehat|surat-sehat|bpjs_card|bpjs-card|vaccine_card|vaccine-card')
+            ->middleware('throttle:sensitive-file')
+            ->name('data-kesehatan.preview');
         Route::delete('/data-kesehatan/dokumen/{docType}', [CandidateHealthRecord::class, 'deleteDocument'])
             ->name('data-kesehatan.delete-doc');
 
@@ -131,11 +143,13 @@ Route::middleware(['auth', RoleMiddleware::class . ':candidate'])
             ->name('data-dokumen.index');
 
         // ⚠️ download HARUS sebelum store/{docType} — cegah 'download' tertangkap sebagai docType
-        Route::get('/data-dokumen/download/{document}', [CandidateDocument::class, 'download'])
+        Route::get('/data-dokumen/download/{document}', [SecureFileController::class, 'candidateDocumentDownload'])
+            ->middleware('throttle:sensitive-file')
             ->name('data-dokumen.download');
 
         // ⚠️preview HARUS sebelum store/{docType} — cegah 'preview' tertangkap sebagai docType
-        Route::get('/data-dokumen/preview/{document}', [CandidateDocument::class, 'preview'])
+        Route::get('/data-dokumen/preview/{document}', [SecureFileController::class, 'candidateDocumentPreview'])
+            ->middleware('throttle:sensitive-file')
             ->name('data-dokumen.preview');
 
         Route::post('/data-dokumen/{docType}', [CandidateDocument::class, 'store'])
@@ -154,6 +168,9 @@ Route::middleware(['auth', RoleMiddleware::class . ':candidate'])
             ->name('pembayaran.cancel');
         Route::post('/pembayaran/snap-token', [CandidatePayment::class, 'snapToken'])
             ->name('pembayaran.snap-token');
+        Route::get('/pembayaran/proof/{payment}', [SecureFileController::class, 'candidatePaymentProofPreview'])
+            ->middleware('throttle:sensitive-file')
+            ->name('pembayaran.proof');
         Route::post('/pembayaran/upload-proof', [CandidatePayment::class, 'uploadProof'])
             ->name('pembayaran.upload-proof')
             ->middleware('throttle:upload');
@@ -184,13 +201,20 @@ Route::middleware(['auth', RoleMiddleware::class . ':staff'])
         Route::get('/candidates', [StaffDashboard::class, 'candidates'])
             ->name('candidates.index');
         Route::get('/candidates/{candidate}', [StaffDashboard::class, 'show'])
-            ->name('candidates.show');
-        Route::get('/candidates/{candidate}/health-documents/{docType}', [StaffDashboard::class, 'previewHealthDocument'])
+            ->name('candidates.show')
+            ->missing(fn () => redirect()
+                ->route('staff.candidates.index')
+                ->with('error', 'Kandidat yang dipilih tidak ditemukan atau sudah tidak tersedia.'));
+        Route::get('/candidates/{candidate}/health-documents/{docType}', [SecureFileController::class, 'staffHealthDocumentPreview'])
             ->where('docType', 'chronic-disease|surat-sehat|bpjs-card|vaccine-card')
+            ->middleware('throttle:sensitive-file')
             ->name('health-documents.preview');
         Route::get('/candidates/{candidate}/{section}', [StaffDashboard::class, 'show'])
             ->where('section', 'data-diri|data-kesehatan|data-wali|dokumen|pembayaran')
-            ->name('candidates.section');
+            ->name('candidates.section')
+            ->missing(fn () => redirect()
+                ->route('staff.candidates.index')
+                ->with('error', 'Kandidat yang dipilih tidak ditemukan atau sudah tidak tersedia.'));
         Route::post('/candidates/{candidate}/status', [StaffDashboard::class, 'updateStatus'])
             ->name('candidates.status');
 
@@ -209,13 +233,15 @@ Route::middleware(['auth', RoleMiddleware::class . ':staff'])
         // ── Documents ────────────────────────────────────────────────────
         Route::post('/documents/{document}/verify', [StaffDashboard::class, 'verifyDocument'])
             ->name('documents.verify');
-        Route::get('/documents/{document}/preview', [StaffDashboard::class, 'previewDocument'])
+        Route::get('/documents/{document}/preview', [SecureFileController::class, 'staffDocumentPreview'])
+            ->middleware('throttle:sensitive-file')
             ->name('documents.preview');
 
         // ── Payments ─────────────────────────────────────────────────────
         Route::post('/payments/{payment}/verify', [StaffDashboard::class, 'verifyPayment'])
             ->name('payments.verify');
-        Route::get('/payments/{payment}/proof', [StaffDashboard::class, 'previewPaymentProof'])
+        Route::get('/payments/{payment}/proof', [SecureFileController::class, 'staffPaymentProofPreview'])
+            ->middleware('throttle:sensitive-file')
             ->name('payments.proof');
 
         // ── Profile ───────────────────────────────────────────────────────
@@ -223,6 +249,8 @@ Route::middleware(['auth', RoleMiddleware::class . ':staff'])
             ->name('profile');
         Route::put('/profile', [StaffProfile::class, 'update'])
             ->name('profile.update');
+        Route::get('/profile/avatar', [StaffProfile::class, 'serveAvatar'])
+            ->name('profile.avatar');
         Route::post('/profile/avatar', [StaffProfile::class, 'updateAvatar'])
             ->name('profile.avatar.update');
 
@@ -244,8 +272,20 @@ Route::middleware(['auth', RoleMiddleware::class . ':admin'])
         // ── Candidates ───────────────────────────────────────────────────
         Route::get('/candidates', [AdminCandidate::class, 'index'])
             ->name('candidates.index');
+        Route::get('/candidates/{candidate}/health-documents/{docType}', [SecureFileController::class, 'adminHealthDocumentPreview'])
+            ->where('docType', 'chronic-disease|surat-sehat|bpjs-card|vaccine-card')
+            ->middleware('throttle:sensitive-file')
+            ->name('health-documents.preview');
         Route::delete('/candidates/{candidate}', [AdminDashboard::class, 'deleteCandidate'])
             ->name('candidates.delete');
+
+        // ── Sensitive file access ────────────────────────────────────────
+        Route::get('/documents/{document}/preview', [SecureFileController::class, 'adminDocumentPreview'])
+            ->middleware('throttle:sensitive-file')
+            ->name('documents.preview');
+        Route::get('/payments/{payment}/proof', [SecureFileController::class, 'adminPaymentProofPreview'])
+            ->middleware('throttle:sensitive-file')
+            ->name('payments.proof');
 
         // ── Waves ─────────────────────────────────────────────────────────
         Route::get('/waves', [AdminWave::class, 'index'])
@@ -276,6 +316,8 @@ Route::middleware(['auth', RoleMiddleware::class . ':admin'])
             ->name('profile');
         Route::put('/profile', [AdminProfile::class, 'update'])
             ->name('profile.update');
+        Route::get('/profile/avatar', [AdminProfile::class, 'serveAvatar'])
+            ->name('profile.avatar');
         Route::post('/profile/avatar', [AdminProfile::class, 'updateAvatar'])
             ->name('profile.avatar.update');
 

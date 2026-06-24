@@ -52,10 +52,10 @@ export default function HeroSection({ activeWave, onOpenVideo }: HeroSectionProp
                 {/* BACKGROUND: Bersih dari filter blend yang mengotori warna */}
                 <div className="absolute inset-0 z-0">
                     <picture>
-                        <source media="(max-width: 768px)" srcSet="/assets/hero-background-mobile.webp" type="image/webp" />
-                        <source media="(min-width: 769px)" srcSet="/assets/hero-background.webp" type="image/webp" />
+                        <source media="(max-width: 768px)" srcSet="/assets/landing/hero/background-mobile.webp" type="image/webp" />
+                        <source media="(min-width: 769px)" srcSet="/assets/landing/hero/background.webp" type="image/webp" />
                         <img
-                            src="/assets/hero-background.webp"
+                            src="/assets/landing/hero/background.webp"
                             alt="Lingkungan Al-Muntaha Boarding School"
                             className="w-full h-full object-cover"
                             fetchPriority="high"

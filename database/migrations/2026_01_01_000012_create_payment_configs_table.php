@@ -44,7 +44,7 @@ return new class extends Migration
             $table->string('bank_account_name', 100)->nullable();
 
             // Enum key untuk mapping logo bank di frontend
-            // Frontend map ke asset: /assets/banks/{bank_logo_key}.svg
+            // Frontend map ke asset: /assets/icons/banks/{bank_logo_key}.*
             $table->enum('bank_logo_key', [
                 'bca', 'bri', 'mandiri', 'bni', 'bsi', 'other',
             ])->nullable();

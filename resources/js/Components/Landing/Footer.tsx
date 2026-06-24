@@ -28,7 +28,7 @@ export default function Footer({ auth: _auth, app }: FooterProps) {
                             unggul dalam ilmu, kokoh dalam iman, dan siap berkontribusi untuk umat.
                         </p>
                         <div className="pt-4">
-                            <a href="/assets/brosur.pdf"
+                            <a href="/assets/landing/brochure/brosur.pdf"
                                 className="inline-flex items-center gap-3 bg-gray-800 border border-gray-600 px-6 py-3 rounded-xl hover:border-gold hover:text-gold transition group">
                                 <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center group-hover:bg-gold group-hover:text-navy transition">
                                     <i className="fa-solid fa-file-pdf"></i>

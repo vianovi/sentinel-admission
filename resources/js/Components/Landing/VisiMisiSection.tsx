@@ -47,7 +47,7 @@ export default function VisiMisiSection() {
                              *    Gambar visi/misi ada di bawah fold — tidak perlu di-load awal.
                              */}
                             <img
-                                src="/assets/visi-section.webp"
+                                src="/assets/landing/vision-mission/visi.webp"
                                 alt="Visi Al-Muntaha Boarding School"
                                 className="w-full h-full object-cover"
                                 loading="lazy"
@@ -70,7 +70,7 @@ export default function VisiMisiSection() {
                     <div className="visimisi-animate opacity-0 bg-white rounded-2xl shadow-sm border border-gray-100 p-2 hover:shadow-lg transition duration-300">
                         <div className="h-48 rounded-xl overflow-hidden bg-gray-200 relative">
                             <img
-                                src="/assets/misi-section.webp"
+                                src="/assets/landing/vision-mission/misi.webp"
                                 alt="Misi Al-Muntaha Boarding School"
                                 className="w-full h-full object-cover"
                                 loading="lazy"

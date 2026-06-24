@@ -8,20 +8,20 @@ use Illuminate\Console\Command;
 class PruneExpiredDrafts extends Command
 {
     protected $signature   = 'drafts:prune';
-    protected $description = 'Hard delete all registration drafts that have passed their expires_at date';
+    protected $description = 'Soft delete expired drafts and permanently delete drafts trashed for over 30 days';
 
     public function handle(): int
     {
-        // Hanya hapus draft yang:
-        // 1. expires_at sudah lewat (tidak null)
-        // 2. Belum dikonversi jadi akun (deleted_at null — belum soft-deleted)
-        //    ATAU sudah soft-deleted (cleanup draft yang sudah jadi akun juga)
-        $count = RegistrationDraft::withTrashed()
+        $softDeleted = RegistrationDraft::query()
             ->whereNotNull('expires_at')
-            ->where('expires_at', '<', now())
+            ->where('expires_at', '<=', now())
+            ->delete();
+
+        $forceDeleted = RegistrationDraft::onlyTrashed()
+            ->where('deleted_at', '<=', now()->subDays(30))
             ->forceDelete();
 
-        $this->info("Pruned {$count} expired draft(s).");
+        $this->info("Soft deleted {$softDeleted} expired draft(s); permanently deleted {$forceDeleted} old draft(s).");
 
         return self::SUCCESS;
     }

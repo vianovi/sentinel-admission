@@ -44,8 +44,8 @@ return new class extends Migration
             // Ekstensi diambil dari magic bytes, BUKAN dari nama asli user
 
             $table->string('file_path', 500);
-            // Full path: candidates/{candidate_code}/{stored_filename}
-            // Selalu di storage/app/private/ — tidak web-accessible
+            // Relative private disk path:
+            // sentinel/candidates/{candidate_code}/documents/{group}/{doc_type}/{stored_filename}
 
             $table->string('mime_type', 100)->nullable();
             $table->unsignedInteger('file_size_kb')->nullable();

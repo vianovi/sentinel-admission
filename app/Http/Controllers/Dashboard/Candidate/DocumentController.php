@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CandidateDocument;
 use App\Models\CandidateDocumentSecurity;
 use App\Services\DocumentSecurityService;
+use App\Support\SentinelStoragePaths;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -115,40 +116,42 @@ class DocumentController extends Controller
         $storedFilename = $this->security->generateStoredFilename(
             $securityResult['detected_mime']
         );
-        $storagePath = "candidates/{$candidate->candidate_code}/{$storedFilename}";
+        $docGroup = CandidateDocument::getGroupForDocType($docType) ?? 'general';
+        $storageDirectory = SentinelStoragePaths::candidateDocumentDirectory(
+            $candidate->candidate_code,
+            $docGroup,
+            $docType
+        );
+        $storagePath = "{$storageDirectory}/{$storedFilename}";
+
+        $oldPaths = collect();
 
         DB::beginTransaction();
         try {
             if (! CandidateDocument::allowsMultiple($docType)) {
-                CandidateDocument::where('candidate_id', $candidate->id)
+                $oldDocuments = CandidateDocument::where('candidate_id', $candidate->id)
                     ->where('doc_type', $docType)
                     ->whereNull('deleted_at')
-                    ->each(function ($doc) {
-                        Storage::disk('private')->delete($doc->file_path);
-                        $doc->delete();
-                    });
+                    ->get();
+
+                $oldPaths = $oldDocuments->pluck('file_path')->filter();
+
+                $oldDocuments->each(function ($doc) {
+                    $doc->delete();
+                });
             }
 
-            if (config('sentinel.layer_private_storage', true)) {
-                $file->storeAs(
-                    "candidates/{$candidate->candidate_code}",
-                    $storedFilename,
-                    'private'
-                );
-            } else {
-                Log::warning('[LAB-HACK] Private storage DISABLED — saving to public', ['user_id' => $user->id]);
-                $file->storeAs(
-                    "candidates/{$candidate->candidate_code}",
-                    $storedFilename,
-                    'public'
-                );
-            }
+            $file->storeAs(
+                $storageDirectory,
+                $storedFilename,
+                'private'
+            );
 
             $document = CandidateDocument::create([
                 'candidate_id'      => $candidate->id,
                 'candidate_code'    => $candidate->candidate_code,
                 'doc_type'          => $docType,
-                'doc_group'         => CandidateDocument::getGroupForDocType($docType),
+                'doc_group'         => $docGroup,
                 'original_filename' => $file->getClientOriginalName(),
                 'stored_filename'   => $storedFilename,
                 'file_path'         => $storagePath,
@@ -163,6 +166,12 @@ class DocumentController extends Controller
             ));
 
             DB::commit();
+
+            $oldPaths->each(function (string $oldPath) use ($storagePath) {
+                if ($oldPath !== $storagePath && Storage::disk('private')->exists($oldPath)) {
+                    Storage::disk('private')->delete($oldPath);
+                }
+            });
 
             if ($isJson) return response()->json(['message' => 'Dokumen berhasil diupload.'], 200);
             return back()->with('success', 'Dokumen berhasil diupload dan sedang menunggu verifikasi.');
@@ -218,64 +227,6 @@ class DocumentController extends Controller
             ]);
             return back()->withErrors(['file' => 'Gagal menghapus dokumen. Silakan coba lagi.']);
         }
-    }
-
-    // =============================================
-    // DOWNLOAD — Serve file via signed URL
-    // =============================================
-
-    public function download(Request $request, int $documentId)
-    {
-        $user      = $request->user();
-        $candidate = $user->candidate()->firstOrFail();
-
-        $document = CandidateDocument::where('id', $documentId)
-            ->where('candidate_id', $candidate->id)
-            ->firstOrFail();
-
-        if (! Storage::disk('private')->exists($document->file_path)) {
-            abort(404, 'File tidak ditemukan.');
-        }
-
-        if (config('sentinel.layer_force_download', true)) {
-            return Storage::disk('private')->download(
-                $document->file_path,
-                $document->original_filename,
-                ['Content-Disposition' => 'attachment']
-            );
-        }
-
-        Log::warning('[LAB-HACK] Force download DISABLED — serving inline', [
-            'user_id'     => $user->id,
-            'document_id' => $documentId,
-        ]);
-        return Storage::disk('private')->response($document->file_path);
-    }
-
-    // =============================================
-    // PREVIEW — Serve file inline (untuk lightbox & PDF viewer)
-    // =============================================
-
-    public function preview(Request $request, int $documentId)
-    {
-        $user      = $request->user();
-        $candidate = $user->candidate()->firstOrFail();
-
-        $document = CandidateDocument::where('id', $documentId)
-            ->where('candidate_id', $candidate->id)
-            ->firstOrFail();
-
-        if (! Storage::disk('private')->exists($document->file_path)) {
-            abort(404, 'File tidak ditemukan.');
-        }
-
-        // Serve inline — Content-Disposition: inline agar browser render langsung
-        // (gambar di lightbox, PDF di tab baru) tanpa trigger download
-        return Storage::disk('private')->response(
-            $document->file_path,
-            $document->original_filename,
-            ['Content-Disposition' => 'inline']
-        );
     }
 
     // =============================================

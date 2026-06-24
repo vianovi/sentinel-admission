@@ -24,6 +24,7 @@ interface WizardStep2Props {
     onChange: (data: Step2Data) => void
     onNext: () => void
     onBack: () => void
+    onInvalidDraft: () => void
 }
 
 const toTitleCase = (s: string) =>
@@ -36,7 +37,7 @@ const formatHP = (val: string) => {
     return v.slice(0, 14)
 }
 
-export default function WizardStep2({ data, draftId, candidateName, onChange, onNext, onBack }: WizardStep2Props) {
+export default function WizardStep2({ data, draftId, candidateName, onChange, onNext, onBack, onInvalidDraft }: WizardStep2Props) {
     const [errors, setErrors]         = useState<Partial<Record<keyof Step2Data, string>>>({})
     const [submitting, setSubmitting] = useState(false)
 
@@ -102,6 +103,10 @@ export default function WizardStep2({ data, draftId, candidateName, onChange, on
             onNext()
         } catch (err: any) {
             setSubmitting(false)
+            if (err.response?.status === 403) {
+                onInvalidDraft()
+                return
+            }
             const errs = err.response?.data?.errors as Record<string, string[]> | undefined
             if (errs) {
                 const mapped: Partial<Record<keyof Step2Data, string>> = {}

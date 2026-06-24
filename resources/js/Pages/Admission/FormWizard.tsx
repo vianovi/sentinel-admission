@@ -77,8 +77,8 @@ interface DuplicateInfo {
         name: string
         nisn: string
         nik: string
-        draft_id?: number
         updated_at?: string
+        can_resume?: boolean
     }
 }
 
@@ -123,7 +123,7 @@ export default function FormWizard({ activeWave, flash }: FormWizardProps) {
                     })
 
                     if (res.valid) {
-                        // Draft masih aktif → restore semua data
+                        // Restore hanya setelah backend memvalidasi cookie ownership.
                         if (stored.step1)  setStep1({ ...defaultStep1, ...stored.step1 })
                         if (stored.step2)  setStep2({ ...defaultStep2, ...stored.step2 })
                         if (stored.step3)  setStep3({ ...defaultStep3, ...stored.step3 })
@@ -370,6 +370,7 @@ export default function FormWizard({ activeWave, flash }: FormWizardProps) {
                                                     onChange={setStep2}
                                                     onNext={() => goToStep(3)}
                                                     onBack={() => goToStep(1)}
+                                                    onInvalidDraft={handleInvalidDraft}
                                                 />
                                             )}
                                             {currentStep === 3 && (

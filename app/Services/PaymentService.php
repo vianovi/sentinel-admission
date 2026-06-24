@@ -9,6 +9,7 @@ namespace App\Services;
 use App\Models\Payment;
 use App\Models\PaymentConfig;
 use App\Models\Candidate;
+use App\Support\SentinelStoragePaths;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -146,31 +147,36 @@ class PaymentService
 
 
         $storedFilename = $this->securityService->generateStoredFilename($magicResult['detected_mime']);
-        $storedPath     = "payment-proofs/{$payment->candidate_code}/{$storedFilename}";
+        $storageDirectory = SentinelStoragePaths::paymentProofDirectory($payment->candidate_code);
+        $storedPath     = "{$storageDirectory}/{$storedFilename}";
 
-        DB::transaction(function () use ($payment, $file, $storedPath, $storedFilename) {
-            // Hapus file lama kalau ada (upload ulang setelah reject)
-            if ($payment->proof_path) {
-                Storage::disk('private')->delete($payment->proof_path);
-            }
+        $oldPath = $payment->proof_path;
 
-            // Simpan ke private storage
+        try {
             $file->storeAs(
-                "payment-proofs/{$payment->candidate_code}",
+                $storageDirectory,
                 $storedFilename,
                 'private'
             );
 
-            $payment->updateQuietly([
-                'proof_path'              => $storedPath,
-                'proof_original_filename' => $file->getClientOriginalName(),
-                'proof_uploaded_at'       => now(),
-                'proof_attempt'           => $payment->proof_attempt + 1,
-                'manual_status'           => Payment::MANUAL_PROOF_UPLOADED,
-                // Reset rejection reason saat upload ulang
-                'rejection_reason'        => null,
-            ]);
-        });
+            DB::transaction(function () use ($payment, $file, $storedPath) {
+                $payment->updateQuietly([
+                    'proof_path'              => $storedPath,
+                    'proof_original_filename' => $file->getClientOriginalName(),
+                    'proof_uploaded_at'       => now(),
+                    'proof_attempt'           => $payment->proof_attempt + 1,
+                    'manual_status'           => Payment::MANUAL_PROOF_UPLOADED,
+                    'rejection_reason'        => null,
+                ]);
+            });
+        } catch (\Throwable $e) {
+            Storage::disk('private')->delete($storedPath);
+            throw $e;
+        }
+
+        if ($oldPath && $oldPath !== $storedPath && Storage::disk('private')->exists($oldPath)) {
+            Storage::disk('private')->delete($oldPath);
+        }
 
         return $payment->fresh();
     }
@@ -307,28 +313,20 @@ class PaymentService
     // Proof File Access
     // ─────────────────────────────────────────────────────────────────────
 
-    /**
-     * Generate temporary signed URL untuk akses proof file.
-     * Expire 30 menit — konsisten dengan dokumen kandidat.
-     */
-    public function getProofTemporaryUrl(Payment $payment): ?string
+    public function getProofAccessUrl(Payment $payment): ?string
     {
-        if (! $payment->proof_path) {
+        if (! $payment->proof_path || ! $payment->isManualChannel()) {
             return null;
         }
 
         if (! Storage::disk('private')->exists($payment->proof_path)) {
             Log::warning('PaymentService: proof file not found', [
                 'payment_id' => $payment->id,
-                'proof_path' => $payment->proof_path,
             ]);
             return null;
         }
 
-        return Storage::disk('private')->temporaryUrl(
-            $payment->proof_path,
-            now()->addMinutes(30)
-        );
+        return route('dashboard.pembayaran.proof', $payment);
     }
 
     // ─────────────────────────────────────────────────────────────────────

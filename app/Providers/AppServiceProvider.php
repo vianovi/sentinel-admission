@@ -28,6 +28,10 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(10)->by($request->user()?->id);
         });
 
+        RateLimiter::for('sensitive-file', function ($request) {
+            return Limit::perMinute(60)->by(($request->user()?->id ?? 'guest') . '|' . $request->ip());
+        });
+
         Vite::prefetch(concurrency: 3);
 
         if (env('FORCE_HTTPS', false)) {

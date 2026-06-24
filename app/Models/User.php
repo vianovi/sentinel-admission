@@ -58,7 +58,13 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         if (! $this->avatar) return null;
         // Tambah timestamp sebagai cache buster — browser paksa fetch ulang setiap avatar diganti
-        return route('dashboard.profile.avatar') . '?v=' . $this->updated_at->timestamp;
+        $routeName = match ($this->role) {
+            'staff' => 'staff.profile.avatar',
+            'admin' => 'admin.profile.avatar',
+            default => 'dashboard.profile.avatar',
+        };
+
+        return route($routeName) . '?v=' . $this->updated_at->timestamp;
     }
 
     /**
