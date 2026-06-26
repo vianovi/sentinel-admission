@@ -9,9 +9,14 @@ import type { GalleryItem } from './GalleryCard';
 // FIX DEAD CODE: OriginRect import dihapus — tidak lagi dipakai di handleItemClick
 
 // ─── Route helpers ────────────────────────────────────────────────────────────
+// Semua media showcase disajikan lewat route privat agar lokasi file fisiknya
+// bisa dipindah tanpa mengubah struktur komponen.
 
-const img = (file: string) => route('media.gallery', { filename: `images/${file}` });
-const vid = (file: string) => route('media.gallery', { filename: `videos/${file}` });
+const showcaseMedia = (bucket: 'images' | 'videos', file: string) =>
+    route('media.gallery', { filename: `${bucket}/${file}` });
+
+const img = (file: string) => showcaseMedia('images', file);
+const vid = (file: string) => showcaseMedia('videos', file);
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 

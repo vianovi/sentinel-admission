@@ -46,6 +46,11 @@ class SentinelStoragePaths
         return self::join('sentinel', 'temp', 'uploads');
     }
 
+    public static function cinematicShowcaseDirectory(): string
+    {
+        return self::join('assets', 'cinematic_showcase');
+    }
+
     private static function join(string ...$segments): string
     {
         return implode('/', array_map([self::class, 'segment'], $segments));

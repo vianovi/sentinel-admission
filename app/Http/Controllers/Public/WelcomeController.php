@@ -4,8 +4,12 @@ namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
 use App\Models\AdmissionWave;
+use App\Support\SentinelStoragePaths;
+use Illuminate\Http\Response as HttpResponse;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class WelcomeController extends Controller
 {
@@ -34,7 +38,7 @@ class WelcomeController extends Controller
     }
 
     /**
-     * Serve public gallery media. Safe landing assets live under public/assets/landing.
+     * Serve landing showcase media from private storage.
      *
      * Accepts paths like:
      *   /media/gallery/images/photo-01.webp
@@ -45,15 +49,17 @@ class WelcomeController extends Controller
      *   - Filename hanya boleh: huruf, angka, dash, underscore, titik
      *   - Tidak ada path traversal (../, //, dll)
      */
-    public function serveGallery(string $filename): \Symfony\Component\HttpFoundation\BinaryFileResponse|\Illuminate\Http\Response
+    public function serveGallery(string $filename): BinaryFileResponse|HttpResponse
     {
         if (! preg_match('/^(images|videos)\/[\w\-]+\.(webp|jpg|jpeg|png|mp4)$/i', $filename)) {
             abort(404);
         }
 
-        $path = public_path('assets/landing/showcase/' . $filename);
+        $relativePath = SentinelStoragePaths::cinematicShowcaseDirectory() . '/' . ltrim($filename, '/');
 
-        abort_if(! file_exists($path), 404);
+        abort_if(! Storage::disk('private')->exists($relativePath), 404);
+
+        $path = Storage::disk('private')->path($relativePath);
 
         $mimeMap = [
             'webp' => 'image/webp',
