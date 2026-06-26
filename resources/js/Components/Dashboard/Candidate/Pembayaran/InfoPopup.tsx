@@ -15,13 +15,13 @@ type Props = {
 // Gunakan format internasional tanpa + untuk nomor WA (628xxxxxxxxx)
 // ─────────────────────────────────────────────────────────────────────────────
 
-const CONTACT_BENDAHARA_NAMA   = 'Silvia Noviana • Bendahara SPMB'
+const CONTACT_BENDAHARA_NAMA   = 'Silvia Dewi N.P • Bendahara SPMB'
 const CONTACT_BENDAHARA_TELEPON = '6281234567890'
 
 const CONTACT_SEKRETARIS_NAMA   = 'Haura Fatimah Azzahra • Sekertariat SPMB'
 const CONTACT_SEKRETARIS_TELEPON = '6281234567891'
 
-const CONTACT_ADMIN_NAMA   = 'Adiguna Erlangga • Admin SPMB'
+const CONTACT_ADMIN_NAMA   = 'M.Farhan Pratama• Admin SPMB'
 const CONTACT_ADMIN_TELEPON = '6281234567892'
 
 // ─────────────────────────────────────────────────────────────────────────────
