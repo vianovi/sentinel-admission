@@ -58,7 +58,7 @@ type Props = {
 
 const PSB_CONTACTS = [
     {
-        name:  'Silvia Noviana D.P',
+        name:  'Silvia Dewi N.P',
         role:  'Bendahara SPMB',
         desc:  'Konfirmasi & Verifikasi Pembayaran',
         icon:  'fa-solid fa-coins',
@@ -76,7 +76,7 @@ const PSB_CONTACTS = [
         wa:    '6281234567891', // nomor WA sekretariat
     },
     {
-        name:  'Adiguna Erlangga',
+        name:  'M.Farhan Pratama',
         role:  'Admin SPMB',
         desc:  'Kendala Teknis & Bantuan Umum',
         icon:  'fa-solid fa-headset',
