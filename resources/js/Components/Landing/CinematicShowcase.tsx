@@ -8,12 +8,55 @@ import type { GalleryItem } from './GalleryCard';
 
 // FIX DEAD CODE: OriginRect import dihapus — tidak lagi dipakai di handleItemClick
 
-// ─── Route helpers ────────────────────────────────────────────────────────────
-// Semua media showcase disajikan lewat route privat agar lokasi file fisiknya
-// bisa dipindah tanpa mengubah struktur komponen.
+// ─── Media Source Config ─────────────────────────────────────────────────────
+// Ganti nilai ini untuk memilih sumber media showcase:
+// local       -> route Laravel ke storage/app/private/assets/cinematic_showcase
+// placeholder -> URL placeholder eksternal untuk staging/dev
+// cdn         -> base URL CDN untuk production
 
-const showcaseMedia = (bucket: 'images' | 'videos', file: string) =>
-    route('media.gallery', { filename: `${bucket}/${file}` });
+type ShowcaseMediaSource = 'local' | 'placeholder' | 'cdn';
+type ShowcaseMediaBucket = 'images' | 'videos';
+
+const SHOWCASE_MEDIA_CONFIG: { source: ShowcaseMediaSource } = {
+    source: 'placeholder',
+};
+
+const SHOWCASE_CDN_BASE_URL = 'https://cdn.example.com/assets/cinematic_showcase';
+const PLACEHOLDER_IMAGE_BASE_URL = 'https://picsum.photos/seed/sentinel-showcase';
+const PLACEHOLDER_VIDEO_URLS: Record<string, string> = {
+    'video-01.mp4': 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+    'video-02.mp4': 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+    'video-03.mp4': 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+    'video-04.mp4': 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+};
+
+// ─── Route helpers ────────────────────────────────────────────────────────────
+
+const trimTrailingSlashes = (value: string) => value.replace(/\/+$/g, '');
+
+const externalMediaUrl = (baseUrl: string, bucket: ShowcaseMediaBucket, file: string) =>
+    `${trimTrailingSlashes(baseUrl)}/${bucket}/${file}`;
+
+const placeholderMediaUrl = (bucket: ShowcaseMediaBucket, file: string) => {
+    if (bucket === 'videos') {
+        return PLACEHOLDER_VIDEO_URLS[file] ?? PLACEHOLDER_VIDEO_URLS['video-01.mp4'];
+    }
+
+    const seed = file.replace(/\.[^.]+$/, '');
+    return `${PLACEHOLDER_IMAGE_BASE_URL}-${seed}/900/600`;
+};
+
+const showcaseMedia = (bucket: ShowcaseMediaBucket, file: string) => {
+    switch (SHOWCASE_MEDIA_CONFIG.source) {
+        case 'cdn':
+            return externalMediaUrl(SHOWCASE_CDN_BASE_URL, bucket, file);
+        case 'placeholder':
+            return placeholderMediaUrl(bucket, file);
+        case 'local':
+        default:
+            return route('media.gallery', { filename: `${bucket}/${file}` });
+    }
+};
 
 const img = (file: string) => showcaseMedia('images', file);
 const vid = (file: string) => showcaseMedia('videos', file);
