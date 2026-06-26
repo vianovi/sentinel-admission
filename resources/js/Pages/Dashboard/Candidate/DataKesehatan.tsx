@@ -60,7 +60,13 @@ export type HealthRecord = {
     completion_percentage:    number;
 };
 
-export type EmptyField = { key: string; label: string; tab: TabId };
+type HealthDocumentKey = "chronic_disease" | "surat_sehat" | "bpjs_card" | "vaccine_card";
+
+export type EmptyField = {
+    key: string;
+    label: string;
+    tab: TabId;
+};
 
 type Props = {
     healthRecord: HealthRecord | null;
@@ -111,6 +117,7 @@ const REQUIRED_FIELDS: EmptyField[] = [
     { key: "allergyMedicine",  label: "Alergi Obat",             tab: "riwayat" },
     { key: "allergyCondition", label: "Alergi Kondisi",          tab: "riwayat" },
     { key: "physicalDisab",    label: "Disabilitas Fisik",       tab: "riwayat" },
+    { key: "bpjsCardUpload",   label: "Kartu BPJS / JKN",        tab: "catatan" },
 ];
 
 const REQUIRED_BY_TAB: Record<string, string[]> = {
@@ -167,6 +174,22 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
     // ── Form state — Tab Catatan Khusus ───────────────────────────────────────
     const [specialNotes,  setSpecialNotes]  = useState(healthRecord?.special_notes        ?? "");
     const [parentConcern, setParentConcern] = useState(healthRecord?.parent_concern_notes ?? "");
+    const [chronicDocUrl, setChronicDocUrl] = useState<string | null>(healthRecord?.chronic_disease_doc_url ?? null);
+    const [suratSehatUrl, setSuratSehatUrl] = useState<string | null>(healthRecord?.surat_sehat_url ?? null);
+    const [bpjsCardUrl,   setBpjsCardUrl]   = useState<string | null>(healthRecord?.bpjs_card_url ?? null);
+    const [vaccineCardUrl,setVaccineCardUrl]= useState<string | null>(healthRecord?.vaccine_card_url ?? null);
+
+    useEffect(() => {
+        setChronicDocUrl(healthRecord?.chronic_disease_doc_url ?? null);
+        setSuratSehatUrl(healthRecord?.surat_sehat_url ?? null);
+        setBpjsCardUrl(healthRecord?.bpjs_card_url ?? null);
+        setVaccineCardUrl(healthRecord?.vaccine_card_url ?? null);
+    }, [
+        healthRecord?.chronic_disease_doc_url,
+        healthRecord?.surat_sehat_url,
+        healthRecord?.bpjs_card_url,
+        healthRecord?.vaccine_card_url,
+    ]);
 
     // ── BMI realtime — memoized ───────────────────────────────────────────────
     const bmi = useMemo(() => {
@@ -185,20 +208,25 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
     }, [bmi]);
 
     // ── Completion & empty fields — memoized ──────────────────────────────────
-    const formSnapshot = useMemo<Record<string, string>>(() => ({
+    const formSnapshot = useMemo<Record<string, string | null>>(() => ({
         bloodType, rhesus, heightCm, weightKg, generalHealth,
         eyeRightType, eyeLeftType,
         majorIllnesses, lastIllness,
         allergyFood, allergyMedicine, allergyCondition, physicalDisab,
+        bpjsCardUpload: bpjsCardUrl,
     }), [
         bloodType, rhesus, heightCm, weightKg, generalHealth,
         eyeRightType, eyeLeftType,
         majorIllnesses, lastIllness,
         allergyFood, allergyMedicine, allergyCondition, physicalDisab,
+        bpjsCardUrl,
     ]);
 
     const emptyRequiredFields = useMemo(
-        () => REQUIRED_FIELDS.filter(f => !formSnapshot[f.key]),
+        () => REQUIRED_FIELDS.filter(f => {
+            const value = formSnapshot[f.key];
+            return typeof value === "string" ? value.trim() === "" : !value;
+        }),
         [formSnapshot],
     );
 
@@ -258,6 +286,13 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
             }
         }, 190);
     }, [activeTab]);
+
+    const handleDocumentUrlChange = useCallback((key: HealthDocumentKey, url: string | null) => {
+        if (key === "chronic_disease") setChronicDocUrl(url);
+        if (key === "surat_sehat")     setSuratSehatUrl(url);
+        if (key === "bpjs_card")       setBpjsCardUrl(url);
+        if (key === "vaccine_card")    setVaccineCardUrl(url);
+    }, []);
 
     // ── Clear single error — useCallback ─────────────────────────────────────
     const clearError = useCallback((field: string) => {
@@ -471,6 +506,9 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
                         {TABS.map((tab) => {
                             const isActive    = activeTab === tab.id;
                             const isRangkuman = tab.id === "rangkuman";
+                            const hasMissingInTab = isRangkuman
+                                ? hasEmptyRequired
+                                : emptyRequiredFields.some(field => field.tab === tab.id);
                             return (
                                 <button
                                     key={tab.id}
@@ -498,7 +536,7 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
                                     </span>
 
                                     {/* Dot amber — rangkuman kalau ada field kosong */}
-                                    {isRangkuman && hasEmptyRequired && !isActive && (
+                                    {hasMissingInTab && !isActive && (
                                         <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-amber-400" />
                                     )}
                                 </button>
@@ -549,7 +587,6 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
                             allergyMedicine={allergyMedicine}     setAllergyMedicine={setAllergyMedicine}
                             allergyCondition={allergyCondition}   setAllergyCondition={setAllergyCondition}
                             physicalDisab={physicalDisab}         setPhysicalDisab={setPhysicalDisab}
-                            chronicDocUrl={healthRecord?.chronic_disease_doc_url ?? null}
                             errors={errors}
                             clearError={clearError}
                         />
@@ -559,9 +596,11 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
                         <TabCatatanKhusus
                             specialNotes={specialNotes}     setSpecialNotes={setSpecialNotes}
                             parentConcern={parentConcern}   setParentConcern={setParentConcern}
-                            suratSehatUrl={healthRecord?.surat_sehat_url   ?? null}
-                            bpjsCardUrl={healthRecord?.bpjs_card_url       ?? null}
-                            vaccineCardUrl={healthRecord?.vaccine_card_url ?? null}
+                            chronicDocUrl={chronicDocUrl}
+                            suratSehatUrl={suratSehatUrl}
+                            bpjsCardUrl={bpjsCardUrl}
+                            vaccineCardUrl={vaccineCardUrl}
+                            onDocumentUrlChange={handleDocumentUrlChange}
                         />
                     )}
 
@@ -570,7 +609,6 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
                     {activeTab === "rangkuman" && (
                         <TabRangkuman
                             key="rangkuman-live"
-                            healthRecord={healthRecord}
                             bmi={bmi}
                             bmiCategory={bmiCategory}
                             emptyRequiredFields={emptyRequiredFields}
@@ -579,6 +617,12 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
                             submitting={submitting}
                             onNavigateToTab={handleTabChange}
                             onSubmitAll={handleSubmitAll}
+                            healthDocuments={{
+                                chronic_disease_doc_url: chronicDocUrl,
+                                surat_sehat_url: suratSehatUrl,
+                                bpjs_card_url: bpjsCardUrl,
+                                vaccine_card_url: vaccineCardUrl,
+                            }}
                             formState={{
                                 bloodType, rhesus, heightCm, weightKg,
                                 generalHealth, mentalNotes,

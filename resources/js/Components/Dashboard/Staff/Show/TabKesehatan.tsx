@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { animate, stagger } from "animejs";
+import FilePreviewModal from "@/Components/UI/FilePreviewModal";
 import { EmptyState, InfoField, Pill, SectionTitle } from "./ReadonlyParts";
 
 export type HealthDocument = {
@@ -95,15 +96,7 @@ function DocumentCard({ document }: { document: HealthDocument }) {
                     </p>
                 </div>
                 {document.preview_url && (
-                    <a
-                        href={document.preview_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex h-10 shrink-0 items-center gap-2 rounded-xl border border-cyan-200 px-3 text-xs font-semibold text-cyan-600 transition hover:border-cyan-400 hover:bg-cyan-50 dark:border-cyan-500/20 dark:text-cyan-400 dark:hover:bg-cyan-500/10"
-                    >
-                        <i className="fa-solid fa-up-right-from-square text-[10px]"></i>
-                        Lihat
-                    </a>
+                    <FilePreviewModal serverUrl={document.preview_url} label="Lihat" />
                 )}
             </div>
         </div>
@@ -227,9 +220,6 @@ export default function TabKesehatan({ healthRecord }: { healthRecord: StaffHeal
                             <InfoField label="Alergi Kondisi/Lingkungan" value={healthRecord.allergy_condition} />
                             <InfoField label="Disabilitas/Kebutuhan Khusus" value={healthRecord.physical_disabilities} />
                         </div>
-                        {healthRecord.documents.find(doc => doc.key === "chronic-disease") && (
-                            <DocumentCard document={healthRecord.documents.find(doc => doc.key === "chronic-disease")!} />
-                        )}
                     </div>
                 )}
 
@@ -247,7 +237,6 @@ export default function TabKesehatan({ healthRecord }: { healthRecord: StaffHeal
                         </div>
                         <div className="space-y-3">
                             {healthRecord.documents
-                                .filter(doc => doc.key !== "chronic-disease")
                                 .map(doc => <DocumentCard key={doc.key} document={doc} />)}
                         </div>
                     </div>

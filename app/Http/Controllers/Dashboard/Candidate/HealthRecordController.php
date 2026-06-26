@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 
@@ -116,21 +117,32 @@ class HealthRecordController extends Controller
     public function uploadDocument(Request $request, string $docType)
     {
         if (! array_key_exists($docType, self::UPLOAD_FIELDS)) {
-            return response()->json(['message' => 'Tipe dokumen tidak valid.'], 422);
+            return response()->json(['message' => 'Jenis dokumen tidak dikenali. Muat ulang halaman lalu coba lagi.'], 422);
         }
 
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'file' => [
-                'required', 'file',
+                'bail',
+                'required',
+                'file',
                 'max:' . self::MAX_FILE_SIZE,
                 'mimes:' . implode(',', self::ALLOWED_EXTENSIONS),
                 'mimetypes:' . implode(',', self::ALLOWED_MIMES),
             ],
         ], [
             'file.required' => 'File tidak boleh kosong.',
+            'file.file'     => 'File tidak dapat dibaca. Pilih ulang dokumen yang ingin diunggah.',
             'file.max'      => 'Ukuran file maksimal 2MB.',
             'file.mimes'    => 'Format file harus JPG, PNG, WebP, atau PDF.',
+            'file.mimetypes'=> 'Format file harus JPG, PNG, WebP, atau PDF.',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => $validator->errors()->first('file'),
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
 
         $file = $request->file('file');
 
@@ -140,7 +152,9 @@ class HealthRecordController extends Controller
                 'doc_type'      => $docType,
                 'original_name' => $file->getClientOriginalName(),
             ]);
-            return response()->json(['message' => 'File tidak valid.'], 422);
+            return response()->json([
+                'message' => 'File tidak dapat diproses. Pastikan dokumen asli berupa JPG, PNG, WebP, atau PDF yang valid.',
+            ], 422);
         }
 
         if (! $this->passesPolyglotScan($file)) {
@@ -148,17 +162,20 @@ class HealthRecordController extends Controller
                 'candidate_id' => Auth::user()->candidate?->id,
                 'doc_type'     => $docType,
             ]);
-            return response()->json(['message' => 'File tidak valid.'], 422);
+            return response()->json([
+                'message' => 'File tidak dapat diproses. Gunakan dokumen asli yang diekspor langsung dari kamera, scanner, atau PDF.',
+            ], 422);
         }
 
         $candidate = Auth::user()->candidate;
 
         if (! $candidate) {
-            return response()->json(['message' => 'Data kandidat tidak ditemukan.'], 422);
+            return response()->json(['message' => 'Sesi kandidat tidak valid. Muat ulang halaman lalu coba lagi.'], 422);
         }
 
         $column      = self::UPLOAD_FIELDS[$docType];
         $ext         = $this->getExtFromMagicBytes($file);
+        $mimeType    = $this->mimeTypeFromExtension($ext);
         $filename    = Str::uuid() . '.' . $ext;
         $storageDirectory = SentinelStoragePaths::candidateHealthDirectory(
             $candidate->candidate_code,
@@ -188,6 +205,7 @@ class HealthRecordController extends Controller
             return response()->json([
                 'message'  => 'Dokumen berhasil diunggah.',
                 'file_url' => route('dashboard.data-kesehatan.preview', ['docType' => $docType]),
+                'mime_type'=> $mimeType,
                 'column'   => $column,
             ]);
 
@@ -378,5 +396,16 @@ class HealthRecordController extends Controller
         if (str_starts_with($header, 'RIFF'))         return 'webp';
 
         return strtolower($file->getClientOriginalExtension());
+    }
+
+    private function mimeTypeFromExtension(string $extension): string
+    {
+        return match (strtolower($extension)) {
+            'jpg', 'jpeg' => 'image/jpeg',
+            'png'         => 'image/png',
+            'webp'        => 'image/webp',
+            'pdf'         => 'application/pdf',
+            default       => 'application/octet-stream',
+        };
     }
 }

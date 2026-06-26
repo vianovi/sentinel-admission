@@ -12,7 +12,8 @@ type TabId = "fisik" | "riwayat" | "catatan" | "tim-kesehatan" | "rangkuman";
 
 type EmptyField = { key: string; label: string; tab: TabId };
 
-type HealthRecord = {
+type HealthDocuments = {
+    chronic_disease_doc_url: string | null;
     surat_sehat_url:  string | null;
     bpjs_card_url:    string | null;
     vaccine_card_url: string | null;
@@ -32,7 +33,7 @@ type FormState = {
 };
 
 type Props = {
-    healthRecord:        HealthRecord | null;
+    healthDocuments:     HealthDocuments;
     bmi:                 number | null;
     bmiCategory:         string | null;
     formState:           FormState;
@@ -153,7 +154,7 @@ function Row({ label, value, valueClass }: {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default memo(function TabRangkuman({
-    healthRecord, bmi, bmiCategory, formState,
+    healthDocuments, bmi, bmiCategory, formState,
     emptyRequiredFields, progressGradient, completion,
     submitting, onNavigateToTab, onSubmitAll,
 }: Props) {
@@ -343,10 +344,11 @@ export default memo(function TabRangkuman({
                     <Row label="Keluhan ortu"      value={parentConcern} />
 
                     {/* Dokumen kesehatan — dengan tombol preview */}
-                    {healthRecord && [
-                        { label: "Surat sehat", url: healthRecord.surat_sehat_url },
-                        { label: "BPJS / JKN",  url: healthRecord.bpjs_card_url },
-                        { label: "Kartu vaksin", url: healthRecord.vaccine_card_url },
+                    {[
+                        { label: "Hasil lab / CT Scan / USG", url: healthDocuments.chronic_disease_doc_url },
+                        { label: "Surat sehat", url: healthDocuments.surat_sehat_url },
+                        { label: "BPJS / JKN",  url: healthDocuments.bpjs_card_url },
+                        { label: "Kartu vaksin", url: healthDocuments.vaccine_card_url },
                     ].map(doc => (
                         <div key={doc.label}
                             className="flex items-center justify-between gap-2 px-4 py-[7px]
@@ -357,11 +359,10 @@ export default memo(function TabRangkuman({
                             <div className="flex items-center gap-2 min-w-0">
                                 {doc.url ? (
                                     <>
-                                        <span className="text-[11px] font-medium dark:text-cyan-400 text-cyan-600">
+                                        <span className="text-[11px] font-medium dark:text-emerald-400 text-emerald-600">
                                             <i className="fa-solid fa-circle-check text-[9px] mr-1"></i>
-                                            Diunggah
+                                            Terupload
                                         </span>
-                                        {/* Preview — akan berfungsi setelah backend fix */}
                                         <FilePreviewModal serverUrl={doc.url} label="Lihat" />
                                     </>
                                 ) : (

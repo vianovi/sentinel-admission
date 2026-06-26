@@ -11,7 +11,8 @@
 //   <FilePreviewModal serverUrl={route('...')} />   ← auto HEAD fetch
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { animate }                                    from "animejs";
+import { createPortal } from "react-dom";
+import { animate } from "animejs";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -66,7 +67,7 @@ const createTempUrl = (file: File, revokeAfterMs = 60_000): string => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// LIGHTBOX COMPONENT — inline, zero dependency
+// LIGHTBOX COMPONENT — full-window style aligned with homepage gallery
 // ─────────────────────────────────────────────────────────────────────────────
 
 function ImageLightbox({
@@ -74,157 +75,93 @@ function ImageLightbox({
     alt,
     onClose,
 }: {
-    src:     string;
-    alt:     string;
+    src: string;
+    alt: string;
     onClose: () => void;
 }) {
     const backdropRef = useRef<HTMLDivElement>(null);
-    const panelRef    = useRef<HTMLDivElement>(null);
-    const [zoom, setZoom]         = useState(1);
-    const [dragging, setDragging] = useState(false);
-    const [offset, setOffset]     = useState({ x: 0, y: 0 });
-    const dragStart               = useRef({ mx: 0, my: 0, ox: 0, oy: 0 });
+    const cardRef = useRef<HTMLDivElement>(null);
 
-    // ── Entrance animation ────────────────────────────────────────────────────
     useEffect(() => {
-        if (!backdropRef.current || !panelRef.current) return;
+        if (!backdropRef.current || !cardRef.current) return;
+
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+
         animate(backdropRef.current, { opacity: [0, 1], duration: 200, ease: "outQuad" });
-        animate(panelRef.current,    { opacity: [0, 1], scale: [0.92, 1], duration: 280, ease: "outExpo" });
+        animate(cardRef.current, {
+            opacity: [0, 1],
+            scale: [0.92, 1],
+            translateY: [24, 0],
+            duration: 380,
+            ease: "outExpo",
+        });
+
+        return () => {
+            document.body.style.overflow = previousOverflow;
+        };
     }, []);
 
-    // ── Close dengan animasi ──────────────────────────────────────────────────
     const handleClose = useCallback(() => {
-        if (!backdropRef.current || !panelRef.current) { onClose(); return; }
-        animate(panelRef.current,    { opacity: [1, 0], scale: [1, 0.94], duration: 180, ease: "inQuad" });
+        if (!backdropRef.current || !cardRef.current) {
+            onClose();
+            return;
+        }
+
+        animate(cardRef.current, {
+            opacity: [1, 0],
+            scale: [1, 0.94],
+            translateY: [0, 16],
+            duration: 220,
+            ease: "inQuad",
+        });
         animate(backdropRef.current, { opacity: [1, 0], duration: 200, ease: "inQuad" });
         setTimeout(onClose, 200);
     }, [onClose]);
 
-    // ── Keyboard ──────────────────────────────────────────────────────────────
     useEffect(() => {
         const onKey = (e: KeyboardEvent) => {
-            if (e.key === "Escape")                   handleClose();
-            if (e.key === "+" || e.key === "=")       setZoom(z => Math.min(z + 0.25, 4));
-            if (e.key === "-")                         setZoom(z => Math.max(z - 0.25, 0.5));
-            if (e.key === "0")                        { setZoom(1); setOffset({ x: 0, y: 0 }); }
+            if (e.key === "Escape") handleClose();
         };
         window.addEventListener("keydown", onKey);
         return () => window.removeEventListener("keydown", onKey);
     }, [handleClose]);
 
-    // ── Wheel zoom ────────────────────────────────────────────────────────────
-    const handleWheel = useCallback((e: React.WheelEvent) => {
-        e.preventDefault();
-        setZoom(z => Math.min(Math.max(z - e.deltaY * 0.001, 0.5), 4));
-    }, []);
-
-    // ── Drag pan ──────────────────────────────────────────────────────────────
-    const handleMouseDown = useCallback((e: React.MouseEvent) => {
-        if (zoom <= 1) return;
-        setDragging(true);
-        dragStart.current = { mx: e.clientX, my: e.clientY, ox: offset.x, oy: offset.y };
-    }, [zoom, offset]);
-
-    const handleMouseMove = useCallback((e: React.MouseEvent) => {
-        if (!dragging) return;
-        setOffset({
-            x: dragStart.current.ox + (e.clientX - dragStart.current.mx),
-            y: dragStart.current.oy + (e.clientY - dragStart.current.my),
-        });
-    }, [dragging]);
-
-    const handleMouseUp = useCallback(() => setDragging(false), []);
-
-    useEffect(() => {
-        if (zoom <= 1) setOffset({ x: 0, y: 0 });
-    }, [zoom]);
-
-    return (
+    return createPortal(
         <div
             ref={backdropRef}
-            className="fixed inset-0 z-[9999] flex items-center justify-center"
-            style={{ backgroundColor: "rgba(4, 8, 20, 0.88)", backdropFilter: "blur(6px)" }}
+            className="fixed inset-0 z-[9999] flex items-center justify-center px-4"
+            style={{ backgroundColor: "rgba(15, 23, 42, 0.90)", backdropFilter: "blur(12px)" }}
             onClick={handleClose}
         >
             <div
-                ref={panelRef}
-                className="relative flex flex-col items-center"
-                style={{ maxWidth: "90vw", maxHeight: "90vh" }}
+                ref={cardRef}
+                className="relative z-10 w-full max-w-4xl opacity-0"
                 onClick={e => e.stopPropagation()}
-                onWheel={handleWheel}
-                onMouseDown={handleMouseDown}
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
             >
-                {/* Gambar */}
-                <img
-                    src={src}
-                    alt={alt}
-                    draggable={false}
-                    className="rounded-xl object-contain shadow-2xl select-none"
-                    style={{
-                        maxWidth:   "85vw",
-                        maxHeight:  "80vh",
-                        transform:  `scale(${zoom}) translate(${offset.x / zoom}px, ${offset.y / zoom}px)`,
-                        transition: dragging ? "none" : "transform 0.15s ease",
-                        cursor:     zoom > 1 ? (dragging ? "grabbing" : "grab") : "default",
-                    }}
-                />
+                <div className="relative overflow-hidden rounded-2xl border border-white/10 shadow-2xl">
+                    <img
+                        src={src}
+                        alt={alt}
+                        draggable={false}
+                        className="w-full max-h-[80vh] select-none object-contain bg-slate-950/80"
+                    />
 
-                {/* Toolbar bawah */}
-                <div className="absolute bottom-[-48px] left-1/2 -translate-x-1/2
-                                flex items-center gap-1.5 px-3 py-1.5 rounded-xl
-                                bg-slate-900/90 border border-white/[0.08] backdrop-blur-sm">
-                    <button
-                        onClick={() => setZoom(z => Math.max(z - 0.25, 0.5))}
-                        className="w-7 h-7 flex items-center justify-center rounded-lg
-                                   text-slate-400 hover:bg-white/[0.08] transition-colors duration-100"
-                        title="Perkecil (−)"
-                    >
-                        <i className="fa-solid fa-minus text-[10px]"></i>
-                    </button>
-                    <button
-                        onClick={() => { setZoom(1); setOffset({ x: 0, y: 0 }); }}
-                        className="min-w-[40px] h-7 px-2 rounded-lg text-[11px] font-mono
-                                   text-slate-300 hover:bg-white/[0.08] transition-colors duration-100"
-                        title="Reset zoom (0)"
-                    >
-                        {Math.round(zoom * 100)}%
-                    </button>
-                    <button
-                        onClick={() => setZoom(z => Math.min(z + 0.25, 4))}
-                        className="w-7 h-7 flex items-center justify-center rounded-lg
-                                   text-slate-400 hover:bg-white/[0.08] transition-colors duration-100"
-                        title="Perbesar (+)"
-                    >
-                        <i className="fa-solid fa-plus text-[10px]"></i>
-                    </button>
-                    <div className="w-px h-4 bg-white/[0.12] mx-0.5"></div>
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/90 to-transparent px-6 py-4">
+                        <p className="text-sm font-semibold text-white">{alt}</p>
+                    </div>
+
                     <button
                         onClick={handleClose}
-                        className="w-7 h-7 flex items-center justify-center rounded-lg
-                                   text-slate-400 hover:bg-red-500/20 hover:text-red-400
-                                   transition-colors duration-100"
-                        title="Tutup (Esc)"
+                        aria-label="Tutup foto"
+                        className="absolute right-3 top-3 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-black/50 text-white backdrop-blur-sm transition hover:bg-black/80"
                     >
-                        <i className="fa-solid fa-xmark text-[11px]"></i>
+                        <i className="fa-solid fa-times"></i>
                     </button>
                 </div>
-
-                {/* Close pojok kanan atas */}
-                <button
-                    onClick={handleClose}
-                    className="absolute -top-10 -right-2
-                               w-8 h-8 flex items-center justify-center rounded-full
-                               bg-white/[0.08] hover:bg-white/[0.16]
-                               text-slate-300 hover:text-white transition-all duration-150"
-                    title="Tutup"
-                >
-                    <i className="fa-solid fa-xmark text-xs"></i>
-                </button>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
 

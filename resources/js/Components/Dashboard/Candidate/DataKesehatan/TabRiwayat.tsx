@@ -15,7 +15,6 @@ type Props = {
     allergyMedicine:  string; setAllergyMedicine:   (v: string) => void;
     allergyCondition: string; setAllergyCondition:  (v: string) => void;
     physicalDisab:    string; setPhysicalDisab:     (v: string) => void;
-    chronicDocUrl:    string | null;
     errors:           Record<string, string>;
     clearError:       (field: string) => void;
 };
@@ -31,7 +30,6 @@ export default memo(function TabRiwayat({
     allergyMedicine,  setAllergyMedicine,
     allergyCondition, setAllergyCondition,
     physicalDisab,    setPhysicalDisab,
-    chronicDocUrl,
     errors,
     clearError,
 }: Props) {
@@ -161,7 +159,7 @@ export default memo(function TabRiwayat({
 
             <div className="border-t dark:border-white/[0.06] border-black/[0.06]"></div>
 
-            {/* ── Disabilitas & Hasil Lab ───────────────────────────────── */}
+            {/* ── Disabilitas ───────────────────────────────────────────── */}
             <section className="riwayat-section opacity-0">
                 <h3 className="text-sm font-display font-bold dark:text-white text-slate-800
                                 flex items-center gap-2 mb-5">
@@ -183,42 +181,6 @@ export default memo(function TabRiwayat({
                             className={textareaCls(errors.physical_disabilities)}
                         />
                     </Field>
-
-                    <div>
-                        <p className="text-xs font-semibold dark:text-slate-400 text-slate-600 mb-2">
-                            Dokumen Hasil Lab / CT Scan / USG
-                            <span className="ml-1.5 text-[10px] font-normal dark:text-slate-500 text-slate-400">
-                                (opsional)
-                            </span>
-                        </p>
-                        {chronicDocUrl ? (
-                            <div className="flex items-center gap-3 p-3.5 rounded-xl
-                                            dark:bg-cyan-500/10 bg-cyan-50
-                                            border dark:border-cyan-500/20 border-cyan-200">
-                                <i className="fa-solid fa-file-waveform text-cyan-400 text-sm shrink-0"></i>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-xs font-medium dark:text-cyan-300 text-cyan-700">
-                                        Dokumen sudah diunggah
-                                    </p>
-                                </div>
-                                <a href={chronicDocUrl} target="_blank" rel="noreferrer"
-                                    className="text-xs font-semibold dark:text-cyan-400 text-cyan-600 hover:underline shrink-0">
-                                    Lihat →
-                                </a>
-                            </div>
-                        ) : (
-                            <div className="flex items-center gap-3 p-3.5 rounded-xl
-                                            dark:bg-white/[0.02] bg-slate-50
-                                            border border-dashed dark:border-slate-700 border-slate-200">
-                                <i className="fa-solid fa-file-waveform dark:text-slate-600 text-slate-300 text-sm shrink-0"></i>
-                                <p className="text-xs dark:text-slate-500 text-slate-400">
-                                    Upload hasil lab dapat dilakukan di tab{" "}
-                                    <strong className="dark:text-slate-300 text-slate-600">Catatan Khusus</strong>
-                                    {" "}— opsional, hanya jika ada penyakit kronis
-                                </p>
-                            </div>
-                        )}
-                    </div>
                 </div>
             </section>
 
