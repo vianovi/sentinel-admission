@@ -242,7 +242,7 @@ function BSIBankCard({ config, finalAmount }: { config: Config | null; finalAmou
     const accName = config?.bank_account_name ?? 'Yayasan Al-Muntaha'
     const accNum  = config?.bank_account_number ?? ''
     const accFmt  = accNum.replace(/(.{4})/g, '$1 ').trim()
-    const bankLogo = `/assets/icons/banks/${config?.bank_logo_key ?? 'bsi'}.webp`
+    const bankLogo = `/assets/icons/banks/${config?.bank_logo_key ?? 'BSI'}.webp`
 
     return (
         <div className="relative w-full rounded-[2rem] overflow-hidden p-7 sm:p-8 shadow-xl shadow-teal-900/10 transition-transform hover:scale-[1.01] duration-500"
