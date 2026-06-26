@@ -2,7 +2,7 @@
 // LOKASI FILE: resources/js/Pages/Dashboard/Candidate/Pembayaran.tsx
 // =============================================================================
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { animate }                     from 'animejs'
 import { Head, router }                from '@inertiajs/react'
 import axios                           from 'axios'
@@ -82,6 +82,10 @@ type Props = {
     candidate:     CandidateData
     payment:       PaymentData | null
     config:        ConfigData | null
+    gateway: {
+        client_key: string | null
+        script_url: string
+    }
     proof_url:     string | null
     whatsapp_url:  string | null
     base_amount:   number
@@ -158,23 +162,50 @@ function CheckoutNarasi({ channel }: { channel: string }) {
 
 type PageState = 'selection' | 'gateway' | 'manual'
 
+type PaymentStatusResponse = {
+    payment: PaymentData | null
+    proof_url: string | null
+    whatsapp_url: string | null
+}
+
 export default function PembayaranPage({
-    user, candidate, payment, config, proof_url, whatsapp_url, base_amount, flash,
+    user, candidate, payment, config, gateway, proof_url, whatsapp_url, base_amount, flash,
 }: Props) {
     const [processing, setProcessing] = useState(false)
     const [cancelling, setCancelling] = useState(false)
+    const [livePayment, setLivePayment] = useState<PaymentData | null>(payment)
+    const [liveProofUrl, setLiveProofUrl] = useState<string | null>(proof_url)
+    const [liveWhatsappUrl, setLiveWhatsappUrl] = useState<string | null>(whatsapp_url)
+    const [snapReady, setSnapReady] = useState<boolean>(() => typeof window !== 'undefined' && !!(window as any).snap)
+    const [snapPopupOpen, setSnapPopupOpen] = useState(false)
     const contentRef                  = useRef<HTMLDivElement>(null)
+    const pollTimerRef                = useRef<number | null>(null)
+    const snapLoaderRef               = useRef<Promise<void> | null>(null)
+    const snapPopupOpenRef            = useRef(false)
+    const deferredStatusRef           = useRef<PaymentStatusResponse | null>(null)
+    const snapFinalizeTimerRef        = useRef<number | null>(null)
 
-    const deriveState = (): PageState => {
-        if (!payment || payment.status !== 'pending') return 'selection'
-        if (payment.payment_channel === 'gateway') return 'gateway'
+    const deriveState = (currentPayment: PaymentData | null): PageState => {
+        if (!currentPayment || currentPayment.status !== 'pending' || currentPayment.is_expired) return 'selection'
+        if (currentPayment.payment_channel === 'gateway') return 'gateway'
         return 'manual'
     }
 
-    const [pageState, setPageState] = useState<PageState>(deriveState)
+    const [pageState, setPageState] = useState<PageState>(() => deriveState(payment))
 
     const isDraft = candidate.status === 'draft'
-    const isPaid  = payment?.status === 'paid'
+    const isPaid  = livePayment?.status === 'paid'
+
+    useEffect(() => {
+        setLivePayment(payment)
+        setLiveProofUrl(proof_url)
+        setLiveWhatsappUrl(whatsapp_url)
+    }, [payment, proof_url, whatsapp_url])
+
+    useEffect(() => {
+        const nextState = deriveState(livePayment)
+        setPageState(prev => (prev === nextState ? prev : nextState))
+    }, [livePayment])
 
     // ── Entrance animation ────────────────────────────────────────────────
     useEffect(() => {
@@ -201,6 +232,282 @@ export default function PembayaranPage({
         }
     }, [flash])
 
+    const ensureSnapReady = useCallback(async (): Promise<void> => {
+        if ((window as any).snap) {
+            setSnapReady(true)
+            return
+        }
+
+        if (!gateway.client_key) {
+            throw new Error('MIDTRANS_CLIENT_KEY_MISSING')
+        }
+        const clientKey = gateway.client_key
+
+        if (snapLoaderRef.current) {
+            await snapLoaderRef.current
+            return
+        }
+
+        snapLoaderRef.current = new Promise<void>((resolve, reject) => {
+            const existingScript = document.querySelector<HTMLScriptElement>('script[data-midtrans-snap="true"]')
+
+            const finalizeReady = () => {
+                setSnapReady(true)
+                resolve()
+            }
+
+            const waitForSnap = (attempt = 0) => {
+                if ((window as any).snap) {
+                    finalizeReady()
+                    return
+                }
+
+                if (attempt >= 40) {
+                    reject(new Error('MIDTRANS_SNAP_TIMEOUT'))
+                    return
+                }
+
+                window.setTimeout(() => waitForSnap(attempt + 1), 250)
+            }
+
+            const handleLoad = () => waitForSnap()
+            const handleError = () => reject(new Error('MIDTRANS_SNAP_LOAD_FAILED'))
+
+            if (existingScript) {
+                existingScript.addEventListener('load', handleLoad, { once: true })
+                existingScript.addEventListener('error', handleError, { once: true })
+                waitForSnap()
+                return
+            }
+
+            const script = document.createElement('script')
+            script.src = gateway.script_url
+            script.setAttribute('data-client-key', clientKey)
+            script.setAttribute('data-midtrans-snap', 'true')
+            script.async = true
+            script.addEventListener('load', handleLoad, { once: true })
+            script.addEventListener('error', handleError, { once: true })
+            document.body.appendChild(script)
+        })
+
+        try {
+            await snapLoaderRef.current
+        } finally {
+            snapLoaderRef.current = null
+        }
+    }, [gateway.client_key, gateway.script_url])
+
+    useEffect(() => {
+        if (!gateway.client_key) return
+        void ensureSnapReady().catch(() => {
+            setSnapReady(false)
+        })
+    }, [ensureSnapReady, gateway.client_key])
+
+    const stopGatewayPolling = () => {
+        if (pollTimerRef.current !== null) {
+            window.clearTimeout(pollTimerRef.current)
+            pollTimerRef.current = null
+        }
+    }
+
+    const isSnapPopupVisible = useCallback((): boolean => {
+        if (typeof document === 'undefined') {
+            return false
+        }
+
+        const selectors = [
+            'iframe[src*="midtrans"]',
+            'iframe[name*="snap"]',
+            '#snap-midtrans',
+            '.snap-midtrans',
+            '[id*="snap-midtrans"]',
+            '[class*="snap-midtrans"]',
+        ]
+
+        return selectors.some(selector => {
+            try {
+                return Array.from(document.querySelectorAll<HTMLElement>(selector)).some(element => {
+                    const rect = element.getBoundingClientRect()
+                    const style = window.getComputedStyle(element)
+
+                    return (
+                        style.display !== 'none' &&
+                        style.visibility !== 'hidden' &&
+                        style.opacity !== '0' &&
+                        rect.width > 0 &&
+                        rect.height > 0
+                    )
+                })
+            } catch {
+                return false
+            }
+        })
+    }, [])
+
+    const applyPaymentStatus = useCallback((
+        snapshot: PaymentStatusResponse,
+        options: { allowDefer?: boolean } = {}
+    ): PaymentData | null => {
+        const allowDefer = options.allowDefer ?? true
+        const nextPayment = snapshot.payment
+
+        if (
+            allowDefer &&
+            snapPopupOpenRef.current &&
+            nextPayment?.payment_channel === 'gateway' &&
+            nextPayment.status === 'paid'
+        ) {
+            deferredStatusRef.current = snapshot
+            return nextPayment
+        }
+
+        deferredStatusRef.current = null
+        setLivePayment(nextPayment)
+        setLiveProofUrl(snapshot.proof_url)
+        setLiveWhatsappUrl(snapshot.whatsapp_url)
+
+        return nextPayment
+    }, [])
+
+    const fetchPaymentStatus = useCallback(async (): Promise<PaymentStatusResponse | null> => {
+        try {
+            const response = await axios.get<PaymentStatusResponse>(route('dashboard.pembayaran.status'), {
+                headers: { Accept: 'application/json' },
+            })
+            return response.data
+        } catch (error) {
+            console.error('Failed to refresh payment status', error)
+            return null
+        }
+    }, [])
+
+    const refreshPaymentStatus = useCallback(async (
+        options: { allowDefer?: boolean } = {}
+    ): Promise<PaymentData | null> => {
+        const snapshot = await fetchPaymentStatus()
+
+        if (!snapshot) {
+            return livePayment
+        }
+
+        return applyPaymentStatus(snapshot, options)
+    }, [applyPaymentStatus, fetchPaymentStatus, livePayment])
+
+    const finalizeSnapPopup = useCallback((
+        options: { delay?: number; refresh?: boolean; waitForPopupClose?: boolean } = {}
+    ) => {
+        const { delay = 0, refresh = false, waitForPopupClose = false } = options
+
+        if (snapFinalizeTimerRef.current !== null) {
+            window.clearTimeout(snapFinalizeTimerRef.current)
+            snapFinalizeTimerRef.current = null
+        }
+
+        const runFinalize = async (attempt = 0) => {
+            if (waitForPopupClose && isSnapPopupVisible() && attempt < 40) {
+                snapFinalizeTimerRef.current = window.setTimeout(() => {
+                    void runFinalize(attempt + 1)
+                }, 250)
+                return
+            }
+
+            snapPopupOpenRef.current = false
+            setSnapPopupOpen(false)
+
+            if (deferredStatusRef.current) {
+                applyPaymentStatus(deferredStatusRef.current, { allowDefer: false })
+                deferredStatusRef.current = null
+                return
+            }
+
+            if (refresh) {
+                const nextPayment = await refreshPaymentStatus({ allowDefer: false })
+                if (
+                    nextPayment &&
+                    nextPayment.payment_channel === 'gateway' &&
+                    nextPayment.status === 'pending' &&
+                    !nextPayment.is_expired
+                ) {
+                    scheduleGatewayPolling(1800)
+                }
+            }
+        }
+
+        snapFinalizeTimerRef.current = window.setTimeout(() => {
+            void runFinalize()
+        }, delay)
+    }, [applyPaymentStatus, isSnapPopupVisible, refreshPaymentStatus])
+
+    const scheduleGatewayPolling = (delay = 2500) => {
+        stopGatewayPolling()
+        pollTimerRef.current = window.setTimeout(async () => {
+            const nextPayment = await refreshPaymentStatus()
+            if (
+                nextPayment &&
+                nextPayment.payment_channel === 'gateway' &&
+                nextPayment.status === 'pending' &&
+                !nextPayment.is_expired
+            ) {
+                scheduleGatewayPolling(3500)
+                return
+            }
+
+            stopGatewayPolling()
+        }, delay)
+    }
+
+    useEffect(() => {
+        if (
+            livePayment &&
+            livePayment.payment_channel === 'gateway' &&
+            livePayment.status === 'pending' &&
+            !livePayment.is_expired &&
+            !snapPopupOpen
+        ) {
+            scheduleGatewayPolling(3500)
+            return () => stopGatewayPolling()
+        }
+
+        stopGatewayPolling()
+        return undefined
+    }, [livePayment?.id, livePayment?.payment_channel, livePayment?.status, livePayment?.is_expired, snapPopupOpen])
+
+    useEffect(() => {
+        const handleFocusRefresh = () => {
+            if (
+                document.visibilityState === 'visible' &&
+                livePayment &&
+                livePayment.payment_channel === 'gateway' &&
+                livePayment.status === 'pending' &&
+                !livePayment.is_expired &&
+                !snapPopupOpen
+            ) {
+                void refreshPaymentStatus()
+                scheduleGatewayPolling(2000)
+            }
+        }
+
+        window.addEventListener('focus', handleFocusRefresh)
+        document.addEventListener('visibilitychange', handleFocusRefresh)
+
+        return () => {
+            window.removeEventListener('focus', handleFocusRefresh)
+            document.removeEventListener('visibilitychange', handleFocusRefresh)
+        }
+    }, [livePayment, refreshPaymentStatus, snapPopupOpen])
+
+    useEffect(() => {
+        return () => {
+            stopGatewayPolling()
+
+            if (snapFinalizeTimerRef.current !== null) {
+                window.clearTimeout(snapFinalizeTimerRef.current)
+                snapFinalizeTimerRef.current = null
+            }
+        }
+    }, [])
+
     // ── Transition helper ─────────────────────────────────────────────────
     const transitionTo = (next: PageState, dir: 'forward' | 'back' = 'forward') => {
         const dx = dir === 'forward' ? -20 : 20
@@ -216,8 +523,8 @@ export default function PembayaranPage({
     // ── Create payment ────────────────────────────────────────────────────
     const handleSelectChannel = (channel: 'gateway' | 'transfer' | 'cash') => {
         // Kalau payment aktif untuk channel ini → langsung navigate ke state
-        if (payment?.status === 'pending' && !payment.is_expired) {
-            transitionTo(payment.payment_channel === 'gateway' ? 'gateway' : 'manual')
+        if (livePayment?.status === 'pending' && !livePayment.is_expired) {
+            transitionTo(livePayment.payment_channel === 'gateway' ? 'gateway' : 'manual')
             return
         }
 
@@ -238,7 +545,7 @@ export default function PembayaranPage({
     const handlePay = async () => {
         setProcessing(true)
 
-        let token = payment?.snap_token
+        let token = livePayment?.snap_token
 
         if (!token) {
             try {
@@ -253,21 +560,42 @@ export default function PembayaranPage({
             }
         }
 
-        const snap = (window as any).snap
-        if (!snap) {
+        try {
+            await ensureSnapReady()
+        } catch (error: any) {
             setProcessing(false)
-            swalDark.fire({ icon: 'error', title: 'Error', text: 'Payment gateway belum siap. Coba muat ulang halaman.' })
+            const message = error?.message === 'MIDTRANS_CLIENT_KEY_MISSING'
+                ? 'Konfigurasi payment gateway belum lengkap. Hubungi admin.'
+                : 'Payment gateway sedang menyiapkan koneksi. Coba lagi beberapa detik lagi.'
+            swalDark.fire({ icon: 'error', title: 'Payment Gateway Belum Siap', text: message })
             return
         }
 
+        const snap = (window as any).snap
+        snapPopupOpenRef.current = true
+        setSnapPopupOpen(true)
+        stopGatewayPolling()
+
         snap.pay(token, {
-            onSuccess: () => { setProcessing(false); router.reload() },
-            onPending: () => { setProcessing(false); router.reload() },
+            onSuccess: async () => {
+                setProcessing(false)
+                await refreshPaymentStatus()
+                finalizeSnapPopup({ delay: 250, refresh: true, waitForPopupClose: true })
+            },
+            onPending: async () => {
+                setProcessing(false)
+                await refreshPaymentStatus()
+                finalizeSnapPopup({ delay: 150, refresh: true, waitForPopupClose: true })
+            },
             onError:   () => {
                 setProcessing(false)
+                finalizeSnapPopup()
                 swalDark.fire({ icon: 'error', title: 'Pembayaran Gagal', text: 'Terjadi kesalahan. Silakan coba lagi.' })
             },
-            onClose: () => setProcessing(false),
+            onClose: () => {
+                setProcessing(false)
+                finalizeSnapPopup({ refresh: true })
+            },
         })
     }
 
@@ -288,7 +616,7 @@ export default function PembayaranPage({
 
     // ── Cancel payment ────────────────────────────────────────────────────
     const handleCancel = async () => {
-        if (!payment) return
+        if (!livePayment) return
         const result = await swalDark.fire({
             icon: 'warning',
             title: 'Batalkan Transaksi?',
@@ -300,9 +628,13 @@ export default function PembayaranPage({
         if (!result.isConfirmed) return
 
         setCancelling(true)
-        router.delete(route('dashboard.pembayaran.cancel', payment.id), {
+        router.delete(route('dashboard.pembayaran.cancel', livePayment.id), {
             onSuccess: () => {
                 setCancelling(false)
+                setLivePayment(null)
+                setLiveProofUrl(null)
+                setLiveWhatsappUrl(null)
+                stopGatewayPolling()
                 transitionTo('selection', 'back')
             },
             onError:  () => setCancelling(false),
@@ -339,9 +671,9 @@ export default function PembayaranPage({
                     schoolOrigin={candidate.school_origin}
                     motherName={candidate.mother_name}
                     wave={candidate.admission_wave}
-                    payment={payment}
+                    payment={livePayment}
                     config={config}
-                    whatsappUrl={whatsapp_url}
+                    whatsappUrl={liveWhatsappUrl}
                     baseAmount={base_amount}
                     isPaid={!!isPaid}
                 />
@@ -374,14 +706,14 @@ export default function PembayaranPage({
                 )}
 
                 {/* Paid */}
-                {isPaid && payment && (
+                {isPaid && livePayment && (
                     <PaymentSuccess
                         payment={{
-                            order_id:        payment.order_id,
-                            final_amount:    payment.final_amount,
-                            payment_method:  payment.payment_method,
-                            payment_channel: payment.payment_channel,
-                            paid_at:         payment.paid_at,
+                            order_id:        livePayment.order_id,
+                            final_amount:    livePayment.final_amount,
+                            payment_method:  livePayment.payment_method,
+                            payment_channel: livePayment.payment_channel,
+                            paid_at:         livePayment.paid_at,
                         }}
                     />
                 )}
@@ -390,8 +722,8 @@ export default function PembayaranPage({
                 {!isDraft && !isPaid && (
                     <>
                         {/* Narasi panduan — tampil saat di checkout, gantikan welcome */}
-                        {isInCheckout && payment && (
-                            <CheckoutNarasi channel={payment.payment_channel} />
+                        {isInCheckout && livePayment && (
+                            <CheckoutNarasi channel={livePayment.payment_channel} />
                         )}
 
                         {/* Selection */}
@@ -399,7 +731,7 @@ export default function PembayaranPage({
                             <ChannelSelection
                                 baseAmount={base_amount}
                                 config={config}
-                                payment={payment}
+                                payment={livePayment}
                                 onSelect={handleSelectChannel}
                                 processing={processing}
                                 candidateName={candidate.full_name}
@@ -407,12 +739,12 @@ export default function PembayaranPage({
                         )}
 
                         {/* Gateway checkout */}
-                        {pageState === 'gateway' && payment?.payment_channel === 'gateway' && (
+                        {pageState === 'gateway' && livePayment?.payment_channel === 'gateway' && (
                             <GatewayCheckout
-                                payment={payment}
+                                payment={livePayment}
                                 candidate={candidateInfo}
                                 config={config}
-                                processing={processing}
+                                processing={processing || !snapReady}
                                 cancelling={cancelling}
                                 onPay={handlePay}
                                 onCancel={handleCancel}
@@ -421,13 +753,13 @@ export default function PembayaranPage({
                         )}
 
                         {/* Manual checkout */}
-                        {pageState === 'manual' && payment && payment.payment_channel !== 'gateway' && (
+                        {pageState === 'manual' && livePayment && livePayment.payment_channel !== 'gateway' && (
                             <ManualCheckout
-                                payment={payment as any}
+                                payment={livePayment as any}
                                 candidate={candidateInfo}
                                 config={config}
-                                proofUrl={proof_url}
-                                whatsappUrl={whatsapp_url}
+                                proofUrl={liveProofUrl}
+                                whatsappUrl={liveWhatsappUrl}
                                 processing={processing}
                                 cancelling={cancelling}
                                 onUploadProof={handleUploadProof}

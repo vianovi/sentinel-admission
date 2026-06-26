@@ -168,6 +168,8 @@ Route::middleware(['auth', RoleMiddleware::class . ':candidate'])
             ->name('pembayaran.cancel');
         Route::post('/pembayaran/snap-token', [CandidatePayment::class, 'snapToken'])
             ->name('pembayaran.snap-token');
+        Route::get('/pembayaran/status', [CandidatePayment::class, 'status'])
+            ->name('pembayaran.status');
         Route::get('/pembayaran/proof/{payment}', [SecureFileController::class, 'candidatePaymentProofPreview'])
             ->middleware('throttle:sensitive-file')
             ->name('pembayaran.proof');

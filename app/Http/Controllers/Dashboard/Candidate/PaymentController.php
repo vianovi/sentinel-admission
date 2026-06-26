@@ -28,10 +28,7 @@ class PaymentController extends Controller
         $user      = $request->user();
         $candidate = $user->candidate()->with('admissionWave')->first();
 
-        $payment = Payment::where('candidate_id', $candidate->id)
-            ->whereIn('status', [Payment::STATUS_PENDING, Payment::STATUS_PAID])
-            ->latest()
-            ->first();
+        $payment = $this->resolveActivePayment($candidate);
 
         $config = $this->paymentService->resolveConfig($candidate->admission_wave_id);
 
@@ -76,6 +73,38 @@ class PaymentController extends Controller
             'proof_url'    => $proofUrl,
             'whatsapp_url' => $whatsappUrl,
             'base_amount'  => (float) $wave?->registration_fee,
+            'gateway'      => [
+                'client_key' => config('midtrans.client_key'),
+                'script_url' => config('midtrans.is_production')
+                    ? 'https://app.midtrans.com/snap/snap.js'
+                    : 'https://app.sandbox.midtrans.com/snap/snap.js',
+            ],
+        ]);
+    }
+
+    public function status(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $candidate = $request->user()->candidate()->with('admissionWave')->first();
+        $payment   = $this->resolveActivePayment($candidate);
+        $config    = $this->paymentService->resolveConfig($candidate->admission_wave_id);
+
+        $proofUrl = null;
+        if ($payment?->isManualChannel() && $payment->proof_path) {
+            $proofUrl = $this->paymentService->getProofAccessUrl($payment);
+        }
+
+        $whatsappUrl = null;
+        if ($config && $payment?->isManualChannel()) {
+            $whatsappUrl = $config->generateWhatsAppUrl(
+                $candidate->full_name,
+                $candidate->candidate_code
+            );
+        }
+
+        return response()->json([
+            'payment'      => $payment ? $this->formatPayment($payment) : null,
+            'proof_url'    => $proofUrl,
+            'whatsapp_url' => $whatsappUrl,
         ]);
     }
 
@@ -331,5 +360,30 @@ class PaymentController extends Controller
             'bank_logo_label'        => $config->bank_logo_label,
             'whatsapp_contact_label' => $config->whatsapp_contact_label,
         ];
+    }
+
+    private function resolveActivePayment(Candidate $candidate): ?Payment
+    {
+        $payment = Payment::where('candidate_id', $candidate->id)
+            ->whereIn('status', [Payment::STATUS_PENDING, Payment::STATUS_PAID])
+            ->latest()
+            ->first();
+
+        if (! $payment) {
+            return null;
+        }
+
+        if ($payment->isGateway() && $payment->status === Payment::STATUS_PENDING) {
+            $payment = $this->paymentService->syncGatewayPaymentStatus($payment);
+
+            if (! in_array($payment->status, [Payment::STATUS_PENDING, Payment::STATUS_PAID], true)) {
+                return Payment::where('candidate_id', $candidate->id)
+                    ->whereIn('status', [Payment::STATUS_PENDING, Payment::STATUS_PAID])
+                    ->latest()
+                    ->first();
+            }
+        }
+
+        return $payment;
     }
 }

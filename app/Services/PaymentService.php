@@ -309,6 +309,69 @@ class PaymentService
         ]);
     }
 
+    public function syncGatewayPaymentStatus(Payment $payment): Payment
+    {
+        if (! $payment->isGateway()) {
+            return $payment->fresh() ?? $payment;
+        }
+
+        if (in_array($payment->status, [
+            Payment::STATUS_PAID,
+            Payment::STATUS_FAILED,
+            Payment::STATUS_EXPIRED,
+            Payment::STATUS_CANCELLED,
+        ], true)) {
+            return $payment->fresh() ?? $payment;
+        }
+
+        try {
+            \Midtrans\Config::$serverKey = config('midtrans.server_key');
+            \Midtrans\Config::$isProduction = config('midtrans.is_production');
+
+            $response = \Midtrans\Transaction::status($payment->order_id);
+            $payload = json_decode(json_encode($response), true) ?? [];
+
+            $transactionStatus = $payload['transaction_status'] ?? '';
+            $fraudStatus = $payload['fraud_status'] ?? '';
+
+            $newStatus = match (true) {
+                $transactionStatus === 'capture' && $fraudStatus === 'accept' => Payment::STATUS_PAID,
+                $transactionStatus === 'settlement'                           => Payment::STATUS_PAID,
+                $transactionStatus === 'cancel'                               => Payment::STATUS_CANCELLED,
+                $transactionStatus === 'deny'                                 => Payment::STATUS_FAILED,
+                $transactionStatus === 'expire'                               => Payment::STATUS_EXPIRED,
+                $transactionStatus === 'failure'                              => Payment::STATUS_FAILED,
+                default                                                       => Payment::STATUS_PENDING,
+            };
+
+            if (
+                $payment->status !== $newStatus
+                || empty($payment->payment_method)
+                || empty($payment->midtrans_transaction_id)
+            ) {
+                DB::transaction(function () use ($payment, $newStatus, $payload) {
+                    $payment->updateQuietly([
+                        'status'                  => $newStatus,
+                        'payment_method'          => $payload['payment_type'] ?? $payment->payment_method,
+                        'midtrans_transaction_id' => $payload['transaction_id'] ?? $payment->midtrans_transaction_id,
+                        'paid_at'                 => $newStatus === Payment::STATUS_PAID
+                            ? ($payment->paid_at ?? now())
+                            : null,
+                        'metadata'                => $payload,
+                    ]);
+                });
+            }
+        } catch (\Throwable $e) {
+            Log::warning('PaymentService: gateway sync failed', [
+                'payment_id' => $payment->id,
+                'order_id'   => $payment->order_id,
+                'error'      => $e->getMessage(),
+            ]);
+        }
+
+        return $payment->fresh() ?? $payment;
+    }
+
     // ─────────────────────────────────────────────────────────────────────
     // Proof File Access
     // ─────────────────────────────────────────────────────────────────────
@@ -346,7 +409,7 @@ class PaymentService
      */
     private function validateMidtransSignature(array $payload): void
     {
-        $serverKey = config('services.midtrans.server_key');
+        $serverKey = config('midtrans.server_key');
 
         $signatureKey = hash('sha512',
             ($payload['order_id']    ?? '') .
