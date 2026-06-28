@@ -1,7 +1,7 @@
 // resources/js/Pages/Landing/Welcome.tsx
 
 import { Head, usePage } from '@inertiajs/react'
-import { useState, lazy, Suspense } from 'react'
+import { useEffect, useRef, useState, lazy, Suspense } from 'react'
 import { WelcomeProps } from '@/types/landing'
 import { PageProps } from '@/types'
 import TopBar from '@/Components/Landing/TopBar'
@@ -25,18 +25,88 @@ import { useLandingLenis } from '@/hooks/useLandingLenis'
  */
 const CinematicShowcase = lazy(() => import('@/Components/Landing/CinematicShowcase'))
 
+type IdleCapableWindow = Window & typeof globalThis & {
+    requestIdleCallback?: (callback: () => void, options?: { timeout?: number }) => number
+    cancelIdleCallback?: (handle: number) => void
+}
+
+function DeferredCinematicShowcase() {
+    const wrapperRef = useRef<HTMLDivElement>(null)
+    const [shouldRender, setShouldRender] = useState(false)
+
+    useEffect(() => {
+        const media = window.matchMedia('(min-width: 450px)')
+
+        if (!media.matches) return
+
+        const wrapper = wrapperRef.current
+
+        if (!wrapper) return
+
+        let idleId: number | undefined
+        let fallbackTimer: number | undefined
+        const idleWindow = window as IdleCapableWindow
+
+        const renderWhenIdle = () => {
+            if (idleWindow.requestIdleCallback) {
+                idleId = idleWindow.requestIdleCallback(() => setShouldRender(true), { timeout: 1800 })
+                return
+            }
+
+            fallbackTimer = window.setTimeout(() => setShouldRender(true), 700)
+        }
+
+        if (!('IntersectionObserver' in window)) {
+            renderWhenIdle()
+            return () => {
+                if (fallbackTimer !== undefined) window.clearTimeout(fallbackTimer)
+                if (idleId !== undefined && idleWindow.cancelIdleCallback) idleWindow.cancelIdleCallback(idleId)
+            }
+        }
+
+        const observer = new IntersectionObserver((entries) => {
+            if (entries.some((entry) => entry.isIntersecting)) {
+                observer.disconnect()
+                renderWhenIdle()
+            }
+        }, { rootMargin: '900px 0px' })
+
+        observer.observe(wrapper)
+
+        return () => {
+            observer.disconnect()
+            if (fallbackTimer !== undefined) window.clearTimeout(fallbackTimer)
+            if (idleId !== undefined && idleWindow.cancelIdleCallback) idleWindow.cancelIdleCallback(idleId)
+        }
+    }, [])
+
+    return (
+        <div ref={wrapperRef} className="hidden min-[450px]:block">
+            {shouldRender && (
+                <Suspense fallback={<div />}>
+                    <CinematicShowcase />
+                </Suspense>
+            )}
+        </div>
+    )
+}
+
 export default function Welcome({ activeWave, auth }: WelcomeProps) {
     const { props } = usePage<PageProps>()
     const { app } = props
     const [videoModalOpen, setVideoModalOpen] = useState(false)
     useLandingLenis()
+    const currentYear = new Date().getFullYear()
+    const canonicalUrl = typeof window === 'undefined'
+        ? undefined
+        : `${window.location.origin}${window.location.pathname}`
 
     return (
         <>
             {/*
              * ✅ PERF: Preload hero image + SEO Meta → LCP + SEO score
              */}
-            <Head title={`${app.name} - Penerimaan Siswa Baru ${new Date().getFullYear()}/${new Date().getFullYear() + 1}`}>
+            <Head title={`${app.name} - Penerimaan Santri Baru ${currentYear}/${currentYear + 1}`}>
                 {/* Preload hero */}
                 <link
                     rel="preload"
@@ -52,32 +122,26 @@ export default function Welcome({ activeWave, auth }: WelcomeProps) {
                     media="(min-width: 769px)"
                     fetchPriority="high"
                 />
-                {app.logo && (
-                    <link
-                        rel="preload"
-                        as="image"
-                        href={app.logo}
-                        fetchPriority="high"
-                    />
-                )}
 
                 {/* SEO Meta - Boost SEO score 90+ */}
-                <meta name="description" content="Al-Muntaha Islamic Boarding School - Pendaftaran Siswa Baru Online. Gelombang aktif sekarang. Kuota terbatas." />
-                <meta property="og:title" content={`${app.name} - PSB ${new Date().getFullYear()}/${new Date().getFullYear() + 1}`} />
-                <meta property="og:description" content="Daftar sekarang di sistem penerimaan siswa baru Al-Muntaha School. Gelombang aktif, kuota terbatas." />
+                <meta name="description" content="Penerimaan santri baru Al-Muntaha Islamic Boarding School dengan pendaftaran online, informasi gelombang aktif, jadwal seleksi, dan kuota tersedia." />
+                <meta name="robots" content="index, follow" />
+                <meta property="og:title" content={`${app.name} - Penerimaan Santri Baru ${currentYear}/${currentYear + 1}`} />
+                <meta property="og:description" content="Daftar di sistem penerimaan santri baru Al-Muntaha School. Cek gelombang aktif, jadwal seleksi, fasilitas, dan alur pendaftaran online." />
                 <meta property="og:image" content="/assets/landing/hero/background.webp" />
                 <meta property="og:image:width" content="1920" />
                 <meta property="og:image:height" content="1080" />
                 <meta property="og:type" content="website" />
-                <meta property="og:url" content={window.location.origin} />
+                {canonicalUrl && <meta property="og:url" content={canonicalUrl} />}
+                <meta property="og:locale" content="id_ID" />
                 <meta name="twitter:card" content="summary_large_image" />
-                <meta name="twitter:title" content={`${app.name} - PSB ${new Date().getFullYear()}/${new Date().getFullYear() + 1}`} />
-                <meta name="twitter:description" content="Pendaftaran Siswa Baru Al-Muntaha Islamic Boarding School" />
+                <meta name="twitter:title" content={`${app.name} - Penerimaan Santri Baru ${currentYear}/${currentYear + 1}`} />
+                <meta name="twitter:description" content="Pendaftaran online Al-Muntaha Islamic Boarding School dengan informasi gelombang, jadwal seleksi, dan fasilitas." />
                 <meta name="twitter:image" content="/assets/landing/hero/background.webp" />
 
                 {/* Mobile SEO */}
                 <meta name="theme-color" content="#0f172a" />
-                <link rel="canonical" href={window.location.href} />
+                {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
             </Head>
 
             <div className="font-sans text-navy bg-light antialiased selection:bg-gold/30 selection:text-gold">
@@ -89,16 +153,7 @@ export default function Welcome({ activeWave, auth }: WelcomeProps) {
                 <HighlightSection />
                 <GallerySection />
 
-                {/*
-                 * CinematicShowcase hanya tampil di layar ≥ 450px.
-                 * Suspense fallback: div kosong — tidak ada loading indicator
-                 * karena section ini di bawah fold, user tidak akan melihat flash.
-                 */}
-                <div className="hidden min-[450px]:block">
-                    <Suspense fallback={<div />}>
-                        <CinematicShowcase />
-                    </Suspense>
-                </div>
+                <DeferredCinematicShowcase />
 
                 <FacilitiesSection />
                 <HowToRegisterSection />

@@ -1,29 +1,49 @@
 // resources/js/Components/Landing/HighlightSection.tsx
 
 import { useEffect, useRef } from 'react'
-import { animate, stagger } from 'animejs'
+
+const SIMPLE_REVEAL_QUERY = '(prefers-reduced-motion: reduce), (max-width: 767px)'
 
 export default function HighlightSection() {
     const sectionRef = useRef<HTMLElement>(null)
 
     useEffect(() => {
+        const section = sectionRef.current
+        if (!section) return
+        let cancelled = false
+
+        const targets = Array.from(section.querySelectorAll<HTMLElement>('.highlight-animate'))
+
+        if (window.matchMedia(SIMPLE_REVEAL_QUERY).matches) {
+            targets.forEach((target) => {
+                target.style.opacity = '1'
+                target.style.transform = 'none'
+            })
+            return
+        }
+
         const observer = new IntersectionObserver((entries) => {
             entries.forEach((entry) => {
                 if (entry.isIntersecting) {
-                    animate('.highlight-animate', {
-                        opacity: [0, 1],
-                        translateY: [40, 0],
-                        duration: 1100,
-                        delay: stagger(220),
-                        ease: 'outExpo',
+                    observer.unobserve(entry.target)
+                    void import('animejs').then(({ animate, stagger }) => {
+                        if (cancelled) return
+                        animate(targets, {
+                            opacity: [0, 1],
+                            translateY: [40, 0],
+                            duration: 1100,
+                            delay: stagger(220),
+                            ease: 'outExpo',
+                        })
                     })
-                } else {
-                    animate('.highlight-animate', { opacity: 0, translateY: 40, duration: 0 })
                 }
             })
         }, { threshold: 0.1 })
-        if (sectionRef.current) observer.observe(sectionRef.current)
-        return () => observer.disconnect()
+        observer.observe(section)
+        return () => {
+            cancelled = true
+            observer.disconnect()
+        }
     }, [])
 
     return (
@@ -56,6 +76,8 @@ export default function HighlightSection() {
                             src="/assets/landing/highlights/seleksi.webp"
                             alt="Proses seleksi siswa Al-Muntaha"
                             className="w-full h-[400px] object-cover rounded-2xl shadow-xl transform md:translate-y-8 hover:translate-y-4 transition duration-500"
+                            width="400"
+                            height="600"
                             loading="lazy"
                             decoding="async"
                             onError={(e) => { e.currentTarget.src = 'https://placehold.co/400x600/f1f5f9/0f172a?text=Seleksi' }}
@@ -78,6 +100,8 @@ export default function HighlightSection() {
                             src="/assets/landing/highlights/asrama.webp"
                             alt="Asrama Al-Muntaha Boarding School"
                             className="w-full h-48 object-cover rounded-2xl shadow-lg border-4 border-white"
+                            width="400"
+                            height="200"
                             loading="lazy"
                             decoding="async"
                             onError={(e) => { e.currentTarget.src = 'https://placehold.co/400x200/f1f5f9/0f172a?text=Asrama' }}

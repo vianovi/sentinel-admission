@@ -1,29 +1,49 @@
 // resources/js/Components/Landing/VisiMisiSection.tsx
 
 import { useEffect, useRef } from 'react'
-import { animate, stagger } from 'animejs'
+
+const SIMPLE_REVEAL_QUERY = '(prefers-reduced-motion: reduce), (max-width: 767px)'
 
 export default function VisiMisiSection() {
     const sectionRef = useRef<HTMLElement>(null)
 
     useEffect(() => {
+        const section = sectionRef.current
+        if (!section) return
+        let cancelled = false
+
+        const targets = Array.from(section.querySelectorAll<HTMLElement>('.visimisi-animate'))
+
+        if (window.matchMedia(SIMPLE_REVEAL_QUERY).matches) {
+            targets.forEach((target) => {
+                target.style.opacity = '1'
+                target.style.transform = 'none'
+            })
+            return
+        }
+
         const observer = new IntersectionObserver((entries) => {
             entries.forEach((entry) => {
                 if (entry.isIntersecting) {
-                    animate('.visimisi-animate', {
-                        opacity: [0, 1],
-                        translateY: [40, 0],
-                        duration: 1100,
-                        delay: stagger(280),
-                        ease: 'outExpo',
+                    observer.unobserve(entry.target)
+                    void import('animejs').then(({ animate, stagger }) => {
+                        if (cancelled) return
+                        animate(targets, {
+                            opacity: [0, 1],
+                            translateY: [40, 0],
+                            duration: 1100,
+                            delay: stagger(280),
+                            ease: 'outExpo',
+                        })
                     })
-                } else {
-                    animate('.visimisi-animate', { opacity: 0, translateY: 40, duration: 0 })
                 }
             })
         }, { threshold: 0.1 })
-        if (sectionRef.current) observer.observe(sectionRef.current)
-        return () => observer.disconnect()
+        observer.observe(section)
+        return () => {
+            cancelled = true
+            observer.disconnect()
+        }
     }, [])
 
     return (
@@ -31,7 +51,7 @@ export default function VisiMisiSection() {
          * ✅ PERF: Ganti inline style backgroundImage ke Tailwind class bg-dotted.
          *    Didefinisikan sekali di app.css, di-cache browser, tidak di-parse ulang tiap render.
          */
-        <section id="visi" ref={sectionRef} className="py-20 relative border-y border-gray-200 bg-dotted">
+        <section id="visi" ref={sectionRef} className="py-20 relative scroll-mt-28 border-y border-gray-200 bg-dotted">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="visimisi-animate opacity-0 text-center mb-12">
                     <span className="text-gold font-bold text-sm tracking-widest uppercase">Komitmen Kami</span>
@@ -50,6 +70,8 @@ export default function VisiMisiSection() {
                                 src="/assets/landing/vision-mission/visi.webp"
                                 alt="Visi Al-Muntaha Boarding School"
                                 className="w-full h-full object-cover"
+                                width="600"
+                                height="300"
                                 loading="lazy"
                                 decoding="async"
                                 onError={(e) => { e.currentTarget.src = 'https://placehold.co/600x300/0f172a/ffffff?text=Visi' }}
@@ -73,6 +95,8 @@ export default function VisiMisiSection() {
                                 src="/assets/landing/vision-mission/misi.webp"
                                 alt="Misi Al-Muntaha Boarding School"
                                 className="w-full h-full object-cover"
+                                width="600"
+                                height="300"
                                 loading="lazy"
                                 decoding="async"
                                 onError={(e) => { e.currentTarget.src = 'https://placehold.co/600x300/0f172a/ffffff?text=Misi' }}

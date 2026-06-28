@@ -1,13 +1,13 @@
 // resources/js/Components/Landing/HeroSection.tsx
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState, useCallback } from 'react'
 import { Link } from '@inertiajs/react'
-import { animate, stagger } from 'animejs'
 import { AdmissionWaveData } from '@/types/landing'
 import WaveCard from './WaveCard'
-import ScheduleModal from './ScheduleModal'
 
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)'
+const MOBILE_VIEWPORT_QUERY = '(max-width: 767px)'
 const HERO_WORDS = ['Generasi', 'Santri', 'Pemimpin', 'Insan', 'Pribadi'] as const
+const ScheduleModal = lazy(() => import('./ScheduleModal'))
 
 type TypingPhase = 'typing' | 'holding' | 'deleting'
 
@@ -35,13 +35,32 @@ function usePrefersReducedMotion() {
     return reducedMotion
 }
 
-function useTypingWords(words: readonly string[], reducedMotion: boolean) {
+function useViewportMatch(query: string) {
+    const [matches, setMatches] = useState(() => {
+        if (typeof window === 'undefined') return false
+        return window.matchMedia(query).matches
+    })
+
+    useEffect(() => {
+        const media = window.matchMedia(query)
+        const handleChange = () => setMatches(media.matches)
+
+        handleChange()
+        media.addEventListener('change', handleChange)
+
+        return () => media.removeEventListener('change', handleChange)
+    }, [query])
+
+    return matches
+}
+
+function useTypingWords(words: readonly string[], enabled: boolean) {
     const [wordIndex, setWordIndex] = useState(0)
     const [visibleWord, setVisibleWord] = useState(words[0] ?? '')
     const [phase, setPhase] = useState<TypingPhase>('holding')
 
     useEffect(() => {
-        if (reducedMotion) {
+        if (!enabled) {
             setWordIndex(0)
             setVisibleWord(words[0] ?? '')
             setPhase('holding')
@@ -81,7 +100,7 @@ function useTypingWords(words: readonly string[], reducedMotion: boolean) {
         return () => {
             if (timeoutId) window.clearTimeout(timeoutId)
         }
-    }, [phase, reducedMotion, visibleWord, wordIndex, words])
+    }, [enabled, phase, visibleWord, wordIndex, words])
 
     return {
         visibleWord,
@@ -92,8 +111,12 @@ function useTypingWords(words: readonly string[], reducedMotion: boolean) {
 export default function HeroSection({ activeWave, onOpenVideo }: HeroSectionProps) {
     const heroRef = useRef<HTMLElement>(null)
     const [scheduleModalOpen, setScheduleModalOpen] = useState(false)
+    const [heroReady, setHeroReady] = useState(false)
+    const [typingReady, setTypingReady] = useState(false)
     const reducedMotion = usePrefersReducedMotion()
-    const { visibleWord, activeWord } = useTypingWords(HERO_WORDS, reducedMotion)
+    const isMobileViewport = useViewportMatch(MOBILE_VIEWPORT_QUERY)
+    const typingEnabled = typingReady && !reducedMotion && !isMobileViewport
+    const { visibleWord, activeWord } = useTypingWords(HERO_WORDS, typingEnabled)
 
     // Memoize callback untuk menghindari re-render tidak berguna pada WaveCard
     const handleOpenSchedule = useCallback(() => {
@@ -101,55 +124,41 @@ export default function HeroSection({ activeWave, onOpenVideo }: HeroSectionProp
     },[])
 
     useEffect(() => {
-        const hero = heroRef.current
-        if (!hero) return
-
-        const textTargets = Array.from(hero.querySelectorAll('.hero-text-anim'))
-        const cardTargets = Array.from(hero.querySelectorAll('.hero-card-anim'))
-        const motionTargets = [...textTargets, ...cardTargets]
-
         if (reducedMotion) {
-            motionTargets.forEach((element) => {
-                const target = element as HTMLElement
-                target.style.opacity = '1'
-                target.style.transform = 'none'
-            })
+            setHeroReady(true)
             return
         }
 
-        motionTargets.forEach((element) => {
-            const target = element as HTMLElement
-            target.style.opacity = ''
-            target.style.transform = ''
+        let secondFrame = 0
+        const firstFrame = window.requestAnimationFrame(() => {
+            secondFrame = window.requestAnimationFrame(() => setHeroReady(true))
         })
 
-        // Strict Anime.js V4 approach dengan instance capture
-        const textAnim = animate(textTargets, {
-            opacity: [0, 1],
-            translateY: [30, 0],
-            duration: 1100,
-            delay: stagger(150, { start: 100 }),
-            ease: 'outExpo',
-        })
-
-        const cardAnim = animate(cardTargets, {
-            opacity: [0, 1],
-            translateX: [40, 0],
-            duration: 1200,
-            delay: 500,
-            ease: 'outExpo',
-        })
-
-        // Cleanup function (Anti-Memory Leak Policy)
         return () => {
-            if (textAnim) textAnim.cancel()
-            if (cardAnim) cardAnim.cancel()
+            window.cancelAnimationFrame(firstFrame)
+            window.cancelAnimationFrame(secondFrame)
         }
     },[reducedMotion])
 
+    useEffect(() => {
+        setTypingReady(false)
+
+        if (reducedMotion || isMobileViewport) return
+
+        const timer = window.setTimeout(() => setTypingReady(true), 1200)
+        return () => window.clearTimeout(timer)
+    }, [isMobileViewport, reducedMotion])
+
+    const textMotionClass = heroReady || reducedMotion
+        ? 'translate-y-0 opacity-100'
+        : 'translate-y-7 opacity-0'
+    const cardMotionClass = heroReady || reducedMotion
+        ? 'translate-x-0 translate-y-0 opacity-100'
+        : 'translate-y-7 opacity-0 lg:translate-x-10 lg:translate-y-0'
+
     return (
         <>
-            <header ref={heroRef} id="home" className="relative -mt-24 min-h-[calc(80vh+6rem)] flex items-center pt-48 pb-16 lg:pt-52 lg:pb-20 overflow-hidden bg-navy">
+            <header ref={heroRef} id="home" className="relative -mt-24 flex min-h-[calc(80vh+6rem)] scroll-mt-28 items-center overflow-hidden bg-navy pt-48 pb-16 lg:pt-52 lg:pb-20">
 
                 {/* BACKGROUND: Bersih dari filter blend yang mengotori warna */}
                 <div className="absolute inset-0 z-0">
@@ -159,6 +168,8 @@ export default function HeroSection({ activeWave, onOpenVideo }: HeroSectionProp
                         <img
                             src="/assets/landing/hero/background.webp"
                             alt="Lingkungan Al-Muntaha Boarding School"
+                            width="1920"
+                            height="1080"
                             className="w-full h-full object-cover"
                             fetchPriority="high"
                             loading="eager"
@@ -179,7 +190,7 @@ export default function HeroSection({ activeWave, onOpenVideo }: HeroSectionProp
                         <div className="space-y-5 lg:space-y-6 text-center lg:text-left">
 
                             {/* Elite Branding Tags */}
-                            <div className="hero-text-anim opacity-0 flex flex-wrap items-center justify-center lg:justify-start gap-2.5">
+                            <div className={`hero-text-anim flex flex-wrap items-center justify-center gap-2.5 transition-all duration-700 ease-out lg:justify-start ${textMotionClass}`}>
                                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/15 border border-gold/30 text-white font-bold text-[10px] sm:text-xs tracking-wide backdrop-blur-md shadow-sm">
                                     <i className="fa-solid fa-star text-gold"></i>
                                     <span>Akreditasi A (Unggul)</span>
@@ -231,15 +242,16 @@ export default function HeroSection({ activeWave, onOpenVideo }: HeroSectionProp
                             </h1>
 
                             {/* Subtext: SEO Restored & Balanced Contrast */}
-                            <p className="hero-text-anim opacity-0 text-slate-300 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto lg:mx-0">
+                            <p className={`hero-text-anim mx-auto max-w-2xl text-base leading-relaxed text-slate-300 transition-all delay-100 duration-700 ease-out sm:text-lg lg:mx-0 ${textMotionClass}`}>
                                 <strong className="text-white font-semibold">Al-Muntaha Islamic Boarding School -</strong> adalah tempat di mana potensi tertinggi setiap santri diasah. Kami memadukan keunggulan akademik global dengan kedalaman spiritual untuk membentuk pemimpin masa depan yang bertaqwa.
                             </p>
 
                             {/* CTA Actions */}
-                            <div className="hero-text-anim opacity-0 flex flex-col items-center gap-3 justify-center lg:items-start pt-2">
+                            <div className={`hero-text-anim flex flex-col items-center justify-center gap-3 pt-2 transition-all delay-150 duration-700 ease-out lg:items-start ${textMotionClass}`}>
                                 <div className="flex w-full flex-col sm:flex-row items-stretch sm:items-center gap-4 justify-center lg:justify-start">
                                     <Link
                                         href="/daftar"
+                                        aria-label="Daftar penerimaan siswa baru Al-Muntaha"
                                         className="w-full sm:w-auto px-8 py-3.5 bg-gold text-slate-900 rounded-xl font-bold shadow-lg shadow-gold/20 hover:-translate-y-1 hover:shadow-gold/40 transition-all duration-300 text-center text-sm sm:text-base"
                                     >
                                         Amankan Kursi Sekarang
@@ -273,7 +285,7 @@ export default function HeroSection({ activeWave, onOpenVideo }: HeroSectionProp
                         </div>
 
                         {/* RIGHT: Compact WaveCard */}
-                        <div className="hero-card-anim opacity-0 w-full">
+                        <div className={`hero-card-anim w-full transition-all delay-200 duration-700 ease-out ${cardMotionClass}`}>
                             <WaveCard
                                 activeWave={activeWave}
                                 onOpenSchedule={handleOpenSchedule}
@@ -291,12 +303,14 @@ export default function HeroSection({ activeWave, onOpenVideo }: HeroSectionProp
                 </div>
             </header>
 
-            {activeWave && (
-                <ScheduleModal
-                    isOpen={scheduleModalOpen}
-                    onClose={() => setScheduleModalOpen(false)}
-                    activeWave={activeWave}
-                />
+            {activeWave && scheduleModalOpen && (
+                <Suspense fallback={null}>
+                    <ScheduleModal
+                        isOpen={scheduleModalOpen}
+                        onClose={() => setScheduleModalOpen(false)}
+                        activeWave={activeWave}
+                    />
+                </Suspense>
             )}
         </>
     )

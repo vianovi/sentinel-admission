@@ -6,7 +6,7 @@ type FooterProps = Pick<WelcomeProps, 'auth'> & { app: AppConfig }
 
 export default function Footer({ auth: _auth, app }: FooterProps) {
     return (
-        <footer id="kontak" className="bg-navy text-white pt-24 pb-10 mt-12 relative rounded-t-[3rem]">
+        <footer id="kontak" className="bg-navy text-white pt-24 pb-10 mt-12 relative scroll-mt-28 rounded-t-[3rem]">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 border-b border-gray-700 pb-16">
 
@@ -18,6 +18,10 @@ export default function Footer({ auth: _auth, app }: FooterProps) {
                                 <img
                                     src={app.logo}
                                     alt={app.name}
+                                    width="44"
+                                    height="44"
+                                    loading="lazy"
+                                    decoding="async"
                                     className="w-11 h-11 rounded-xl object-cover shadow-lg shadow-black/10 border border-white/5 transition-transform duration-300 hover:scale-105"
                                 />
                             ) : (

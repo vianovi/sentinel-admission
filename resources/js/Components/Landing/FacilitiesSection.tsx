@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react'
-import { animate, stagger } from 'animejs'
 
 const facilities = [
     { icon: 'fa-chalkboard-teacher', title: 'Ruang Kelas Modern', description: 'Dilengkapi proyektor, AC, dan koneksi internet cepat untuk mendukung pembelajaran aktif.' },
@@ -12,38 +11,60 @@ const facilities = [
     { icon: 'fa-utensils', title: 'Kantin Sehat', description: 'Menyediakan makanan bergizi yang diawasi ahli gizi untuk mendukung tumbuh kembang optimal.' },
 ]
 
+const SIMPLE_REVEAL_QUERY = '(prefers-reduced-motion: reduce), (max-width: 767px)'
+
 export default function FacilitiesSection() {
     const sectionRef = useRef<HTMLElement>(null)
 
     useEffect(() => {
+        const section = sectionRef.current
+        if (!section) return
+        let cancelled = false
+
+        const titleTargets = Array.from(section.querySelectorAll<HTMLElement>('.facilities-title'))
+        const cardTargets = Array.from(section.querySelectorAll<HTMLElement>('.facility-card'))
+        const revealTargets = [...titleTargets, ...cardTargets]
+
+        if (window.matchMedia(SIMPLE_REVEAL_QUERY).matches) {
+            revealTargets.forEach((target) => {
+                target.style.opacity = '1'
+                target.style.transform = 'none'
+            })
+            return
+        }
+
         const observer = new IntersectionObserver((entries) => {
             entries.forEach((entry) => {
                 if (entry.isIntersecting) {
-                    animate('.facilities-title', {
-                        opacity: [0, 1],
-                        translateY: [30, 0],
-                        duration: 1000,
-                        ease: 'outExpo',
+                    observer.unobserve(entry.target)
+                    void import('animejs').then(({ animate, stagger }) => {
+                        if (cancelled) return
+                        animate(titleTargets, {
+                            opacity: [0, 1],
+                            translateY: [30, 0],
+                            duration: 1000,
+                            ease: 'outExpo',
+                        })
+                        animate(cardTargets, {
+                            opacity: [0, 1],
+                            translateY: [50, 0],
+                            duration: 1000,
+                            delay: stagger(120, { start: 200 }),
+                            ease: 'outExpo',
+                        })
                     })
-                    animate('.facility-card', {
-                        opacity: [0, 1],
-                        translateY: [50, 0],
-                        duration: 1000,
-                        delay: stagger(120, { start: 200 }),
-                        ease: 'outExpo',
-                    })
-                } else {
-                    animate('.facilities-title', { opacity: 0, translateY: 30, duration: 0 })
-                    animate('.facility-card', { opacity: 0, translateY: 50, duration: 0 })
                 }
             })
         }, { threshold: 0.1 })
-        if (sectionRef.current) observer.observe(sectionRef.current)
-        return () => observer.disconnect()
+        observer.observe(section)
+        return () => {
+            cancelled = true
+            observer.disconnect()
+        }
     }, [])
 
     return (
-        <section id="fasilitas" ref={sectionRef} className="py-24 bg-slate-50">
+        <section id="fasilitas" ref={sectionRef} className="py-24 scroll-mt-28 bg-slate-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="facilities-title opacity-0 text-center mb-16">
                     <span className="text-gold font-bold text-sm tracking-widest uppercase">Apa yang Kami Sediakan</span>

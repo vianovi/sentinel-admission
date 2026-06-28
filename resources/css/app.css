@@ -216,6 +216,24 @@
     animation: hero-caret-blink 1.2s ease-in-out infinite;
 }
 
+@media (max-width: 767px) {
+    .hero-emphasis-text,
+    .hero-organic-underline path,
+    .hero-typing-caret {
+        animation: none !important;
+    }
+
+    .hero-emphasis-text {
+        background-position: 50% 50%;
+        text-shadow: 0 0 18px rgba(212, 160, 23, 0.14);
+    }
+
+    .hero-organic-underline path {
+        opacity: 0.86;
+        transform: none;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .hero-emphasis-text,
     .hero-organic-underline path,
@@ -254,7 +272,10 @@
 /* ── Background patterns ────────────────────────────────────────────────────── */
 
 .bg-cubes {
-    background-image: url('https://www.transparenttextures.com/patterns/cubes.png');
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+    background-size: 28px 28px;
 }
 
 .bg-dotted {

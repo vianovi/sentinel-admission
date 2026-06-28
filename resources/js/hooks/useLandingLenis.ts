@@ -1,9 +1,14 @@
 import { useEffect } from 'react'
-import Lenis from 'lenis'
 
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)'
+const MOBILE_SCROLL_QUERY = '(max-width: 767px), (pointer: coarse)'
 const NAVBAR_OFFSET = -80
 const ANCHOR_SCROLL_DURATION = 1.05
+
+type IdleCapableWindow = Window & typeof globalThis & {
+    requestIdleCallback?: (callback: () => void, options?: { timeout?: number }) => number
+    cancelIdleCallback?: (handle: number) => void
+}
 
 function getSamePageAnchorTarget(anchor: HTMLAnchorElement): HTMLElement | null {
     const href = anchor.getAttribute('href')
@@ -40,65 +45,94 @@ function getSamePageAnchorTarget(anchor: HTMLAnchorElement): HTMLElement | null 
 export function useLandingLenis() {
     useEffect(() => {
         const reducedMotion = window.matchMedia(REDUCED_MOTION_QUERY)
+        const mobileScroll = window.matchMedia(MOBILE_SCROLL_QUERY)
 
-        if (reducedMotion.matches) {
+        if (reducedMotion.matches || mobileScroll.matches) {
             return
         }
 
-        const lenis = new Lenis({
-            easing: (t) => Math.min(1, 1.001 - 2 ** (-10 * t)),
-            lerp: 0.07,
-            smoothWheel: true,
-            syncTouch: false,
-            touchMultiplier: 0.95,
-            wheelMultiplier: 0.82,
-        })
-
+        let cancelled = false
+        let cleanupLenis: (() => void) | undefined
         let rafId = 0
+        let idleId: number | undefined
+        let fallbackTimer: number | undefined
+        const idleWindow = window as IdleCapableWindow
 
-        const raf = (time: number) => {
-            lenis.raf(time)
-            rafId = requestAnimationFrame(raf)
-        }
+        const startLenis = async () => {
+            const { default: Lenis } = await import('lenis')
 
-        const handleAnchorClick = (event: MouseEvent) => {
-            if (
-                event.defaultPrevented ||
-                event.button !== 0 ||
-                event.metaKey ||
-                event.ctrlKey ||
-                event.shiftKey ||
-                event.altKey
-            ) {
-                return
-            }
+            if (cancelled) return
 
-            const anchor = (event.target as Element | null)?.closest<HTMLAnchorElement>('a[href]')
-
-            if (!anchor || anchor.target || anchor.hasAttribute('download')) {
-                return
-            }
-
-            const target = getSamePageAnchorTarget(anchor)
-
-            if (!target) {
-                return
-            }
-
-            event.preventDefault()
-            lenis.scrollTo(target, {
-                offset: NAVBAR_OFFSET,
-                duration: ANCHOR_SCROLL_DURATION,
+            const lenis = new Lenis({
+                easing: (t) => Math.min(1, 1.001 - 2 ** (-10 * t)),
+                lerp: 0.07,
+                smoothWheel: true,
+                syncTouch: false,
+                touchMultiplier: 0.95,
+                wheelMultiplier: 0.82,
             })
+
+            const raf = (time: number) => {
+                lenis.raf(time)
+                rafId = requestAnimationFrame(raf)
+            }
+
+            const handleAnchorClick = (event: MouseEvent) => {
+                if (
+                    event.defaultPrevented ||
+                    event.button !== 0 ||
+                    event.metaKey ||
+                    event.ctrlKey ||
+                    event.shiftKey ||
+                    event.altKey
+                ) {
+                    return
+                }
+
+                const anchor = (event.target as Element | null)?.closest<HTMLAnchorElement>('a[href]')
+
+                if (!anchor || anchor.target || anchor.hasAttribute('download')) {
+                    return
+                }
+
+                const target = getSamePageAnchorTarget(anchor)
+
+                if (!target) {
+                    return
+                }
+
+                event.preventDefault()
+                lenis.scrollTo(target, {
+                    offset: NAVBAR_OFFSET,
+                    duration: ANCHOR_SCROLL_DURATION,
+                })
+            }
+
+            document.addEventListener('click', handleAnchorClick)
+            rafId = requestAnimationFrame(raf)
+
+            cleanupLenis = () => {
+                document.removeEventListener('click', handleAnchorClick)
+                cancelAnimationFrame(rafId)
+                lenis.destroy()
+            }
         }
 
-        document.addEventListener('click', handleAnchorClick)
-        rafId = requestAnimationFrame(raf)
+        if (idleWindow.requestIdleCallback) {
+            idleId = idleWindow.requestIdleCallback(() => void startLenis(), { timeout: 1800 })
+        } else {
+            fallbackTimer = window.setTimeout(() => void startLenis(), 900)
+        }
 
         return () => {
-            document.removeEventListener('click', handleAnchorClick)
-            cancelAnimationFrame(rafId)
-            lenis.destroy()
+            cancelled = true
+            if (idleId !== undefined && idleWindow.cancelIdleCallback) {
+                idleWindow.cancelIdleCallback(idleId)
+            }
+            if (fallbackTimer !== undefined) {
+                window.clearTimeout(fallbackTimer)
+            }
+            cleanupLenis?.()
         }
     }, [])
 }

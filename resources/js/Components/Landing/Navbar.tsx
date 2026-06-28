@@ -2,93 +2,73 @@ import { useState, useEffect, useRef } from 'react'
 import { Link } from '@inertiajs/react'
 import { WelcomeProps } from '@/types/landing'
 import { AppConfig } from '@/types'
-import { animate } from 'animejs' // Menggunakan sintaks Anime.js V4
 
 type NavbarProps = Pick<WelcomeProps, 'auth'> & { app: AppConfig }
 type NavState = 'top' | 'hero' | 'below'
 
+const NAV_LINKS = [
+    { href: '#home', label: 'Beranda' },
+    { href: '#visi', label: 'Profil' },
+    { href: '#galeri', label: 'Galeri' },
+    { href: '#fasilitas', label: 'Fasilitas' },
+    { href: '#alur', label: 'Alur Daftar' },
+    { href: '#kontak', label: 'Kontak' },
+]
+
 export default function Navbar({ auth, app }: NavbarProps) {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const [navState, setNavState] = useState<NavState>('top')
-
-    // Target element refs untuk animasi Anime.js V4
-    const containerRef = useRef<HTMLDivElement>(null)
+    const navStateRef = useRef<NavState>('top')
 
     useEffect(() => {
         const topBarHeight = 40    // estimasi tinggi TopBar
         const navbarHeight = 80
         const heroEl = document.getElementById('home')
+        let ticking = false
+        let frameId = 0
 
-        const handleScroll = () => {
+        const updateNavState = () => {
             const scrollY = window.scrollY
             const heroBottom = heroEl
                 ? heroEl.getBoundingClientRect().bottom + scrollY - navbarHeight
                 : window.innerHeight
 
-            if (scrollY < topBarHeight) {
-                setNavState('top')
-            } else if (scrollY < heroBottom) {
-                setNavState('hero')
-            } else {
-                setNavState('below')
+            const nextState: NavState = scrollY < topBarHeight
+                ? 'top'
+                : scrollY < heroBottom
+                    ? 'hero'
+                    : 'below'
+
+            if (navStateRef.current !== nextState) {
+                navStateRef.current = nextState
+                setNavState(nextState)
             }
         }
 
-        window.addEventListener('scroll', handleScroll, { passive: true })
-        handleScroll()
-        return () => window.removeEventListener('scroll', handleScroll)
-    }, [])
+        const handleScroll = () => {
+            if (ticking) return
 
-    // Handler Animasi Smooth Transition Menggunakan Anime.js V4
-    useEffect(() => {
-        if (!containerRef.current) return
-
-        const isFloatingDark = navState === 'top' || navState === 'hero'
-        let navAnim: ReturnType<typeof animate> | null = null
-
-        if (isFloatingDark) {
-            navAnim = animate(containerRef.current, {
-                maxWidth: '1728px',
-                borderRadius: '26px',
-                translateY: 10,
-                backgroundColor: 'rgba(15, 23, 42, 0.6)',
-                borderColor: 'rgba(226, 232, 240, 0.12)',
-                paddingLeft: '34px',
-                paddingRight: '34px',
-                duration: 500,
-                ease: 'outQuad'
-            })
-        } else {
-            navAnim = animate(containerRef.current, {
-                maxWidth: '1320px',
-                borderRadius: '18px',
-                translateY: 8,
-                backgroundColor: 'rgba(255, 255, 255, 0.88)',
-                borderColor: 'rgba(226, 232, 240, 0.84)',
-                paddingLeft: '28px',
-                paddingRight: '28px',
-                duration: 500,
-                ease: 'outQuad'
+            ticking = true
+            frameId = window.requestAnimationFrame(() => {
+                ticking = false
+                updateNavState()
             })
         }
+
+        window.addEventListener('scroll', handleScroll, { passive: true })
+        window.addEventListener('resize', handleScroll, { passive: true })
+        updateNavState()
 
         return () => {
-            if (navAnim) navAnim.cancel()
+            window.removeEventListener('scroll', handleScroll)
+            window.removeEventListener('resize', handleScroll)
+            window.cancelAnimationFrame(frameId)
         }
-    }, [navState])
+    }, [])
 
     const handleNavClick = () => {
         setMobileMenuOpen(false)
     }
-
-    const navLinks = [
-        { href: '#home',      label: 'Beranda'     },
-        { href: '#visi',      label: 'Profil'      },
-        { href: '#galeri',    label: 'Galeri'      },
-        { href: '#fasilitas', label: 'Fasilitas'   },
-        { href: '#alur',      label: 'Alur Daftar' },
-        { href: '#kontak',    label: 'Kontak'      },
-    ]
 
     const isDark = navState === 'top' || navState === 'hero'
     const isBelow = navState === 'below'
@@ -99,6 +79,9 @@ export default function Navbar({ auth, app }: NavbarProps) {
     const linkColor      = isDark ? 'text-white/80'     : 'text-slate-700'
     const masukColor     = isDark ? 'text-white/80 hover:text-white' : 'text-slate-600 hover:text-navy'
     const burgerColor    = isDark ? 'text-white'        : 'text-navy'
+    const shellClassName = isDark
+        ? 'max-w-[108rem] translate-y-2.5 rounded-[26px] border-white/10 bg-slate-900/60 px-4 sm:px-8 md:px-[34px] shadow-2xl shadow-black/25 backdrop-blur-md md:backdrop-blur-xl backdrop-saturate-150'
+        : 'max-w-[1320px] translate-y-2 rounded-[18px] border-slate-200/80 bg-white/[0.88] px-4 sm:px-7 md:px-7 shadow-[0_12px_34px_rgba(15,23,42,0.1)] backdrop-blur-md md:backdrop-blur-xl backdrop-saturate-150'
 
     return (
         <nav className="sticky top-0 z-50 w-full border-none bg-transparent pointer-events-none">
@@ -107,14 +90,7 @@ export default function Navbar({ auth, app }: NavbarProps) {
 
                 {/* Visual Card Utama (Ref yang dianimasikan secara dinamis) */}
                 <div
-                    ref={containerRef}
-                    className={`mx-auto w-full border transition-shadow duration-500 flex flex-col justify-center overflow-hidden
-                    ${isDark ? 'shadow-2xl shadow-black/25 backdrop-blur-xl backdrop-saturate-150' : 'shadow-[0_12px_34px_rgba(15,23,42,0.1)] backdrop-blur-xl backdrop-saturate-150'}`}
-                    style={{
-                        maxWidth: '1728px',
-                        borderRadius: '26px',
-                        transform: 'translateY(10px)',
-                    }}
+                    className={`mx-auto flex w-full flex-col justify-center overflow-hidden border transition-[max-width,transform,border-radius,background-color,border-color,box-shadow,padding] duration-500 ease-out ${shellClassName}`}
                 >
                     <div className={`flex justify-between items-center transition-all duration-500 ${isBelow ? 'h-[72px]' : 'h-20'}`}>
 
@@ -127,7 +103,6 @@ export default function Navbar({ auth, app }: NavbarProps) {
                                         alt={app.name}
                                         width="40"
                                         height="40"
-                                        fetchPriority="high"
                                         loading="eager"
                                         decoding="async"
                                         className={`rounded-lg object-cover shadow-lg transition-all duration-500 ${isBelow ? 'w-9 h-9' : 'w-10 h-10'}`}
@@ -138,9 +113,9 @@ export default function Navbar({ auth, app }: NavbarProps) {
                                     </div>
                                 )}
                                 <div className="leading-tight">
-                                    <h1 className={`font-display font-extrabold tracking-wide uppercase transition-all duration-500 ${isBelow ? 'text-base' : 'text-base md:text-lg'} ${logoTextColor}`}>
+                                    <span className={`block font-display font-extrabold tracking-wide uppercase transition-all duration-500 ${isBelow ? 'text-base' : 'text-base md:text-lg'} ${logoTextColor}`}>
                                         {app.name}
-                                    </h1>
+                                    </span>
                                     <p className={`text-[8px] md:text-[9px] font-bold tracking-[0.2em] uppercase transition-colors duration-400 ${logoSubColor}`}>
                                         {app.tagline}
                                     </p>
@@ -171,7 +146,7 @@ export default function Navbar({ auth, app }: NavbarProps) {
                                         ? 'gap-2 rounded-full border border-slate-300/10 bg-slate-950/26 p-2 shadow-inner shadow-black/10'
                                         : 'gap-2 rounded-full border border-slate-200 bg-slate-100/88 p-2'
                             }`}>
-                                {navLinks.map((link) => (
+                                {NAV_LINKS.map((link) => (
                                     <a
                                         key={link.href}
                                         href={link.href}
@@ -224,13 +199,13 @@ export default function Navbar({ auth, app }: NavbarProps) {
                         <div className="flex items-center gap-4 md:hidden">
                             {auth.user ? (
                                 <Link href="/dashboard" aria-label="Ke Dashboard"
-                                    className="w-8 h-8 rounded-full bg-gold text-navy flex items-center justify-center text-xs"
+                                    className="w-11 h-11 rounded-full bg-gold text-navy flex items-center justify-center text-xs"
                                     style={{ color: '#0f172a' }}>
                                     <i className="fa-solid fa-user"></i>
                                 </Link>
                             ) : (
                                 <Link href="/login"
-                                    className={`flex items-center gap-2 text-xs font-bold px-3 py-1.5 rounded-full transition-colors duration-500 ${
+                                    className={`flex min-h-11 items-center gap-2 rounded-full px-4 py-2 text-xs font-bold transition-colors duration-500 ${
                                         isDark
                                             ? 'text-white bg-white/15 border border-white/20'
                                             : 'text-navy bg-gray-100'
@@ -240,7 +215,7 @@ export default function Navbar({ auth, app }: NavbarProps) {
                             )}
                             <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                                 aria-label="Buka menu navigasi" aria-expanded={mobileMenuOpen}
-                                className={`transition-colors duration-500 ${burgerColor} hover:text-gold`}>
+                                className={`flex h-11 w-11 items-center justify-center rounded-full transition-colors duration-500 ${burgerColor} hover:text-gold`}>
                                 <i className={`fa-solid ${mobileMenuOpen ? 'fa-times' : 'fa-bars'} text-2xl`}></i>
                             </button>
                         </div>
@@ -252,7 +227,7 @@ export default function Navbar({ auth, app }: NavbarProps) {
                             isDark ? 'bg-navy/95 border-white/10' : 'bg-white border-gray-100'
                         }`}>
                             <div className="p-4 space-y-1">
-                                {navLinks.map((link) => (
+                                {NAV_LINKS.map((link) => (
                                     <a key={link.href} href={link.href}
                                         onClick={handleNavClick}
                                         className={`block py-2.5 px-3 font-semibold text-xs rounded-lg transition-colors duration-300 ${

@@ -1,7 +1,13 @@
 // resources/js/Components/Landing/GallerySection.tsx
 
 import { useEffect, useRef, useState } from 'react'
-import { animate, stagger } from 'animejs'
+
+let animeModulePromise: Promise<typeof import('animejs')> | null = null
+
+function loadAnime() {
+    animeModulePromise ??= import('animejs')
+    return animeModulePromise
+}
 
 // ── Daftar foto galeri ────────────────────────────────────────────────────────
 // Letakkan foto di: public/assets/landing/gallery/
@@ -22,14 +28,14 @@ import { animate, stagger } from 'animejs'
 // Max ukuran file: 300 KB/foto. Format WebP disarankan.
 
 const photos = [
-    { src: '/assets/landing/gallery/photo-01-600x800-tall.webp',  alt: 'Kegiatan santri Al-Muntaha', span: 'tall'  },
-    { src: '/assets/landing/gallery/photo-02-800x500-wide.webp',  alt: 'Upacara bendera',             span: 'wide'  },
-    { src: '/assets/landing/gallery/photo-03-600x600-small.webp', alt: 'Kelas tahfidz',               span: 'small' },
-    { src: '/assets/landing/gallery/photo-04-600x600-small.webp', alt: 'Lab komputer',                span: 'small' },
-    { src: '/assets/landing/gallery/photo-05-600x600-small.webp', alt: 'Perpustakaan',                span: 'small' },
-    { src: '/assets/landing/gallery/photo-06-600x800-tall.webp',  alt: 'Masjid sekolah',              span: 'tall'  },
-    { src: '/assets/landing/gallery/photo-07-800x500-wide.webp',  alt: 'Lapangan olahraga',           span: 'wide'  },
-    { src: '/assets/landing/gallery/photo-08-600x600-small.webp', alt: 'Asrama putra',                span: 'small' },
+    { src: '/assets/landing/gallery/photo-01-600x800-tall.webp',  alt: 'Kegiatan santri Al-Muntaha', span: 'tall',  width: 600, height: 800 },
+    { src: '/assets/landing/gallery/photo-02-800x500-wide.webp',  alt: 'Upacara bendera',             span: 'wide',  width: 800, height: 500 },
+    { src: '/assets/landing/gallery/photo-03-600x600-small.webp', alt: 'Kelas tahfidz',               span: 'small', width: 600, height: 600 },
+    { src: '/assets/landing/gallery/photo-04-600x600-small.webp', alt: 'Lab komputer',                span: 'small', width: 600, height: 600 },
+    { src: '/assets/landing/gallery/photo-05-600x600-small.webp', alt: 'Perpustakaan',                span: 'small', width: 600, height: 600 },
+    { src: '/assets/landing/gallery/photo-06-600x800-tall.webp',  alt: 'Masjid sekolah',              span: 'tall',  width: 600, height: 800 },
+    { src: '/assets/landing/gallery/photo-07-800x500-wide.webp',  alt: 'Lapangan olahraga',           span: 'wide',  width: 800, height: 500 },
+    { src: '/assets/landing/gallery/photo-08-600x600-small.webp', alt: 'Asrama putra',                span: 'small', width: 600, height: 600 },
 ]
 
 const desktopSpanClass: Record<string, string> = {
@@ -43,6 +49,8 @@ const desktopHeightClass: Record<string, string> = {
     wide:  'h-[220px]',
     small: 'h-[200px]',
 }
+
+const SIMPLE_REVEAL_QUERY = '(prefers-reduced-motion: reduce), (max-width: 767px)'
 
 export default function GallerySection() {
     const sectionRef   = useRef<HTMLElement>(null)
@@ -69,14 +77,18 @@ export default function GallerySection() {
         }
 
         setTimeout(() => {
-            animate('.lightbox-backdrop', { opacity: [0, 1], duration: 250, ease: 'outQuad' })
-            animate('.lightbox-card',     { opacity: [0, 1], scale: [0.92, 1], translateY: [24, 0], duration: 380, ease: 'outExpo' })
+            void loadAnime().then(({ animate }) => {
+                animate('.lightbox-backdrop', { opacity: [0, 1], duration: 250, ease: 'outQuad' })
+                animate('.lightbox-card',     { opacity: [0, 1], scale: [0.92, 1], translateY: [24, 0], duration: 380, ease: 'outExpo' })
+            })
         }, 10)
     }
 
     const closeLightbox = () => {
-        animate('.lightbox-card',     { opacity: [1, 0], scale: [1, 0.94], translateY: [0, 16], duration: 220, ease: 'inQuad' })
-        animate('.lightbox-backdrop', { opacity: [1, 0], duration: 220, ease: 'inQuad' })
+        void loadAnime().then(({ animate }) => {
+            animate('.lightbox-card',     { opacity: [1, 0], scale: [1, 0.94], translateY: [0, 16], duration: 220, ease: 'inQuad' })
+            animate('.lightbox-backdrop', { opacity: [1, 0], duration: 220, ease: 'inQuad' })
+        })
         setTimeout(() => {
             setLightbox(null)
             setShowSwipeHint(false)
@@ -86,10 +98,14 @@ export default function GallerySection() {
 
     const navigateLightbox = (dir: 1 | -1) => {
         const next = (lightbox!.index + dir + photos.length) % photos.length
-        animate('.lightbox-card', { opacity: [1, 0], translateX: [0, dir * -48], duration: 180, ease: 'inQuad' })
+        void loadAnime().then(({ animate }) => {
+            animate('.lightbox-card', { opacity: [1, 0], translateX: [0, dir * -48], duration: 180, ease: 'inQuad' })
+        })
         setTimeout(() => {
             setLightbox({ src: photos[next].src, alt: photos[next].alt, index: next })
-            animate('.lightbox-card', { opacity: [0, 1], translateX: [dir * 48, 0], duration: 260, ease: 'outExpo' })
+            void loadAnime().then(({ animate }) => {
+                animate('.lightbox-card', { opacity: [0, 1], translateX: [dir * 48, 0], duration: 260, ease: 'outExpo' })
+            })
         }, 180)
     }
 
@@ -145,36 +161,56 @@ export default function GallerySection() {
 
     // ── IntersectionObserver — stagger kiri & kanan ───────────────────────────
     useEffect(() => {
+        const section = sectionRef.current
+        if (!section) return
+        let cancelled = false
+
+        const titleTargets = Array.from(section.querySelectorAll<HTMLElement>('.gallery-title'))
+        const leftTargets = Array.from(section.querySelectorAll<HTMLElement>('.gallery-item-left'))
+        const rightTargets = Array.from(section.querySelectorAll<HTMLElement>('.gallery-item-right'))
+        const revealTargets = [...titleTargets, ...leftTargets, ...rightTargets]
+
+        if (window.matchMedia(SIMPLE_REVEAL_QUERY).matches) {
+            revealTargets.forEach((target) => {
+                target.style.opacity = '1'
+                target.style.transform = 'none'
+            })
+            return
+        }
+
         const observer = new IntersectionObserver((entries) => {
             entries.forEach((entry) => {
                 if (entry.isIntersecting) {
-                    animate('.gallery-title', {
-                        opacity: [0, 1], translateY: [30, 0],
-                        duration: 900, ease: 'outExpo',
+                    observer.unobserve(entry.target)
+                    void loadAnime().then(({ animate, stagger }) => {
+                        if (cancelled) return
+                        animate(titleTargets, {
+                            opacity: [0, 1], translateY: [30, 0],
+                            duration: 900, ease: 'outExpo',
+                        })
+                        animate(leftTargets, {
+                            opacity: [0, 1], translateX: [-24, 0], scale: [0.96, 1],
+                            duration: 800, delay: stagger(120, { start: 200 }), ease: 'outExpo',
+                        })
+                        animate(rightTargets, {
+                            opacity: [0, 1], translateX: [24, 0], scale: [0.96, 1],
+                            duration: 800, delay: stagger(120, { start: 280 }), ease: 'outExpo',
+                        })
                     })
-                    animate('.gallery-item-left', {
-                        opacity: [0, 1], translateX: [-24, 0], scale: [0.96, 1],
-                        duration: 800, delay: stagger(120, { start: 200 }), ease: 'outExpo',
-                    })
-                    animate('.gallery-item-right', {
-                        opacity: [0, 1], translateX: [24, 0], scale: [0.96, 1],
-                        duration: 800, delay: stagger(120, { start: 280 }), ease: 'outExpo',
-                    })
-                } else {
-                    animate('.gallery-title',      { opacity: 0, translateY: 30, duration: 0 })
-                    animate('.gallery-item-left',  { opacity: 0, translateX: -24, scale: 0.96, duration: 0 })
-                    animate('.gallery-item-right', { opacity: 0, translateX: 24,  scale: 0.96, duration: 0 })
                 }
             })
         }, { threshold: 0.08 })
 
-        if (sectionRef.current) observer.observe(sectionRef.current)
-        return () => observer.disconnect()
+        observer.observe(section)
+        return () => {
+            cancelled = true
+            observer.disconnect()
+        }
     }, [])
 
     return (
         <>
-        <section id="galeri" ref={sectionRef} className="py-24 bg-navy relative overflow-hidden">
+        <section id="galeri" ref={sectionRef} className="py-24 bg-navy relative scroll-mt-28 overflow-hidden">
 
             <div className="absolute inset-0 opacity-[0.04] bg-cubes" />
 
@@ -225,6 +261,8 @@ export default function GallerySection() {
                                 <img
                                     src={photo.src}
                                     alt={photo.alt}
+                                    width={photo.width}
+                                    height={photo.height}
                                     className="w-full h-auto object-cover transition duration-500 group-hover:scale-105 group-active:scale-95"
                                     loading="lazy"
                                     decoding="async"
@@ -258,6 +296,8 @@ export default function GallerySection() {
                                 <img
                                     src={photo.src}
                                     alt={photo.alt}
+                                    width={photo.width}
+                                    height={photo.height}
                                     className={`w-full object-cover transition duration-700 group-hover:scale-110 ${desktopHeightClass[photo.span]}`}
                                     loading="lazy"
                                     decoding="async"
@@ -300,6 +340,8 @@ export default function GallerySection() {
                         <img
                             src={lightbox.src}
                             alt={lightbox.alt}
+                            width={photos[lightbox.index].width}
+                            height={photos[lightbox.index].height}
                             className="w-full max-h-[80vh] object-contain bg-navy/80"
                             decoding="async"
                             onError={(e) => { e.currentTarget.src = 'https://placehold.co/800x600/1e293b/d4a017?text=Foto' }}

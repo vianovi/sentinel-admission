@@ -4,14 +4,29 @@ import { Link } from '@inertiajs/react'
 import { AdmissionWaveData, formatRupiah, remainingQuota } from '@/types/landing'
 
 declare global {
+    interface PublicWaveChannel {
+        listen(event: string, callback: (payload: { wave: AdmissionWaveData }) => void): PublicWaveChannel
+        stopListening(event: string): void
+    }
+
+    interface PublicWaveEcho {
+        channel(name: string): PublicWaveChannel
+        leaveChannel(name: string): void
+    }
+
     interface Window {
-        Echo: any;
+        Echo?: PublicWaveEcho;
     }
 }
 
 interface WaveCardProps {
     activeWave: AdmissionWaveData | null
     onOpenSchedule: () => void
+}
+
+type IdleCapableWindow = Window & typeof globalThis & {
+    requestIdleCallback?: (callback: () => void, options?: { timeout?: number }) => number
+    cancelIdleCallback?: (handle: number) => void
 }
 
 const WaveCard = ({ activeWave: initialWave, onOpenSchedule }: WaveCardProps) => {
@@ -23,26 +38,53 @@ const WaveCard = ({ activeWave: initialWave, onOpenSchedule }: WaveCardProps) =>
     }, [initialWave])
 
     useEffect(() => {
-        if (typeof window !== 'undefined' && window.Echo) {
+        let idleId: number | undefined
+        let fallbackTimer: number | undefined
+        let pulseTimer: number | undefined
+        let cleanupChannel: (() => void) | undefined
+        const idleWindow = window as IdleCapableWindow
+
+        const subscribeToWaveUpdates = () => {
+            if (typeof window === 'undefined' || !window.Echo) return
+
             const channel = window.Echo.channel('public-waves')
 
             channel.listen('.wave.updated', (e: { wave: AdmissionWaveData }) => {
                 setWave(e.wave)
                 setIsPulsing(true)
-                const timer = setTimeout(() => setIsPulsing(false), 800)
-                return () => clearTimeout(timer)
+                if (pulseTimer) window.clearTimeout(pulseTimer)
+                pulseTimer = window.setTimeout(() => setIsPulsing(false), 800)
             })
 
-            return () => {
+            cleanupChannel = () => {
                 channel.stopListening('.wave.updated')
-                window.Echo.leaveChannel('public-waves')
+                window.Echo?.leaveChannel('public-waves')
             }
+        }
+
+        if (idleWindow.requestIdleCallback) {
+            idleId = idleWindow.requestIdleCallback(subscribeToWaveUpdates, { timeout: 2200 })
+        } else {
+            fallbackTimer = window.setTimeout(subscribeToWaveUpdates, 1200)
+        }
+
+        return () => {
+            if (idleId !== undefined && idleWindow.cancelIdleCallback) {
+                idleWindow.cancelIdleCallback(idleId)
+            }
+            if (fallbackTimer !== undefined) {
+                window.clearTimeout(fallbackTimer)
+            }
+            if (pulseTimer !== undefined) {
+                window.clearTimeout(pulseTimer)
+            }
+            cleanupChannel?.()
         }
     }, [])
 
     if (!wave) {
         return (
-            <div className="w-full max-w-[540px] mx-auto lg:ml-auto lg:mr-0 bg-white/5 backdrop-blur-xl border border-white/10 p-10 rounded-[2rem] shadow-2xl flex flex-col items-center justify-center text-center gap-4">
+            <div className="w-full max-w-[540px] mx-auto lg:ml-auto lg:mr-0 bg-white/5 backdrop-blur-md sm:backdrop-blur-xl border border-white/10 p-10 rounded-[2rem] shadow-2xl flex flex-col items-center justify-center text-center gap-4">
                 <div className="w-14 h-14 bg-white/5 rounded-full flex items-center justify-center text-slate-400 border border-white/10 shadow-inner">
                     <i className="fa-solid fa-lock text-xl"></i>
                 </div>
@@ -64,13 +106,13 @@ const WaveCard = ({ activeWave: initialWave, onOpenSchedule }: WaveCardProps) =>
         <div className="relative w-full max-w-[540px] mx-auto lg:ml-auto lg:mr-0 group mt-10 lg:mt-0 perspective-1000">
             {/* Ambient Pulse Glow */}
             <div
-                className={`absolute -inset-1 rounded-[2.2rem] blur-2xl transition-all duration-700 pointer-events-none z-0
+                className={`absolute -inset-1 hidden rounded-[2.2rem] blur-2xl transition-all duration-700 pointer-events-none z-0 md:block
                 ${isPulsing ? 'bg-white/15 opacity-100 scale-102' : 'bg-gradient-to-r from-white/5 to-slate-500/5 opacity-0 group-hover:opacity-100'}`}
             />
 
             {/* Glassmorphism Card (Wider Layout) */}
             <div
-                className={`relative z-10 backdrop-blur-[24px] p-6 sm:p-8 rounded-[2rem] shadow-2xl flex flex-col gap-6 transition-all duration-500 ease-out border
+                className={`relative z-10 backdrop-blur-md sm:backdrop-blur-[24px] p-6 sm:p-8 rounded-[2rem] shadow-2xl flex flex-col gap-6 transition-all duration-500 ease-out border
                 ${isPulsing ? 'bg-white/10 border-white/30' : 'bg-white/5 border-white/10 hover:border-white/20'}`}
             >
                 {/* HEADER */}
@@ -123,7 +165,7 @@ const WaveCard = ({ activeWave: initialWave, onOpenSchedule }: WaveCardProps) =>
                                 className="h-full bg-gradient-to-r from-gold to-yellow-400 rounded-full transition-all duration-1000 ease-out relative"
                                 style={{ width: `${filledPercentage}%` }}
                             >
-                                <div className="absolute top-0 right-0 bottom-0 w-8 bg-white/20 blur-[2px] animate-pulse" />
+                                <div className="absolute top-0 right-0 bottom-0 hidden w-8 bg-white/20 blur-[2px] animate-pulse sm:block" />
                             </div>
                         </div>
                     </div>

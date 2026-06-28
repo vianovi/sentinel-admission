@@ -1,42 +1,64 @@
 // resources/js/Components/Landing/ProfileSection.tsx
 
 import { useEffect, useRef } from 'react'
-import { animate, stagger } from 'animejs'
 
 interface ProfileSectionProps {
     onOpenVideo: () => void
 }
 
+const SIMPLE_REVEAL_QUERY = '(prefers-reduced-motion: reduce), (max-width: 767px)'
+
 export default function ProfileSection({ onOpenVideo }: ProfileSectionProps) {
     const sectionRef = useRef<HTMLElement>(null)
 
     useEffect(() => {
+        const section = sectionRef.current
+        if (!section) return
+        let cancelled = false
+
+        const textTargets = Array.from(section.querySelectorAll<HTMLElement>('.profile-animate'))
+        const videoTargets = Array.from(section.querySelectorAll<HTMLElement>('.profile-video-animate'))
+        const revealTargets = [...textTargets, ...videoTargets]
+        const simpleReveal = window.matchMedia(SIMPLE_REVEAL_QUERY).matches
+
+        if (simpleReveal) {
+            revealTargets.forEach((target) => {
+                target.style.opacity = '1'
+                target.style.transform = 'none'
+            })
+            return
+        }
+
         const observer = new IntersectionObserver((entries) => {
             entries.forEach((entry) => {
                 if (entry.isIntersecting) {
-                    animate('.profile-animate', {
-                        opacity:    [0, 1],
-                        translateY: [40, 0],
-                        duration:   1100,
-                        delay:      stagger(220),
-                        ease:       'outExpo',
+                    observer.unobserve(entry.target)
+                    void import('animejs').then(({ animate, stagger }) => {
+                        if (cancelled) return
+                        animate(textTargets, {
+                            opacity:    [0, 1],
+                            translateY: [40, 0],
+                            duration:   1100,
+                            delay:      stagger(220),
+                            ease:       'outExpo',
+                        })
+                        animate(videoTargets, {
+                            opacity:    [0, 1],
+                            translateX: [60, 0],
+                            duration:   1300,
+                            delay:      300,
+                            ease:       'outExpo',
+                        })
                     })
-                    animate('.profile-video-animate', {
-                        opacity:    [0, 1],
-                        translateX: [60, 0],
-                        duration:   1300,
-                        delay:      300,
-                        ease:       'outExpo',
-                    })
-                } else {
-                    animate('.profile-animate',       { opacity: 0, translateY: 40, duration: 0 })
-                    animate('.profile-video-animate', { opacity: 0, translateX: 60, duration: 0 })
                 }
             })
         }, { threshold: 0.15 })
 
-        if (sectionRef.current) observer.observe(sectionRef.current)
-        return () => observer.disconnect()
+        observer.observe(section)
+        return () => {
+            cancelled = true
+            observer.disconnect()
+        }
     }, [])
 
     return (
@@ -99,6 +121,8 @@ export default function ProfileSection({ onOpenVideo }: ProfileSectionProps) {
                                 src="/assets/landing/profile/thumbnail.webp"
                                 className="w-full object-cover object-center transform group-hover:scale-105 transition duration-700 ease-in-out h-[400px]"
                                 alt="Eksplorasi Kehidupan Santri Al-Muntaha Boarding School"
+                                width="900"
+                                height="506"
                                 loading="lazy"
                                 decoding="async"
                                 onError={(e) => { e.currentTarget.src = 'https://placehold.co/800x400/1e293b/d4a017?text=Video+Profil+Al-Muntaha' }}
