@@ -19,6 +19,8 @@ const TabPembayaran = lazy(() => import("@/Components/Dashboard/Staff/Show/TabPe
 type SectionId = "data-diri" | "data-kesehatan" | "data-wali" | "dokumen" | "pembayaran";
 
 type Props = {
+    scope?: "staff" | "admin";
+    base_path?: string;
     active_section: SectionId;
     candidate: StaffCandidateData;
     documents: DocumentItem[];
@@ -103,6 +105,8 @@ function TabSkeleton() {
 }
 
 export default function StaffCandidateShow({
+    scope = "staff",
+    base_path,
     active_section,
     candidate,
     documents,
@@ -115,6 +119,8 @@ export default function StaffCandidateShow({
     const section = active_section ?? "data-diri";
     const meta = SECTION_META[section];
     const contentRef = useRef<HTMLDivElement>(null);
+    const basePath = base_path ?? (scope === "admin" ? "/dashboard/admin" : "/dashboard/staff");
+    const selectedCandidateStorageKey = `${scope}:selectedCandidateId`;
 
     const [docTarget, setDocTarget] = useState<number | null>(null);
     const [docStatus, setDocStatus] = useState<"verified" | "rejected">("verified");
@@ -155,8 +161,8 @@ export default function StaffCandidateShow({
 
     useEffect(() => {
         if (typeof window === "undefined") return;
-        window.localStorage.setItem("staff:selectedCandidateId", String(candidate.id));
-    }, [candidate.id]);
+        window.localStorage.setItem(selectedCandidateStorageKey, String(candidate.id));
+    }, [candidate.id, selectedCandidateStorageKey]);
 
     useEffect(() => {
         animate(".staff-show-item", {
@@ -233,7 +239,7 @@ export default function StaffCandidateShow({
 
         setDocProcessing(true);
         router.post(
-            `/dashboard/staff/documents/${selectedDoc.id}/verify`,
+            `${basePath}/documents/${selectedDoc.id}/verify`,
             {
                 status: docStatus,
                 rejection_reason: docStatus === "rejected" ? docReason : undefined,
@@ -275,7 +281,7 @@ export default function StaffCandidateShow({
 
         setCandidateProcessing(true);
         router.post(
-            `/dashboard/staff/candidates/${candidate.id}/status`,
+            `${basePath}/candidates/${candidate.id}/status`,
             {
                 status: candidateFinalStatus,
                 reason: candidateFinalStatus === "rejected" ? candidateReason : undefined,
@@ -327,7 +333,7 @@ export default function StaffCandidateShow({
 
         return (
             <Suspense fallback={<TabSkeleton />}>
-                <TabPembayaran payment={payment} />
+                <TabPembayaran payment={payment} basePath={basePath} />
             </Suspense>
         );
     };
@@ -337,6 +343,8 @@ export default function StaffCandidateShow({
             aside={
                 <StaffSidebar
                     user={auth.user}
+                    scope={scope}
+                    basePath={basePath}
                     candidate={{
                         full_name: candidate.full_name,
                         candidate_code: candidate.candidate_code,
@@ -348,7 +356,7 @@ export default function StaffCandidateShow({
                 />
             }
         >
-            <Head title={`Staff - ${meta.label}`} />
+            <Head title={`${scope === "admin" ? "Admin" : "Staff"} - ${meta.label}`} />
 
             <div className="space-y-5 px-4 py-6 sm:px-6">
                 <div className="staff-show-item opacity-0 flex items-center gap-3">
@@ -381,7 +389,7 @@ export default function StaffCandidateShow({
                             {CANDIDATE_STATUS_LABEL[candidate.status]}
                         </span>
                         <Link
-                            href="/dashboard/staff/candidates"
+                            href={`${basePath}/candidates`}
                             className="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-600 transition-colors hover:border-emerald-500 hover:text-emerald-500 dark:border-white/10 dark:text-slate-300"
                         >
                             <i className="fa-solid fa-arrow-left text-xs" />

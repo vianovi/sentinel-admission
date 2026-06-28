@@ -15,6 +15,8 @@ type StaffSidebarCandidate = {
 
 type Props = {
     user: UserMini;
+    scope?: "staff" | "admin";
+    basePath?: string;
     candidate: StaffSidebarCandidate;
     completion: number;
     tips?: string[];
@@ -28,24 +30,38 @@ const statusClass: Record<string, string> = {
     rejected:  "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400",
 };
 
-export default function StaffSidebar({ user, candidate, completion, tips = [] }: Props) {
+export default function StaffSidebar({
+    user,
+    scope = "staff",
+    basePath = "/dashboard/staff",
+    candidate,
+    completion,
+    tips = [],
+}: Props) {
+    const roleLabel = scope === "admin" ? "Admin Panel" : "Staff Panel";
+    const roleDescription = scope === "admin" ? "Administrator" : "Staff Verifikasi";
+    const dashboardLabel = scope === "admin" ? "Dashboard Admin" : "Dashboard Staff";
+    const accentText = scope === "admin" ? "text-rose-500" : "text-emerald-500";
+    const accentBorder = scope === "admin" ? "hover:border-rose-500 hover:text-rose-500" : "hover:border-emerald-500 hover:text-emerald-500";
+    const avatarTone = scope === "admin" ? "bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400" : "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400";
+
     return (
         <div className="h-full flex flex-col gap-4 p-4">
             <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 p-4">
-                <p className="text-[11px] uppercase tracking-[0.2em] text-emerald-500 font-semibold">
-                    Staff Panel
+                <p className={`text-[11px] uppercase tracking-[0.2em] ${accentText} font-semibold`}>
+                    {roleLabel}
                 </p>
                 <div className="mt-3 flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-xl overflow-hidden bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                    <div className={`w-11 h-11 rounded-xl overflow-hidden border flex items-center justify-center ${avatarTone}`}>
                         {user.avatar_url ? (
                             <img src={user.avatar_url} alt={user.name} className="w-full h-full object-cover" />
                         ) : (
-                            <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{user.initials}</span>
+                            <span className="text-sm font-bold">{user.initials}</span>
                         )}
                     </div>
                     <div className="min-w-0">
                         <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">{user.name}</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">Staff Verifikasi</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">{roleDescription}</p>
                     </div>
                 </div>
             </div>
@@ -85,25 +101,25 @@ export default function StaffSidebar({ user, candidate, completion, tips = [] }:
                 <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Quick Action</p>
                 <div className="mt-3 grid grid-cols-1 gap-2">
                     <Link
-                        href="/dashboard/staff/candidates"
-                        className="h-11 rounded-xl border border-slate-200 dark:border-white/10 hover:border-emerald-500 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-emerald-500 inline-flex items-center justify-center gap-2 transition"
+                        href={`${basePath}/candidates`}
+                        className={`h-11 rounded-xl border border-slate-200 dark:border-white/10 text-sm font-semibold text-slate-600 dark:text-slate-300 inline-flex items-center justify-center gap-2 transition ${accentBorder}`}
                     >
                         <i className="fa-solid fa-list-check text-xs" />
                         Daftar Kandidat
                     </Link>
                     <Link
-                        href="/dashboard/staff"
-                        className="h-11 rounded-xl border border-slate-200 dark:border-white/10 hover:border-emerald-500 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-emerald-500 inline-flex items-center justify-center gap-2 transition"
+                        href={basePath}
+                        className={`h-11 rounded-xl border border-slate-200 dark:border-white/10 text-sm font-semibold text-slate-600 dark:text-slate-300 inline-flex items-center justify-center gap-2 transition ${accentBorder}`}
                     >
                         <i className="fa-solid fa-chart-line text-xs" />
-                        Dashboard Staff
+                        {dashboardLabel}
                     </Link>
                 </div>
             </div>
 
             {tips.length > 0 && (
                 <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 p-4">
-                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Catatan Staff</p>
+                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Catatan Operasional</p>
                     <ul className="mt-2 space-y-2">
                         {tips.map((tip, i) => (
                             <li key={i} className="text-xs leading-relaxed text-slate-600 dark:text-slate-400 flex gap-2">

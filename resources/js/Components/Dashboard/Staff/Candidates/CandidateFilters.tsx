@@ -11,6 +11,7 @@ export type Filters = {
     search: string;
     status: string;
     wave:   string;
+    program?: string;
 };
 
 export type Wave = {
@@ -21,17 +22,20 @@ export type Wave = {
 type Props = {
     filters: Filters;
     waves:   Wave[];
+    basePath?: string;
 };
 
 export function buildCandidateListQuery(filters: Partial<Filters>, page?: number) {
     const search = (filters.search ?? "").trim();
     const status = (filters.status ?? "").trim();
     const wave = (filters.wave ?? "").trim();
+    const program = (filters.program ?? "").trim();
     const query: Record<string, string | number> = {};
 
     if (search) query.search = search;
     if (status) query.status = status;
     if (wave) query.wave = wave;
+    if (program) query.program = program;
     if (page && page > 1) query.page = page;
 
     return query;
@@ -63,20 +67,20 @@ const SELECT_CLASS = `
 // COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function CandidateFilters({ filters, waves }: Props) {
+export default function CandidateFilters({ filters, waves, basePath = "/dashboard/staff/candidates" }: Props) {
     const applyFilter = useCallback((patch: Partial<Filters>) => {
         router.get(
-            "/dashboard/staff/candidates",
+            basePath,
             buildCandidateListQuery({ ...filters, ...patch }),
             { preserveState: true, preserveScroll: true, replace: true }
         );
-    }, [filters]);
+    }, [basePath, filters]);
 
     const handleSearch = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         applyFilter({ search: e.target.value });
     }, [applyFilter]);
 
-    const hasActiveFilter = filters.search || filters.status || filters.wave;
+    const hasActiveFilter = filters.search || filters.status || filters.wave || filters.program;
 
     return (
         <div className="flex flex-col sm:flex-row gap-3">
@@ -129,7 +133,7 @@ export default function CandidateFilters({ filters, waves }: Props) {
             {hasActiveFilter && (
                 <button
                     type="button"
-                    onClick={() => applyFilter({ search: "", status: "", wave: "" })}
+                    onClick={() => applyFilter({ search: "", status: "", wave: "", program: "" })}
                     className="h-10 px-4 rounded-xl text-sm font-semibold
                                border border-slate-200 dark:border-white/10
                                text-slate-500 dark:text-slate-400

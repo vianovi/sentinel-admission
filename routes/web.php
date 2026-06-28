@@ -10,6 +10,7 @@ use App\Http\Controllers\Dashboard\Candidate\GuardianController   as CandidateGu
 use App\Http\Controllers\Dashboard\Candidate\DocumentController   as CandidateDocument;
 use App\Http\Controllers\Dashboard\Candidate\PaymentController    as CandidatePayment;
 use App\Http\Controllers\Dashboard\ChangeRequestController;
+use App\Http\Controllers\Dashboard\ComingSoonController;
 use App\Http\Controllers\Dashboard\SecureFileController;
 use App\Http\Controllers\Dashboard\Staff\IndexController          as StaffDashboard;
 use App\Http\Controllers\Dashboard\Staff\ProfileController        as StaffProfile;
@@ -91,6 +92,12 @@ Route::middleware(['auth', RoleMiddleware::class . ':candidate'])
             ->name('calendar.agenda.store');
         Route::patch('/calendar/settings', [CandidateCalendar::class, 'updateSettings'])
             ->name('calendar.settings.update');
+        Route::get('/info', ComingSoonController::class)
+            ->defaults('feature', 'candidate.info')
+            ->name('info');
+        Route::get('/status', ComingSoonController::class)
+            ->defaults('feature', 'candidate.status')
+            ->name('status');
 
         // ── Profile ───────────────────────────────────────────────────────
         Route::get('/profile', [CandidateProfile::class, 'show'])
@@ -232,6 +239,17 @@ Route::middleware(['auth', RoleMiddleware::class . ':staff'])
         Route::post('/change-requests/email/{candidate}/reject', [ChangeRequestController::class, 'rejectEmail'])
             ->name('change-requests.email.reject');
 
+        // ── Future operational pages ───────────────────────────────────
+        Route::get('/selection-status', ComingSoonController::class)
+            ->defaults('feature', 'staff.selection-status')
+            ->name('selection-status');
+        Route::get('/reports', ComingSoonController::class)
+            ->defaults('feature', 'staff.reports')
+            ->name('reports');
+        Route::get('/payment-recap', ComingSoonController::class)
+            ->defaults('feature', 'staff.payment-recap')
+            ->name('payment-recap');
+
         // ── Documents ────────────────────────────────────────────────────
         Route::post('/documents/{document}/verify', [StaffDashboard::class, 'verifyDocument'])
             ->name('documents.verify');
@@ -274,10 +292,23 @@ Route::middleware(['auth', RoleMiddleware::class . ':admin'])
         // ── Candidates ───────────────────────────────────────────────────
         Route::get('/candidates', [AdminCandidate::class, 'index'])
             ->name('candidates.index');
+        Route::get('/candidates/{candidate}', [StaffDashboard::class, 'show'])
+            ->name('candidates.show')
+            ->missing(fn () => redirect()
+                ->route('admin.candidates.index')
+                ->with('error', 'Kandidat yang dipilih tidak ditemukan atau sudah tidak tersedia.'));
         Route::get('/candidates/{candidate}/health-documents/{docType}', [SecureFileController::class, 'adminHealthDocumentPreview'])
             ->where('docType', 'chronic-disease|surat-sehat|bpjs-card|vaccine-card')
             ->middleware('throttle:sensitive-file')
             ->name('health-documents.preview');
+        Route::get('/candidates/{candidate}/{section}', [StaffDashboard::class, 'show'])
+            ->where('section', 'data-diri|data-kesehatan|data-wali|dokumen|pembayaran')
+            ->name('candidates.section')
+            ->missing(fn () => redirect()
+                ->route('admin.candidates.index')
+                ->with('error', 'Kandidat yang dipilih tidak ditemukan atau sudah tidak tersedia.'));
+        Route::post('/candidates/{candidate}/status', [StaffDashboard::class, 'updateStatus'])
+            ->name('candidates.status');
         Route::delete('/candidates/{candidate}', [AdminDashboard::class, 'deleteCandidate'])
             ->name('candidates.delete');
 
@@ -285,9 +316,13 @@ Route::middleware(['auth', RoleMiddleware::class . ':admin'])
         Route::get('/documents/{document}/preview', [SecureFileController::class, 'adminDocumentPreview'])
             ->middleware('throttle:sensitive-file')
             ->name('documents.preview');
+        Route::post('/documents/{document}/verify', [StaffDashboard::class, 'verifyDocument'])
+            ->name('documents.verify');
         Route::get('/payments/{payment}/proof', [SecureFileController::class, 'adminPaymentProofPreview'])
             ->middleware('throttle:sensitive-file')
             ->name('payments.proof');
+        Route::post('/payments/{payment}/verify', [StaffDashboard::class, 'verifyPayment'])
+            ->name('payments.verify');
 
         // ── Waves ─────────────────────────────────────────────────────────
         Route::get('/waves', [AdminWave::class, 'index'])
@@ -312,6 +347,23 @@ Route::middleware(['auth', RoleMiddleware::class . ':admin'])
             ->name('change-requests.email.approve');
         Route::post('/change-requests/email/{candidate}/reject', [ChangeRequestController::class, 'rejectEmail'])
             ->name('change-requests.email.reject');
+
+        // ── Future admin pages ──────────────────────────────────────────
+        Route::get('/selection-status', ComingSoonController::class)
+            ->defaults('feature', 'admin.selection-status')
+            ->name('selection-status');
+        Route::get('/reports', ComingSoonController::class)
+            ->defaults('feature', 'admin.reports')
+            ->name('reports');
+        Route::get('/payment-recap', ComingSoonController::class)
+            ->defaults('feature', 'admin.payment-recap')
+            ->name('payment-recap');
+        Route::get('/programs', ComingSoonController::class)
+            ->defaults('feature', 'admin.programs')
+            ->name('programs');
+        Route::get('/settings', ComingSoonController::class)
+            ->defaults('feature', 'admin.settings')
+            ->name('settings');
 
         // ── Profile ───────────────────────────────────────────────────────
         Route::get('/profile', [AdminProfile::class, 'show'])

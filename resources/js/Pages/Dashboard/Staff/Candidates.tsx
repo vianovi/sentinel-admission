@@ -68,10 +68,18 @@ export default function StaffCandidates({ candidates, waves, filters }: Props) {
                 )}
 
                 {/* ── Filters ──────────────────────────────────────────────── */}
-                <CandidateFilters filters={filters} waves={waves} />
+                <CandidateFilters
+                    filters={filters}
+                    waves={waves}
+                    basePath="/dashboard/staff/candidates"
+                />
 
                 {/* ── Table ────────────────────────────────────────────────── */}
-                <CandidateTable candidates={candidates.data} />
+                <CandidateTable
+                    candidates={candidates.data}
+                    basePath="/dashboard/staff/candidates"
+                    selectedCandidateStorageKey="staff:selectedCandidateId"
+                />
 
                 {/* ── Pagination ───────────────────────────────────────────── */}
                 <CandidatePagination
@@ -80,6 +88,7 @@ export default function StaffCandidates({ candidates, waves, filters }: Props) {
                     total={candidates.total}
                     links={candidates.links}
                     filters={filters}
+                    basePath="/dashboard/staff/candidates"
                 />
 
             </div>

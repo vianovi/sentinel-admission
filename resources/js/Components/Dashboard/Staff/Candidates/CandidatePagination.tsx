@@ -19,13 +19,21 @@ type Props = {
     total:       number;
     links:       PaginationLink[];
     filters:     Filters;
+    basePath?:   string;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function CandidatePagination({ currentPage, lastPage, total, links, filters }: Props) {
+export default function CandidatePagination({
+    currentPage,
+    lastPage,
+    total,
+    links,
+    filters,
+    basePath = "/dashboard/staff/candidates",
+}: Props) {
     if (lastPage <= 1) return null;
 
     const handlePage = (url: string | null) => {
@@ -35,7 +43,7 @@ export default function CandidatePagination({ currentPage, lastPage, total, link
         const page = pageValue ? Number(pageValue) : 1;
 
         router.get(
-            "/dashboard/staff/candidates",
+            basePath,
             buildCandidateListQuery(filters, Number.isFinite(page) ? page : 1),
             { preserveState: true, preserveScroll: false }
         );

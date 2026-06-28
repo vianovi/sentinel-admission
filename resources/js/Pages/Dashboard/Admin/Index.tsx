@@ -297,7 +297,7 @@ export default function AdminIndex({ stats, active_wave, recent_candidates, staf
                                     return (
                                         <li key={item.id}>
                                             <Link
-                                                href={`/dashboard/admin/candidates?search=${encodeURIComponent(item.full_name)}`}
+                                                href={`/dashboard/admin/candidates/${item.id}`}
                                                 className="flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50 dark:hover:bg-white/5 transition group"
                                             >
                                                 <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">

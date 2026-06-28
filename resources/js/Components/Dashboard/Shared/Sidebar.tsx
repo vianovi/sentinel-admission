@@ -28,6 +28,7 @@ export default function Sidebar({ role }: Props) {
     const navRef = useRef<HTMLDivElement>(null);
     const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
     const [storedStaffCandidateId, setStoredStaffCandidateId] = useState<string | null>(null);
+    const [storedAdminCandidateId, setStoredAdminCandidateId] = useState<string | null>(null);
 
     const isVisible = isExpanded || isHovered || isMobileOpen;
     const groups: NavGroup[] = navigationConfig[role] ?? [];
@@ -35,7 +36,14 @@ export default function Sidebar({ role }: Props) {
         const match = url.match(/^\/dashboard\/staff\/candidates\/(\d+)/);
         return match?.[1] ?? null;
     }, [url]);
+    const adminCandidateIdFromUrl = useMemo(() => {
+        const match = url.match(/^\/dashboard\/admin\/candidates\/(\d+)/);
+        return match?.[1] ?? null;
+    }, [url]);
     const activeStaffCandidateId = staffCandidateIdFromUrl ?? storedStaffCandidateId;
+    const activeAdminCandidateId = adminCandidateIdFromUrl ?? storedAdminCandidateId;
+    const activeCandidateId = role === "admin" ? activeAdminCandidateId : activeStaffCandidateId;
+    const candidateBasePath = role === "admin" ? "/dashboard/admin/candidates" : "/dashboard/staff/candidates";
 
     useEffect(() => {
         if (!navRef.current) return;
@@ -60,39 +68,59 @@ export default function Sidebar({ role }: Props) {
         setStoredStaffCandidateId(window.localStorage.getItem("staff:selectedCandidateId"));
     }, [role, staffCandidateIdFromUrl]);
 
+    useEffect(() => {
+        if (role !== "admin" || typeof window === "undefined") return;
+
+        if (adminCandidateIdFromUrl) {
+            window.localStorage.setItem("admin:selectedCandidateId", adminCandidateIdFromUrl);
+            setStoredAdminCandidateId(adminCandidateIdFromUrl);
+            return;
+        }
+
+        setStoredAdminCandidateId(window.localStorage.getItem("admin:selectedCandidateId"));
+    }, [role, adminCandidateIdFromUrl]);
+
     const isActive = (href: string, exact?: boolean) => {
         if (exact) return url === href;
         return url.startsWith(href);
     };
 
-    const isStaffSectionActive = (section: NonNullable<NavItem["staffCandidateSection"]>) => {
-        if (section === "data-diri" && /^\/dashboard\/staff\/candidates\/\d+$/.test(url)) {
+    const isCandidateSectionActive = (section: NonNullable<NavItem["staffCandidateSection"]>) => {
+        const escapedBase = candidateBasePath.replace(/\//g, "\\/");
+
+        if (section === "data-diri" && new RegExp(`^${escapedBase}\\/\\d+$`).test(url)) {
             return true;
         }
 
-        return url.endsWith(`/${section}`) && url.includes("/dashboard/staff/candidates/");
+        return url.endsWith(`/${section}`) && url.includes(`${candidateBasePath}/`);
     };
 
     const getItemHref = (item: NavItem) => {
-        if (item.staffCandidateHome) {
-            if (!activeStaffCandidateId) return item.href;
-            return `/dashboard/staff/candidates/${activeStaffCandidateId}`;
+        const candidateSection = item.staffCandidateSection ?? item.adminCandidateSection;
+
+        if (item.staffCandidateHome || item.adminCandidateHome) {
+            if (!activeCandidateId) return item.href;
+            return `${candidateBasePath}/${activeCandidateId}`;
         }
 
-        if (!item.staffCandidateSection) return item.href;
-        if (!activeStaffCandidateId) return item.href;
-        return `/dashboard/staff/candidates/${activeStaffCandidateId}/${item.staffCandidateSection}`;
+        if (!candidateSection) return item.href;
+        if (!activeCandidateId) return item.href;
+        return `${candidateBasePath}/${activeCandidateId}/${candidateSection}`;
     };
 
     const getSubItemHref = (subItem: NavSubItem) => {
-        if (!subItem.staffCandidateSection) return subItem.href ?? "#";
-        if (!activeStaffCandidateId) return "/dashboard/staff/candidates";
-        return `/dashboard/staff/candidates/${activeStaffCandidateId}/${subItem.staffCandidateSection}`;
+        const candidateSection = subItem.staffCandidateSection ?? subItem.adminCandidateSection;
+
+        if (!candidateSection) return subItem.href ?? "#";
+        if (!activeCandidateId) return candidateBasePath;
+        return `${candidateBasePath}/${activeCandidateId}/${candidateSection}`;
     };
 
     const isSubItemActive = (subItem: NavSubItem) => {
-        if (!subItem.staffCandidateSection) return subItem.href ? isActive(subItem.href) : false;
-        return isStaffSectionActive(subItem.staffCandidateSection);
+        const candidateSection = subItem.staffCandidateSection ?? subItem.adminCandidateSection;
+
+        if (!candidateSection) return subItem.href ? isActive(subItem.href) : false;
+        return isCandidateSectionActive(candidateSection);
     };
 
     const isChildrenActive = (children?: NavSubItem[]) => {
@@ -181,10 +209,11 @@ export default function Sidebar({ role }: Props) {
                             {group.items.map((item) => {
                                 const hasChildren = !!item.children?.length;
                                 const itemHref = getItemHref(item);
-                                const waitingForCandidate = !!item.staffCandidateSection && !activeStaffCandidateId;
+                                const candidateSection = item.staffCandidateSection ?? item.adminCandidateSection;
+                                const waitingForCandidate = !!candidateSection && !activeCandidateId;
                                 const active = !item.disabled
-                                    && ((item.staffCandidateSection
-                                        ? isStaffSectionActive(item.staffCandidateSection)
+                                    && ((candidateSection
+                                        ? isCandidateSectionActive(candidateSection)
                                         : isActive(item.href, item.exact))
                                         || isChildrenActive(item.children));
                                 const childOpen = hasChildren && isVisible && (openMenus[item.href] || active);
@@ -261,6 +290,11 @@ export default function Sidebar({ role }: Props) {
                                                                 {waitingForCandidate && (
                                                                     <i className="fa-solid fa-circle-info ml-auto text-[10px] text-slate-400"></i>
                                                                 )}
+                                                                {item.comingSoon && !waitingForCandidate && (
+                                                                    <span className="ml-auto rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-500">
+                                                                        Soon
+                                                                    </span>
+                                                                )}
                                                             </>
                                                         )}
                                                     </Link>
@@ -313,6 +347,11 @@ export default function Sidebar({ role }: Props) {
                                                             {waitingForCandidate && (
                                                                 <i className="fa-solid fa-circle-info ml-auto text-[10px] text-slate-400"></i>
                                                             )}
+                                                            {item.comingSoon && !waitingForCandidate && (
+                                                                <span className="ml-auto rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-500">
+                                                                    Soon
+                                                                </span>
+                                                            )}
                                                         </>
                                                     )}
                                                     {!isVisible && active && (
@@ -336,7 +375,8 @@ export default function Sidebar({ role }: Props) {
                                                 {item.children?.map((subItem, subIndex) => {
                                                     const subActive = isSubItemActive(subItem);
                                                     const href = getSubItemHref(subItem);
-                                                    const waitingForCandidate = !!subItem.staffCandidateSection && !activeStaffCandidateId;
+                                                    const subCandidateSection = subItem.staffCandidateSection ?? subItem.adminCandidateSection;
+                                                    const waitingForCandidate = !!subCandidateSection && !activeCandidateId;
 
                                                     return (
                                                         <li key={`${item.href}-${subItem.label}`}>

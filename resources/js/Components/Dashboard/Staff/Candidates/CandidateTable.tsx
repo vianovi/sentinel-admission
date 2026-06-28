@@ -24,6 +24,8 @@ export type CandidateRow = {
 
 type Props = {
     candidates: CandidateRow[];
+    basePath?: string;
+    selectedCandidateStorageKey?: string;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -44,7 +46,11 @@ const TABLE_HEADERS = ["Kandidat", "Gelombang", "Status", "Dokumen", "Tanggal", 
 // COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function CandidateTable({ candidates }: Props) {
+export default function CandidateTable({
+    candidates,
+    basePath = "/dashboard/staff/candidates",
+    selectedCandidateStorageKey = "staff:selectedCandidateId",
+}: Props) {
     useEffect(() => {
         if (candidates.length === 0) return;
         animate(".candidate-row", {
@@ -105,10 +111,10 @@ export default function CandidateTable({ candidates }: Props) {
                     return (
                         <li key={c.id} className="candidate-row opacity-0">
                             <Link
-                                href={`/dashboard/staff/candidates/${c.id}`}
+                                href={`${basePath}/${c.id}`}
                                 onClick={() => {
                                     if (typeof window !== "undefined") {
-                                        window.localStorage.setItem("staff:selectedCandidateId", String(c.id));
+                                        window.localStorage.setItem(selectedCandidateStorageKey, String(c.id));
                                     }
                                 }}
                                 className="flex flex-col lg:grid

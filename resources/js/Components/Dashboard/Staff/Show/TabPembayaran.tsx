@@ -67,7 +67,12 @@ function statusTone(status: string): "slate" | "green" | "amber" | "red" | "blue
     return "slate";
 }
 
-export default function TabPembayaran({ payment }: { payment: StaffPayment }) {
+type Props = {
+    payment: StaffPayment;
+    basePath?: string;
+};
+
+export default function TabPembayaran({ payment, basePath = "/dashboard/staff" }: Props) {
     const [status, setStatus] = useState<"verified" | "rejected">("verified");
     const [reason, setReason] = useState("");
     const [processing, setProcessing] = useState(false);
@@ -108,7 +113,7 @@ export default function TabPembayaran({ payment }: { payment: StaffPayment }) {
 
         setProcessing(true);
         router.post(
-            `/dashboard/staff/payments/${payment.id}/verify`,
+            `${basePath}/payments/${payment.id}/verify`,
             {
                 status,
                 rejection_reason: status === "rejected" ? reason : undefined,

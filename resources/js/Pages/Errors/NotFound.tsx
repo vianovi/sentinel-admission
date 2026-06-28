@@ -9,12 +9,18 @@ interface Props {
     comingSoon?: boolean  // true = "Segera Hadir", false = 404
     backUrl?:    string   // override tombol kembali
     backLabel?:  string
+    featureName?: string
+    description?: string
+    statusLabel?: string
 }
 
 export default function NotFound({
     comingSoon = true,
     backUrl    = '/dashboard',
     backLabel  = 'Kembali',
+    featureName = 'Fitur Ini Sedang Disiapkan',
+    description,
+    statusLabel = 'Segera Hadir',
 }: Props) {
 
     const containerRef = useRef<HTMLDivElement>(null)
@@ -103,7 +109,7 @@ export default function NotFound({
                         {comingSoon ? (
                             <span className="inline-block rounded-full border border-gold/30 bg-gold/10
                                            px-4 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-gold">
-                                Segera Hadir
+                                {statusLabel}
                             </span>
                         ) : (
                             <span
@@ -123,7 +129,7 @@ export default function NotFound({
                     {/* Judul */}
                     <h1 className="nf-item mb-3 text-2xl font-bold text-slate-100">
                         {comingSoon
-                            ? 'Fitur Ini Sedang Disiapkan'
+                            ? featureName
                             : 'Halaman Tidak Ditemukan'
                         }
                     </h1>
@@ -131,7 +137,7 @@ export default function NotFound({
                     {/* Deskripsi */}
                     <p className="nf-item mb-8 text-sm leading-relaxed text-slate-400 max-w-sm">
                         {comingSoon
-                            ? 'Kami sedang membangun fitur ini dengan sepenuh hati. Mohon bersabar — tidak lama lagi akan hadir untuk kamu.'
+                            ? description ?? 'Fitur ini sedang disiapkan dan belum tersedia untuk digunakan.'
                             : 'Halaman yang kamu cari tidak ada atau mungkin telah dipindahkan. Jangan khawatir, kamu bisa kembali ke dashboard.'
                         }
                     </p>

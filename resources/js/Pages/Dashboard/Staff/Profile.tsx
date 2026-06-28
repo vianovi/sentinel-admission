@@ -50,6 +50,13 @@ const swalDark = Swal.mixin({
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function StaffProfile({ user, flash }: Props) {
+    const isAdmin = user.role === "admin";
+    const basePath = isAdmin ? "/dashboard/admin" : "/dashboard/staff";
+    const roleLabel = isAdmin ? "Admin" : "Staff";
+    const headerTone = isAdmin
+        ? "bg-gradient-to-br from-rose-500 to-orange-500 shadow-rose-500/25"
+        : "bg-gradient-to-br from-emerald-500 to-teal-500 shadow-emerald-500/25";
+
     // ── Form state ───────────────────────────────────────────────────────────
     const [name, setName]                       = useState(user.name);
     const [whatsapp, setWhatsapp]               = useState(user.whatsapp_number ?? "");
@@ -108,7 +115,7 @@ export default function StaffProfile({ user, flash }: Props) {
 
         const confirmed = await swalDark.fire({
             title:             "Simpan perubahan profil?",
-            text:              "Pastikan data staff sudah sesuai sebelum disimpan.",
+            text:              `Pastikan data ${roleLabel.toLowerCase()} sudah sesuai sebelum disimpan.`,
             icon:              "question",
             showCancelButton:  true,
             confirmButtonText: "Ya, simpan",
@@ -118,7 +125,7 @@ export default function StaffProfile({ user, flash }: Props) {
 
         setProcessing(true);
         router.put(
-            "/dashboard/staff/profile",
+            `${basePath}/profile`,
             {
                 name,
                 whatsapp_number:           whatsapp || undefined,
@@ -155,7 +162,7 @@ export default function StaffProfile({ user, flash }: Props) {
         fd.append("avatar", file);
 
         setAvatarProcessing(true);
-        router.post("/dashboard/staff/profile/avatar", fd, {
+        router.post(`${basePath}/profile/avatar`, fd, {
             preserveScroll: true,
             onSuccess: () => router.reload({ only: ["user"] }),
             onError: (e) => setErrors(e as Record<string, string>),
@@ -169,22 +176,19 @@ export default function StaffProfile({ user, flash }: Props) {
 
     return (
         <DashboardLayout>
-            <Head title="Staff · Profil" />
+            <Head title={`${roleLabel} - Profil`} />
 
             <div className="flex flex-col gap-6 max-w-3xl mx-auto pb-8">
 
                 {/* ── Page header ──────────────────────────────────────────── */}
                 <div className="staff-profile-block opacity-0 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl shrink-0
-                                    bg-gradient-to-br from-emerald-500 to-teal-500
-                                    flex items-center justify-center
-                                    shadow-lg shadow-emerald-500/25">
+                    <div className={`w-10 h-10 rounded-2xl shrink-0 flex items-center justify-center shadow-lg ${headerTone}`}>
                         <i className="fa-solid fa-circle-user text-white text-sm" />
                     </div>
                     <div>
                         <h1 className="text-xl font-display font-bold
                                        text-slate-800 dark:text-white leading-tight">
-                            Profil Staff
+                            Profil {roleLabel}
                         </h1>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                             Kelola identitas akun untuk operasional dashboard

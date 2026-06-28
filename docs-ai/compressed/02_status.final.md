@@ -38,15 +38,15 @@ Environment note:
 
 ## Current Strategic Direction
 
-The project is entering **Staff/Admin Dashboard V2**.
+The project is in **Staff/Admin Dashboard V2**.
 
 Main focus:
 
 ```txt
-1. Clean sidebar/menu grouping by operational domain.
-2. Route future menu items to ComingSoon instead of 404.
-3. Build Permintaan Perubahan as the next high-priority Staff/Admin feature.
-4. Continue Admin Dashboard subpages after Staff/Admin V2 foundations are clean.
+1. Keep Staff/Admin sidebar/menu grouping by operational domain.
+2. Keep future menu items routed to ComingSoon instead of 404.
+3. Harden Staff/Admin operational pages without expanding into ERP/finance scope.
+4. Continue final polish, status page decisions, and production audit before merge.
 ```
 
 The system remains intentionally simple:
@@ -89,13 +89,13 @@ Work labels like bendahara, administrasi, operator, verifikator, or panitia are 
 | Data Kesehatan | ✅ Active | Show/save + upload/delete health documents active |
 | Data Dokumen | ✅ Active | Upload, preview, download, delete active |
 | Pembayaran | ✅ Active | Gateway/manual/cash flow, proof upload, cancel active |
-| Status Kandidat | ⚠️ Partial | Status visible in dashboard/profile, but no dedicated `/dashboard/status` route |
+| Status Kandidat | 🔜 ComingSoon | Dedicated `/dashboard/status` route exists and opens ComingSoon |
 
 Important correction:
 - `/dashboard/data-wali` is active.
 - `/dashboard/data-dokumen` is active.
 - `/dashboard/pembayaran` is active.
-- Only `/dashboard/status` is still not a dedicated active route.
+- `/dashboard/status` is routed to ComingSoon until a real timeline/status page is built.
 
 ### Staff Dashboard
 
@@ -108,17 +108,22 @@ Important correction:
 | Staff profile | ✅ Active | Show/update/avatar active |
 | Staff document area | ✅ Active | Preview + verify/reject active |
 | Staff payment area | ✅ Active | Proof preview + verify/reject active |
-| Permintaan Perubahan | ⚠️ Partial | Candidate can request/cancel; staff/admin approval not built |
+| Permintaan Perubahan | ✅ Active | Staff/admin inbox + approve/reject data/email requests active |
 
 ### Admin Dashboard
 
 | Feature | Status | Notes |
 |---|---|---|
 | Admin dashboard index | ✅ Active | Functional, uses DB data |
-| Admin candidates | ⚠️ Backend scaffold | Route + controller exist; React page missing |
-| Admin waves/gelombang | ⚠️ Backend scaffold | Route + controller exist; React page missing |
-| Admin staff management | ⚠️ Backend scaffold | Route + controller exist; React page missing |
-| Admin profile | ⚠️ Backend scaffold | Route + controller exist; React page missing |
+| Admin candidates | ✅ Active | List, filters, pagination, detail/review access active |
+| Admin candidate detail | ✅ Active | Reuses operational candidate review screen with admin-scoped routes |
+| Admin document area | ✅ Active | Preview + verify/reject active through admin routes |
+| Admin payment area | ✅ Active | Proof preview + verify/reject active through admin routes |
+| Admin change requests | ✅ Active | Same operational inbox as staff, admin-scoped |
+| Admin waves/gelombang | ✅ Active | List + active toggle page implemented |
+| Admin staff management | ✅ Active | Staff list + activate/suspend implemented |
+| Admin profile | ✅ Active | Show/update/avatar active |
+| Admin future settings | 🔜 ComingSoon | Program/Jalur and Pengaturan Sistem route to ComingSoon |
 
 ---
 
@@ -153,69 +158,67 @@ Important correction:
 | Staff Document Validation | Preview + verify/reject active |
 | Staff Payment Validation | Proof preview + verify/reject active |
 | Admin Dashboard Index | Functional and uses DB data |
+| Staff/Admin Change Requests | Operational inbox for candidate data/email requests with approve/reject |
+| Staff/Admin ComingSoon Routes | Future sidebar links route to role-aware ComingSoon, not 404 |
+| Admin Candidates | Candidate list + operational detail/review access |
+| Admin Waves | Gelombang list + activate/deactivate toggle |
+| Admin Staff Management | Staff account list + activate/suspend toggle |
+| Admin Profile | Show/update/avatar active |
 
 ---
 
 ## Current Gaps / Pending Build ⚠️
 
-### 1. Staff/Admin — Permintaan Perubahan
+### 1. Candidate Email Finalization
 
-Highest priority next feature.
+Current state:
+- Candidate can request and cancel email change.
+- Staff/admin can approve/reject pending email requests.
+- Approved request is manually verified by staff/admin.
+- Candidate-side apply-approved-email endpoint exists from profile flow.
 
-Candidate side exists:
-- Candidate can request data change from Data Diri.
-- Candidate can cancel data change request.
-- Candidate can request email change from Profile.
-- Candidate can cancel email change request.
-
-Missing:
-- Staff/admin list of pending requests.
-- Staff/admin approve/reject data change request.
-- Staff/admin approve/reject email change request.
-- Email token finalization endpoint is not implemented.
-
-Build direction:
-- Add menu `Permintaan Perubahan`.
-- Make it an operational inbox for data/email change requests.
-- Admin can access the same domain as staff.
+Still needs final product decision:
+- Whether to keep manual approval + candidate apply flow.
+- Whether to add/restore email-token verification as a required final step.
 
 ### 2. Candidate Status Page
 
 Current state:
 - Candidate status is visible in dashboard/profile.
-- Dedicated sidebar route `/dashboard/status` does not exist yet.
+- Dedicated sidebar route `/dashboard/status` exists and opens ComingSoon.
 
 Decision:
 - Route Status to ComingSoon until a real status/timeline page is built.
 
-### 3. Admin Subpages
+### 3. Reports / Exports / Standalone Queues
 
 Current state:
-- Admin dashboard index exists and is functional.
-- Admin candidates/waves/staff/profile controllers/routes exist.
-- React pages are missing.
+- Candidate document/payment review is active inside candidate detail for staff/admin.
+- Reports and payment recap routes open ComingSoon.
 
 Build later:
-- `resources/js/Pages/Dashboard/Admin/Candidates.tsx`
-- `resources/js/Pages/Dashboard/Admin/Waves.tsx`
-- `resources/js/Pages/Dashboard/Admin/Staff.tsx`
-- `resources/js/Pages/Dashboard/Admin/Profile.tsx`
+- Staff/Admin report pages when data shape is stable.
+- Payment recap/export if it remains SPMB-payment scope only.
+- Optional standalone Dokumen/Pembayaran queue pages if useful operationally.
 
 ### 4. ComingSoon Routing for Future Menus
 
-Needed for:
-- Candidate Kalender SPMB
+Active for:
 - Candidate Informasi
 - Candidate Status
 - Staff/Admin Seleksi & Status
 - Staff/Admin Laporan Umum
 - Staff/Admin Rekap Pembayaran
-- Admin Pengaturan items not built yet
+- Admin Program / Jalur
+- Admin Pengaturan Sistem
 
 Rule:
 - Sidebar future items may be visible.
 - They must not produce 404.
 - Use role-aware ComingSoon.
+
+Note:
+- Candidate Kalender SPMB is currently an active calendar page, not ComingSoon.
 
 ### 5. UI Maturity / Polish
 
@@ -231,29 +234,29 @@ Polish should happen after domain/menu routing and priority workflows are stable
 ```txt
 MENU
 - Dashboard                 ✅ active
-- Kandidat                  ✅ active for staff; admin page pending
-- Permintaan Perubahan      🔜 next build priority
+- Kandidat                  ✅ active for staff/admin
+- Permintaan Perubahan      ✅ active for staff/admin
 - Seleksi & Status          🔜 ComingSoon
 - Laporan Umum              🔜 ComingSoon
 
 ADMINISTRASI
-- Dokumen                   ✅ active in staff candidate detail; may become standalone later
+- Dokumen                   ✅ active in staff/admin candidate detail; may become standalone later
 
 PEMBAYARAN
-- Pembayaran                ✅ active in staff candidate detail; may become standalone later
+- Pembayaran                ✅ active in staff/admin candidate detail; may become standalone later
 - Rekap Pembayaran          🔜 ComingSoon
 
 AKUN
-- Profil                    ✅ active for staff; admin page pending
+- Profil                    ✅ active for staff/admin
 ```
 
 ### Admin-Only Menu
 
 ```txt
 PENGATURAN ADMIN
-- Gelombang                 ⚠️ route/controller exists, page missing
+- Gelombang                 ✅ active
 - Program / Jalur           🔜 ComingSoon
-- Staff                     ⚠️ route/controller exists, page missing
+- Staff                     ✅ active
 - Pengaturan Sistem         🔜 ComingSoon
 ```
 
@@ -267,31 +270,31 @@ Important direction:
 
 ```txt
 PHASE 1 — Documentation & Routing Cleanup
-[ ] Update 01_project.md with current route truth
-[ ] Update 02_status.md into roadmap/checklist format
+[x] Update 01_project.md with current route truth
+[x] Update 02_status.md into roadmap/checklist format
 [ ] Update audit_staff_dashboard.md focusing on current real gaps
-[ ] Clean sidebar future links → ComingSoon
+[x] Clean sidebar future links → ComingSoon
 [ ] Remove outdated route notes that mark active candidate pages as pending
 
 PHASE 2 — Staff/Admin V2: Permintaan Perubahan
-[ ] Audit actual data/email request source before coding
-[ ] Build request inbox page
-[ ] Build approve/reject data change request
-[ ] Fix address_detail old_value display bug
-[ ] Build approve/reject email change request
+[x] Audit actual data/email request source before coding
+[x] Build request inbox page
+[x] Build approve/reject data change request
+[x] Fix address_detail old_value display bug
+[x] Build approve/reject email change request
 [ ] Decide and implement email token finalization flow
-[ ] Show clear badges/counts for pending requests
+[x] Show clear badges/counts for pending requests
 
 PHASE 3 — Admin Subpages
-[ ] Build Admin Candidates page
-[ ] Build Admin Waves/Gelombang page
-[ ] Build Admin Staff management page
-[ ] Build Admin Profile page
-[ ] Make admin pages functional, not static placeholders
+[x] Build Admin Candidates page
+[x] Build Admin Waves/Gelombang page
+[x] Build Admin Staff management page
+[x] Build Admin Profile page
+[x] Make admin pages functional, not static placeholders
 
 PHASE 4 — Candidate Status & Future Pages
 [ ] Build candidate Status page or keep ComingSoon
-[ ] Kalender SPMB
+[x] Kalender SPMB
 [ ] Informasi page
 [ ] Reports/exports when data shape is stable
 
@@ -317,7 +320,7 @@ PHASE 5 — Final Polish & Production
 | Route | `POST /dashboard/data-diri/change-request` |
 | Cancel route | `DELETE /dashboard/data-diri/change-request` |
 | Storage | `candidates.data_change_request` JSON |
-| Staff/admin approval | Not implemented |
+| Staff/admin approval | Active via `Dashboard/Operations/ChangeRequests` |
 
 Current JSON format:
 
@@ -338,8 +341,8 @@ Allowed fields:
 full_name, nisn, nik, gender, place_of_birth, date_of_birth, address_detail, school_origin
 ```
 
-Risk:
-- `address_detail.old_value` may become `"Array"`. Must be fixed during approval workflow.
+Risk handled:
+- `address_detail.old_value` display is normalized in `ChangeRequestService` so `"Array"` is not shown to staff/admin reviewers.
 
 ### Email Change Request
 
@@ -350,11 +353,13 @@ Risk:
 | Request route | `POST /dashboard/profile/email` |
 | Cancel route | `DELETE /dashboard/profile/email` |
 | Storage | `users.pending_email`, `pending_email_token`, `pending_email_requested_at` |
-| Staff/admin approval | Not implemented |
-| Token finalization route | Not implemented |
+| Staff/admin approval | Active |
+| Token finalization route | Pending decision |
 
-Direction:
-- Prefer two-stage flow: staff/admin approve first, then candidate verifies new email through token link.
+Current direction:
+- Staff/admin approval is active.
+- Candidate can apply approved email from profile.
+- A stricter email-token finalization step is still a product/security decision.
 
 ---
 
@@ -363,9 +368,8 @@ Direction:
 | Item | Decision Needed |
 |---|---|
 | Email change flow | Confirm final 2-stage flow: staff/admin approval → email-token verification |
-| Data change audit fields | Whether to add reviewer/reviewed_at metadata now or keep inside JSON first |
+| Data change audit fields | Reviewer/reviewed_at metadata currently stored inside JSON |
 | Candidate Status page | Timeline/result announcement/simple badge page? |
-| Admin subpage order | Candidates first, then Waves, Staff, Profile? |
 | Reports/export scope | Staff-visible report vs admin-only report |
 | Growth % stat cards | Keep mock/static or later add historical snapshot table |
 | useIdleLogout production | Set to 1200/300 only after dashboard flow is tested |
@@ -380,13 +384,15 @@ Known outdated notes:
 - Any note saying `/dashboard/pembayaran` is pending.
 - Any note saying Staff payment verification is missing.
 - Any note saying Staff document preview/verify/reject is missing.
+- Any note saying Staff/Admin change request approval is missing.
+- Any note saying Admin candidates/waves/staff/profile pages are missing.
 - Any note implying bendahara/operator/verifikator are auth roles.
-- Any note treating Admin dashboard as completely unbuilt; index is already functional.
+- Any note treating Admin dashboard as completely unbuilt; admin operational pages are now usable.
 
 Still accurate:
-- Dedicated `/dashboard/status` is not built.
-- Staff/Admin approval for data/email change request is not built.
-- Admin subpages after index are not usable because pages are missing.
+- Dedicated candidate Status page content is not built; route opens ComingSoon.
+- Email-token finalization remains undecided/not implemented as strict final step.
+- Reports/export/payment recap remain future scope.
 
 ---
 

@@ -156,9 +156,11 @@ class IndexController extends Controller
     // GET /dashboard/staff/candidates/{candidate}
     // =============================================
 
-    public function show(Candidate $candidate, string $section = 'data-diri'): Response
+    public function show(Request $request, Candidate $candidate, string $section = 'data-diri'): Response
     {
         abort_unless(in_array($section, self::STAFF_SECTIONS, true), 404);
+
+        $scope = $this->resolveOperationalScope($request);
 
         $candidate->load([
             'user',
@@ -174,6 +176,8 @@ class IndexController extends Controller
             ->first();
 
         return Inertia::render('Dashboard/Staff/Show', [
+            'scope' => $scope,
+            'base_path' => "/dashboard/{$scope}",
             'active_section' => $section,
             'candidate' => $this->formatCandidate($candidate),
             'documents' => $candidate->documents->map(fn ($d) => [
@@ -185,11 +189,11 @@ class IndexController extends Controller
                 'rejection_reason'  => $d->rejection_reason,
                 'verified_by'       => $d->verifiedBy?->name,
                 'verified_at'       => $d->verified_at?->format('d M Y H:i'),
-                'preview_url'       => route('staff.documents.preview', $d),
+                'preview_url'       => route("{$scope}.documents.preview", $d),
             ])->values(),
             'guardian'      => $this->formatGuardian($candidate),
-            'health_record' => $this->formatHealthRecord($candidate),
-            'payment'       => $this->formatPayment($payment),
+            'health_record' => $this->formatHealthRecord($candidate, $scope),
+            'payment'       => $this->formatPayment($payment, $scope),
         ]);
     }
 
@@ -353,7 +357,7 @@ class IndexController extends Controller
         return $data;
     }
 
-    private function formatHealthRecord(Candidate $candidate): ?array
+    private function formatHealthRecord(Candidate $candidate, string $scope): ?array
     {
         $record = $candidate->healthRecord;
 
@@ -369,7 +373,7 @@ class IndexController extends Controller
                 'is_required' => $docType === 'bpjs-card',
                 'has_file'    => ! empty($record->{$config['column']}),
                 'preview_url' => ! empty($record->{$config['column']})
-                    ? route('staff.health-documents.preview', [$candidate, $docType])
+                    ? route("{$scope}.health-documents.preview", [$candidate, $docType])
                     : null,
             ])
             ->values();
@@ -405,7 +409,7 @@ class IndexController extends Controller
         ];
     }
 
-    private function formatPayment(?Payment $payment): ?array
+    private function formatPayment(?Payment $payment, string $scope): ?array
     {
         if (! $payment) {
             return null;
@@ -424,7 +428,7 @@ class IndexController extends Controller
             'proof_original_filename' => $payment->proof_original_filename,
             'proof_uploaded_at'       => $payment->proof_uploaded_at?->format('d M Y H:i'),
             'proof_attempt'           => $payment->proof_attempt,
-            'proof_url'               => $payment->proof_path ? route('staff.payments.proof', $payment) : null,
+            'proof_url'               => $payment->proof_path ? route("{$scope}.payments.proof", $payment) : null,
             'rejection_reason'        => $payment->rejection_reason,
             'verified_by'             => $payment->verifiedBy?->name,
             'verified_at'             => $payment->verified_at?->format('d M Y H:i'),
@@ -433,5 +437,12 @@ class IndexController extends Controller
             'is_expired'              => $payment->isExpired(),
             'can_verify'              => $payment->isManualChannel() && $payment->isProofUploaded(),
         ];
+    }
+
+    private function resolveOperationalScope(Request $request): string
+    {
+        return str_starts_with((string) $request->route()?->getName(), 'admin.')
+            ? 'admin'
+            : 'staff';
     }
 }
