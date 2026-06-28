@@ -10,38 +10,62 @@ export default function Footer({ auth: _auth, app }: FooterProps) {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 border-b border-gray-700 pb-16">
 
-                    {/* Brand */}
+                    {/* Brand colum*/}
                     <div className="lg:col-span-4 space-y-6">
+                        {/* Brand Logo & Title */}
                         <div className="flex items-center gap-3">
                             {app.logo ? (
-                                <img src={app.logo} alt={app.name} className="w-10 h-10 rounded-lg object-cover" />
+                                <img
+                                    src={app.logo}
+                                    alt={app.name}
+                                    className="w-11 h-11 rounded-xl object-cover shadow-lg shadow-black/10 border border-white/5 transition-transform duration-300 hover:scale-105"
+                                />
                             ) : (
-                                <i className="fa-solid fa-graduation-cap text-4xl text-gold"></i>
+                                <div className="w-11 h-11 bg-navy rounded-xl flex items-center justify-center text-gold shadow-lg shadow-black/10 border border-white/5">
+                                    <i className="fa-solid fa-graduation-cap text-lg"></i>
+                                </div>
                             )}
-                            <div>
-                                <h3 className="font-display font-bold text-2xl uppercase tracking-wide">{app.name}</h3>
-                                <p className="text-xs tracking-[0.3em] opacity-60 uppercase">{app.tagline}</p>
+                            <div className="space-y-0.5">
+                                <h3 className="font-display font-extrabold text-xl sm:text-2xl uppercase tracking-wide text-white leading-none">
+                                    {app.name}
+                                </h3>
+                                <p className="text-[9px] font-bold tracking-[0.25em] text-gold/80 uppercase leading-none">
+                                    {app.tagline}
+                                </p>
                             </div>
                         </div>
-                        <p className="text-gray-400 text-sm leading-relaxed pr-6">
+
+                        {/* Brand Description */}
+                        <p className="text-gray-400/95 text-sm leading-relaxed pr-6 max-w-sm">
                             Al-Muntaha Islamic Boarding School — membentuk generasi Muslim yang
                             unggul dalam ilmu, kokoh dalam iman, dan siap berkontribusi untuk umat.
                         </p>
-                        <div className="pt-4">
-                            <a href="/assets/landing/brochure/brosur.pdf"
-                                className="inline-flex items-center gap-3 bg-gray-800 border border-gray-600 px-6 py-3 rounded-xl hover:border-gold hover:text-gold transition group">
-                                <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center group-hover:bg-gold group-hover:text-navy transition">
-                                    <i className="fa-solid fa-file-pdf"></i>
+
+                        {/* Brochure Download Action */}
+                        <div className="pt-2">
+                            <a
+                                href="/assets/landing/brochure/brosur.pdf"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                download="Brosur_Al_Muntaha.pdf"
+                                className="inline-flex items-center gap-4 bg-white/[0.02] border border-white/10 hover:border-gold/30 px-5 py-3.5 rounded-xl hover:bg-gold/5 hover:shadow-lg hover:shadow-gold/5 transition-all duration-300 group"
+                                aria-label="Unduh Brosur Informasi Lengkap Al-Muntaha PDF"
+                            >
+                                {/* PDF Icon Wrapper with Micro-rotations on Hover */}
+                                <div className="w-9 h-9 rounded-lg bg-white/5 border border-white/5 flex items-center justify-center text-slate-300 group-hover:bg-gold group-hover:text-navy group-hover:border-gold/10 transition-all duration-300 transform group-hover:scale-105 group-hover:rotate-3">
+                                    <i className="fa-solid fa-file-pdf text-sm"></i>
                                 </div>
-                                <div className="text-left">
-                                    <p className="text-[10px] text-gray-400">Informasi Lengkap</p>
-                                    <p className="font-bold text-xs">Download Brosur PDF</p>
+
+                                {/* Action Text */}
+                                <div className="text-left space-y-0.5">
+                                    <p className="text-[10px] text-gray-400/80 font-bold tracking-wider uppercase">Informasi Lengkap</p>
+                                    <p className="font-bold text-xs text-white group-hover:text-gold transition-colors">Download Brosur PDF</p>
                                 </div>
                             </a>
                         </div>
                     </div>
 
-                    {/* Navigasi */}
+                    {/* Navigasi colum */}
                     <div className="lg:col-span-2 space-y-6">
                         <h4 className="font-bold text-lg text-white font-display">Akses Cepat</h4>
                         <ul className="space-y-3 text-sm text-gray-400">

@@ -65,7 +65,6 @@ function buildTickerItems(activeWave: AdmissionWaveData | null): string[] {
     ];
 
     if (activeWave.exam_info) items.push(`Tes seleksi: ${activeWave.exam_info}`);
-    // Info pengumuman
     if (activeWave.announcement_info) items.push(`Info: ${activeWave.announcement_info}`);
 
     items.push('Daftar sekarang dan amankan peluang terbaikmu');
@@ -73,11 +72,8 @@ function buildTickerItems(activeWave: AdmissionWaveData | null): string[] {
     return items;
 }
 
-// Komponen pemisah estetik
-const Divider = () => <span className="mx-3 text-white/10 select-none">|</span>;
-// Margin (mx) dikurangi agar spasi tidak terlalu jauh/kepanjangan
-const TickerDot = () => <span className="mx-3 text-gold/60 select-none text-[9px]">✦</span>;
-
+const Divider = () => <span className="mx-4 text-slate-500/20 select-none">|</span>;
+const TickerDot = () => <span className="mx-4 text-gold/50 select-none text-[8px] tracking-widest">✦</span>;
 
 // ── KOMPONEN UTAMA ────────────────────────────────────────────────────────────
 function TopBar({ activeWave }: TopBarProps) {
@@ -110,36 +106,43 @@ function TopBar({ activeWave }: TopBarProps) {
                 }
             `}</style>
 
-            <div className="w-full border-b border-white/5 bg-navy py-2.5 font-sans text-xs text-gray-300">
-                <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 sm:gap-6 lg:px-8">
+            {/* Container Utama dengan backdrop-blur untuk estetika modern */}
+            <div className="hidden md:block w-full border-b border-slate-800/70 bg-[#0b1220] py-2 sm:py-2.5 font-sans text-[11px] text-slate-200 transition-all duration-300 z-50">
+                {/* Lebar Container Sesuai Instruksi Baru */}
+                <div className="max-w-[108rem] mx-auto px-5 sm:px-7 lg:px-10 xl:px-12 flex items-center justify-between gap-6 sm:gap-8">
 
-                    {/* KIRI: Kontak (Email & Telepon) */}
-                    <div className="hidden shrink-0 items-center border-r border-white/5 pr-4 md:flex">
+                    {/* KIRI: Informasi Kontak */}
+                    <div className="hidden shrink-0 items-center border-r border-slate-700/70 pr-5 lg:flex">
                         <a
                             href={`mailto:${EMAIL_ADDRESS}`}
-                            className="group flex items-center gap-2 transition-colors duration-300 hover:text-white"
+                            className="group flex items-center gap-2 transition-all duration-300 hover:text-white"
                             aria-label={`Kirim email ke ${EMAIL_ADDRESS}`}
                         >
-                            <i className="fa-solid fa-envelope text-[11px] text-gold transition-transform duration-300 group-hover:-translate-y-0.5" aria-hidden="true" />
-                            <span className="font-medium tracking-wide">{EMAIL_ADDRESS}</span>
+                            <span className="flex items-center justify-center w-5 h-5 rounded-full bg-slate-800/40 border border-slate-500/10 group-hover:border-gold/35 group-hover:bg-gold/5 transition-all duration-300">
+                                <i className="fa-solid fa-envelope text-[10px] text-gold/90 transition-transform duration-300 group-hover:scale-105" aria-hidden="true" />
+                            </span>
+                            <span className="font-semibold tracking-wide text-slate-200 group-hover:text-white transition-colors">{EMAIL_ADDRESS}</span>
                         </a>
 
                         <Divider />
 
                         <a
                             href={`tel:${PHONE_NUMBER.replace(/[^\d+]/g, '')}`}
-                            className="group flex items-center gap-2 transition-colors duration-300 hover:text-white"
+                            className="group flex items-center gap-2 transition-all duration-300 hover:text-white"
                             aria-label={`Hubungi ${PHONE_NUMBER}`}
                         >
-                            <i className="fa-solid fa-phone text-[10px] text-gold transition-transform duration-300 group-hover:-translate-y-0.5" aria-hidden="true" />
-                            <span className="font-medium tracking-wide">{PHONE_NUMBER}</span>
+                            <span className="flex items-center justify-center w-5 h-5 rounded-full bg-slate-800/40 border border-slate-500/10 group-hover:border-gold/35 group-hover:bg-gold/5 transition-all duration-300">
+                                <i className="fa-solid fa-phone text-[9px] text-gold/90 transition-transform duration-300 group-hover:scale-105" aria-hidden="true" />
+                            </span>
+                            <span className="font-semibold tracking-wide text-slate-200 group-hover:text-white transition-colors">{PHONE_NUMBER}</span>
                         </a>
                     </div>
 
-                    {/* TENGAH: Infinite Running Text */}
-                    <div className="relative flex min-w-0 flex-1 items-center overflow-hidden">
-                        <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-8 bg-gradient-to-r from-navy to-transparent md:w-16" />
-                        <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-8 bg-gradient-to-l from-navy to-transparent md:w-16" />
+                    {/* TENGAH: Ticker Teks Berjalan */}
+                    <div className="relative flex min-w-0 flex-1 items-center overflow-hidden py-1">
+                        {/* Gradasi Halus di Tepi Ticker */}
+                        <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-12 bg-gradient-to-r from-[#0b1220] via-[#0b1220]/70 to-transparent" />
+                        <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-12 bg-gradient-to-l from-[#0b1220] via-[#0b1220]/70 to-transparent" />
 
                         <div className="w-full overflow-hidden">
                             <div
@@ -151,7 +154,9 @@ function TopBar({ activeWave }: TopBarProps) {
                                 <div className="flex items-center">
                                     {tickerTextArray.map((text, idx) => (
                                         <span key={`set1-${idx}`} className="flex items-center">
-                                            <span className="whitespace-nowrap font-medium tracking-wide text-gray-300/90">{text}</span>
+                                            <span className="whitespace-nowrap font-medium tracking-wide text-slate-200/90 hover:text-white transition-colors duration-200">
+                                                {text}
+                                            </span>
                                             <TickerDot />
                                         </span>
                                     ))}
@@ -160,7 +165,9 @@ function TopBar({ activeWave }: TopBarProps) {
                                 <div className="flex items-center" aria-hidden="true">
                                     {tickerTextArray.map((text, idx) => (
                                         <span key={`set2-${idx}`} className="flex items-center">
-                                            <span className="whitespace-nowrap font-medium tracking-wide text-gray-300/90">{text}</span>
+                                            <span className="whitespace-nowrap font-medium tracking-wide text-slate-200/90 hover:text-white transition-colors duration-200">
+                                                {text}
+                                            </span>
                                             <TickerDot />
                                         </span>
                                     ))}
@@ -170,12 +177,11 @@ function TopBar({ activeWave }: TopBarProps) {
                     </div>
 
                     {/* KANAN: Sosial Media */}
-                    <div className="hidden shrink-0 items-center gap-4 border-l border-white/5 pl-4 md:flex">
-                        {/* Diubah jadi Title Case & ukuran font sedikit disesuaikan agar rapi */}
-                        <span className="whitespace-nowrap text-[11px] font-medium tracking-wide text-gray-400/90">
-                            Tetap Terhubung :
+                    <div className="hidden shrink-0 items-center gap-4 border-l border-slate-700/70 pl-5 md:flex">
+                        <span className="whitespace-nowrap text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                            Sosial Media :
                         </span>
-                        <div className="flex items-center gap-3.5">
+                        <div className="flex items-center gap-2.5">
                             {SOCIAL_LINKS.map((link) => (
                                 <a
                                     key={link.ariaLabel}
@@ -184,9 +190,9 @@ function TopBar({ activeWave }: TopBarProps) {
                                     rel="noreferrer"
                                     aria-label={link.ariaLabel}
                                     title={link.title}
-                                    className="group relative flex items-center justify-center text-gray-400 transition-all duration-300 hover:text-gold hover:drop-shadow-glow"
+                                    className="group flex items-center justify-center w-7 h-7 rounded-lg bg-slate-800/35 border border-slate-500/10 text-gray-400 transition-all duration-300 hover:text-gold hover:border-gold/30 hover:bg-gold/5"
                                 >
-                                    <i className={`${link.iconClassName} text-[13px] transform transition-transform duration-300 group-hover:-translate-y-0.5`} aria-hidden="true" />
+                                    <i className={`${link.iconClassName} text-xs transform transition-transform duration-300 group-hover:-translate-y-0.5`} aria-hidden="true" />
                                 </a>
                             ))}
                         </div>

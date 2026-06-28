@@ -15,6 +15,7 @@ import HowToRegisterSection from '@/Components/Landing/HowToRegisterSection'
 import GallerySection from '@/Components/Landing/GallerySection'
 import Footer from '@/Components/Landing/Footer'
 import VideoModal from '@/Components/Landing/VideoModal'
+import { useLandingLenis } from '@/hooks/useLandingLenis'
 
 /*
  * ✅ FIX #5: Lazy import CinematicShowcase — component ini berat (35 media items,
@@ -28,6 +29,7 @@ export default function Welcome({ activeWave, auth }: WelcomeProps) {
     const { props } = usePage<PageProps>()
     const { app } = props
     const [videoModalOpen, setVideoModalOpen] = useState(false)
+    useLandingLenis()
 
     return (
         <>
@@ -50,6 +52,14 @@ export default function Welcome({ activeWave, auth }: WelcomeProps) {
                     media="(min-width: 769px)"
                     fetchPriority="high"
                 />
+                {app.logo && (
+                    <link
+                        rel="preload"
+                        as="image"
+                        href={app.logo}
+                        fetchPriority="high"
+                    />
+                )}
 
                 {/* SEO Meta - Boost SEO score 90+ */}
                 <meta name="description" content="Al-Muntaha Islamic Boarding School - Pendaftaran Siswa Baru Online. Gelombang aktif sekarang. Kuota terbatas." />
@@ -70,7 +80,7 @@ export default function Welcome({ activeWave, auth }: WelcomeProps) {
                 <link rel="canonical" href={window.location.href} />
             </Head>
 
-            <div className="font-sans text-navy bg-light antialiased scroll-smooth selection:bg-gold/30 selection:text-gold">
+            <div className="font-sans text-navy bg-light antialiased selection:bg-gold/30 selection:text-gold">
                 <TopBar activeWave={activeWave} />
                 <Navbar auth={auth} app={app} />
                 <HeroSection activeWave={activeWave} onOpenVideo={() => setVideoModalOpen(true)} />
