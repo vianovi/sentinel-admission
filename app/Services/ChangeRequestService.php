@@ -213,7 +213,7 @@ class ChangeRequestService
                 'pending_email_rejection_reason' => null,
             ])->save();
 
-            Log::info('Candidate email change approved and waiting candidate confirmation.', [
+            Log::info('Candidate email change manually verified by dashboard workflow.', [
                 'candidate_user_id' => $user->id,
                 'pending_email' => $pendingEmail,
                 'approved_by' => $actor->id,

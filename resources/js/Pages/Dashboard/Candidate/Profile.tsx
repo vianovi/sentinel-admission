@@ -301,7 +301,7 @@ export default function ProfilePage({
                             title={email_change_request.status === "approved" ? "Perubahan email siap diterapkan" : "Permintaan perubahan email ditolak"}
                             description={
                                 email_change_request.status === "approved"
-                                    ? `Perubahan email ke ${email_change_request.pending_email} telah disetujui oleh ${reviewedByLabel(email_change_request.reviewed_by_name)}. Login masih menggunakan email lama sampai kamu menerapkannya sendiri.`
+                                    ? `Perubahan email ke ${email_change_request.pending_email} telah disetujui dan diverifikasi manual oleh ${reviewedByLabel(email_change_request.reviewed_by_name)}. Login masih menggunakan email lama sampai kamu menerapkannya sendiri.`
                                     : `Permintaan perubahan email ditolak oleh ${reviewedByLabel(email_change_request.reviewed_by_name)}.${email_change_request.rejection_reason ? ` Alasan: ${email_change_request.rejection_reason}.` : ""}`
                             }
                             meta={email_change_request.reviewed_at ? `Ditinjau ${email_change_request.reviewed_at}` : null}
@@ -530,10 +530,10 @@ export default function ProfilePage({
                                         <i className="fa-solid fa-shield-check text-blue-500 mt-0.5 shrink-0"></i>
                                         <div>
                                             <p className="text-sm font-semibold text-blue-800 dark:text-blue-300">
-                                                Email baru sudah disetujui
+                                                Email baru sudah disetujui dan diverifikasi manual
                                             </p>
                                             <p className="text-xs text-blue-700 dark:text-blue-200 mt-0.5">
-                                                Login tetap memakai email lama sampai kamu menekan tombol terapkan untuk <span className="font-semibold">{email_change_request.pending_email}</span>.
+                                                Staff/admin sudah memeriksa email ini. Login tetap memakai email lama sampai kamu menekan tombol terapkan untuk <span className="font-semibold">{email_change_request.pending_email}</span>.
                                             </p>
                                         </div>
                                     </div>
@@ -568,7 +568,7 @@ export default function ProfilePage({
                                     <div className="bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-3 flex items-start gap-2">
                                         <i className="fa-solid fa-circle-info text-slate-400 mt-0.5 text-xs shrink-0"></i>
                                         <p className="text-xs text-slate-500 dark:text-slate-400">
-                                            Permintaan ganti email memerlukan persetujuan staff terlebih dahulu. Email login lama tetap aktif sampai kamu menerapkan email baru yang sudah disetujui.
+                                            Permintaan ganti email memerlukan persetujuan dan verifikasi manual staff/admin terlebih dahulu. Email login lama tetap aktif sampai kamu menerapkan email baru yang sudah disetujui.
                                         </p>
                                     </div>
 

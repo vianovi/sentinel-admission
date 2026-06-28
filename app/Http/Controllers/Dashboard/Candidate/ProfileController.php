@@ -255,6 +255,7 @@ class ProfileController extends Controller
 
         $user->forceFill([
             'email' => $pendingEmail,
+            'email_verified_at' => now(),
             'pending_email' => null,
             'pending_email_token' => null,
             'pending_email_status' => null,
@@ -264,6 +265,6 @@ class ProfileController extends Controller
             'pending_email_requested_at' => null,
         ])->save();
 
-        return back()->with('success', 'Email login berhasil diperbarui. Gunakan email baru ini untuk login berikutnya.');
+        return back()->with('success', 'Email login berhasil diperbarui dan sudah diverifikasi manual oleh staff/admin.');
     }
 }

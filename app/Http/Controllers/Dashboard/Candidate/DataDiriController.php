@@ -198,6 +198,11 @@ class DataDiriController extends Controller
     public function cancelDataChange(Request $request)
     {
         $candidate = $request->user()->candidate()->firstOrFail();
+
+        if (! $candidate->hasPendingChangeRequest()) {
+            return back()->with('error', 'Pengajuan perubahan data ini sudah ditinjau dan tidak dapat dibatalkan.');
+        }
+
         $candidate->update(['data_change_request' => null]);
 
         return back()->with('success', 'Pengajuan perubahan data dibatalkan.');

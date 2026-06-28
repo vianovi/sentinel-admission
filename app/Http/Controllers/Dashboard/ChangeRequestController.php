@@ -61,7 +61,7 @@ class ChangeRequestController extends Controller
         return $this->handleAction(
             $request,
             fn () => $this->changeRequestService->approveEmailRequest($candidate, $request->user()),
-            'Permintaan perubahan email disetujui. Kandidat masih harus menerapkan email baru secara manual.'
+            'Permintaan perubahan email disetujui dan diverifikasi manual. Kandidat dapat menerapkan email baru dari profil.'
         );
     }
 

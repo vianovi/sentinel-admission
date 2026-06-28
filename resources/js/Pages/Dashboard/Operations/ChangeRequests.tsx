@@ -185,11 +185,11 @@ export default function ChangeRequestsPage({ scope, data_requests, email_request
 
     const handleApproveEmail = async (item: EmailRequestItem) => {
         const confirmed = await swalDark.fire({
-            title: "Setujui perubahan email?",
-            html: `<p class="text-sm text-slate-300">Permintaan email <strong>${item.pending_email}</strong> untuk <strong>${item.candidate_name}</strong> akan ditandai siap diterapkan. Email login lama tetap aktif sampai kandidat mengonfirmasi sendiri.</p>`,
+            title: "Setujui dan verifikasi manual email?",
+            html: `<p class="text-sm text-slate-300">Pastikan email <strong>${item.pending_email}</strong> untuk <strong>${item.candidate_name}</strong> sudah diperiksa manual oleh staff/admin. Setelah disetujui, kandidat dapat menerapkan email baru dari profil.</p>`,
             icon: "question",
             showCancelButton: true,
-            confirmButtonText: "Ya, setujui",
+            confirmButtonText: "Ya, sudah diverifikasi",
             cancelButtonText: "Batal",
         });
 

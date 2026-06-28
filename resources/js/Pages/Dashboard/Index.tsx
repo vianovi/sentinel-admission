@@ -274,7 +274,7 @@ export default function CandidateDashboard({
                             title={email_change_request.status === "approved" ? "Perubahan email siap diterapkan" : "Permintaan perubahan email ditolak"}
                             description={
                                 email_change_request.status === "approved"
-                                    ? `Perubahan email ke ${email_change_request.pending_email} telah disetujui oleh ${reviewedByLabel(email_change_request.reviewed_by_name)}. Login masih memakai email lama sampai kamu menekan Terapkan Email Baru.`
+                                    ? `Perubahan email ke ${email_change_request.pending_email} telah disetujui dan diverifikasi manual oleh ${reviewedByLabel(email_change_request.reviewed_by_name)}. Login masih memakai email lama sampai kamu menekan Terapkan Email Baru.`
                                     : `Permintaan perubahan email ditolak oleh ${reviewedByLabel(email_change_request.reviewed_by_name)}.${email_change_request.rejection_reason ? ` Alasan: ${email_change_request.rejection_reason}.` : ""}`
                             }
                             meta={email_change_request.reviewed_at ? `Ditinjau ${email_change_request.reviewed_at}` : null}

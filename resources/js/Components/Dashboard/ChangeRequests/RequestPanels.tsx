@@ -289,7 +289,7 @@ export function EmailRequestCard({ item, scope, tone, onApprove, onReject }: Ema
             <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-white/10 dark:bg-white/5">
                 <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                     <i className={`fa-solid fa-shield-halved ${tone.icon}`} />
-                    Approval staff/admin hanya membuka langkah konfirmasi kandidat. Email login lama tetap aktif sampai kandidat menerapkan email baru sendiri.
+                    Approval berarti email baru sudah disetujui dan diverifikasi manual oleh staff/admin. Email login lama tetap aktif sampai kandidat menerapkan email baru sendiri.
                 </div>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
                     Diajukan {item.requested_at}
