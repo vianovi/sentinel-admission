@@ -120,18 +120,9 @@ const TABS = [
 
 type TabId = typeof TABS[number]["id"];
 
-// Field wajib untuk completion tracking & TabRangkuman
+// Field wajib mengikuti CandidateObserver auto-submit.
 const REQUIRED_FIELDS: EmptyField[] = [
     { key: "religion",      label: "Agama",              tab: "identitas" },
-    { key: "phoneNumber",   label: "Nomor HP/WA",        tab: "identitas" },
-    { key: "email",         label: "Email",              tab: "identitas" },
-    { key: "familyCardNo",  label: "No. Kartu Keluarga", tab: "identitas" },
-    { key: "childOrder",    label: "Anak ke-",           tab: "identitas" },
-    { key: "siblingsCount", label: "Jumlah Saudara",     tab: "identitas" },
-    { key: "postalCode",    label: "Kode Pos",           tab: "alamat" },
-    { key: "schoolNpsn",    label: "NPSN Sekolah",       tab: "alamat" },
-    { key: "hobbies",       label: "Hobi / Minat",       tab: "minat" },
-    { key: "ambitions",     label: "Cita-cita",          tab: "minat" },
     { key: "programChoice", label: "Pilihan Program",    tab: "program" },
 ];
 
@@ -619,8 +610,10 @@ export default function DataDiriPage({ user, candidate, data_change_request_resu
                                     dark:bg-content-card bg-slate-50
                                     p-1 gap-1 no-scrollbar">
                         {TABS.map((tab) => {
-                            const isActive    = activeTab === tab.id;
-                            const isRangkuman = tab.id === "rangkuman";
+                            const isActive = activeTab === tab.id;
+                            const hasMissingInTab = tab.id === "rangkuman"
+                                ? hasEmptyRequired
+                                : emptyRequiredFields.some(field => field.tab === tab.id);
                             return (
                                 <button
                                     key={tab.id}
@@ -639,8 +632,7 @@ export default function DataDiriPage({ user, candidate, data_change_request_resu
                                     {/* Label hanya tampil di sm ke atas */}
                                     <span className="hidden sm:inline whitespace-nowrap">{tab.label}</span>
 
-                                    {/* Dot amber — Rangkuman kalau ada field kosong */}
-                                    {isRangkuman && hasEmptyRequired && !isActive && (
+                                    {hasMissingInTab && !isActive && (
                                         <span className="absolute -right-0.5 -top-0.5
                                                          h-2 w-2 rounded-full bg-amber-400" />
                                     )}

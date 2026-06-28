@@ -35,7 +35,22 @@ const TABS = [
     { key: 'wali',            label: 'Wali',            icon: 'fa-solid fa-user-shield' },
     { key: 'profil-keluarga', label: 'Profil Keluarga', icon: 'fa-solid fa-house' },
     { key: 'rangkuman',       label: 'Rangkuman',       icon: 'fa-solid fa-list-check' },
+] as const
+
+type WaliTabKey = typeof TABS[number]['key']
+
+const REQUIRED_FIELDS: { key: keyof GuardianData; label: string; tab: WaliTabKey }[] = [
+    { key: 'father_status', label: 'Status ayah', tab: 'ayah' },
+    { key: 'mother_status', label: 'Status ibu', tab: 'ibu' },
+    { key: 'mother_name', label: 'Nama ibu', tab: 'ibu' },
+    { key: 'no_kk', label: 'Nomor KK', tab: 'profil-keluarga' },
+    { key: 'income_type', label: 'Tipe penghasilan', tab: 'profil-keluarga' },
 ]
+
+const isBlank = (value: unknown): boolean => {
+    if (value === null || value === undefined) return true
+    return typeof value === 'string' ? value.trim() === '' : false
+}
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -73,6 +88,8 @@ export default function DataWali({ guardian, completion: initialCompletion, user
     const contentRef     = useRef<HTMLDivElement>(null)
     const rangkumanIndex = TABS.length - 1
     const isRangkuman    = activeTab === rangkumanIndex
+    const emptyRequiredFields = REQUIRED_FIELDS.filter(field => isBlank(form[field.key]))
+    const hasEmptyRequired = emptyRequiredFields.length > 0
 
     // ── Entrance animation ────────────────────────────────────────────────────
     useEffect(() => {
@@ -263,8 +280,10 @@ export default function DataWali({ guardian, completion: initialCompletion, user
                                     dark:bg-content-card bg-slate-50
                                     p-1 gap-1 no-scrollbar">
                         {TABS.map((tab, idx) => {
-                            const isActive       = activeTab === idx
-                            const isRangkumanTab = idx === rangkumanIndex
+                            const isActive = activeTab === idx
+                            const hasMissingInTab = tab.key === 'rangkuman'
+                                ? hasEmptyRequired
+                                : emptyRequiredFields.some(field => field.tab === tab.key)
                             return (
                                 <button
                                     key={tab.key}
@@ -282,7 +301,7 @@ export default function DataWali({ guardian, completion: initialCompletion, user
                                     <i className={`${tab.icon} text-xs shrink-0`} />
                                     <span className="hidden sm:inline whitespace-nowrap">{tab.label}</span>
 
-                                    {isRangkumanTab && completion < 100 && !isActive && (
+                                    {hasMissingInTab && !isActive && (
                                         <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-amber-400" />
                                     )}
                                 </button>
@@ -307,6 +326,7 @@ export default function DataWali({ guardian, completion: initialCompletion, user
                         <TabRangkuman
                             data={form}
                             completion={completion}
+                            emptyRequiredFields={emptyRequiredFields}
                             onGoToTab={switchTab}
                             onSubmitAll={handleSubmitAll}
                             submitting={submitting}

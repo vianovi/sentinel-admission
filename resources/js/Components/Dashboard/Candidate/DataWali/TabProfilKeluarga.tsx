@@ -100,8 +100,7 @@ export default function TabProfilKeluarga({ data, errors, onChange }: Props) {
 
             <Field
                 label="Email yang Dapat Dihubungi"
-                hint="Email Ayah / Ibu / keluarga untuk keperluan komunikasi"
-                required
+                hint="Opsional. Email Ayah / Ibu / keluarga untuk keperluan komunikasi"
                 error={errors.family_email}
             >
                 <input

@@ -117,7 +117,6 @@ const REQUIRED_FIELDS: EmptyField[] = [
     { key: "allergyMedicine",  label: "Alergi Obat",             tab: "riwayat" },
     { key: "allergyCondition", label: "Alergi Kondisi",          tab: "riwayat" },
     { key: "physicalDisab",    label: "Disabilitas Fisik",       tab: "riwayat" },
-    { key: "bpjsCardUpload",   label: "Kartu BPJS / JKN",        tab: "catatan" },
 ];
 
 const REQUIRED_BY_TAB: Record<string, string[]> = {
@@ -213,13 +212,11 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
         eyeRightType, eyeLeftType,
         majorIllnesses, lastIllness,
         allergyFood, allergyMedicine, allergyCondition, physicalDisab,
-        bpjsCardUpload: bpjsCardUrl,
     }), [
         bloodType, rhesus, heightCm, weightKg, generalHealth,
         eyeRightType, eyeLeftType,
         majorIllnesses, lastIllness,
         allergyFood, allergyMedicine, allergyCondition, physicalDisab,
-        bpjsCardUrl,
     ]);
 
     const emptyRequiredFields = useMemo(

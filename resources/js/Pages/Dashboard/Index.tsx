@@ -1,49 +1,16 @@
-import { useEffect, useState } from "react";
-import { animate, stagger } from "animejs";
-import { Head, router } from "@inertiajs/react";
-import DashboardLayout from "@/Layouts/DashboardLayout";
+import { Head, Link, router } from "@inertiajs/react";
+import { useState } from "react";
+import DocumentPaymentSummary from "@/Components/Dashboard/Candidate/Index/DocumentPaymentSummary";
+import IdentityHero from "@/Components/Dashboard/Candidate/Index/IdentityHero";
+import NextActionPanel from "@/Components/Dashboard/Candidate/Index/NextActionPanel";
+import ProgressOverview from "@/Components/Dashboard/Candidate/Index/ProgressOverview";
+import StatusTimeline from "@/Components/Dashboard/Candidate/Index/StatusTimeline";
+import type { CandidateDashboardData } from "@/Components/Dashboard/Candidate/Index/types";
 import RequestStatusBanner from "@/Components/Dashboard/Candidate/Shared/RequestStatusBanner";
-
-// ─── Types ───────────────────────────────────────────────────────────────────
-
-type AdmissionWave = {
-    title:         string;
-    academic_year: string;
-    end_date:      string | null;
-} | null;
+import DashboardLayout from "@/Layouts/DashboardLayout";
 
 type Candidate = {
-    id:              number;
-    full_name:       string;
-    nisn:            string;
-    nik:             string;
-    gender_label:    string;
-    place_of_birth:  string;
-    date_of_birth:   string | null;
-    school_origin:   string;
-    address_full:    string;
-    status:          "draft" | "submitted" | "verified" | "accepted" | "rejected";
-    admission_wave:  AdmissionWave;
-} | null;
-
-type Document = {
-    id:             number;
-    document_type:  string;
-    document_owner: string;
-    status:         "pending" | "valid" | "invalid";
-    admin_note:     string | null;
-    created_at:     string;
-};
-
-type Payment = {
-    id:               number;
-    transaction_code: string;
-    payment_method:   string;
-    expected_amount:  number;
-    amount:           number | null;
-    status:           string;
-    verified_at:      string | null;
-    admin_note:       string | null;
+    id: number;
 } | null;
 
 type EmailChangeRequest = {
@@ -72,107 +39,51 @@ type DataChangeRequestResult = {
     review_note: string | null;
 } | null;
 
+type PendingDataChangeRequest = {
+    field: string;
+    field_label: string;
+    old_value: string;
+    new_value: string;
+    reason: string | null;
+    requested_at: string | null;
+} | null;
+
 type Props = {
-    candidate:      Candidate;
-    documents:      Document[];
-    payment:        Payment;
+    candidate: Candidate;
+    dashboard: CandidateDashboardData | null;
     email_verified: boolean;
     email_change_request: EmailChangeRequest;
     data_change_request_result: DataChangeRequestResult;
+    data_change_request_pending: PendingDataChangeRequest;
     flash?: { success?: string; error?: string };
 };
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+const reviewedByLabel = (name: string | null | undefined): string => name ?? "petugas";
 
-const statusBadge = (status: string) => {
-    const map: Record<string, string> = {
-        draft:     "bg-slate-100 text-slate-600",
-        submitted: "bg-blue-50 text-blue-600",
-        verified:  "bg-amber-50 text-amber-600",
-        accepted:  "bg-emerald-50 text-emerald-700",
-        rejected:  "bg-red-50 text-red-600",
-        pending:   "bg-orange-50 text-orange-600",
-        valid:     "bg-emerald-50 text-emerald-700",
-        invalid:   "bg-red-50 text-red-600",
-    };
-    return map[status] ?? "bg-slate-100 text-slate-500";
-};
+function Alert({ tone, message }: { tone: "success" | "error"; message: string }) {
+    const classes = tone === "success"
+        ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-200"
+        : "border-red-200 bg-red-50 text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-200";
+    const icon = tone === "success" ? "fa-solid fa-circle-check" : "fa-solid fa-circle-exclamation";
 
-const statusLabel = (status: string) => {
-    const map: Record<string, string> = {
-        draft:     "Draft",
-        submitted: "Menunggu Verifikasi",
-        verified:  "Terverifikasi",
-        accepted:  "Diterima",
-        rejected:  "Ditolak",
-        pending:   "Pending",
-        valid:     "Valid",
-        invalid:   "Tidak Valid",
-    };
-    return map[status] ?? status;
-};
-
-const statusIcon = (status: string) => {
-    const map: Record<string, string> = {
-        draft:     "fa-solid fa-pen-to-square text-slate-500",
-        submitted: "fa-solid fa-paper-plane text-blue-500",
-        verified:  "fa-solid fa-magnifying-glass text-amber-500",
-        accepted:  "fa-solid fa-circle-check text-emerald-500",
-        rejected:  "fa-solid fa-circle-xmark text-red-500",
-    };
-    return map[status] ?? "fa-solid fa-circle text-slate-400";
-};
-
-const timelineSteps = [
-    { key: "draft",     label: "Data Tersimpan" },
-    { key: "submitted", label: "Dokumen Diupload" },
-    { key: "verified",  label: "Dokumen Diverifikasi" },
-    { key: "accepted",  label: "Diterima" },
-];
-
-const stepOrder = ["draft", "submitted", "verified", "accepted", "rejected"];
-
-const getStepIndex = (status: string) => stepOrder.indexOf(status);
-
-const formatRupiah = (amount: number) =>
-    new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(amount);
-
-const docTypeLabel = (type: string) => {
-    const map: Record<string, string> = {
-        kk:             "Kartu Keluarga",
-        akta:           "Akta Kelahiran",
-        ijazah:         "Ijazah / SKL",
-        foto:           "Pas Foto",
-        rapor:          "Rapor",
-        surat_domisili: "Surat Domisili",
-    };
-    return map[type] ?? type;
-};
-
-const reviewedByLabel = (name: string | null | undefined) => name ?? "petugas";
-
-// ─── Component ───────────────────────────────────────────────────────────────
+    return (
+        <div className={`flex items-start gap-3 rounded-2xl border px-5 py-4 ${classes}`}>
+            <i className={`${icon} mt-0.5 shrink-0`} />
+            <p className="text-sm font-semibold">{message}</p>
+        </div>
+    );
+}
 
 export default function CandidateDashboard({
     candidate,
-    documents,
-    payment,
+    dashboard,
     email_verified,
     email_change_request,
     data_change_request_result,
+    data_change_request_pending,
     flash,
 }: Props) {
     const [applyEmailProcessing, setApplyEmailProcessing] = useState(false);
-
-    useEffect(() => {
-        animate(".card-item", {
-            opacity:    [0, 1],
-            translateY: [20, 0],
-            duration:   600,
-            delay:      stagger(80),
-            ease:       "outExpo",
-        });
-    }, []);
 
     const handleApplyApprovedEmail = () => {
         setApplyEmailProcessing(true);
@@ -183,295 +94,118 @@ export default function CandidateDashboard({
         });
     };
 
-    // ── Null candidate state ──────────────────────────────────────────────────
-    if (!candidate) {
+    if (!candidate || !dashboard) {
         return (
             <DashboardLayout>
                 <Head title="Dashboard Pendaftar" />
-                <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-                    <div className="w-16 h-16 rounded-2xl bg-gold/10 border border-gold/20 flex items-center justify-center mb-4">
-                        <i className="fa-solid fa-graduation-cap text-gold text-2xl"></i>
+                <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 text-center">
+                    <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-gold/20 bg-gold/10">
+                        <i className="fa-solid fa-graduation-cap text-2xl text-gold" />
                     </div>
-                    <h2 className="text-lg font-display font-bold text-slate-800 dark:text-white">
+                    <h1 className="text-lg font-bold text-slate-800 dark:text-white">
                         Belum Ada Data Pendaftaran
-                    </h2>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 max-w-sm">
-                        Kamu belum memulai proses pendaftaran. Klik tombol di bawah untuk memulai.
+                    </h1>
+                    <p className="mt-2 max-w-sm text-sm leading-6 text-slate-500 dark:text-slate-400">
+                        Akun ini belum memiliki data kandidat. Silakan mulai pendaftaran dari halaman utama.
                     </p>
-                    <a
-                        href="/admission/register"
-                        className="mt-6 bg-gold hover:bg-goldhover text-navy px-6 py-2.5 rounded-xl font-semibold text-sm shadow-glow transition hover:-translate-y-0.5"
+                    <Link
+                        href="/"
+                        className="mt-6 inline-flex min-h-11 items-center justify-center rounded-xl bg-gold px-6 py-2.5 text-sm font-bold text-navy shadow-glow transition hover:bg-goldhover"
                     >
-                        Mulai Pendaftaran
-                    </a>
+                        Ke Halaman Utama
+                    </Link>
                 </div>
             </DashboardLayout>
         );
     }
 
-    const currentStepIndex = getStepIndex(candidate.status);
-
     return (
         <DashboardLayout>
             <Head title="Dashboard Pendaftar" />
 
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-5 px-4 py-5 sm:px-6 lg:gap-6">
+                {flash?.success && <Alert tone="success" message={flash.success} />}
+                {flash?.error && <Alert tone="error" message={flash.error} />}
 
-                {flash?.success && (
-                    <div className="card-item opacity-0 bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-4 flex items-start gap-3">
-                        <i className="fa-solid fa-circle-check text-emerald-500 mt-0.5 flex-shrink-0"></i>
-                        <p className="text-sm font-semibold text-emerald-700">{flash.success}</p>
-                    </div>
-                )}
-
-                {flash?.error && (
-                    <div className="card-item opacity-0 bg-red-50 border border-red-200 rounded-2xl px-5 py-4 flex items-start gap-3">
-                        <i className="fa-solid fa-circle-exclamation text-red-500 mt-0.5 flex-shrink-0"></i>
-                        <p className="text-sm font-semibold text-red-700">{flash.error}</p>
-                    </div>
-                )}
-
-                {/* ── Email verification banner ── */}
                 {!email_verified && (
-                    <div className="card-item opacity-0 bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4 flex items-start gap-3">
-                        <i className="fa-solid fa-circle-info text-amber-500 mt-0.5 flex-shrink-0"></i>
-                        <div className="flex-1">
-                            <p className="text-sm font-semibold text-amber-800">Email belum diverifikasi</p>
-                            <p className="text-xs text-amber-600 mt-0.5">
-                                Silakan cek inbox kamu dan klik link verifikasi untuk melanjutkan proses pendaftaran.
-                            </p>
+                    <div className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 dark:border-amber-500/20 dark:bg-amber-500/10 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-start gap-3">
+                            <i className="fa-solid fa-circle-info mt-0.5 shrink-0 text-amber-500" />
+                            <div>
+                                <p className="text-sm font-bold text-amber-800 dark:text-amber-200">Email belum diverifikasi</p>
+                                <p className="mt-0.5 text-xs leading-5 text-amber-700 dark:text-amber-300">
+                                    Verifikasi email membantu memastikan akun pendaftaranmu aman dan aktif.
+                                </p>
+                            </div>
                         </div>
-                        <a
+                        <Link
                             href="/email/verify"
-                            className="text-xs font-semibold text-amber-700 hover:text-amber-900 transition shrink-0"
+                            className="inline-flex min-h-11 items-center justify-center rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-amber-600"
                         >
-                            Verifikasi →
-                        </a>
+                            Verifikasi Email
+                        </Link>
                     </div>
                 )}
 
                 {data_change_request_result && (
-                    <div className="card-item opacity-0">
-                        <RequestStatusBanner
-                            tone={data_change_request_result.status === "approved" ? "emerald" : "red"}
-                            icon={data_change_request_result.status === "approved" ? "fa-solid fa-file-circle-check" : "fa-solid fa-file-circle-xmark"}
-                            title={data_change_request_result.status === "approved" ? "Permintaan perubahan data disetujui" : "Permintaan perubahan data ditolak"}
-                            description={
-                                data_change_request_result.status === "approved"
-                                    ? `Permintaan perubahan data ${data_change_request_result.field_label.toLowerCase()} disetujui oleh ${reviewedByLabel(data_change_request_result.reviewed_by_name)}. Data kamu sudah diperbarui.`
-                                    : `Permintaan perubahan data ditolak oleh ${reviewedByLabel(data_change_request_result.reviewed_by_name)}.${data_change_request_result.rejection_reason ? ` Alasan: ${data_change_request_result.rejection_reason}.` : ""}`
-                            }
-                            meta={data_change_request_result.reviewed_at ? `Ditinjau ${data_change_request_result.reviewed_at}` : null}
-                        />
-                    </div>
+                    <RequestStatusBanner
+                        tone={data_change_request_result.status === "approved" ? "emerald" : "red"}
+                        icon={data_change_request_result.status === "approved" ? "fa-solid fa-file-circle-check" : "fa-solid fa-file-circle-xmark"}
+                        title={data_change_request_result.status === "approved" ? "Permintaan perubahan data disetujui" : "Permintaan perubahan data ditolak"}
+                        description={
+                            data_change_request_result.status === "approved"
+                                ? `Permintaan perubahan data ${data_change_request_result.field_label.toLowerCase()} disetujui oleh ${reviewedByLabel(data_change_request_result.reviewed_by_name)}. Data kamu sudah diperbarui.`
+                                : `Permintaan perubahan data ditolak oleh ${reviewedByLabel(data_change_request_result.reviewed_by_name)}.${data_change_request_result.rejection_reason ? ` Alasan: ${data_change_request_result.rejection_reason}.` : ""}`
+                        }
+                        meta={data_change_request_result.reviewed_at ? `Ditinjau ${data_change_request_result.reviewed_at}` : null}
+                    />
+                )}
+
+                {data_change_request_pending && (
+                    <RequestStatusBanner
+                        tone="blue"
+                        icon="fa-solid fa-file-circle-question"
+                        title="Permintaan perubahan data sedang ditinjau"
+                        description={`Perubahan ${data_change_request_pending.field_label.toLowerCase()} dari "${data_change_request_pending.old_value}" ke "${data_change_request_pending.new_value}" sedang menunggu keputusan panitia.`}
+                        meta={data_change_request_pending.requested_at ? `Diajukan ${data_change_request_pending.requested_at}` : null}
+                    />
+                )}
+
+                {email_change_request && email_change_request.status === "pending" && (
+                    <RequestStatusBanner
+                        tone="blue"
+                        icon="fa-solid fa-envelope-open-text"
+                        title="Permintaan perubahan email sedang ditinjau"
+                        description={`Email baru ${email_change_request.pending_email} sedang menunggu persetujuan panitia. Login tetap memakai ${email_change_request.current_email} sampai proses selesai.`}
+                        meta={email_change_request.requested_at ? `Diajukan ${email_change_request.requested_at}` : null}
+                    />
                 )}
 
                 {email_change_request && email_change_request.status !== "pending" && (
-                    <div className="card-item opacity-0">
-                        <RequestStatusBanner
-                            tone={email_change_request.status === "approved" ? "amber" : "red"}
-                            icon={email_change_request.status === "approved" ? "fa-solid fa-envelope-circle-check" : "fa-solid fa-envelope-circle-xmark"}
-                            title={email_change_request.status === "approved" ? "Perubahan email siap diterapkan" : "Permintaan perubahan email ditolak"}
-                            description={
-                                email_change_request.status === "approved"
-                                    ? `Perubahan email ke ${email_change_request.pending_email} telah disetujui dan diverifikasi manual oleh ${reviewedByLabel(email_change_request.reviewed_by_name)}. Login masih memakai email lama sampai kamu menekan Terapkan Email Baru.`
-                                    : `Permintaan perubahan email ditolak oleh ${reviewedByLabel(email_change_request.reviewed_by_name)}.${email_change_request.rejection_reason ? ` Alasan: ${email_change_request.rejection_reason}.` : ""}`
-                            }
-                            meta={email_change_request.reviewed_at ? `Ditinjau ${email_change_request.reviewed_at}` : null}
-                            actions={email_change_request.can_apply ? [{
-                                label: "Terapkan Email Baru",
-                                icon: applyEmailProcessing ? "fa-solid fa-spinner fa-spin" : "fa-solid fa-check",
-                                onClick: handleApplyApprovedEmail,
-                                disabled: applyEmailProcessing,
-                            }] : []}
-                        />
-                    </div>
+                    <RequestStatusBanner
+                        tone={email_change_request.status === "approved" ? "amber" : "red"}
+                        icon={email_change_request.status === "approved" ? "fa-solid fa-envelope-circle-check" : "fa-solid fa-envelope-circle-xmark"}
+                        title={email_change_request.status === "approved" ? "Perubahan email siap diterapkan" : "Permintaan perubahan email ditolak"}
+                        description={
+                            email_change_request.status === "approved"
+                                ? `Perubahan email ke ${email_change_request.pending_email} telah disetujui dan diverifikasi manual oleh ${reviewedByLabel(email_change_request.reviewed_by_name)}. Login masih memakai email lama sampai kamu menekan Terapkan Email Baru.`
+                                : `Permintaan perubahan email ditolak oleh ${reviewedByLabel(email_change_request.reviewed_by_name)}.${email_change_request.rejection_reason ? ` Alasan: ${email_change_request.rejection_reason}.` : ""}`
+                        }
+                        meta={email_change_request.reviewed_at ? `Ditinjau ${email_change_request.reviewed_at}` : null}
+                        actions={email_change_request.can_apply ? [{
+                            label: "Terapkan Email Baru",
+                            icon: applyEmailProcessing ? "fa-solid fa-spinner fa-spin" : "fa-solid fa-check",
+                            onClick: handleApplyApprovedEmail,
+                            disabled: applyEmailProcessing,
+                        }] : []}
+                    />
                 )}
 
-                {/* ── Greeting + info gelombang ── */}
-                <div className="card-item opacity-0 bg-navy rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center gap-4">
-                    <div className="flex-1">
-                        <p className="text-[11px] uppercase tracking-[0.2em] text-gold font-semibold mb-1">
-                            Selamat Datang
-                        </p>
-                        <h1 className="text-xl font-display font-bold text-white">
-                            {candidate.full_name}
-                        </h1>
-                        <p className="text-sm text-slate-400 mt-1">
-                            NISN: <span className="text-slate-300 font-medium">{candidate.nisn}</span>
-                            <span className="mx-2 text-slate-600">·</span>
-                            Asal: <span className="text-slate-300 font-medium">{candidate.school_origin}</span>
-                        </p>
-                    </div>
-                    <div className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-right shrink-0">
-                        <p className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Gelombang</p>
-                        <p className="text-sm font-display font-bold text-white mt-0.5">
-                            {candidate.admission_wave?.title ?? "-"}
-                        </p>
-                        <p className="text-[11px] text-slate-400 mt-0.5">
-                            {candidate.admission_wave?.academic_year ?? ""}
-                        </p>
-                    </div>
-                </div>
-
-                {/* ── Status timeline ── */}
-                <div className="card-item opacity-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-6 shadow-soft">
-                    <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-sm font-display font-semibold text-slate-800 dark:text-white">
-                            Status Pendaftaran
-                        </h2>
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold ${statusBadge(candidate.status)}`}>
-                            {statusLabel(candidate.status)}
-                        </span>
-                    </div>
-
-                    {/* Timeline steps */}
-                    <div className="flex items-start gap-0">
-                        {timelineSteps.map((step, i) => {
-                            const isDone    = currentStepIndex > i || (candidate.status === "accepted" && i === 3);
-                            const isActive  = candidate.status === step.key || (candidate.status === "rejected" && i === currentStepIndex);
-                            const isRejected = candidate.status === "rejected" && i === currentStepIndex;
-                            const isLast    = i === timelineSteps.length - 1;
-
-                            return (
-                                <div key={step.key} className={`flex flex-col items-center ${!isLast ? "flex-1" : ""}`}>
-                                    <div className="flex items-center w-full">
-                                        {/* Circle */}
-                                        <div className={`
-                                            w-8 h-8 rounded-xl flex items-center justify-center shrink-0 z-10
-                                            ${isDone    ? "bg-gold shadow-glow"                          : ""}
-                                            ${isActive && !isRejected ? "bg-gold/20 border-2 border-gold" : ""}
-                                            ${isRejected ? "bg-red-100 border-2 border-red-400"          : ""}
-                                            ${!isDone && !isActive ? "bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10" : ""}
-                                        `}>
-                                            {isDone && <i className="fa-solid fa-check text-navy text-xs"></i>}
-                                            {isActive && !isRejected && <i className={`${statusIcon(step.key)} text-xs`}></i>}
-                                            {isRejected && <i className="fa-solid fa-xmark text-red-500 text-xs"></i>}
-                                            {!isDone && !isActive && (
-                                                <span className="text-xs font-bold text-slate-400">{i + 1}</span>
-                                            )}
-                                        </div>
-
-                                        {/* Connector line */}
-                                        {!isLast && (
-                                            <div className={`flex-1 h-0.5 mx-1 rounded-full transition-all duration-500 ${isDone ? "bg-gold" : "bg-slate-200 dark:bg-white/10"}`} />
-                                        )}
-                                    </div>
-
-                                    {/* Label */}
-                                    <p className={`
-                                        text-[10px] font-semibold mt-2 text-center leading-tight
-                                        ${isDone || isActive ? "text-slate-700 dark:text-slate-200" : "text-slate-400"}
-                                    `}>
-                                        {step.label}
-                                    </p>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-
-                {/* ── Dokumen + Pembayaran grid ── */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-                    {/* Dokumen */}
-                    <div className="card-item opacity-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-6 shadow-soft">
-                        <div className="flex items-center justify-between mb-5">
-                            <h2 className="text-sm font-display font-semibold text-slate-800 dark:text-white">
-                                Dokumen Pendaftaran
-                            </h2>
-                            <div className="w-8 h-8 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center">
-                                <i className="fa-solid fa-file-lines text-gold text-xs"></i>
-                            </div>
-                        </div>
-
-                        {documents.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-8 text-center">
-                                <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-white/5 flex items-center justify-center mb-3">
-                                    <i className="fa-solid fa-folder-open text-slate-400 text-lg"></i>
-                                </div>
-                                <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">Belum ada dokumen</p>
-                                <p className="text-xs text-slate-400 mt-1">Upload dokumen untuk melanjutkan pendaftaran</p>
-                            </div>
-                        ) : (
-                            <ul className="flex flex-col gap-2.5">
-                                {documents.map((doc) => (
-                                    <li key={doc.id} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
-                                        <div className="w-8 h-8 rounded-xl bg-white dark:bg-white/10 border border-slate-200 dark:border-white/10 flex items-center justify-center shrink-0">
-                                            <i className="fa-solid fa-file text-slate-400 text-xs"></i>
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate">
-                                                {docTypeLabel(doc.document_type)}
-                                            </p>
-                                            {doc.admin_note && (
-                                                <p className="text-[11px] text-slate-400 mt-0.5 truncate">{doc.admin_note}</p>
-                                            )}
-                                        </div>
-                                        <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[11px] font-semibold shrink-0 ${statusBadge(doc.status)}`}>
-                                            {statusLabel(doc.status)}
-                                        </span>
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
-                    </div>
-
-                    {/* Pembayaran */}
-                    <div className="card-item opacity-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-6 shadow-soft">
-                        <div className="flex items-center justify-between mb-5">
-                            <h2 className="text-sm font-display font-semibold text-slate-800 dark:text-white">
-                                Informasi Pembayaran
-                            </h2>
-                            <div className="w-8 h-8 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center">
-                                <i className="fa-solid fa-credit-card text-gold text-xs"></i>
-                            </div>
-                        </div>
-
-                        {!payment ? (
-                            <div className="flex flex-col items-center justify-center py-8 text-center">
-                                <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-white/5 flex items-center justify-center mb-3">
-                                    <i className="fa-solid fa-receipt text-slate-400 text-lg"></i>
-                                </div>
-                                <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">Belum ada tagihan</p>
-                                <p className="text-xs text-slate-400 mt-1">Tagihan akan muncul setelah dokumen diverifikasi</p>
-                            </div>
-                        ) : (
-                            <div className="flex flex-col gap-3">
-                                {/* Amount highlight */}
-                                <div className="bg-navy rounded-xl p-4 flex items-center justify-between">
-                                    <div>
-                                        <p className="text-[10px] uppercase tracking-widest text-slate-400 font-semibold">Total Tagihan</p>
-                                        <p className="text-2xl font-display font-bold text-white mt-1">
-                                            {formatRupiah(payment.expected_amount)}
-                                        </p>
-                                    </div>
-                                    <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold ${statusBadge(payment.status)}`}>
-                                        {statusLabel(payment.status)}
-                                    </span>
-                                </div>
-
-                                {/* Transaction code */}
-                                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
-                                    <div>
-                                        <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Kode Transaksi</p>
-                                        <p className="text-sm font-mono font-semibold text-slate-700 dark:text-slate-200 mt-0.5">
-                                            {payment.transaction_code}
-                                        </p>
-                                    </div>
-                                    <button
-                                        onClick={() => navigator.clipboard.writeText(payment.transaction_code)}
-                                        className="w-8 h-8 rounded-xl bg-white dark:bg-white/10 border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-400 hover:text-gold transition"
-                                        title="Salin kode"
-                                    >
-                                        <i className="fa-solid fa-copy text-xs"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
+                <IdentityHero identity={dashboard.identity} />
+                <NextActionPanel action={dashboard.next_action} />
+                <ProgressOverview progress={dashboard.progress} />
+                <DocumentPaymentSummary documents={dashboard.documents_summary} payment={dashboard.payment_summary} />
+                <StatusTimeline status={dashboard.status_summary} />
             </div>
         </DashboardLayout>
     );

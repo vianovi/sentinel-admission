@@ -82,7 +82,7 @@ Work labels like bendahara, administrasi, operator, verifikator, or panitia are 
 
 | Feature | Status | Notes |
 |---|---|---|
-| Dashboard | ✅ Active | Main dashboard active |
+| Dashboard | ✅ Active | Candidate Dashboard V2 active as Admission Journey Center: identity summary, progress overview, next action, document/payment summary, and status timeline |
 | Profile | ✅ Active | Profile + email change request UI exists |
 | Data Diri | ✅ Active | Show/update + data change request active |
 | Data Wali | ✅ Active | Form save active; guardian auto `firstOrCreate` |
@@ -145,6 +145,7 @@ Important correction:
 | Candidate Data Wali V2 | Wizard-style nav, guardian save active |
 | Candidate Data Dokumen V2 | Upload, preview, download, delete active |
 | Candidate Pembayaran V2 | Gateway/manual/cash, proof upload, cancel active |
+| Candidate Dashboard V2 | Admission Journey Center active with dashboard-oriented backend props, reusable React components, progress/next-action/status summaries |
 | Error Pages | 404 NotFound + comingSoon mode exists |
 | Auto-Submitted Observer | CandidateObserver + GuardianObserver + HealthRecordObserver |
 | Backend Document Security | DocumentSecurityService, magic bytes, polyglot scan, security model |
@@ -185,6 +186,7 @@ Still needs final product decision:
 
 Current state:
 - Candidate status is visible in dashboard/profile.
+- Candidate Dashboard V2 now includes a simple status timeline/summary on `/dashboard`.
 - Dedicated sidebar route `/dashboard/status` exists and opens ComingSoon.
 
 Decision:
@@ -293,10 +295,30 @@ PHASE 3 — Admin Subpages
 [x] Make admin pages functional, not static placeholders
 
 PHASE 4 — Candidate Status & Future Pages
-[ ] Build candidate Status page or keep ComingSoon
+[x] Keep candidate Status page as ComingSoon and show simple status timeline on Candidate Dashboard V2
 [x] Kalender SPMB
 [ ] Informasi page
 [ ] Reports/exports when data shape is stable
+
+## Candidate Dashboard V2 Manual Validation Checklist
+
+```txt
+[ ] Login as candidate
+[ ] Open /dashboard
+[ ] Check identity summary, admission wave, program, and contact summary
+[ ] Check progress summary and each linked progress card
+[ ] Check next-action card changes based on missing/rejected data
+[ ] Open Data Diri link
+[ ] Open Data Wali link
+[ ] Open Data Kesehatan link
+[ ] Open Dokumen link
+[ ] Open Pembayaran link
+[ ] Check pending/approved/rejected data or email request banner if available
+[ ] Check mobile width around 390px
+[ ] Confirm Staff dashboard still opens
+[ ] Confirm Admin dashboard still opens
+[ ] Confirm no direct private file URL/path is exposed in dashboard props
+```
 
 PHASE 5 — Final Polish & Production
 [ ] Staff/Admin UI polish

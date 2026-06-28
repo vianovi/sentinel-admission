@@ -3,6 +3,13 @@
 import { memo, useEffect }        from "react";
 import { animate, stagger } from "animejs";
 import FilePreviewModal      from "@/Components/UI/FilePreviewModal";
+import {
+    SummaryActionFooter,
+    SummaryEmptyState,
+    SummaryStatus,
+    SummaryWarning,
+    type SummaryMissingGroup,
+} from "@/Components/Dashboard/Candidate/Shared/SummaryLayout";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -168,7 +175,7 @@ export default memo(function TabRangkuman({
     } = formState;
 
     useEffect(() => {
-        animate(".rangkuman-card", {
+        animate(".rangkuman-card, .summary-card", {
             opacity:    [0, 1],
             translateY: [12, 0],
             duration:   450,
@@ -193,108 +200,38 @@ export default memo(function TabRangkuman({
         (acc, f) => { if (!acc[f.tab]) acc[f.tab] = []; acc[f.tab].push(f); return acc; },
         {}
     );
+    const missingGroups: SummaryMissingGroup<TabId>[] = (Object.entries(emptyByTab) as [TabId, EmptyField[]][])
+        .map(([tab, fields]) => ({
+            tab,
+            label: tabLabels[tab],
+            fields: fields.map(({ key, label }) => ({ key, label })),
+        }));
 
     // Empty state
     const isEmpty = !bloodType && !heightCm && !majorIllnesses;
     if (isEmpty) {
         return (
-            <div className="flex flex-col items-center justify-center py-16 gap-4">
-                <div className="w-16 h-16 rounded-2xl dark:bg-cyan-500/10 bg-cyan-50
-                                border dark:border-cyan-500/20 border-cyan-200
-                                flex items-center justify-center">
-                    <i className="fa-solid fa-heart-pulse text-2xl dark:text-cyan-400 text-cyan-500"></i>
-                </div>
-                <div className="text-center">
-                    <p className="text-sm font-semibold dark:text-slate-300 text-slate-600 mb-1">
-                        Data kesehatan belum diisi
-                    </p>
-                    <p className="text-xs dark:text-slate-500 text-slate-400 max-w-xs">
-                        Mulai dari tab{" "}
-                        <button
-                            onClick={() => onNavigateToTab("fisik")}
-                            className="dark:text-cyan-400 text-cyan-600 font-semibold hover:underline"
-                        >
-                            Fisik
-                        </button>
-                        {" "}untuk mengisi data kesehatan kamu
-                    </p>
-                </div>
-            </div>
+            <SummaryEmptyState
+                accent="cyan"
+                icon="fa-solid fa-heart-pulse"
+                title="Data kesehatan belum diisi"
+                description="Mulai dari tab"
+                actionLabel="Fisik"
+                onAction={() => onNavigateToTab("fisik")}
+            />
         );
     }
 
     return (
         <div className="flex flex-col gap-4">
 
-            {/* ── Status Kelengkapan ────────────────────────────────────── */}
-            <div className="rangkuman-card opacity-0 rounded-xl border overflow-hidden
-                            dark:border-white/[0.07] border-black/[0.07]
-                            dark:bg-white/[0.02] bg-white">
-                <div className="flex items-center gap-2.5 px-4 py-2.5
-                                border-b dark:border-white/[0.06] border-black/[0.06]
-                                dark:bg-white/[0.03] bg-slate-50">
-                    <div className="w-5 h-5 rounded-md flex items-center justify-center
-                                    dark:bg-cyan-500/20 bg-cyan-50">
-                        <i className="fa-solid fa-circle-check text-cyan-400 text-[10px]"></i>
-                    </div>
-                    <p className="text-[11px] font-semibold dark:text-slate-400 text-slate-500
-                                  uppercase tracking-wider flex-1">
-                        Status Kelengkapan
-                    </p>
-                    <span className={`text-xs font-bold ${
-                        completion === 100 ? "dark:text-cyan-400 text-cyan-600"
-                            : completion >= 75 ? "dark:text-blue-400 text-blue-600"
-                            : completion >= 50 ? "dark:text-amber-400 text-amber-600"
-                            : "dark:text-red-400 text-red-600"
-                    }`}>{completion}%</span>
-                </div>
-                <div className="p-4">
-                    <div className="h-1.5 dark:bg-white/[0.05] bg-black/[0.06] rounded-full overflow-hidden mb-3">
-                        <div className="h-full rounded-full transition-all duration-700"
-                             style={{ width: `${completion}%`, background: progressGradient }} />
-                    </div>
-                    {completion === 100 ? (
-                        <p className="text-xs dark:text-cyan-400 text-cyan-600 flex items-center gap-1.5">
-                            <i className="fa-solid fa-circle-check text-[11px]"></i>
-                            Semua data wajib sudah diisi — data kesehatan lengkap!
-                        </p>
-                    ) : (
-                        <div className="flex flex-col gap-2.5">
-                            <p className="text-xs dark:text-slate-400 text-slate-500">
-                                {emptyRequiredFields.length} field wajib belum diisi:
-                            </p>
-                            {(Object.entries(emptyByTab) as [TabId, EmptyField[]][]).map(([tab, fields]) => (
-                                <div key={tab} className="flex items-start gap-3">
-                                    <button
-                                        onClick={() => onNavigateToTab(tab)}
-                                        className="shrink-0 text-[10px] font-semibold px-2.5 py-1 rounded-lg
-                                                   dark:bg-white/[0.05] bg-black/[0.05]
-                                                   dark:text-slate-400 text-slate-500
-                                                   dark:hover:text-cyan-400 hover:text-cyan-600
-                                                   dark:hover:bg-cyan-500/10 hover:bg-cyan-50
-                                                   border dark:border-white/[0.07] border-black/[0.07]
-                                                   transition-all duration-150 min-h-[28px]"
-                                    >
-                                        <i className="fa-solid fa-arrow-right text-[9px] mr-1"></i>
-                                        {tabLabels[tab]}
-                                    </button>
-                                    <div className="flex flex-wrap gap-1.5 pt-0.5">
-                                        {fields.map(f => (
-                                            <span key={f.key}
-                                                className="text-[10px] px-2 py-0.5 rounded-full
-                                                           dark:bg-amber-500/10 bg-amber-50
-                                                           dark:text-amber-400 text-amber-600
-                                                           border dark:border-amber-500/20 border-amber-200">
-                                                {f.label}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            </div>
+            <SummaryStatus
+                accent="cyan"
+                completion={completion}
+                completeMessage="Semua data wajib sudah diisi - data kesehatan lengkap!"
+                missingGroups={missingGroups}
+                onNavigate={onNavigateToTab}
+            />
 
             {/* ── Grid 2 kolom — card kiri & kanan ─────────────────────── */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -377,49 +314,15 @@ export default memo(function TabRangkuman({
 
             </div>
 
-            {/* ── Warning field belum lengkap ───────────────────────────── */}
-            {completion < 100 && (
-                <div className="rangkuman-card opacity-0 flex items-start gap-2.5 p-3.5 rounded-xl
-                                dark:bg-amber-500/[0.08] bg-amber-50
-                                border dark:border-amber-500/20 border-amber-200">
-                    <i className="fa-solid fa-circle-info text-amber-400 text-xs mt-0.5 shrink-0"></i>
-                    <p className="text-[11px] dark:text-amber-300/80 text-amber-700">
-                        Masih ada <strong>{emptyRequiredFields.length} field wajib</strong> yang belum diisi.
-                        Klik tab di atas untuk melengkapi data yang kurang.
-                    </p>
-                </div>
-            )}
+            <SummaryWarning count={emptyRequiredFields.length} />
 
-            {/* ── Tombol Kirim Semua ────────────────────────────────────── */}
-            <div className="rangkuman-card opacity-0 rounded-xl border
-                            dark:border-white/[0.07] border-black/[0.07]
-                            dark:bg-white/[0.02] bg-white p-4">
-                <div className="flex items-center justify-between gap-4">
-                    <div>
-                        <p className="text-xs font-semibold dark:text-slate-300 text-slate-700">
-                            Simpan Semua Data Kesehatan
-                        </p>
-                        <p className="text-[11px] dark:text-slate-500 text-slate-400 mt-0.5">
-                            Data dari semua tab akan disimpan sekaligus
-                        </p>
-                    </div>
-                    <button
-                        onClick={onSubmitAll}
-                        disabled={submitting}
-                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl
-                                   bg-cyan-500 hover:bg-cyan-400
-                                   text-white text-sm font-semibold shrink-0
-                                   transition-all duration-200 active:scale-95
-                                   disabled:opacity-60 disabled:cursor-not-allowed
-                                   min-h-[44px]"
-                    >
-                        {submitting
-                            ? <><i className="fa-solid fa-spinner fa-spin text-xs"></i> Mengirim...</>
-                            : <><i className="fa-solid fa-paper-plane text-xs"></i> Kirim &amp; Selesaikan</>
-                        }
-                    </button>
-                </div>
-            </div>
+            <SummaryActionFooter
+                accent="cyan"
+                title="Simpan Semua Data Kesehatan"
+                description="Data dari semua tab akan disimpan sekaligus"
+                submitting={submitting}
+                onSubmit={onSubmitAll}
+            />
 
         </div>
     );

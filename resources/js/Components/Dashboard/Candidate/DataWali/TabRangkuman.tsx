@@ -3,6 +3,12 @@
 import { useEffect } from 'react'
 import { animate, stagger } from 'animejs'
 import {
+    SummaryActionFooter,
+    SummaryEmptyState,
+    SummaryStatus,
+    type SummaryMissingGroup,
+} from '@/Components/Dashboard/Candidate/Shared/SummaryLayout'
+import {
     GuardianData,
     EDUCATION_LABELS, INCOME_LABELS, STATUS_LABELS,
     MARITAL_LABELS, HOUSE_LABELS, VEHICLE_LABELS,
@@ -14,11 +20,12 @@ import {
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface Props {
-    data:        GuardianData
-    completion:  number
-    onGoToTab:   (index: number) => void
+    data: GuardianData
+    completion: number
+    emptyRequiredFields: { key: keyof GuardianData; label: string; tab: 'ayah' | 'ibu' | 'wali' | 'profil-keluarga' | 'rangkuman' }[]
+    onGoToTab: (index: number) => void
     onSubmitAll: () => void
-    submitting:  boolean
+    submitting: boolean
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -133,10 +140,10 @@ function Row({ label, value, valueClass }: {
 // COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function TabRangkuman({ data, completion, onGoToTab, onSubmitAll, submitting }: Props) {
+export default function TabRangkuman({ data, completion, emptyRequiredFields, onGoToTab, onSubmitAll, submitting }: Props) {
 
     useEffect(() => {
-        animate('.rangkuman-wali-card', {
+        animate('.rangkuman-wali-card, .summary-card', {
             opacity:    [0, 1],
             translateY: [12, 0],
             duration:   450,
@@ -145,31 +152,43 @@ export default function TabRangkuman({ data, completion, onGoToTab, onSubmitAll,
         })
     }, [])
 
+    const tabIndexes = {
+        ayah: 0,
+        ibu: 1,
+        wali: 2,
+        'profil-keluarga': 3,
+        rangkuman: 4,
+    }
+    const tabLabels = {
+        ayah: 'Ayah',
+        ibu: 'Ibu',
+        wali: 'Wali',
+        'profil-keluarga': 'Profil Keluarga',
+        rangkuman: 'Rangkuman',
+    }
+    const emptyByTab = emptyRequiredFields.reduce<Record<string, typeof emptyRequiredFields>>((acc, field) => {
+        if (!acc[field.tab]) acc[field.tab] = []
+        acc[field.tab].push(field)
+        return acc
+    }, {})
+    const missingGroups: SummaryMissingGroup<keyof typeof tabIndexes>[] = (Object.entries(emptyByTab) as [keyof typeof tabIndexes, typeof emptyRequiredFields][])
+        .map(([tab, fields]) => ({
+            tab,
+            label: tabLabels[tab],
+            fields: fields.map(({ key, label }) => ({ key: String(key), label })),
+        }))
+
     const isEmpty = !data.mother_name && !data.father_name && !data.no_kk
     if (isEmpty) {
         return (
-            <div className="flex flex-col items-center justify-center py-16 gap-4">
-                <div className="w-16 h-16 rounded-2xl dark:bg-violet-500/10 bg-violet-50
-                                border dark:border-violet-500/20 border-violet-200
-                                flex items-center justify-center">
-                    <i className="fa-solid fa-users text-2xl dark:text-violet-400 text-violet-500"></i>
-                </div>
-                <div className="text-center">
-                    <p className="text-sm font-semibold dark:text-slate-300 text-slate-600 mb-1">
-                        Data wali belum diisi
-                    </p>
-                    <p className="text-xs dark:text-slate-500 text-slate-400 max-w-xs">
-                        Mulai dari tab{' '}
-                        <button
-                            onClick={() => onGoToTab(1)}
-                            className="dark:text-violet-400 text-violet-600 font-semibold hover:underline"
-                        >
-                            Ibu
-                        </button>
-                        {' '}untuk mengisi data wali
-                    </p>
-                </div>
-            </div>
+            <SummaryEmptyState
+                accent="violet"
+                icon="fa-solid fa-users"
+                title="Data wali belum diisi"
+                description="Mulai dari tab"
+                actionLabel="Ibu"
+                onAction={() => onGoToTab(1)}
+            />
         )
     }
 
@@ -178,42 +197,13 @@ export default function TabRangkuman({ data, completion, onGoToTab, onSubmitAll,
     return (
         <div className="flex flex-col gap-4">
 
-            {/* ── Status Kelengkapan ────────────────────────────────────── */}
-            <div className="rangkuman-wali-card opacity-0 rounded-xl border overflow-hidden
-                            dark:border-white/[0.07] border-black/[0.07]
-                            dark:bg-white/[0.02] bg-white">
-                <div className="flex items-center gap-2.5 px-4 py-2.5
-                                border-b dark:border-white/[0.06] border-black/[0.06]
-                                dark:bg-white/[0.03] bg-slate-50">
-                    <div className="w-5 h-5 rounded-md flex items-center justify-center
-                                    dark:bg-violet-500/20 bg-violet-50">
-                        <i className="fa-solid fa-circle-check text-violet-400 text-[10px]"></i>
-                    </div>
-                    <p className="text-[11px] font-semibold dark:text-slate-400 text-slate-500
-                                  uppercase tracking-wider flex-1">
-                        Status Kelengkapan
-                    </p>
-                    <span className={`text-xs font-bold ${progressColor(completion)}`}>
-                        {completion}%
-                    </span>
-                </div>
-                <div className="p-4">
-                    <div className="h-1.5 dark:bg-white/[0.05] bg-black/[0.06] rounded-full overflow-hidden mb-3">
-                        <div className="h-full rounded-full transition-all duration-700"
-                             style={{ width: `${completion}%`, background: progressGradient(completion) }} />
-                    </div>
-                    {completion === 100 ? (
-                        <p className="text-xs dark:text-violet-400 text-violet-600 flex items-center gap-1.5">
-                            <i className="fa-solid fa-circle-check text-[11px]"></i>
-                            Semua data wajib sudah diisi — data wali lengkap!
-                        </p>
-                    ) : (
-                        <p className="text-xs dark:text-slate-500 text-slate-400">
-                            Lengkapi data yang masih kosong di tab masing-masing
-                        </p>
-                    )}
-                </div>
-            </div>
+            <SummaryStatus
+                accent="violet"
+                completion={completion}
+                completeMessage="Semua data wajib sudah diisi - data wali lengkap!"
+                missingGroups={missingGroups}
+                onNavigate={(tab) => onGoToTab(tabIndexes[tab])}
+            />
 
             {/* ── Grid 2 kolom ──────────────────────────────────────────── */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -303,37 +293,13 @@ export default function TabRangkuman({ data, completion, onGoToTab, onSubmitAll,
 
             </div>
 
-            {/* ── Tombol Kirim Semua ────────────────────────────────────── */}
-            <div className="rangkuman-wali-card opacity-0 rounded-xl border
-                            dark:border-white/[0.07] border-black/[0.07]
-                            dark:bg-white/[0.02] bg-white p-4">
-                <div className="flex items-center justify-between gap-4">
-                    <div>
-                        <p className="text-xs font-semibold dark:text-slate-300 text-slate-700">
-                            Simpan Semua Data Wali
-                        </p>
-                        <p className="text-[11px] dark:text-slate-500 text-slate-400 mt-0.5">
-                            Data dari semua tab akan disimpan sekaligus
-                        </p>
-                    </div>
-                    <button
-                        type="button"
-                        onClick={onSubmitAll}
-                        disabled={submitting}
-                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl
-                                   bg-violet-500 hover:bg-violet-400
-                                   text-white text-sm font-semibold shrink-0
-                                   transition-all duration-200 active:scale-95
-                                   disabled:opacity-60 disabled:cursor-not-allowed
-                                   min-h-[44px]"
-                    >
-                        {submitting
-                            ? <><i className="fa-solid fa-spinner fa-spin text-xs" /> Mengirim...</>
-                            : <><i className="fa-solid fa-paper-plane text-xs" /> Kirim &amp; Selesaikan</>
-                        }
-                    </button>
-                </div>
-            </div>
+            <SummaryActionFooter
+                accent="violet"
+                title="Simpan Semua Data Wali"
+                description="Data dari semua tab akan disimpan sekaligus"
+                submitting={submitting}
+                onSubmit={onSubmitAll}
+            />
 
         </div>
     )

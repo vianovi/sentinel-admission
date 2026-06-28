@@ -47,6 +47,24 @@ class CandidateRequestPresenter
         ];
     }
 
+    public static function formatPendingDataChangeRequest(?array $request): ?array
+    {
+        if (empty($request) || ($request['status'] ?? null) !== 'pending') {
+            return null;
+        }
+
+        $field = (string) ($request['field'] ?? '');
+
+        return [
+            'field' => $field,
+            'field_label' => self::DATA_FIELD_LABELS[$field] ?? $field,
+            'old_value' => self::normalizeValue($request['old_value'] ?? null),
+            'new_value' => self::normalizeValue($request['new_value'] ?? null),
+            'reason' => self::nullableString($request['reason'] ?? null),
+            'requested_at' => self::formatDateTime($request['requested_at'] ?? null),
+        ];
+    }
+
     public static function formatEmailChangeRequest(User $user): ?array
     {
         if (! $user->pending_email) {
