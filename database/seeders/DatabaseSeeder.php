@@ -11,7 +11,8 @@ class DatabaseSeeder extends Seeder
         // Gelombang harus dibuat duluan — candidates butuh admission_wave_id
         $this->call([
             AdmissionWaveSeeder::class,
-            CandidateSeeder::class,
+            UserSeeder::class,
+            ExtracurricularSeeder::class,
             PaymentConfigSeeder::class,
         ]);
     }
