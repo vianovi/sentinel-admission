@@ -2,7 +2,7 @@
 
 ## Audit Status
 
-Final Phase 5 audit completed. No known critical or high-risk issue remains for the Online Selection Exam Engine at this checkpoint.
+Final Phase 5 audit completed. UX polish checkpoint completed afterward. No known critical or high-risk issue remains for the Online Selection Exam Engine at this checkpoint.
 
 ## Phase Audit Notes
 
@@ -113,6 +113,20 @@ Final Phase 5 audit completed. No known critical or high-risk issue remains for 
   - Exam PHP syntax sweep -> passed
   - Modified integration PHP syntax checks -> passed
 
+### UX Polish Checkpoint
+
+- Added `public/templates/exam-question-template.xlsx` as the official static XLSX template.
+- Updated admin import panel with a visible template download action, step-by-step helper text, selected-file feedback, and clearer processing state.
+- Updated import batch report with readable success/failure guidance and direct actions back to package/template.
+- Updated candidate active attempt UI with clearer session back action, mobile-friendly timer/submit controls, focus states, and larger touch targets.
+- Updated admin/staff result pages with clearer navigation, summary labels, and empty answer states.
+- Updated documentation with template location and usage.
+- Verification passed:
+  - Template read check using `ExamQuestionWorkbookReader` confirmed the expected headings and example row.
+  - `npm run build` passed.
+  - `php artisan test tests/Feature/OnlineSelectionExamSecurityTest.php` passed: 4 tests, 12 assertions.
+  - Candidate answer-key leakage grep returned no matches.
+
 ## Security Review Notes
 
 - Implemented controls:
@@ -143,6 +157,10 @@ Final Phase 5 audit completed. No known critical or high-risk issue remains for 
   - Scope firewall review.
   - Final route/build/test/security checks.
   - No known critical or high-risk exam issue remains.
+- UX polish security check confirmed:
+  - No backend timer/scoring/ownership behavior was changed.
+  - Candidate exam UI changes did not introduce answer-key references.
+  - Official template matches importer headings and contains only a safe example row.
 
 ## Out-of-Scope File Touches
 
@@ -154,6 +172,7 @@ Final Phase 5 audit completed. No known critical or high-risk issue remains for 
 - `resources/js/config/navigation.ts`: activated the candidate exam menu after Phase 3 pages were completed.
 - `resources/js/config/navigation.ts`: activated the staff result menu after Phase 4 pages were completed.
 - `composer.json` and `composer.lock`: changed to install OpenSpout and update vulnerable dependencies. This was necessary to avoid introducing known critical/high security advisories for the import feature and to clear existing Composer audit advisories discovered during Phase 2.
+- `public/templates/exam-question-template.xlsx`: added official static import template for admin UX. This is an exam asset, not a global public feature rewrite.
 
 ## External References Consulted
 
@@ -174,3 +193,4 @@ Final Phase 5 audit completed. No known critical or high-risk issue remains for 
 - Product flow: pass. Admin can manage subjects/packages/sessions/imports/assignments/results; candidates can enter assigned exams, answer, autosave, submit, and expire safely; staff/admin can review results.
 - Scope firewall: pass with documented integration touches only. No auth, payment, document, profile, registration, dashboard layout, global role, or global theme rewrite was performed.
 - Residual limitations: option randomization is configured but not rendered yet; pass/fail does not automatically change admission accepted/rejected status; XLSX only, no XLS; untouched expired attempts finalize on next exam request rather than via scheduler.
+- UX polish residual limitations: template is generic rather than package-specific; no browser/E2E screenshot pass was run for exact 375px/390px visual inspection in this checkpoint.

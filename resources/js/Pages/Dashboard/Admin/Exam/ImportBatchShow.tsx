@@ -30,6 +30,9 @@ type Props = {
 };
 
 export default function ExamImportBatchShow({ batch }: Props) {
+    const hasFailures = batch.failed_rows > 0 || batch.failure_report.length > 0 || batch.missing_columns.length > 0;
+    const isSuccessful = batch.status === "completed" && !hasFailures;
+
     return (
         <DashboardLayout>
             <Head title={`Import ${batch.original_filename}`} />
@@ -45,19 +48,35 @@ export default function ExamImportBatchShow({ batch }: Props) {
                             <Link href={`/dashboard/admin/exams/packages/${batch.package_id}/imports`} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-slate-200 px-3 text-sm font-bold text-slate-700 hover:border-rose-300 hover:text-rose-500 dark:border-white/10 dark:text-slate-200">
                                 <i className="fa-solid fa-clock-rotate-left text-xs" /> Riwayat
                             </Link>
+                            <a href="/templates/exam-question-template.xlsx" download className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-rose-500 px-3 text-sm font-bold text-white hover:bg-rose-400">
+                                <i className="fa-solid fa-file-arrow-down text-xs" /> Template
+                            </a>
                         </>
                     }
                 />
 
-                <section className="rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-900">
+                <section className={`rounded-lg border p-4 ${isSuccessful ? "border-emerald-500/20 bg-emerald-500/10" : hasFailures ? "border-amber-500/20 bg-amber-500/10" : "border-slate-200 bg-white dark:border-white/10 dark:bg-slate-900"}`}>
                     <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                         <div>
                             <div className="mb-2 flex flex-wrap items-center gap-2">
                                 <StatusPill value={batch.status} />
                                 <StatusPill value={batch.subject_name ?? "tanpa subject"} />
                             </div>
-                            <p className="text-sm text-slate-600 dark:text-slate-300">Diunggah oleh {batch.uploaded_by ?? "-"} pada {batch.started_at ?? "-"}.</p>
+                            <h2 className="text-base font-black text-slate-900 dark:text-white">
+                                {isSuccessful ? "Import selesai tanpa kegagalan" : hasFailures ? "Import selesai dengan catatan" : "Import sedang/baru diproses"}
+                            </h2>
+                            <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Diunggah oleh {batch.uploaded_by ?? "-"} pada {batch.started_at ?? "-"}.</p>
                             <p className="mt-1 text-xs text-slate-500">Selesai: {batch.finished_at ?? "-"}</p>
+                            <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                                {isSuccessful
+                                    ? "Langkah berikutnya: buka paket untuk preview soal, lalu publish paket jika bank soal sudah siap dipakai."
+                                    : "Perbaiki baris yang gagal dengan pesan di bawah, simpan sebagai XLSX, lalu import ulang file yang sudah diperbaiki."}
+                            </p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            <Link href={`/dashboard/admin/exams/packages/${batch.package_id}`} className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-slate-900 px-3 text-sm font-bold text-white hover:bg-slate-700 dark:bg-white dark:text-slate-950">
+                                <i className="fa-solid fa-box-archive text-xs" /> Buka Paket
+                            </Link>
                         </div>
                     </div>
                 </section>
@@ -82,13 +101,13 @@ export default function ExamImportBatchShow({ batch }: Props) {
                 ) : null}
 
                 <section className="rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-900">
-                    <div className="mb-4 flex items-center justify-between">
+                    <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                         <h2 className="text-sm font-bold text-slate-900 dark:text-white">Failure Report</h2>
-                        <span className="text-xs font-semibold text-slate-500">{batch.failure_report.length.toLocaleString("id-ID")} baris</span>
+                        <span className="text-xs font-semibold text-slate-500">{batch.failure_report.length.toLocaleString("id-ID")} baris perlu diperiksa</span>
                     </div>
 
                     {batch.failure_report.length === 0 ? (
-                        <EmptyState icon="fa-solid fa-shield-check" title="Tidak ada kegagalan baris" description="Semua baris valid berhasil diproses." />
+                        <EmptyState icon="fa-solid fa-shield-check" title="Tidak ada kegagalan baris" description="Semua baris valid berhasil diproses. Lanjutkan ke halaman paket untuk preview dan publish bila sudah siap." />
                     ) : (
                         <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-white/10">
                             <table className="min-w-full divide-y divide-slate-200 text-sm dark:divide-white/10">

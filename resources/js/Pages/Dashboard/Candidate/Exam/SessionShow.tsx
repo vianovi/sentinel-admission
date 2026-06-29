@@ -157,7 +157,7 @@ export default function CandidateExamSessionShow({ candidate, assignment, attemp
                                     type="button"
                                     onClick={startExam}
                                     disabled={!assignment.can_start || processing}
-                                    className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-amber-500 px-4 text-sm font-bold text-white hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
+                                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-amber-500 px-4 text-sm font-bold text-white hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     {processing ? <i className="fa-solid fa-spinner fa-spin text-xs" /> : <i className="fa-solid fa-play text-xs" />}
                                     Mulai Ujian

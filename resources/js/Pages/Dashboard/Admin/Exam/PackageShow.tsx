@@ -63,6 +63,8 @@ type Props = {
     max_rows: number;
 };
 
+const questionTemplateUrl = "/templates/exam-question-template.xlsx";
+
 export default function ExamPackageShow({ package: examPackage, questions, sessions, imports, required_columns, max_rows }: Props) {
     const { flash, errors: pageErrors } = usePage<PageProps & { errors: Record<string, string> }>().props;
     const form = useForm<ImportForm>({ file: null });
@@ -149,8 +151,29 @@ export default function ExamPackageShow({ package: examPackage, questions, sessi
 
                 <div className="grid gap-4 xl:grid-cols-[420px_1fr]">
                     <section className="rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-900">
-                        <h2 className="text-sm font-bold text-slate-900 dark:text-white">Import Soal XLSX</h2>
-                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Maksimal {max_rows.toLocaleString("id-ID")} baris. Kolom subject/package harus cocok dengan paket tujuan.</p>
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                            <div>
+                                <h2 className="text-sm font-bold text-slate-900 dark:text-white">Import Soal XLSX</h2>
+                                <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
+                                    Unduh template resmi, isi data soal tanpa mengubah header, lalu upload kembali file XLSX yang sudah lengkap.
+                                </p>
+                            </div>
+                            <a
+                                href={questionTemplateUrl}
+                                download
+                                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 text-sm font-bold text-rose-600 hover:border-rose-300 hover:bg-rose-100 focus:outline-none focus:ring-2 focus:ring-rose-500/20 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-200"
+                            >
+                                <i className="fa-solid fa-file-arrow-down text-xs" /> Unduh Template Soal
+                            </a>
+                        </div>
+
+                        <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-white/10 dark:bg-white/[0.03]">
+                            <ol className="grid gap-2 text-xs leading-5 text-slate-600 dark:text-slate-300">
+                                <li><span className="font-black text-slate-900 dark:text-white">1.</span> Isi baris contoh sesuai subject dan package tujuan.</li>
+                                <li><span className="font-black text-slate-900 dark:text-white">2.</span> Biarkan nama kolom tetap sama persis.</li>
+                                <li><span className="font-black text-slate-900 dark:text-white">3.</span> Upload file `.xlsx`; maksimal {max_rows.toLocaleString("id-ID")} baris.</li>
+                            </ol>
+                        </div>
 
                         <form onSubmit={submitImport} className="mt-4 space-y-4">
                             <div>
@@ -163,15 +186,22 @@ export default function ExamPackageShow({ package: examPackage, questions, sessi
                                     className={inputClass}
                                 />
                                 {form.errors.file ? <p className="mt-1 text-xs text-red-500">{form.errors.file}</p> : null}
+                                {form.data.file ? (
+                                    <p className="mt-2 rounded-lg bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-700 dark:text-emerald-200">
+                                        File dipilih: {form.data.file.name}
+                                    </p>
+                                ) : (
+                                    <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Pilih file `.xlsx` yang memakai header template resmi.</p>
+                                )}
                             </div>
 
                             <button
                                 type="submit"
                                 disabled={form.processing || !form.data.file}
-                                className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-rose-500 px-4 text-sm font-bold text-white hover:bg-rose-400 disabled:cursor-not-allowed disabled:opacity-60"
+                                className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-rose-500 px-4 text-sm font-bold text-white hover:bg-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-500/30 disabled:cursor-not-allowed disabled:opacity-60"
                             >
                                 {form.processing ? <i className="fa-solid fa-spinner fa-spin text-xs" /> : <i className="fa-solid fa-file-import text-xs" />}
-                                Import Soal
+                                {form.processing ? "Mengimport Soal..." : "Import Soal"}
                             </button>
                         </form>
 
@@ -197,7 +227,7 @@ export default function ExamPackageShow({ package: examPackage, questions, sessi
                         </div>
 
                         {imports.length === 0 ? (
-                            <EmptyState icon="fa-solid fa-file-circle-plus" title="Belum ada import" description="Upload file XLSX untuk menambahkan bank soal ke paket ini." />
+                            <EmptyState icon="fa-solid fa-file-circle-plus" title="Belum ada import" description="Unduh template resmi, isi baris soal, lalu upload file XLSX pertama untuk mengisi bank soal paket ini." />
                         ) : (
                             <div className="grid gap-3">
                                 {imports.map((item) => (

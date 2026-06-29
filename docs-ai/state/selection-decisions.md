@@ -79,3 +79,9 @@
 - Keep exam documentation under `docs-ai/features/online-selection-exam.md` so the feature spec, import format, limitations, and manual tests live beside the durable AI task state.
 - Add focused feature tests instead of broad browser/E2E tests in this run because the repo already has Pest feature-test coverage and the highest-risk exam behaviors are backend authorization, timer lock, answer-key leakage, and server-side scoring.
 - Treat option randomization and automatic admission accepted/rejected transitions as documented future work rather than expanding scope during closeout.
+
+## UX Polish Decisions
+
+- Store the official XLSX import template as a static public asset at `public/templates/exam-question-template.xlsx` because the template is small, stable, and does not require backend generation.
+- Keep the polish sprint frontend-focused. No database schema, scoring, timer, ownership, or import-domain logic was changed.
+- Use existing exam UI patterns and Font Awesome icons rather than introducing a new component library.

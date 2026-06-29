@@ -64,7 +64,7 @@ export default function ExamResultShow({ attempt }: Props) {
                     icon="fa-solid fa-square-poll-vertical"
                     actions={
                         <>
-                            <BackLink href="/dashboard/admin/exams/results" />
+                            <BackLink href="/dashboard/admin/exams/results" label="Hasil" />
                             {attempt.candidate.id ? (
                                 <Link href={`/dashboard/admin/candidates/${attempt.candidate.id}`} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-slate-200 px-3 text-sm font-bold text-slate-700 hover:border-rose-300 hover:text-rose-500 dark:border-white/10 dark:text-slate-200">
                                     <i className="fa-solid fa-user text-xs" /> Profil Kandidat
@@ -81,6 +81,7 @@ export default function ExamResultShow({ attempt }: Props) {
                                 <StatusPill value={attempt.status} />
                                 <StatusPill value={passLabel} />
                             </div>
+                            <h2 className="mb-3 text-base font-black text-slate-900 dark:text-white">Ringkasan Kandidat dan Ujian</h2>
                             <dl className="grid gap-3 text-sm sm:grid-cols-2">
                                 <Info label="Kode kandidat" value={attempt.candidate.candidate_code ?? "-"} />
                                 <Info label="NISN" value={attempt.candidate.nisn ?? "-"} />
@@ -111,13 +112,18 @@ export default function ExamResultShow({ attempt }: Props) {
                 </div>
 
                 <section className="rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-900">
-                    <div className="mb-4 flex items-center justify-between">
+                    <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                         <h2 className="text-sm font-bold text-slate-900 dark:text-white">Review Jawaban</h2>
                         <span className="text-xs font-semibold text-slate-500">{attempt.answers.length.toLocaleString("id-ID")} jawaban tersimpan</span>
                     </div>
 
-                    <div className="space-y-3">
-                        {attempt.answers.map((answer, index) => (
+                    {attempt.answers.length === 0 ? (
+                        <div className="rounded-lg border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500 dark:border-white/10 dark:text-slate-400">
+                            Belum ada jawaban tersimpan untuk attempt ini.
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            {attempt.answers.map((answer, index) => (
                             <article key={answer.id} className="rounded-lg border border-slate-200 p-4 dark:border-white/10">
                                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                                     <p className="text-sm font-bold leading-6 text-slate-900 dark:text-white">{index + 1}. {answer.question_text ?? "Soal tidak tersedia"}</p>
@@ -155,8 +161,9 @@ export default function ExamResultShow({ attempt }: Props) {
                                     </p>
                                 ) : null}
                             </article>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
+                    )}
                 </section>
             </div>
         </DashboardLayout>

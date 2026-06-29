@@ -79,6 +79,11 @@ Candidate pages must not receive `correct_answer`, explanations, correctness fla
 
 The import uses OpenSpout and supports `.xlsx` files only.
 
+Official template:
+
+- `/templates/exam-question-template.xlsx`
+- Admins should download the template from the package import panel, keep the header row unchanged, replace the example row with real questions, then upload the completed XLSX.
+
 Required heading row columns:
 
 | Column | Required Cell Value | Notes |

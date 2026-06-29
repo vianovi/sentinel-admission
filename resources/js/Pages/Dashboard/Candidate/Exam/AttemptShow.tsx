@@ -284,18 +284,21 @@ export default function CandidateAttemptShow({ candidate, exam, attempt, questio
                                 <StatusPill value={attemptState.status} />
                                 <StatusPill value={saveState === "idle" ? "autosave siap" : saveState} />
                             </div>
-                            <h1 className="mt-2 truncate text-lg font-black text-slate-900 dark:text-white">{exam.session_title ?? "Ujian Seleksi"}</h1>
+                            <h1 className="mt-2 text-lg font-black leading-tight text-slate-900 dark:text-white sm:truncate">{exam.session_title ?? "Ujian Seleksi"}</h1>
                             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{candidate.full_name ?? "-"} · {candidate.candidate_code ?? "-"}</p>
                         </div>
-                        <div className="flex flex-wrap items-center gap-2">
-                            <div className={`rounded-lg px-4 py-2 text-center ${remaining <= 300 ? "bg-red-500 text-white" : "bg-slate-900 text-white dark:bg-white dark:text-slate-950"}`}>
+                        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
+                            <Link href={`/dashboard/seleksi/sesi/${exam.session_id}`} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 text-sm font-bold text-slate-700 hover:border-amber-300 hover:text-amber-600 dark:border-white/10 dark:text-slate-200">
+                                <i className="fa-solid fa-arrow-left text-xs" /> Sesi
+                            </Link>
+                            <div className={`rounded-lg px-3 py-2 text-center sm:px-4 ${remaining <= 300 ? "bg-red-500 text-white" : "bg-slate-900 text-white dark:bg-white dark:text-slate-950"}`}>
                                 <p className="text-[10px] font-bold uppercase tracking-wide opacity-75">Sisa waktu</p>
                                 <p className="font-mono text-lg font-black">{formatTime(remaining)}</p>
                             </div>
                             <button
                                 type="button"
                                 onClick={submitAttempt}
-                                className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-emerald-500 px-4 text-sm font-bold text-white hover:bg-emerald-400"
+                                className="col-span-2 inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 text-sm font-bold text-white hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 sm:col-span-1"
                             >
                                 <i className="fa-solid fa-paper-plane text-xs" /> Kumpulkan
                             </button>
@@ -307,7 +310,7 @@ export default function CandidateAttemptShow({ candidate, exam, attempt, questio
                 <FlashMessage value={flash.error ?? errors.exam} />
 
                 <div className="grid gap-4 xl:grid-cols-[1fr_320px]">
-                    <main className="rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-900">
+                    <main className="rounded-lg border border-slate-200 bg-white p-3 dark:border-white/10 dark:bg-slate-900 sm:p-4">
                         {activeQuestion ? (
                             <>
                                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -329,7 +332,7 @@ export default function CandidateAttemptShow({ candidate, exam, attempt, questio
                                             onClick={() => changeAnswer(activeQuestion.id, {
                                                 selected_option: activeAnswer?.selected_option === key ? null : key,
                                             })}
-                                            className={`flex w-full items-start gap-3 rounded-lg border px-4 py-3 text-left text-sm transition ${
+                                            className={`flex min-h-12 w-full items-start gap-3 rounded-lg border px-3 py-3 text-left text-sm transition focus:outline-none focus:ring-2 focus:ring-amber-500/20 sm:px-4 ${
                                                 activeAnswer?.selected_option === key
                                                     ? "border-amber-400 bg-amber-500/10 text-amber-800 dark:text-amber-200"
                                                     : "border-slate-200 text-slate-700 hover:border-amber-300 dark:border-white/10 dark:text-slate-200"
@@ -351,12 +354,12 @@ export default function CandidateAttemptShow({ candidate, exam, attempt, questio
                                         />
                                         Tandai untuk ditinjau
                                     </label>
-                                    <div className="flex gap-2">
+                                    <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
                                         <button
                                             type="button"
                                             onClick={() => setActiveIndex((current) => Math.max(0, current - 1))}
                                             disabled={activeIndex === 0}
-                                            className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-slate-200 px-3 text-sm font-bold text-slate-700 hover:border-amber-300 hover:text-amber-600 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:text-slate-200"
+                                            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 text-sm font-bold text-slate-700 hover:border-amber-300 hover:text-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:text-slate-200"
                                         >
                                             <i className="fa-solid fa-arrow-left text-xs" /> Sebelumnya
                                         </button>
@@ -364,7 +367,7 @@ export default function CandidateAttemptShow({ candidate, exam, attempt, questio
                                             type="button"
                                             onClick={() => setActiveIndex((current) => Math.min(questions.length - 1, current + 1))}
                                             disabled={activeIndex === questions.length - 1}
-                                            className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-amber-500 px-3 text-sm font-bold text-white hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
+                                            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-amber-500 px-3 text-sm font-bold text-white hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30 disabled:cursor-not-allowed disabled:opacity-50"
                                         >
                                             Berikutnya <i className="fa-solid fa-arrow-right text-xs" />
                                         </button>
@@ -403,7 +406,7 @@ export default function CandidateAttemptShow({ candidate, exam, attempt, questio
                                             key={question.id}
                                             type="button"
                                             onClick={() => setActiveIndex(index)}
-                                            className={`relative flex h-10 items-center justify-center rounded-lg border text-xs font-black ${
+                                            className={`relative flex h-11 items-center justify-center rounded-lg border text-xs font-black focus:outline-none focus:ring-2 focus:ring-amber-500/20 ${
                                                 active
                                                     ? "border-amber-500 bg-amber-500 text-white"
                                                     : answered

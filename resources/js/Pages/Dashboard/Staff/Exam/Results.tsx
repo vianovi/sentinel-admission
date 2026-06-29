@@ -99,14 +99,19 @@ export default function StaffExamResults({ attempts, filters, sessions }: Props)
             <Head title="Hasil Ujian - Staff" />
 
             <div className="space-y-5 pb-8">
-                <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-500 text-white shadow-sm shadow-emerald-500/25">
-                        <i className="fa-solid fa-list-check text-sm" />
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-500 text-white shadow-sm shadow-emerald-500/25">
+                            <i className="fa-solid fa-list-check text-sm" />
+                        </div>
+                        <div>
+                            <h1 className="text-xl font-bold text-slate-900 dark:text-white">Hasil Ujian</h1>
+                            <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">Review skor dan jawaban ujian seleksi kandidat.</p>
+                        </div>
                     </div>
-                    <div>
-                        <h1 className="text-xl font-bold text-slate-900 dark:text-white">Hasil Ujian</h1>
-                        <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">Review skor dan jawaban ujian seleksi kandidat.</p>
-                    </div>
+                    <Link href="/dashboard/staff" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 text-sm font-bold text-slate-700 hover:border-emerald-300 hover:text-emerald-600 dark:border-white/10 dark:text-slate-200">
+                        <i className="fa-solid fa-arrow-left text-xs" /> Dashboard Staff
+                    </Link>
                 </div>
 
                 <section className="rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-900">

@@ -4,6 +4,8 @@
 
 Phase 0 through Phase 5 completed. The Online Selection Exam Engine mission is complete.
 
+UX polish checkpoint completed after the WIP exam engine commit.
+
 ## Completed Phases
 
 - Phase 0 — Project audit and implementation plan
@@ -87,6 +89,16 @@ Phase 0 through Phase 5 completed. The Online Selection Exam Engine mission is c
 - Completed final route/build/migration/test/dependency/security checks.
 - Completed final self-audit and documented residual limitations.
 
+## UX Polish Checkpoint
+
+- Added official XLSX question template asset at `public/templates/exam-question-template.xlsx`.
+- Added template download button and short import instructions to the admin package import panel.
+- Improved import report status copy, next-action guidance, and template/package actions.
+- Improved candidate active attempt header for narrow screens with clearer session back action, timer placement, autosave status visibility, and larger touch targets.
+- Improved result detail readability for admin/staff with clearer summary heading and empty answer state.
+- Added clearer back/navigation actions to admin result list and staff result list/detail pages.
+- Updated feature documentation with the official template location and usage notes.
+
 ## Files Created or Modified
 
 - app/Actions/Exam/SaveExamAnswer.php
@@ -161,6 +173,7 @@ Phase 0 through Phase 5 completed. The Online Selection Exam Engine mission is c
 - docs-ai/audit/selection-exam-audit.md
 - docs-ai/features/online-selection-exam.md
 - tests/Feature/OnlineSelectionExamSecurityTest.php
+- public/templates/exam-question-template.xlsx
 
 ## Commands Run
 
@@ -205,6 +218,16 @@ Phase 0 through Phase 5 completed. The Online Selection Exam Engine mission is c
   - `wc -l docs-ai/task/selection-online-exam.directive.md`
   - `git status --short`
   - `git diff --stat`
+- UX polish checkpoint commands:
+  - `sed -n ...` on admin/candidate/staff exam pages and exam UI components.
+  - `rg -n "class Writer|WriterEntityFactory|OpenSpout..." vendor/openspout -S`
+  - `mkdir -p public/templates && php -r ...` to generate `public/templates/exam-question-template.xlsx`
+  - `php -r ... ExamQuestionWorkbookReader ...` to confirm template headings/example row
+  - `npm run build`
+  - `php artisan test tests/Feature/OnlineSelectionExamSecurityTest.php`
+  - `rg -n "correct_answer|explanation|is_correct|point_awarded" app/Http/Controllers/Dashboard/Candidate resources/js/Pages/Dashboard/Candidate/Exam resources/js/Components/Dashboard/Candidate/Exam -S`
+  - `git status --short`
+  - `git diff --stat`
 
 ## Verification Notes
 
@@ -230,3 +253,7 @@ Phase 0 through Phase 5 completed. The Online Selection Exam Engine mission is c
 - Final exam PHP syntax sweep passed.
 - Final integration PHP syntax checks for modified models, storage path helper, and routes passed.
 - Final candidate answer-key leakage grep returned no matches.
+- UX polish build passed.
+- UX polish focused exam security test passed: 4 tests, 12 assertions.
+- UX polish template read check confirmed the expected import headings and one safe example row.
+- UX polish candidate answer-key leakage grep returned no matches.

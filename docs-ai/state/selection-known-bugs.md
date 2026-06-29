@@ -4,6 +4,7 @@
 
 - Unrelated existing issue observed: `resources/js/Layouts/DashboardLayout.tsx` default function is named `DashboardSplitLayout`. Default imports still work, and this does not block the exam feature, so it is documented but not fixed due to scope firewall.
 - No known critical or high-risk exam-engine bugs remain after the final Phase 5 audit.
+- No critical or high-risk issue was found during the UX polish checkpoint.
 
 ## Build or Test Failures
 
@@ -31,3 +32,4 @@
 - Do not directly integrate pass/fail with accepted/rejected admission status in this mission unless a safe, explicit selection-status flow is added later.
 - Implementing a background scheduler/command for untouched expired attempts is deferred. Current safe behavior auto-submits expired in-progress attempts on show/sync/save/submit touch.
 - Import supports XLSX via OpenSpout only; legacy XLS support is intentionally not included.
+- The official template includes one generic example row. Admins still need to replace `subject` and `package` values with labels/codes matching the target package.
