@@ -2,6 +2,10 @@
 
 namespace App\Models;
 
+use App\Models\Exam\ExamAuditLog;
+use App\Models\Exam\ExamImportBatch;
+use App\Models\Exam\ExamPackage;
+use App\Models\Exam\ExamSession;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -151,5 +155,25 @@ class User extends Authenticatable implements MustVerifyEmail
     public function pendingEmailReviewer()
     {
         return $this->belongsTo(User::class, 'pending_email_reviewed_by');
+    }
+
+    public function createdExamPackages()
+    {
+        return $this->hasMany(ExamPackage::class, 'created_by');
+    }
+
+    public function createdExamSessions()
+    {
+        return $this->hasMany(ExamSession::class, 'created_by');
+    }
+
+    public function examImportBatches()
+    {
+        return $this->hasMany(ExamImportBatch::class, 'uploaded_by');
+    }
+
+    public function examAuditLogs()
+    {
+        return $this->hasMany(ExamAuditLog::class, 'actor_user_id');
     }
 }

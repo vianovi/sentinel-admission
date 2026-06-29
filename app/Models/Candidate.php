@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Exam\ExamAttempt;
+use App\Models\Exam\ExamSessionCandidate;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -96,6 +98,16 @@ class Candidate extends Model
     public function payments()
     {
         return $this->hasMany(Payment::class);
+    }
+
+    public function examSessionCandidates()
+    {
+        return $this->hasMany(ExamSessionCandidate::class);
+    }
+
+    public function examAttempts()
+    {
+        return $this->hasMany(ExamAttempt::class);
     }
 
     // =============================================

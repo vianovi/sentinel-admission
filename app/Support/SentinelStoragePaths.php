@@ -46,6 +46,11 @@ class SentinelStoragePaths
         return self::join('sentinel', 'temp', 'uploads');
     }
 
+    public static function examImportDirectory(): string
+    {
+        return self::join('sentinel', 'exams', 'imports');
+    }
+
     public static function cinematicShowcaseDirectory(): string
     {
         return self::join('assets', 'cinematic_showcase');
