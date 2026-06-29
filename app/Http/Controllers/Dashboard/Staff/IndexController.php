@@ -7,6 +7,7 @@ use App\Models\AdmissionWave;
 use App\Models\Candidate;
 use App\Models\CandidateDocument;
 use App\Models\Payment;
+use App\Services\CandidateVerificationChecklist;
 use App\Services\PaymentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -44,7 +45,8 @@ class IndexController extends Controller
     ];
 
     public function __construct(
-        private readonly PaymentService $paymentService
+        private readonly PaymentService $paymentService,
+        private readonly CandidateVerificationChecklist $verificationChecklist
     ) {}
 
     // =============================================
@@ -215,12 +217,7 @@ class IndexController extends Controller
             'verified_at'      => now(),
         ]);
 
-        $candidate   = $document->candidate;
-        $allVerified = $candidate->documents()->where('status', '!=', 'verified')->doesntExist();
-
-        if ($allVerified && $candidate->documents()->count() > 0) {
-            $candidate->update(['status' => 'verified']);
-        }
+        $this->verificationChecklist->syncCandidateStatus($document->candidate);
 
         return back()->with('success', 'Dokumen berhasil diverifikasi.');
     }
@@ -238,13 +235,15 @@ class IndexController extends Controller
 
         try {
             if ($validated['status'] === 'verified') {
-                $this->paymentService->verifyProof($payment, Auth::id());
+                $payment = $this->paymentService->verifyProof($payment, Auth::id());
+                $this->verificationChecklist->syncCandidateStatus($payment->candidate);
             } else {
-                $this->paymentService->rejectProof(
+                $payment = $this->paymentService->rejectProof(
                     $payment,
                     Auth::id(),
                     $validated['rejection_reason'] ?? ''
                 );
+                $this->verificationChecklist->syncCandidateStatus($payment->candidate);
             }
 
             return back()->with('success', 'Status pembayaran berhasil diperbarui.');

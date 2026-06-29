@@ -6,6 +6,7 @@ use App\Models\Candidate;
 use App\Models\CandidateDocument;
 use App\Models\Payment;
 use App\Models\User;
+use App\Services\CandidateVerificationChecklist;
 use Illuminate\Support\Collection;
 
 class CandidateDashboardData
@@ -46,16 +47,6 @@ class CandidateDashboardData
         'allergy_medicine'         => 'Alergi obat',
         'allergy_condition'        => 'Kondisi alergi',
         'physical_disabilities'    => 'Disabilitas fisik',
-    ];
-
-    private const REQUIRED_DOCUMENT_TYPES = [
-        'photo_formal',
-        'birth_certificate',
-        'family_card',
-        'parent_id_card',
-        'graduation_certificate',
-        'report_card',
-        'parent_statement',
     ];
 
     public static function make(Candidate $candidate, User $user): array
@@ -206,7 +197,8 @@ class CandidateDashboardData
 
     private static function documentSummary(Candidate $candidate, Collection $documents): array
     {
-        $requiredTypes = self::requiredDocumentTypes($candidate);
+        $checklist = app(CandidateVerificationChecklist::class);
+        $requiredTypes = $checklist->requiredDocumentTypes($candidate);
         $requiredLabels = collect($requiredTypes)
             ->mapWithKeys(fn (string $type) => [$type => CandidateDocument::DOC_TYPES[$type]['label'] ?? $type]);
 
@@ -428,17 +420,6 @@ class CandidateDashboardData
                 default => 'upcoming',
             },
         ];
-    }
-
-    private static function requiredDocumentTypes(Candidate $candidate): array
-    {
-        $types = self::REQUIRED_DOCUMENT_TYPES;
-
-        if ($candidate->is_transfer) {
-            $types[] = 'transfer_letter';
-        }
-
-        return $types;
     }
 
     private static function normalizeDocumentStatus(?string $status): string

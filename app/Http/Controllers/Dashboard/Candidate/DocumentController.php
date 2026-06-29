@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Dashboard\Candidate;
 
 use App\Http\Controllers\Controller;
+use App\Models\Candidate;
 use App\Models\CandidateDocument;
 use App\Models\CandidateDocumentSecurity;
+use App\Services\CandidateVerificationChecklist;
 use App\Services\DocumentSecurityService;
 use App\Support\SentinelStoragePaths;
 use Illuminate\Http\RedirectResponse;
@@ -18,7 +20,8 @@ use Inertia\Response;
 class DocumentController extends Controller
 {
     public function __construct(
-        private readonly DocumentSecurityService $security
+        private readonly DocumentSecurityService $security,
+        private readonly CandidateVerificationChecklist $verificationChecklist
     ) {}
 
     // =============================================
@@ -71,7 +74,7 @@ class DocumentController extends Controller
             'documents'       => $documents,
             'achievementDocs' => $achievementDocs,
             'isTransfer'      => (bool) $candidate->is_transfer,
-            'completion'      => $this->calculateCompletion($candidate->id, (bool) $candidate->is_transfer),
+            'completion'      => $this->calculateCompletion($candidate->id),
         ]);
     }
 
@@ -233,23 +236,21 @@ class DocumentController extends Controller
     // PRIVATE: COMPLETION CALCULATION
     // =============================================
 
-    private function calculateCompletion(int $candidateId, bool $isTransfer): int
+    private function calculateCompletion(int $candidateId): int
     {
+        $candidate = Candidate::find($candidateId);
+
+        if (! $candidate) {
+            return 0;
+        }
+
         $uploadedTypes = CandidateDocument::where('candidate_id', $candidateId)
             ->whereNull('deleted_at')
             ->pluck('doc_type')
             ->unique()
             ->toArray();
 
-        $allTypes = collect(CandidateDocument::DOC_TYPES)
-            ->filter(function ($meta, $type) use ($isTransfer) {
-                if (isset($meta['conditional']) && $meta['conditional'] === true) {
-                    return $isTransfer;
-                }
-                return true;
-            })
-            ->keys()
-            ->toArray();
+        $allTypes = $this->verificationChecklist->requiredDocumentTypes($candidate);
 
         if (count($allTypes) === 0) return 0;
 
