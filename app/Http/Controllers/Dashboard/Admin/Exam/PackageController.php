@@ -9,6 +9,7 @@ use App\Models\Exam\ExamSubject;
 use App\Services\Exam\ExamAuditLogger;
 use App\Services\Exam\ExamPackageTemplateService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -111,9 +112,21 @@ class PackageController extends Controller
         ]);
     }
 
-    public function downloadTemplate(ExamPackage $package): BinaryFileResponse
+    public function downloadTemplate(ExamPackage $package): BinaryFileResponse|RedirectResponse
     {
-        $template = $this->templateService->generate($package);
+        try {
+            $template = $this->templateService->generate($package);
+        } catch (\Throwable $exception) {
+            Log::error('Exam package template download failed', [
+                'package_id' => $package->id,
+                'error_code' => $exception->getMessage(),
+                'exception' => $exception::class,
+            ]);
+
+            return redirect()
+                ->route('admin.exams.packages.show', $package)
+                ->with('error', 'Template soal belum dapat dibuat. Periksa dukungan XLSX/ZIP di server lalu coba lagi.');
+        }
 
         return response()
             ->download($template['path'], $template['filename'], [

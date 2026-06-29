@@ -1,7 +1,7 @@
 import { FormEvent, useEffect } from "react";
 import { Head, Link, router, useForm, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
-import { EmptyState, ExamSectionNav, FlashMessage, PageHeader, StatusPill, inputClass, labelClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
+import { EmptyState, ExamWorkspace, FlashMessage, PageHeader, StatusPill, inputClass, labelClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
 import type { PageProps } from "@/types";
 
 type PackageOption = {
@@ -139,7 +139,7 @@ export default function ExamSessions({ sessions, packages, waves, editing_sessio
         <DashboardLayout>
             <Head title="Sesi Ujian" />
 
-            <div className="space-y-5 pb-8">
+            <ExamWorkspace active="sessions">
                 <PageHeader
                     title="Sesi Ujian"
                     description="Sesi menentukan kapan paket tersedia dan untuk siapa kandidat ditugaskan."
@@ -150,8 +150,6 @@ export default function ExamSessions({ sessions, packages, waves, editing_sessio
                         </Link>
                     }
                 />
-
-                <ExamSectionNav active="sessions" />
 
                 <FlashMessage value={flash.success} type="success" />
                 <FlashMessage value={flash.error ?? pageErrors.session} />
@@ -392,7 +390,7 @@ export default function ExamSessions({ sessions, packages, waves, editing_sessio
                         )}
                     </section>
                 </div>
-            </div>
+            </ExamWorkspace>
         </DashboardLayout>
     );
 }

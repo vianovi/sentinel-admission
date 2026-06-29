@@ -2,7 +2,7 @@
 
 ## Audit Status
 
-Final Phase 5 audit completed. UX polish checkpoint completed afterward. Task 2 admin workflow/template/import refinement completed without schema changes. No known critical or high-risk issue remains for the Online Selection Exam Engine at this checkpoint.
+Final Phase 5 audit completed. UX polish checkpoint completed afterward. Task 2 admin workflow/template/import refinement completed without schema changes. Task 3 XLSX runtime stabilization and Admin Exam V2 redesign completed without schema changes. No known critical or high-risk issue remains for the Online Selection Exam Engine at this checkpoint.
 
 ## Phase Audit Notes
 
@@ -139,6 +139,44 @@ Final Phase 5 audit completed. UX polish checkpoint completed afterward. Task 2 
 - Refined admin exam pages with contextual section navigation, clearer package/session/import copy, dynamic template actions, import result summary, and visible back paths.
 - Verification run for this checkpoint included PHP syntax, dynamic template read check, focused import test, focused exam security test, full feature suite, dashboard route list, and frontend build.
 
+### Task 3
+
+- Audited the failing dynamic XLSX template download route `/dashboard/admin/exams/packages/{package}/template`.
+- Root cause: Docker runtime did not install PHP `ext-zip`, so `ZipArchive` was unavailable even though XLSX files and OpenSpout require ZIP support.
+- Added `ext-zip` to `composer.json` so the runtime requirement is explicit during platform checks.
+- Updated `Dockerfile` to install `libzip-dev` and compile PHP `zip` alongside `pdo_mysql`.
+- Kept the Task 2 template/import design and made it production-aware instead of suppressing the error.
+- Hardened `ExamPackageTemplateService`:
+  - explicit `ZipArchive` availability guard
+  - no orphan temp filename created by appending `.xlsx` after `tempnam`
+  - worksheet-entry discovery instead of hard-coding only sheet1/sheet2
+  - temp cleanup on generation failure
+- Hardened `PackageController::downloadTemplate`:
+  - technical detail is logged through Laravel logs
+  - admin receives a safe flash message when template generation fails
+  - no stack trace or internal runtime detail is intentionally exposed
+- Hardened import reader:
+  - `Panduan` is skipped and cannot become question data
+  - legacy fallback remains available for older non-`Data Soal` workbooks
+- Fixed code-less package metadata validation by accepting the generator fallback `PKG-{id}`.
+- Added focused feature coverage for dynamic template download, filename, package data injection, and raw-placeholder removal.
+- Replaced the rejected tab/horizontal admin exam structure with a desktop-first left contextual sidebar inside the exam admin workspace only.
+- Sidebar information architecture is split into:
+  - `Pengaturan Paket`: Ringkasan Ujian, Kategori Ujian, Paket Ujian, Template Soal, Import Soal, Bank Soal
+  - `Pengaturan Sesi`: Sesi Ujian, Peserta, Hasil Ujian
+- Admin package form now emphasizes admin-owned metadata/status and keeps teacher-owned execution defaults in an advanced initial-values panel.
+- No backend domain rewrite, candidate exam behavior change, or schema change was made.
+- Verification passed:
+  - PHP lint for touched backend files
+  - `npm run build`
+  - focused import/download test
+  - focused exam security test
+  - full Feature suite
+  - dashboard route list
+  - Composer validation/platform checks
+  - host and container `ZipArchive` checks
+  - Docker image build
+
 ## Security Review Notes
 
 - Implemented controls:
@@ -173,6 +211,11 @@ Final Phase 5 audit completed. UX polish checkpoint completed afterward. Task 2 
   - No backend timer/scoring/ownership behavior was changed.
   - Candidate exam UI changes did not introduce answer-key references.
   - Official template matches importer headings and contains only a safe example row.
+- Task 3 security check confirmed:
+  - Template generation failures are logged but sanitized for admins.
+  - Import failures remain sanitized.
+  - `Panduan` is not imported as question data.
+  - Candidate timer/autosave/scoring/ownership logic was not changed.
 
 ## Out-of-Scope File Touches
 
@@ -185,6 +228,8 @@ Final Phase 5 audit completed. UX polish checkpoint completed afterward. Task 2 
 - `resources/js/config/navigation.ts`: activated the staff result menu after Phase 4 pages were completed.
 - `composer.json` and `composer.lock`: changed to install OpenSpout and update vulnerable dependencies. This was necessary to avoid introducing known critical/high security advisories for the import feature and to clear existing Composer audit advisories discovered during Phase 2.
 - `public/templates/exam-question-template.xlsx`: added official static import template for admin UX. This is an exam asset, not a global public feature rewrite.
+- `Dockerfile`: changed only to add the PHP ZIP runtime needed by XLSX generation/import.
+- `composer.json`: Task 3 added explicit `ext-zip` platform requirement; no package architecture rewrite.
 
 ## External References Consulted
 
@@ -192,6 +237,12 @@ Final Phase 5 audit completed. UX polish checkpoint completed afterward. Task 2 
 - Laravel Excel documentation: https://docs.laravel-excel.com/
 - Laravel Excel package metadata: https://packagist.org/packages/maatwebsite/excel
 - OpenSpout package/source metadata: https://github.com/openspout/openspout
+- OpenSpout v5.7.2 Composer requirement for `ext-zip`: https://github.com/openspout/openspout/blob/v5.7.2/composer.json
+- PHP Zip installation documentation: https://www.php.net/manual/en/zip.installation.php
+- PHP ZipArchive class documentation: https://www.php.net/manual/en/class.ziparchive.php
+- Laravel 12 response downloads documentation: https://laravel.com/docs/12.x/responses#file-downloads
+- Material Design navigation drawer guidance: https://m3.material.io/components/navigation-drawer/overview
+- Nielsen Norman Group guidance on navigation IA: https://www.nngroup.com/articles/navigation-cognitive-strain/
 - OWASP File Upload Cheat Sheet: https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html
 - OWASP Input Validation Cheat Sheet: https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html
 - OWASP Session Management Cheat Sheet: https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html
@@ -199,10 +250,10 @@ Final Phase 5 audit completed. UX polish checkpoint completed afterward. Task 2 
 
 ## Final Self-Audit
 
-- Backend: pass. Exam schema, models, services/actions, request validation, routes, import parsing, attempt lifecycle, scoring, and audit logging are implemented within the exam domain. Syntax, route list, migration pretend, feature tests, and Composer audit pass.
-- Frontend: pass. Admin, candidate, and staff exam pages are built in exam-specific page/component folders, integrate existing dashboard layout/menu patterns, and `npm run build` passes.
+- Backend: pass. Exam schema, models, services/actions, request validation, routes, import parsing, template generation, attempt lifecycle, scoring, and audit logging are implemented within the exam domain. Syntax, route list, feature tests, Composer platform checks, Docker image build, and `ZipArchive` checks pass.
+- Frontend: pass. Admin, candidate, and staff exam pages are built in exam-specific page/component folders, integrate existing dashboard layout/menu patterns, and `npm run build` passes. Admin Exam V2 now uses an exam-only contextual sidebar rather than the rejected tab-like navigation.
 - Security: pass for target medium-risk scope. Candidate ownership, role route groups, server timer, autosave lock, server-side scoring, import validation/private storage, and candidate answer-key non-disclosure are implemented and covered by focused checks. No known critical/high issue remains.
 - Product flow: pass. Admin can manage subjects/packages/sessions/imports/assignments/results; candidates can enter assigned exams, answer, autosave, submit, and expire safely; staff/admin can review results.
 - Scope firewall: pass with documented integration touches only. No auth, payment, document, profile, registration, dashboard layout, global role, or global theme rewrite was performed.
-- Residual limitations: option randomization is configured but not rendered yet; pass/fail does not automatically change admission accepted/rejected status; XLSX only, no XLS; untouched expired attempts finalize on next exam request rather than via scheduler.
-- UX polish residual limitations: template is generic rather than package-specific; no browser/E2E screenshot pass was run for exact 375px/390px visual inspection in this checkpoint.
+- Residual limitations: option randomization is configured but not rendered yet; pass/fail does not automatically change admission accepted/rejected status; XLSX only, no XLS; untouched expired attempts finalize on next exam request rather than via scheduler; richer retake policy would need a future schema/product decision.
+- UX polish residual limitations: no browser/E2E screenshot pass was run for exact 375px/390px visual inspection in this checkpoint; Task 3 prioritized desktop admin workflow.

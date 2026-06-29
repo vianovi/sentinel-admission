@@ -6,6 +6,8 @@ Phase 0 through Phase 5 completed. The Online Selection Exam Engine mission is c
 
 UX polish checkpoint completed after the WIP exam engine commit.
 
+Task 3 completed on 2026-06-30: XLSX download/import runtime was audited and hardened, and the admin exam workspace was redesigned into a desktop-first contextual-sidebar V2 without schema changes.
+
 ## Completed Phases
 
 - Phase 0 — Project audit and implementation plan
@@ -275,3 +277,32 @@ UX polish checkpoint completed after the WIP exam engine commit.
 - Added a focused import feature test for Indonesian template headers and package configuration updates.
 - Added contextual exam section navigation to admin exam pages without changing the global dashboard layout.
 - Refined package/session/import/result admin copy and navigation for desktop-first workflow clarity.
+
+## Task 3 — XLSX Runtime Fix and Admin Exam V2
+
+- Found the live template download failure root cause: the project Docker runtime installed `pdo_mysql` only, while XLSX generation/import depends on PHP `ext-zip` / `ZipArchive`.
+- Added `ext-zip` as an explicit Composer platform requirement and updated the Docker image build to install `libzip-dev` and compile PHP `zip`.
+- Kept the Task 2 package-specific XLSX template architecture instead of reverting it.
+- Hardened `ExamPackageTemplateService` with an explicit `ZipArchive` availability guard, safer temp-file handling, worksheet-wide placeholder replacement, and cleanup on generation failures.
+- Hardened the template download controller so missing ZIP/XLSX runtime support is logged server-side and shown to admins as a safe readable flash message.
+- Added a focused feature test for the package-specific template download route, filename, package data injection, and absence of raw placeholders.
+- Audited import parsing and ensured `Panduan` is never used as question data while preserving fallback support for legacy non-`Data Soal` workbooks.
+- Fixed package metadata matching for code-less packages by accepting the generator fallback `PKG-{id}`.
+- Confirmed Indonesian headers/config remain supported and legacy English internal headers remain compatible through the existing heading normalization path.
+- Replaced the rejected horizontal/tab-like admin exam navigation with an exam-only left contextual sidebar split into `Pengaturan Paket` and `Pengaturan Sesi`.
+- Reworked the admin package form so admin-owned fields stay primary while teacher-owned execution settings are reduced into an advanced initial-values panel.
+- No schema change was made.
+
+Task 3 verification completed:
+
+- `php -l` for touched backend PHP files passed.
+- `npm run build` passed.
+- `php artisan test tests/Feature/OnlineSelectionExamImportTest.php` passed: 2 tests, 21 assertions.
+- `php artisan test tests/Feature/OnlineSelectionExamSecurityTest.php` passed: 4 tests, 12 assertions.
+- `php artisan test --testsuite=Feature` passed: 17 tests, 81 assertions.
+- `php artisan route:list --path=dashboard` passed and showed 125 dashboard routes.
+- `composer validate --strict` passed.
+- `composer check-platform-reqs` passed and confirmed `ext-zip`.
+- Host `ZipArchive` check passed.
+- `docker compose build app` passed.
+- Container `ZipArchive` check passed.

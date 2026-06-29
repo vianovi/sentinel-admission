@@ -15,6 +15,10 @@ class ExamPackageTemplateService
      */
     public function generate(ExamPackage $package): array
     {
+        if (! class_exists(ZipArchive::class)) {
+            throw new \RuntimeException('EXAM_TEMPLATE_ZIP_EXTENSION_MISSING');
+        }
+
         $package->loadMissing('subject:id,name,code');
 
         $source = resource_path(self::MASTER_TEMPLATE);
@@ -29,8 +33,10 @@ class ExamPackageTemplateService
             throw new \RuntimeException('EXAM_TEMPLATE_TEMP_FAILED');
         }
 
-        $target .= '.xlsx';
-        copy($source, $target);
+        if (! copy($source, $target)) {
+            @unlink($target);
+            throw new \RuntimeException('EXAM_TEMPLATE_COPY_FAILED');
+        }
 
         $replacements = [
             '{kategori}' => $package->subject?->name ?? '-',
@@ -48,7 +54,7 @@ class ExamPackageTemplateService
         }
 
         try {
-            foreach (['xl/worksheets/sheet1.xml', 'xl/worksheets/sheet2.xml'] as $entry) {
+            foreach ($this->worksheetEntries($archive) as $entry) {
                 $xml = $archive->getFromName($entry);
 
                 if ($xml === false) {
@@ -61,6 +67,10 @@ class ExamPackageTemplateService
 
                 $archive->addFromString($entry, $xml);
             }
+        } catch (\Throwable $exception) {
+            @unlink($target);
+
+            throw $exception;
         } finally {
             $archive->close();
         }
@@ -69,6 +79,24 @@ class ExamPackageTemplateService
             'path' => $target,
             'filename' => $this->filename($package),
         ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function worksheetEntries(ZipArchive $archive): array
+    {
+        $entries = [];
+
+        for ($index = 0; $index < $archive->numFiles; $index++) {
+            $name = $archive->getNameIndex($index);
+
+            if (is_string($name) && str_starts_with($name, 'xl/worksheets/') && str_ends_with($name, '.xml')) {
+                $entries[] = $name;
+            }
+        }
+
+        return $entries;
     }
 
     private function filename(ExamPackage $package): string

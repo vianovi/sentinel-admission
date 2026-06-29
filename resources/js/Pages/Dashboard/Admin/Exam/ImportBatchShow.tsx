@@ -1,6 +1,6 @@
 import { Head, Link } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
-import { BackLink, EmptyState, ExamSectionNav, PageHeader, StatCard, StatusPill } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
+import { BackLink, EmptyState, ExamWorkspace, PageHeader, StatCard, StatusPill } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
 
 type FailureRow = {
     row: number | null;
@@ -40,7 +40,7 @@ export default function ExamImportBatchShow({ batch }: Props) {
         <DashboardLayout>
             <Head title={`Import ${batch.original_filename}`} />
 
-            <div className="space-y-5 pb-8">
+            <ExamWorkspace active="import" packageId={batch.package_id}>
                 <PageHeader
                     title="Laporan Import Soal"
                     description={`${batch.package_title ?? "Tanpa paket"} · ${batch.original_filename}`}
@@ -57,8 +57,6 @@ export default function ExamImportBatchShow({ batch }: Props) {
                         </>
                     }
                 />
-
-                <ExamSectionNav active="import" packageId={batch.package_id} />
 
                 <section className={`rounded-lg border p-4 ${isSuccessful ? "border-emerald-500/20 bg-emerald-500/10" : hasFailures ? "border-amber-500/20 bg-amber-500/10" : "border-slate-200 bg-white dark:border-white/10 dark:bg-slate-900"}`}>
                     <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
@@ -158,7 +156,7 @@ export default function ExamImportBatchShow({ batch }: Props) {
                         </div>
                     )}
                 </section>
-            </div>
+            </ExamWorkspace>
         </DashboardLayout>
     );
 }

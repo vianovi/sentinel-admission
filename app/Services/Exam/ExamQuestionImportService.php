@@ -415,7 +415,7 @@ class ExamQuestionImportService
         $package->loadMissing('subject');
         $reasons = [];
 
-        if (($config['kode_paket'] ?? '') !== '' && ! $this->sameLabel($config['kode_paket'], [$package->code])) {
+        if (($config['kode_paket'] ?? '') !== '' && ! $this->sameLabel($config['kode_paket'], [$package->code, 'PKG-'.$package->id])) {
             $reasons[] = 'Kode paket pada file tidak cocok dengan paket tujuan.';
         }
 

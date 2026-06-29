@@ -14,7 +14,7 @@ feat/online-selection-exam
 
 ## Last Safe Checkpoint
 
-Task 2 completed on 2026-06-30. Admin exam workflow, package-specific XLSX template generation, Indonesian import headers/config parsing, and desktop-first admin UX refinement were implemented without schema changes.
+Task 3 completed on 2026-06-30. XLSX template download/import runtime was stabilized with explicit `ext-zip`/`ZipArchive` support, the import reader was hardened, and Admin Exam V2 was redesigned with an exam-only left contextual sidebar split into `Pengaturan Paket` and `Pengaturan Sesi` without schema changes.
 
 ## Resume Instruction
 

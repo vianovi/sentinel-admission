@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Head, router, useForm, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
-import { EmptyState, FlashMessage, PageHeader, StatusPill, inputClass, labelClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
+import { EmptyState, ExamWorkspace, FlashMessage, PageHeader, StatusPill, inputClass, labelClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
 import type { PageProps } from "@/types";
 
 type Subject = {
@@ -83,7 +83,7 @@ export default function ExamSubjects({ subjects }: Props) {
         <DashboardLayout>
             <Head title="Kategori Ujian" />
 
-            <div className="space-y-5 pb-8">
+            <ExamWorkspace active="subjects">
                 <PageHeader
                     title="Kategori Ujian"
                     description="Kelola subject atau kategori soal yang akan dipakai paket ujian."
@@ -231,7 +231,7 @@ export default function ExamSubjects({ subjects }: Props) {
                         )}
                     </section>
                 </div>
-            </div>
+            </ExamWorkspace>
         </DashboardLayout>
     );
 }

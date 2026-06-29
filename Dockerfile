@@ -1,7 +1,11 @@
 FROM php:8.4-apache
 
-# Install extension untuk database MariaDB/MySQL
-RUN docker-php-ext-install pdo_mysql
+# Install extension untuk database MariaDB/MySQL dan pemrosesan XLSX.
+# XLSX adalah arsip ZIP; OpenSpout dan template generator membutuhkan ext-zip.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libzip-dev \
+    && docker-php-ext-install pdo_mysql zip \
+    && rm -rf /var/lib/apt/lists/*
 
 # Setting Apache biar langsung baca folder /public milik Laravel
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public

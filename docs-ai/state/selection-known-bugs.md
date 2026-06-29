@@ -6,6 +6,8 @@
 - No known critical or high-risk exam-engine bugs remain after the final Phase 5 audit.
 - No critical or high-risk issue was found during the UX polish checkpoint.
 - No schema blocker was found during Task 2. Existing package fields support the teacher-filled XLSX configuration.
+- Task 3 resolved the live XLSX template download crash `Class "ZipArchive" not found` by making `ext-zip` explicit in Composer/Docker and adding safe controller handling.
+- No known critical or high-risk exam-engine bugs remain after Task 3 verification.
 
 ## Build or Test Failures
 
@@ -26,6 +28,7 @@
 - Final Phase 5 candidate answer-key leakage grep passed after all candidate changes.
 - Admin/staff result filters now include search, session, status, and pass/fail.
 - Option randomization is configured at package level but not yet implemented in candidate option rendering. Question randomization is implemented through stable `question_order`; option randomization should be documented as a known limitation unless implemented later.
+- XLSX generation/import requires PHP `ext-zip` / `ZipArchive` in every runtime. The project Docker image now installs it; non-Docker deployments must also provide it.
 
 ## Deferred Non-Critical Issues
 
@@ -35,3 +38,4 @@
 - Import supports XLSX via OpenSpout only; legacy XLS support is intentionally not included.
 - The old static public template remains as a legacy asset, but the admin workflow now uses the package-specific dynamic template.
 - Dynamic Task 2 template reads `izinkan_ujian_ulang` into `max_attempts` using a simple 1-or-2 attempt mapping. More granular retake policy would require a future product/schema decision.
+- Admin Exam V2 still uses existing backend package/session fields. A richer future teacher/retake policy would need a separate product/schema decision, not a Task 3 hotfix.

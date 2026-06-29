@@ -1,6 +1,8 @@
 import { Link } from "@inertiajs/react";
 import type { ReactNode } from "react";
 
+type ExamWorkspaceActive = "overview" | "subjects" | "packages" | "template" | "import" | "questions" | "sessions" | "participants" | "results";
+
 export const inputClass =
     "w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-rose-400 focus:ring-2 focus:ring-rose-500/10 dark:border-white/10 dark:bg-slate-950 dark:text-white";
 
@@ -100,53 +102,184 @@ export function BackLink({ href, label = "Kembali" }: { href: string; label?: st
     );
 }
 
-export function ExamSectionNav({
+export function ExamWorkspace({
+    active,
+    packageId,
+    sessionId,
+    children,
+}: {
+    active: ExamWorkspaceActive;
+    packageId?: number;
+    sessionId?: number;
+    children: ReactNode;
+}) {
+    return (
+        <div className="grid gap-5 pb-8 xl:grid-cols-[286px_minmax(0,1fr)]">
+            <ExamContextSidebar active={active} packageId={packageId} sessionId={sessionId} />
+            <main className="min-w-0 space-y-5">{children}</main>
+        </div>
+    );
+}
+
+function ExamContextSidebar({
     active,
     packageId,
     sessionId,
 }: {
-    active: "overview" | "packages" | "import" | "sessions" | "participants" | "results" | "template";
+    active: ExamWorkspaceActive;
     packageId?: number;
     sessionId?: number;
 }) {
-    const items = [
-        { key: "overview", label: "Overview", icon: "fa-solid fa-gauge-high", href: "/dashboard/admin/exams" },
-        { key: "packages", label: "Paket Ujian", icon: "fa-solid fa-box-archive", href: "/dashboard/admin/exams/packages" },
-        { key: "import", label: "Import Soal", icon: "fa-solid fa-file-import", href: packageId ? `/dashboard/admin/exams/packages/${packageId}` : "/dashboard/admin/exams/packages" },
-        { key: "sessions", label: "Sesi Ujian", icon: "fa-solid fa-calendar-check", href: "/dashboard/admin/exams/sessions" },
-        { key: "participants", label: "Peserta", icon: "fa-solid fa-users", href: sessionId ? `/dashboard/admin/exams/sessions/${sessionId}` : "/dashboard/admin/exams/sessions" },
-        { key: "results", label: "Hasil Ujian", icon: "fa-solid fa-square-poll-vertical", href: "/dashboard/admin/exams/results" },
-        { key: "template", label: "Template / Panduan", icon: "fa-solid fa-file-arrow-down", href: packageId ? `/dashboard/admin/exams/packages/${packageId}/template` : "/dashboard/admin/exams/packages" },
+    const packageItems: SidebarItem[] = [
+        {
+            key: "overview",
+            label: "Ringkasan Ujian",
+            description: "Status paket, sesi, import, dan pengerjaan.",
+            icon: "fa-solid fa-gauge-high",
+            href: "/dashboard/admin/exams",
+        },
+        {
+            key: "subjects",
+            label: "Kategori Ujian",
+            description: "Mapel atau kelompok seleksi untuk paket.",
+            icon: "fa-solid fa-layer-group",
+            href: "/dashboard/admin/exams/subjects",
+        },
+        {
+            key: "packages",
+            label: "Paket Ujian",
+            description: "Metadata paket dan kesiapan bank soal.",
+            icon: "fa-solid fa-box-archive",
+            href: "/dashboard/admin/exams/packages",
+        },
+        {
+            key: "template",
+            label: "Template Soal",
+            description: packageId ? "Unduh XLSX khusus paket terpilih." : "Pilih paket sebelum mengunduh template.",
+            icon: "fa-solid fa-file-arrow-down",
+            href: packageId ? `/dashboard/admin/exams/packages/${packageId}/template` : "/dashboard/admin/exams/packages",
+            download: Boolean(packageId),
+        },
+        {
+            key: "import",
+            label: "Import Soal",
+            description: "Upload XLSX dari guru dan review hasilnya.",
+            icon: "fa-solid fa-file-import",
+            href: packageId ? `/dashboard/admin/exams/packages/${packageId}#import-soal` : "/dashboard/admin/exams/packages",
+        },
+        {
+            key: "questions",
+            label: "Bank Soal",
+            description: "Preview soal yang sudah masuk ke paket.",
+            icon: "fa-solid fa-list-ol",
+            href: packageId ? `/dashboard/admin/exams/packages/${packageId}#bank-soal` : "/dashboard/admin/exams/packages",
+        },
+    ];
+
+    const sessionItems: SidebarItem[] = [
+        {
+            key: "sessions",
+            label: "Sesi Ujian",
+            description: "Jadwal, paket aktif, dan aturan akses.",
+            icon: "fa-solid fa-calendar-check",
+            href: "/dashboard/admin/exams/sessions",
+        },
+        {
+            key: "participants",
+            label: "Peserta",
+            description: "Tugaskan kandidat ke sesi yang tepat.",
+            icon: "fa-solid fa-users",
+            href: sessionId ? `/dashboard/admin/exams/sessions/${sessionId}` : "/dashboard/admin/exams/sessions",
+        },
+        {
+            key: "results",
+            label: "Hasil Ujian",
+            description: "Pantau attempt, skor, dan kelulusan.",
+            icon: "fa-solid fa-square-poll-vertical",
+            href: "/dashboard/admin/exams/results",
+        },
     ];
 
     return (
-        <nav className="overflow-x-auto rounded-lg border border-slate-200 bg-white p-2 dark:border-white/10 dark:bg-slate-900" aria-label="Navigasi area ujian seleksi">
-            <div className="flex min-w-max gap-1">
-                {items.map((item) => {
-                    const isActive = item.key === active;
-                    const className = `inline-flex min-h-10 items-center gap-2 rounded-md px-3 text-xs font-bold transition ${isActive ? "bg-rose-500 text-white" : "text-slate-600 hover:bg-slate-50 hover:text-rose-500 dark:text-slate-300 dark:hover:bg-white/5"}`;
+        <aside className="xl:sticky xl:top-24 xl:self-start" aria-label="Navigasi workspace ujian seleksi">
+            <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-soft dark:border-white/10 dark:bg-slate-900">
+                <div className="border-b border-slate-100 px-2 pb-3 dark:border-white/10">
+                    <p className="text-[11px] font-black uppercase tracking-wide text-rose-500">Workspace Ujian</p>
+                    <h2 className="mt-1 text-sm font-black text-slate-900 dark:text-white">Ruang Kerja Ujian</h2>
+                    <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">Pisahkan apa yang diuji dari kapan ujian dibuka dan siapa pesertanya.</p>
+                </div>
 
-                    if (item.key === "template" && packageId) {
-                        return (
-                            <a key={item.key} href={item.href} download className={className}>
-                                <i className={`${item.icon} text-[11px]`} />
-                                {item.label}
-                            </a>
-                        );
-                    }
+                <SidebarGroup title="Pengaturan Paket" items={packageItems} active={active} />
+                <SidebarGroup title="Pengaturan Sesi" items={sessionItems} active={active} />
 
-                    return (
-                        <Link
-                            key={item.key}
-                            href={item.href}
-                            className={className}
-                        >
-                            <i className={`${item.icon} text-[11px]`} />
-                            {item.label}
-                        </Link>
-                    );
-                })}
+                <div className="mt-3 rounded-lg border border-amber-500/20 bg-amber-500/10 p-3 text-xs leading-5 text-amber-800 dark:text-amber-200">
+                    Template dan import hanya berlaku untuk paket yang sedang dipilih. Sesi memakai paket yang sudah siap.
+                </div>
             </div>
-        </nav>
+        </aside>
+    );
+}
+
+type SidebarItem = {
+    key: ExamWorkspaceActive;
+    label: string;
+    description: string;
+    icon: string;
+    href: string;
+    download?: boolean;
+};
+
+function SidebarGroup({ title, items, active }: { title: string; items: SidebarItem[]; active: ExamWorkspaceActive }) {
+    return (
+        <div className="mt-4">
+            <p className="px-2 text-[11px] font-black uppercase tracking-wide text-slate-400">{title}</p>
+            <div className="mt-2 grid gap-1.5">
+                {items.map((item) => (
+                    <SidebarLink key={item.key} item={item} active={active === item.key} />
+                ))}
+            </div>
+        </div>
+    );
+}
+
+function SidebarLink({ item, active }: { item: SidebarItem; active: boolean }) {
+    const className = `group flex min-h-[58px] items-start gap-3 rounded-lg px-3 py-2.5 text-left transition ${
+        active
+            ? "bg-rose-500 text-white shadow-sm shadow-rose-500/20"
+            : "text-slate-600 hover:bg-slate-50 hover:text-rose-500 dark:text-slate-300 dark:hover:bg-white/5"
+    }`;
+
+    const content = (
+        <>
+            <span className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${active ? "bg-white/15" : "bg-slate-100 text-slate-500 group-hover:text-rose-500 dark:bg-white/5"}`}>
+                <i className={`${item.icon} text-xs`} />
+            </span>
+            <span className="min-w-0">
+                <span className="block text-sm font-black">{item.label}</span>
+                <span className={`mt-0.5 block text-xs leading-4 ${active ? "text-white/75" : "text-slate-500 dark:text-slate-400"}`}>{item.description}</span>
+            </span>
+        </>
+    );
+
+    if (item.download) {
+        return (
+            <a href={item.href} download className={className}>
+                {content}
+            </a>
+        );
+    }
+
+    if (item.href.includes("#")) {
+        return (
+            <a href={item.href} className={className}>
+                {content}
+            </a>
+        );
+    }
+
+    return (
+        <Link href={item.href} className={className}>
+            {content}
+        </Link>
     );
 }

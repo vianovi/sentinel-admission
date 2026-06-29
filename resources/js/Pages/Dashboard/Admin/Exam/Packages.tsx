@@ -1,7 +1,7 @@
 import { FormEvent, useEffect } from "react";
 import { Head, Link, router, useForm, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
-import { EmptyState, ExamSectionNav, FlashMessage, PageHeader, StatusPill, inputClass, labelClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
+import { EmptyState, ExamWorkspace, FlashMessage, PageHeader, StatusPill, inputClass, labelClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
 import type { PageProps } from "@/types";
 
 type SubjectOption = {
@@ -124,7 +124,7 @@ export default function ExamPackages({ packages, subjects, editing_package, mode
         <DashboardLayout>
             <Head title="Paket Ujian" />
 
-            <div className="space-y-5 pb-8">
+            <ExamWorkspace active="packages">
                 <PageHeader
                     title="Paket Ujian"
                     description="Paket ujian adalah satu mapel/unit seleksi. Setelah paket dibuat, sistem dapat membuat template soal untuk guru."
@@ -140,8 +140,6 @@ export default function ExamPackages({ packages, subjects, editing_package, mode
                         </>
                     }
                 />
-
-                <ExamSectionNav active="packages" />
 
                 <FlashMessage value={flash.success} type="success" />
                 <FlashMessage value={flash.error ?? pageErrors.package} />
@@ -212,53 +210,6 @@ export default function ExamPackages({ packages, subjects, editing_package, mode
                                     {form.errors.description ? <p className="mt-1 text-xs text-red-500">{form.errors.description}</p> : null}
                                 </div>
 
-                                <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-3 text-xs leading-5 text-amber-800 dark:text-amber-200">
-                                    Durasi, ambang lulus, izin ujian ulang, dan visibilitas hasil adalah nilai awal. Saat admin mengimport XLSX yang diisi guru, nilai ini akan mengikuti konfigurasi pada file tersebut.
-                                </div>
-
-                                <div className="grid grid-cols-3 gap-3">
-                                    <div>
-                                        <label className={labelClass} htmlFor="package-duration">Durasi Awal</label>
-                                        <input
-                                            id="package-duration"
-                                            type="number"
-                                            value={form.data.duration_minutes}
-                                            onChange={(event) => form.setData("duration_minutes", Number(event.target.value))}
-                                            className={inputClass}
-                                            min={5}
-                                            max={300}
-                                        />
-                                        {form.errors.duration_minutes ? <p className="mt-1 text-xs text-red-500">{form.errors.duration_minutes}</p> : null}
-                                    </div>
-                                    <div>
-                                        <label className={labelClass} htmlFor="package-passing">Ambang Lulus %</label>
-                                        <input
-                                            id="package-passing"
-                                            type="number"
-                                            value={form.data.passing_score}
-                                            onChange={(event) => form.setData("passing_score", Number(event.target.value))}
-                                            className={inputClass}
-                                            min={0}
-                                            max={100}
-                                            step="0.01"
-                                        />
-                                        {form.errors.passing_score ? <p className="mt-1 text-xs text-red-500">{form.errors.passing_score}</p> : null}
-                                    </div>
-                                    <div>
-                                        <label className={labelClass} htmlFor="package-max-attempts">Maks. Percobaan</label>
-                                        <input
-                                            id="package-max-attempts"
-                                            type="number"
-                                            value={form.data.max_attempts}
-                                            onChange={(event) => form.setData("max_attempts", Number(event.target.value))}
-                                            className={inputClass}
-                                            min={1}
-                                            max={5}
-                                        />
-                                        {form.errors.max_attempts ? <p className="mt-1 text-xs text-red-500">{form.errors.max_attempts}</p> : null}
-                                    </div>
-                                </div>
-
                                 <div>
                                     <label className={labelClass} htmlFor="package-status">Status Paket</label>
                                     <select
@@ -275,23 +226,75 @@ export default function ExamPackages({ packages, subjects, editing_package, mode
                                     {form.errors.status ? <p className="mt-1 text-xs text-red-500">{form.errors.status}</p> : null}
                                 </div>
 
-                                <div className="grid gap-2">
-                                    {[
-                                        ["randomize_questions", "Acak urutan soal"],
-                                        ["randomize_options", "Acak pilihan jawaban"],
-                                        ["show_result_to_candidate", "Tampilkan hasil ke kandidat setelah selesai"],
-                                    ].map(([field, label]) => (
-                                        <label key={field} className="flex items-center gap-3 rounded-lg border border-slate-200 px-3 py-3 text-sm font-semibold text-slate-700 dark:border-white/10 dark:text-slate-200">
+                                <details className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-white/10 dark:bg-white/[0.03]">
+                                    <summary className="cursor-pointer text-xs font-black uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                                        Nilai awal teknis
+                                    </summary>
+                                    <p className="mt-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
+                                        Durasi, ambang lulus, izin ujian ulang, dan visibilitas hasil akan diperbarui dari XLSX guru saat import berhasil.
+                                    </p>
+
+                                    <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                                        <div>
+                                            <label className={labelClass} htmlFor="package-duration">Durasi</label>
                                             <input
-                                                type="checkbox"
-                                                checked={Boolean(form.data[field as keyof PackageForm])}
-                                                onChange={(event) => form.setData(field as keyof PackageForm, event.target.checked)}
-                                                className="rounded border-slate-300 text-rose-500 focus:ring-rose-500"
+                                                id="package-duration"
+                                                type="number"
+                                                value={form.data.duration_minutes}
+                                                onChange={(event) => form.setData("duration_minutes", Number(event.target.value))}
+                                                className={inputClass}
+                                                min={5}
+                                                max={300}
                                             />
-                                            {label}
-                                        </label>
-                                    ))}
-                                </div>
+                                            {form.errors.duration_minutes ? <p className="mt-1 text-xs text-red-500">{form.errors.duration_minutes}</p> : null}
+                                        </div>
+                                        <div>
+                                            <label className={labelClass} htmlFor="package-passing">Lulus %</label>
+                                            <input
+                                                id="package-passing"
+                                                type="number"
+                                                value={form.data.passing_score}
+                                                onChange={(event) => form.setData("passing_score", Number(event.target.value))}
+                                                className={inputClass}
+                                                min={0}
+                                                max={100}
+                                                step="0.01"
+                                            />
+                                            {form.errors.passing_score ? <p className="mt-1 text-xs text-red-500">{form.errors.passing_score}</p> : null}
+                                        </div>
+                                        <div>
+                                            <label className={labelClass} htmlFor="package-max-attempts">Attempt</label>
+                                            <input
+                                                id="package-max-attempts"
+                                                type="number"
+                                                value={form.data.max_attempts}
+                                                onChange={(event) => form.setData("max_attempts", Number(event.target.value))}
+                                                className={inputClass}
+                                                min={1}
+                                                max={5}
+                                            />
+                                            {form.errors.max_attempts ? <p className="mt-1 text-xs text-red-500">{form.errors.max_attempts}</p> : null}
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-3 grid gap-2">
+                                        {[
+                                            ["randomize_questions", "Acak urutan soal"],
+                                            ["randomize_options", "Acak pilihan jawaban"],
+                                            ["show_result_to_candidate", "Tampilkan hasil ke kandidat"],
+                                        ].map(([field, label]) => (
+                                            <label key={field} className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-slate-700 dark:border-white/10 dark:bg-slate-950 dark:text-slate-200">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={Boolean(form.data[field as keyof PackageForm])}
+                                                    onChange={(event) => form.setData(field as keyof PackageForm, event.target.checked)}
+                                                    className="rounded border-slate-300 text-rose-500 focus:ring-rose-500"
+                                                />
+                                                {label}
+                                            </label>
+                                        ))}
+                                    </div>
+                                </details>
 
                                 <button
                                     type="submit"
@@ -378,7 +381,7 @@ export default function ExamPackages({ packages, subjects, editing_package, mode
                         )}
                     </section>
                 </div>
-            </div>
+            </ExamWorkspace>
         </DashboardLayout>
     );
 }

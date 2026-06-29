@@ -1,7 +1,7 @@
 import { FormEvent, useMemo, useState } from "react";
 import { Head, Link, useForm, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
-import { BackLink, EmptyState, ExamSectionNav, FlashMessage, PageHeader, StatCard, StatusPill, inputClass, labelClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
+import { BackLink, EmptyState, ExamWorkspace, FlashMessage, PageHeader, StatCard, StatusPill, inputClass, labelClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
 import type { PageProps } from "@/types";
 
 type SessionDetail = {
@@ -97,7 +97,7 @@ export default function ExamSessionShow({ session, assigned_candidates, availabl
         <DashboardLayout>
             <Head title={`${session.title} - Sesi Ujian`} />
 
-            <div className="space-y-5 pb-8">
+            <ExamWorkspace active="participants" sessionId={session.id}>
                 <PageHeader
                     title={session.title}
                     description={`${session.package_title ?? "Tanpa paket"} · ${session.package_subject ?? "Tanpa kategori"}`}
@@ -111,8 +111,6 @@ export default function ExamSessionShow({ session, assigned_candidates, availabl
                         </>
                     }
                 />
-
-                <ExamSectionNav active="participants" sessionId={session.id} />
 
                 <FlashMessage value={flash.success} type="success" />
                 <FlashMessage value={flash.error ?? pageErrors.session ?? pageErrors.candidate_ids} />
@@ -249,7 +247,7 @@ export default function ExamSessionShow({ session, assigned_candidates, availabl
                         )}
                     </section>
                 </div>
-            </div>
+            </ExamWorkspace>
         </DashboardLayout>
     );
 }

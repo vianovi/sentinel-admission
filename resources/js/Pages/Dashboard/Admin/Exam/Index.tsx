@@ -1,6 +1,6 @@
 import { Head, Link } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
-import { ExamSectionNav } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
+import { ExamWorkspace } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
 
 type Stats = {
     subjects: number;
@@ -67,7 +67,7 @@ export default function ExamAdminIndex({ stats, recent_imports, upcoming_session
         <DashboardLayout>
             <Head title="Ujian Seleksi" />
 
-            <div className="space-y-5 pb-8">
+            <ExamWorkspace active="overview">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <h1 className="text-xl font-bold text-slate-900 dark:text-white">Ujian Seleksi</h1>
@@ -82,8 +82,6 @@ export default function ExamAdminIndex({ stats, recent_imports, upcoming_session
                         </Link>
                     </div>
                 </div>
-
-                <ExamSectionNav active="overview" />
 
                 <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                     {cards(stats).map((card) => (
@@ -142,7 +140,7 @@ export default function ExamAdminIndex({ stats, recent_imports, upcoming_session
                         </div>
                     </section>
                 </div>
-            </div>
+            </ExamWorkspace>
         </DashboardLayout>
     );
 }

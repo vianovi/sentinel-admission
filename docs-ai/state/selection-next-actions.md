@@ -2,7 +2,7 @@
 
 ## Next Action
 
-Mission complete. UX polish checkpoint also completed. No required continuation action remains for this directive.
+Mission complete. UX polish checkpoint and Task 3 Admin Exam V2 stabilization are completed. No required continuation action remains for this directive.
 
 ## Instructions for Next Agent Run
 
@@ -11,6 +11,7 @@ Mission complete. UX polish checkpoint also completed. No required continuation 
 3. Keep future work scoped to a new feature/bugfix request.
 4. Re-run route/build/test/audit checks after future exam changes.
 5. For import UX questions, use the dynamic package template route `/dashboard/admin/exams/packages/{package}/template`; the master file is `resources/templates/exam/template-import-soal-ujian-seleksi-spmb.final.xlsx`.
+6. Ensure every runtime has PHP `ext-zip` / `ZipArchive`; Docker now installs it through `libzip-dev` + `docker-php-ext-install zip`.
 
 ## Do Not Touch
 
@@ -30,15 +31,26 @@ Mission complete. UX polish checkpoint also completed. No required continuation 
 4. Updated `selection-exam-audit.md` with final self-audit.
 5. Updated all durable state files to completed.
 
+## Completed Task 3 Concrete Steps
+
+1. Audited XLSX template generation/import code and external runtime requirements.
+2. Fixed Docker/Composer runtime support for `ext-zip` / `ZipArchive`.
+3. Added safe admin-facing handling for template generation failures.
+4. Added focused template download verification.
+5. Replaced the rejected tab-like admin exam navigation with a left contextual sidebar split into `Pengaturan Paket` and `Pengaturan Sesi`.
+6. Updated durable state and audit documentation.
+
 ## Known Limitations to Document
 
 - This is not a proctoring/browser-lockdown system.
 - Option randomization is configured but not implemented in candidate rendering yet.
 - Exam pass/fail does not automatically change final admission accepted/rejected status.
 - Import supports XLSX only through OpenSpout, not legacy XLS.
+- Dynamic XLSX generation/import requires PHP `ext-zip` / `ZipArchive` in host and deployed runtimes.
 
 ## Recommended Future UX Polish
 
 - Add browser/E2E viewport checks for candidate exam at 375px and 390px.
 - Consider option randomization rendering if the existing `randomize_options` flag should become active.
 - Consider a dedicated retake policy schema if admins need more than the current `izinkan_ujian_ulang` -> `max_attempts` 1/2 mapping.
+- Add an E2E/browser pass for the new admin exam workspace once demo data is ready, especially package detail/import and session participant workflows.

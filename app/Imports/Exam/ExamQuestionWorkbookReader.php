@@ -19,7 +19,13 @@ class ExamQuestionWorkbookReader
             $fallback = null;
 
             foreach ($reader->getSheetIterator() as $sheet) {
-                if (method_exists($sheet, 'getName') && $sheet->getName() !== 'Data Soal') {
+                $sheetName = method_exists($sheet, 'getName') ? $sheet->getName() : null;
+
+                if ($sheetName === 'Panduan') {
+                    continue;
+                }
+
+                if ($sheetName !== 'Data Soal') {
                     if ($fallback === null) {
                         $fallback = $this->readSheet($sheet, $maxRows);
                     }

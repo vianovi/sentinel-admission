@@ -1,7 +1,7 @@
 import { FormEvent } from "react";
 import { Head, Link, router, useForm, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
-import { BackLink, EmptyState, ExamSectionNav, FlashMessage, PageHeader, StatCard, StatusPill, inputClass, labelClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
+import { BackLink, EmptyState, ExamWorkspace, FlashMessage, PageHeader, StatCard, StatusPill, inputClass, labelClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
 import type { PageProps } from "@/types";
 
 type PackageDetail = {
@@ -90,7 +90,7 @@ export default function ExamPackageShow({ package: examPackage, questions, sessi
         <DashboardLayout>
             <Head title={`${examPackage.title} - Paket Ujian`} />
 
-            <div className="space-y-5 pb-8">
+            <ExamWorkspace active="packages" packageId={examPackage.id}>
                 <PageHeader
                     title={examPackage.title}
                     description={`${examPackage.subject_name ?? "Tanpa kategori"} · ${examPackage.code ?? "Tanpa kode"}`}
@@ -104,8 +104,6 @@ export default function ExamPackageShow({ package: examPackage, questions, sessi
                         </>
                     }
                 />
-
-                <ExamSectionNav active="import" packageId={examPackage.id} />
 
                 <FlashMessage value={flash.success} type="success" />
                 <FlashMessage value={flash.error ?? pageErrors.package ?? pageErrors.file} />
@@ -151,7 +149,7 @@ export default function ExamPackageShow({ package: examPackage, questions, sessi
                 </div>
 
                 <div className="grid gap-4 xl:grid-cols-[420px_1fr]">
-                    <section className="rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-900">
+                    <section id="import-soal" className="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-900">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                             <div>
                                 <h2 className="text-sm font-bold text-slate-900 dark:text-white">Workflow Import Soal</h2>
@@ -260,7 +258,7 @@ export default function ExamPackageShow({ package: examPackage, questions, sessi
                 </div>
 
                 <div className="grid gap-4 xl:grid-cols-2">
-                    <section className="rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-900">
+                    <section id="bank-soal" className="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-900">
                         <div className="mb-4 flex items-center justify-between">
                             <h2 className="text-sm font-bold text-slate-900 dark:text-white">Preview Soal Terbaru</h2>
                             <span className="text-xs font-semibold text-slate-500">20 terakhir</span>
@@ -316,7 +314,7 @@ export default function ExamPackageShow({ package: examPackage, questions, sessi
                         )}
                     </section>
                 </div>
-            </div>
+            </ExamWorkspace>
         </DashboardLayout>
     );
 }
