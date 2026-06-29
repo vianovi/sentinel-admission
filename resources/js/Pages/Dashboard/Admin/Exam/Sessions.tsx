@@ -1,7 +1,7 @@
 import { FormEvent, useEffect } from "react";
 import { Head, Link, router, useForm, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
-import { EmptyState, FlashMessage, PageHeader, StatusPill, inputClass, labelClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
+import { EmptyState, ExamSectionNav, FlashMessage, PageHeader, StatusPill, inputClass, labelClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
 import type { PageProps } from "@/types";
 
 type PackageOption = {
@@ -142,7 +142,7 @@ export default function ExamSessions({ sessions, packages, waves, editing_sessio
             <div className="space-y-5 pb-8">
                 <PageHeader
                     title="Sesi Ujian"
-                    description="Atur jadwal, gelombang pendaftaran, dan aturan attempt per sesi."
+                    description="Sesi menentukan kapan paket tersedia dan untuk siapa kandidat ditugaskan."
                     icon="fa-solid fa-calendar-check"
                     actions={
                         <Link href="/dashboard/admin/exams/sessions/create" className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-rose-500 px-3 text-sm font-bold text-white hover:bg-rose-400">
@@ -151,6 +151,8 @@ export default function ExamSessions({ sessions, packages, waves, editing_sessio
                     }
                 />
 
+                <ExamSectionNav active="sessions" />
+
                 <FlashMessage value={flash.success} type="success" />
                 <FlashMessage value={flash.error ?? pageErrors.session} />
 
@@ -158,7 +160,7 @@ export default function ExamSessions({ sessions, packages, waves, editing_sessio
                     <section className="rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-900">
                         <div className="mb-4">
                             <h2 className="text-sm font-bold text-slate-900 dark:text-white">{isEditing ? "Edit Sesi" : "Sesi Baru"}</h2>
-                            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Sesi yang sudah punya attempt tidak dapat diubah dari halaman ini.</p>
+                            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Paket Ujian = apa yang diuji. Sesi Ujian = jadwal dan kandidat yang mendapat akses.</p>
                         </div>
 
                         {packages.length === 0 ? (
@@ -178,6 +180,9 @@ export default function ExamSessions({ sessions, packages, waves, editing_sessio
                                         ))}
                                     </select>
                                     {form.errors.exam_package_id ? <p className="mt-1 text-xs text-red-500">{form.errors.exam_package_id}</p> : null}
+                                    <p className="mt-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
+                                        Memilih paket akan menyalin durasi, ambang lulus, percobaan, dan aturan hasil dari paket sebagai nilai awal sesi.
+                                    </p>
                                 </div>
 
                                 <div>

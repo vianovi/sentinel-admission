@@ -1,7 +1,7 @@
 import { FormEvent } from "react";
 import { Head, Link, router, useForm, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
-import { BackLink, EmptyState, FlashMessage, PageHeader, StatCard, StatusPill, inputClass, labelClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
+import { BackLink, EmptyState, ExamSectionNav, FlashMessage, PageHeader, StatCard, StatusPill, inputClass, labelClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
 import type { PageProps } from "@/types";
 
 type PackageDetail = {
@@ -63,11 +63,10 @@ type Props = {
     max_rows: number;
 };
 
-const questionTemplateUrl = "/templates/exam-question-template.xlsx";
-
 export default function ExamPackageShow({ package: examPackage, questions, sessions, imports, required_columns, max_rows }: Props) {
     const { flash, errors: pageErrors } = usePage<PageProps & { errors: Record<string, string> }>().props;
     const form = useForm<ImportForm>({ file: null });
+    const templateUrl = `/dashboard/admin/exams/packages/${examPackage.id}/template`;
 
     const submitImport = (event: FormEvent) => {
         event.preventDefault();
@@ -105,6 +104,8 @@ export default function ExamPackageShow({ package: examPackage, questions, sessi
                         </>
                     }
                 />
+
+                <ExamSectionNav active="import" packageId={examPackage.id} />
 
                 <FlashMessage value={flash.success} type="success" />
                 <FlashMessage value={flash.error ?? pageErrors.package ?? pageErrors.file} />
@@ -153,13 +154,13 @@ export default function ExamPackageShow({ package: examPackage, questions, sessi
                     <section className="rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-900">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                             <div>
-                                <h2 className="text-sm font-bold text-slate-900 dark:text-white">Import Soal XLSX</h2>
+                                <h2 className="text-sm font-bold text-slate-900 dark:text-white">Workflow Import Soal</h2>
                                 <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
-                                    Unduh template resmi, isi data soal tanpa mengubah header, lalu upload kembali file XLSX yang sudah lengkap.
+                                    Template dibuat khusus dari paket ini, lalu guru mengisi konfigurasi ujian dan daftar soal pada file XLSX.
                                 </p>
                             </div>
                             <a
-                                href={questionTemplateUrl}
+                                href={templateUrl}
                                 download
                                 className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 text-sm font-bold text-rose-600 hover:border-rose-300 hover:bg-rose-100 focus:outline-none focus:ring-2 focus:ring-rose-500/20 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-200"
                             >
@@ -167,12 +168,23 @@ export default function ExamPackageShow({ package: examPackage, questions, sessi
                             </a>
                         </div>
 
-                        <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-white/10 dark:bg-white/[0.03]">
-                            <ol className="grid gap-2 text-xs leading-5 text-slate-600 dark:text-slate-300">
-                                <li><span className="font-black text-slate-900 dark:text-white">1.</span> Isi baris contoh sesuai subject dan package tujuan.</li>
-                                <li><span className="font-black text-slate-900 dark:text-white">2.</span> Biarkan nama kolom tetap sama persis.</li>
-                                <li><span className="font-black text-slate-900 dark:text-white">3.</span> Upload file `.xlsx`; maksimal {max_rows.toLocaleString("id-ID")} baris.</li>
-                            </ol>
+                        <div className="mt-4 grid gap-3">
+                            {[
+                                ["1", "Unduh Template", "Sistem mengisi kategori, judul paket, kode paket, deskripsi, dan status paket."],
+                                ["2", "Guru Mengisi", "Guru mengisi durasi, ambang lulus, visibilitas hasil, izin ujian ulang, dan baris soal."],
+                                ["3", "Upload File Soal", `Upload kembali XLSX yang sudah lengkap; maksimal ${max_rows.toLocaleString("id-ID")} baris soal.`],
+                                ["4", "Review Import", "Sistem menampilkan ringkasan konfigurasi, jumlah berhasil, dan alasan kegagalan per baris."],
+                            ].map(([step, title, description]) => (
+                                <div key={step} className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-white/10 dark:bg-white/[0.03]">
+                                    <div className="flex items-start gap-3">
+                                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-rose-500 text-xs font-black text-white">{step}</span>
+                                        <div>
+                                            <p className="text-sm font-bold text-slate-900 dark:text-white">{title}</p>
+                                            <p className="mt-1 text-xs leading-5 text-slate-600 dark:text-slate-300">{description}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
 
                         <form onSubmit={submitImport} className="mt-4 space-y-4">
@@ -191,7 +203,7 @@ export default function ExamPackageShow({ package: examPackage, questions, sessi
                                         File dipilih: {form.data.file.name}
                                     </p>
                                 ) : (
-                                    <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Pilih file `.xlsx` yang memakai header template resmi.</p>
+                                    <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Pilih file `.xlsx` hasil pengisian template paket ini.</p>
                                 )}
                             </div>
 
@@ -201,12 +213,12 @@ export default function ExamPackageShow({ package: examPackage, questions, sessi
                                 className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-rose-500 px-4 text-sm font-bold text-white hover:bg-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-500/30 disabled:cursor-not-allowed disabled:opacity-60"
                             >
                                 {form.processing ? <i className="fa-solid fa-spinner fa-spin text-xs" /> : <i className="fa-solid fa-file-import text-xs" />}
-                                {form.processing ? "Mengimport Soal..." : "Import Soal"}
+                                {form.processing ? "Memvalidasi & Import..." : "Validasi & Import"}
                             </button>
                         </form>
 
-                        <div className="mt-5 rounded-lg bg-slate-50 p-3 dark:bg-white/[0.03]">
-                            <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Kolom wajib</p>
+                        <details className="mt-5 rounded-lg bg-slate-50 p-3 dark:bg-white/[0.03]">
+                            <summary className="cursor-pointer text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Format Template</summary>
                             <div className="mt-3 flex flex-wrap gap-2">
                                 {required_columns.map((column) => (
                                     <code key={column} className="rounded-md bg-white px-2 py-1 text-[11px] font-bold text-slate-600 ring-1 ring-slate-200 dark:bg-slate-950 dark:text-slate-300 dark:ring-white/10">
@@ -215,9 +227,9 @@ export default function ExamPackageShow({ package: examPackage, questions, sessi
                                 ))}
                             </div>
                             <p className="mt-3 text-xs leading-5 text-slate-500 dark:text-slate-400">
-                                `option_e`, `explanation`, dan `is_active` boleh kosong, tetapi `correct_answer` E wajib memiliki isi pada `option_e`.
+                                Jangan ubah nama sheet `Data Soal`, section konfigurasi, atau header tabel. `opsi_e`, `pembahasan`, dan `aktif` boleh kosong; jika jawaban benar E maka `opsi_e` wajib diisi.
                             </p>
-                        </div>
+                        </details>
                     </section>
 
                     <section className="rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-900">

@@ -81,32 +81,48 @@ The import uses OpenSpout and supports `.xlsx` files only.
 
 Official template:
 
-- `/templates/exam-question-template.xlsx`
-- Admins should download the template from the package import panel, keep the header row unchanged, replace the example row with real questions, then upload the completed XLSX.
+- Master file: `resources/templates/exam/template-import-soal-ujian-seleksi-spmb.final.xlsx`
+- Dynamic download route: `/dashboard/admin/exams/packages/{package}/template`
+- Admins should open a package detail/import page, download the generated template for that package, send it to the teacher/question maker, then upload the completed XLSX.
+
+The generated workbook has two sheets:
+
+- `Data Soal`, read by the system.
+- `Panduan`, for human instructions and ignored during import.
+
+The `Data Soal` sheet contains:
+
+- Package metadata filled by the system: `kategori`, `judul_paket`, `kode_paket`, `deskripsi`, `status_paket`.
+- Exam configuration filled by the teacher: `durasi_menit`, `ambang_lulus_persen`, `tampilkan_hasil`, `izinkan_ujian_ulang`.
+- Question rows with Indonesian headers.
 
 Required heading row columns:
 
 | Column | Required Cell Value | Notes |
 | --- | --- | --- |
-| `subject` | yes | Must match the target package subject name or code. |
-| `package` | yes | Must match the target package title or code. |
-| `question_text` | yes | Main question text. |
-| `option_a` | yes | Choice A. |
-| `option_b` | yes | Choice B. |
-| `option_c` | yes | Choice C. |
-| `option_d` | yes | Choice D. |
-| `option_e` | optional value | Column must exist. Value may be empty unless answer is E. |
-| `correct_answer` | yes | A, B, C, D, or E. |
-| `point` | yes | Positive number. |
-| `difficulty` | yes | `easy`, `medium`, `hard`, or Indonesian aliases `mudah`, `sedang`, `sulit`. |
-| `explanation` | optional value | Column must exist. Admin/staff review only. |
-| `is_active` | optional value | Empty means active. Accepts true/false, yes/no, y/n, 1/0, aktif/nonaktif. |
+| `nomor` | no | Display-only row number. |
+| `teks_soal` | yes | Main question text. |
+| `opsi_a` | yes | Choice A. |
+| `opsi_b` | yes | Choice B. |
+| `opsi_c` | yes | Choice C. |
+| `opsi_d` | yes | Choice D. |
+| `opsi_e` | optional value | Column must exist. Value may be empty unless answer is E. |
+| `jawaban_benar` | yes | A, B, C, D, or E. |
+| `poin` | yes | Positive number. |
+| `tingkat_kesulitan` | yes | `mudah`, `sedang`, `sulit`; legacy `easy`, `medium`, `hard` also accepted. |
+| `pembahasan` | optional value | Column must exist. Admin/staff review only. |
+| `aktif` | optional value | Empty means active. Accepts ya/tidak, true/false, yes/no, y/n, 1/0, aktif/nonaktif. |
 
-Example row:
+Legacy English headers remain supported for existing import files:
 
-| subject | package | question_text | option_a | option_b | option_c | option_d | option_e | correct_answer | point | difficulty | explanation | is_active |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Akademik | Tes Gelombang 1 | Hasil dari 12 + 8 adalah ... | 18 | 19 | 20 | 21 | 22 | C | 1 | easy | 12 + 8 = 20 | true |
+- `subject`, `package`, `question_text`, `option_a`, `option_b`, `option_c`, `option_d`, `option_e`, `correct_answer`, `point`, `difficulty`, `explanation`, `is_active`.
+
+Configuration mapping:
+
+- `durasi_menit` -> `duration_minutes`
+- `ambang_lulus_persen` -> `passing_score`
+- `tampilkan_hasil` -> `show_result_to_candidate`
+- `izinkan_ujian_ulang` -> `max_attempts` of 2 when `ya`, otherwise 1
 
 ## Import Validation
 
@@ -117,7 +133,9 @@ The import flow validates:
 - Allowed MIME types
 - Maximum size 5 MB
 - XLSX ZIP signature
-- Required heading columns
+- `Data Soal` sheet and required heading columns
+- Package metadata match through `kode_paket`, `judul_paket`, and `kategori`
+- Teacher-filled exam configuration values
 - Empty required fields
 - Subject/package mismatch
 - Invalid correct answer

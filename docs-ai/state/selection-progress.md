@@ -257,3 +257,21 @@ UX polish checkpoint completed after the WIP exam engine commit.
 - UX polish focused exam security test passed: 4 tests, 12 assertions.
 - UX polish template read check confirmed the expected import headings and one safe example row.
 - UX polish candidate answer-key leakage grep returned no matches.
+
+## Task 2 — Admin Workflow and Dynamic XLSX Template
+
+- Added package-specific XLSX template download using master template `resources/templates/exam/template-import-soal-ujian-seleksi-spmb.final.xlsx`.
+- Added admin download route `admin.exams.packages.template.download` at `/dashboard/admin/exams/packages/{package}/template`.
+- Replaced static import-template emphasis with a package workflow: create package, download generated template, teacher fills configuration/questions, admin imports, admin reviews result.
+- Updated import reader to target sheet `Data Soal`, ignore `Panduan`, read package metadata/configuration sections, and find the question header row even when it is not the first non-empty row.
+- Added Indonesian header mapping:
+  - `teks_soal`, `opsi_a`, `opsi_b`, `opsi_c`, `opsi_d`, `opsi_e`, `jawaban_benar`, `poin`, `tingkat_kesulitan`, `pembahasan`, `aktif`.
+- Kept legacy English header compatibility for existing imports.
+- Added teacher-filled configuration parsing:
+  - `durasi_menit` -> `duration_minutes`
+  - `ambang_lulus_persen` -> `passing_score`
+  - `tampilkan_hasil` -> `show_result_to_candidate`
+  - `izinkan_ujian_ulang` -> `max_attempts` of 2 when `ya`, otherwise 1
+- Added a focused import feature test for Indonesian template headers and package configuration updates.
+- Added contextual exam section navigation to admin exam pages without changing the global dashboard layout.
+- Refined package/session/import/result admin copy and navigation for desktop-first workflow clarity.

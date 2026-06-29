@@ -1,7 +1,7 @@
 import { FormEvent, useState } from "react";
 import { Head, Link, router } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
-import { BackLink, EmptyState, PageHeader, StatusPill, inputClass, labelClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
+import { BackLink, EmptyState, ExamSectionNav, PageHeader, StatusPill, inputClass, labelClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
 
 type CandidateSummary = {
     id: number | null;
@@ -105,6 +105,8 @@ export default function ExamResults({ attempts, filters, sessions }: Props) {
                     icon="fa-solid fa-square-poll-vertical"
                     actions={<BackLink href="/dashboard/admin/exams" label="Dashboard Ujian" />}
                 />
+
+                <ExamSectionNav active="results" />
 
                 <section className="rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-900">
                     <form onSubmit={applyFilters} className="grid gap-3 lg:grid-cols-[1.3fr_1fr_1fr_1fr_auto] lg:items-end">

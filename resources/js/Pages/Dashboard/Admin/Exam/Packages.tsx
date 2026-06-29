@@ -1,7 +1,7 @@
 import { FormEvent, useEffect } from "react";
 import { Head, Link, router, useForm, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
-import { EmptyState, FlashMessage, PageHeader, StatusPill, inputClass, labelClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
+import { EmptyState, ExamSectionNav, FlashMessage, PageHeader, StatusPill, inputClass, labelClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
 import type { PageProps } from "@/types";
 
 type SubjectOption = {
@@ -127,7 +127,7 @@ export default function ExamPackages({ packages, subjects, editing_package, mode
             <div className="space-y-5 pb-8">
                 <PageHeader
                     title="Paket Ujian"
-                    description="Rancang paket soal, durasi, ambang kelulusan, dan aturan hasil kandidat."
+                    description="Paket ujian adalah satu mapel/unit seleksi. Setelah paket dibuat, sistem dapat membuat template soal untuk guru."
                     icon="fa-solid fa-box-archive"
                     actions={
                         <>
@@ -141,6 +141,8 @@ export default function ExamPackages({ packages, subjects, editing_package, mode
                     }
                 />
 
+                <ExamSectionNav active="packages" />
+
                 <FlashMessage value={flash.success} type="success" />
                 <FlashMessage value={flash.error ?? pageErrors.package} />
 
@@ -148,7 +150,7 @@ export default function ExamPackages({ packages, subjects, editing_package, mode
                     <section className="rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-900">
                         <div className="mb-4">
                             <h2 className="text-sm font-bold text-slate-900 dark:text-white">{isEditing ? "Edit Paket" : "Paket Baru"}</h2>
-                            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Paket harus punya soal aktif sebelum bisa dipublish.</p>
+                            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Admin mengisi metadata paket. Konfigurasi pengerjaan dapat diperbarui dari file template saat import.</p>
                         </div>
 
                         {subjects.length === 0 ? (
@@ -172,7 +174,7 @@ export default function ExamPackages({ packages, subjects, editing_package, mode
 
                                 <div className="grid gap-3 sm:grid-cols-2">
                                     <div>
-                                        <label className={labelClass} htmlFor="package-title">Judul paket</label>
+                                        <label className={labelClass} htmlFor="package-title">Judul Paket</label>
                                         <input
                                             id="package-title"
                                             value={form.data.title}
@@ -184,7 +186,7 @@ export default function ExamPackages({ packages, subjects, editing_package, mode
                                         {form.errors.title ? <p className="mt-1 text-xs text-red-500">{form.errors.title}</p> : null}
                                     </div>
                                     <div>
-                                        <label className={labelClass} htmlFor="package-code">Kode</label>
+                                        <label className={labelClass} htmlFor="package-code">Kode Paket</label>
                                         <input
                                             id="package-code"
                                             value={form.data.code}
@@ -210,9 +212,13 @@ export default function ExamPackages({ packages, subjects, editing_package, mode
                                     {form.errors.description ? <p className="mt-1 text-xs text-red-500">{form.errors.description}</p> : null}
                                 </div>
 
+                                <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-3 text-xs leading-5 text-amber-800 dark:text-amber-200">
+                                    Durasi, ambang lulus, izin ujian ulang, dan visibilitas hasil adalah nilai awal. Saat admin mengimport XLSX yang diisi guru, nilai ini akan mengikuti konfigurasi pada file tersebut.
+                                </div>
+
                                 <div className="grid grid-cols-3 gap-3">
                                     <div>
-                                        <label className={labelClass} htmlFor="package-duration">Durasi</label>
+                                        <label className={labelClass} htmlFor="package-duration">Durasi Awal</label>
                                         <input
                                             id="package-duration"
                                             type="number"
@@ -225,7 +231,7 @@ export default function ExamPackages({ packages, subjects, editing_package, mode
                                         {form.errors.duration_minutes ? <p className="mt-1 text-xs text-red-500">{form.errors.duration_minutes}</p> : null}
                                     </div>
                                     <div>
-                                        <label className={labelClass} htmlFor="package-passing">Lulus %</label>
+                                        <label className={labelClass} htmlFor="package-passing">Ambang Lulus %</label>
                                         <input
                                             id="package-passing"
                                             type="number"
@@ -239,7 +245,7 @@ export default function ExamPackages({ packages, subjects, editing_package, mode
                                         {form.errors.passing_score ? <p className="mt-1 text-xs text-red-500">{form.errors.passing_score}</p> : null}
                                     </div>
                                     <div>
-                                        <label className={labelClass} htmlFor="package-max-attempts">Attempt</label>
+                                        <label className={labelClass} htmlFor="package-max-attempts">Maks. Percobaan</label>
                                         <input
                                             id="package-max-attempts"
                                             type="number"
@@ -254,7 +260,7 @@ export default function ExamPackages({ packages, subjects, editing_package, mode
                                 </div>
 
                                 <div>
-                                    <label className={labelClass} htmlFor="package-status">Status awal</label>
+                                    <label className={labelClass} htmlFor="package-status">Status Paket</label>
                                     <select
                                         id="package-status"
                                         value={form.data.status}
@@ -273,7 +279,7 @@ export default function ExamPackages({ packages, subjects, editing_package, mode
                                     {[
                                         ["randomize_questions", "Acak urutan soal"],
                                         ["randomize_options", "Acak pilihan jawaban"],
-                                        ["show_result_to_candidate", "Tampilkan hasil ke kandidat"],
+                                        ["show_result_to_candidate", "Tampilkan hasil ke kandidat setelah selesai"],
                                     ].map(([field, label]) => (
                                         <label key={field} className="flex items-center gap-3 rounded-lg border border-slate-200 px-3 py-3 text-sm font-semibold text-slate-700 dark:border-white/10 dark:text-slate-200">
                                             <input

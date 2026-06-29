@@ -1,6 +1,6 @@
 import { Head, Link } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
-import { BackLink, PageHeader, StatCard, StatusPill } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
+import { BackLink, ExamSectionNav, PageHeader, StatCard, StatusPill } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
 
 type CandidateSummary = {
     id: number | null;
@@ -73,6 +73,8 @@ export default function ExamResultShow({ attempt }: Props) {
                         </>
                     }
                 />
+
+                <ExamSectionNav active="results" />
 
                 <section className="rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-900">
                     <div className="grid gap-4 lg:grid-cols-[1fr_320px]">

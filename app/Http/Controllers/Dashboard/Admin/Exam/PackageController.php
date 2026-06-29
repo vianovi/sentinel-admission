@@ -7,14 +7,17 @@ use App\Http\Requests\Exam\StoreExamPackageRequest;
 use App\Models\Exam\ExamPackage;
 use App\Models\Exam\ExamSubject;
 use App\Services\Exam\ExamAuditLogger;
+use App\Services\Exam\ExamPackageTemplateService;
 use Illuminate\Http\RedirectResponse;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class PackageController extends Controller
 {
     public function __construct(
-        private readonly ExamAuditLogger $audit
+        private readonly ExamAuditLogger $audit,
+        private readonly ExamPackageTemplateService $templateService
     ) {}
 
     public function index(): Response
@@ -106,6 +109,17 @@ class PackageController extends Controller
             'required_columns' => \App\Services\Exam\ExamQuestionImportService::requiredColumns(),
             'max_rows' => \App\Services\Exam\ExamQuestionImportService::maxRows(),
         ]);
+    }
+
+    public function downloadTemplate(ExamPackage $package): BinaryFileResponse
+    {
+        $template = $this->templateService->generate($package);
+
+        return response()
+            ->download($template['path'], $template['filename'], [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            ])
+            ->deleteFileAfterSend(true);
     }
 
     public function edit(ExamPackage $package): Response

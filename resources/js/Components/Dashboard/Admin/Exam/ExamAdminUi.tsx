@@ -99,3 +99,54 @@ export function BackLink({ href, label = "Kembali" }: { href: string; label?: st
         </Link>
     );
 }
+
+export function ExamSectionNav({
+    active,
+    packageId,
+    sessionId,
+}: {
+    active: "overview" | "packages" | "import" | "sessions" | "participants" | "results" | "template";
+    packageId?: number;
+    sessionId?: number;
+}) {
+    const items = [
+        { key: "overview", label: "Overview", icon: "fa-solid fa-gauge-high", href: "/dashboard/admin/exams" },
+        { key: "packages", label: "Paket Ujian", icon: "fa-solid fa-box-archive", href: "/dashboard/admin/exams/packages" },
+        { key: "import", label: "Import Soal", icon: "fa-solid fa-file-import", href: packageId ? `/dashboard/admin/exams/packages/${packageId}` : "/dashboard/admin/exams/packages" },
+        { key: "sessions", label: "Sesi Ujian", icon: "fa-solid fa-calendar-check", href: "/dashboard/admin/exams/sessions" },
+        { key: "participants", label: "Peserta", icon: "fa-solid fa-users", href: sessionId ? `/dashboard/admin/exams/sessions/${sessionId}` : "/dashboard/admin/exams/sessions" },
+        { key: "results", label: "Hasil Ujian", icon: "fa-solid fa-square-poll-vertical", href: "/dashboard/admin/exams/results" },
+        { key: "template", label: "Template / Panduan", icon: "fa-solid fa-file-arrow-down", href: packageId ? `/dashboard/admin/exams/packages/${packageId}/template` : "/dashboard/admin/exams/packages" },
+    ];
+
+    return (
+        <nav className="overflow-x-auto rounded-lg border border-slate-200 bg-white p-2 dark:border-white/10 dark:bg-slate-900" aria-label="Navigasi area ujian seleksi">
+            <div className="flex min-w-max gap-1">
+                {items.map((item) => {
+                    const isActive = item.key === active;
+                    const className = `inline-flex min-h-10 items-center gap-2 rounded-md px-3 text-xs font-bold transition ${isActive ? "bg-rose-500 text-white" : "text-slate-600 hover:bg-slate-50 hover:text-rose-500 dark:text-slate-300 dark:hover:bg-white/5"}`;
+
+                    if (item.key === "template" && packageId) {
+                        return (
+                            <a key={item.key} href={item.href} download className={className}>
+                                <i className={`${item.icon} text-[11px]`} />
+                                {item.label}
+                            </a>
+                        );
+                    }
+
+                    return (
+                        <Link
+                            key={item.key}
+                            href={item.href}
+                            className={className}
+                        >
+                            <i className={`${item.icon} text-[11px]`} />
+                            {item.label}
+                        </Link>
+                    );
+                })}
+            </div>
+        </nav>
+    );
+}

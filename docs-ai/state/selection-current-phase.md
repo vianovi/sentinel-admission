@@ -14,7 +14,7 @@ feat/online-selection-exam
 
 ## Last Safe Checkpoint
 
-Phase 5 completed on 2026-06-29. Documentation, focused security tests, final route/build/migration/test/dependency checks, answer-key leakage grep, and final self-audit completed successfully.
+Task 2 completed on 2026-06-30. Admin exam workflow, package-specific XLSX template generation, Indonesian import headers/config parsing, and desktop-first admin UX refinement were implemented without schema changes.
 
 ## Resume Instruction
 

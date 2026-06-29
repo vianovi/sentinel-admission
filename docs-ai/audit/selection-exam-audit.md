@@ -2,7 +2,7 @@
 
 ## Audit Status
 
-Final Phase 5 audit completed. UX polish checkpoint completed afterward. No known critical or high-risk issue remains for the Online Selection Exam Engine at this checkpoint.
+Final Phase 5 audit completed. UX polish checkpoint completed afterward. Task 2 admin workflow/template/import refinement completed without schema changes. No known critical or high-risk issue remains for the Online Selection Exam Engine at this checkpoint.
 
 ## Phase Audit Notes
 
@@ -126,6 +126,18 @@ Final Phase 5 audit completed. UX polish checkpoint completed afterward. No know
   - `npm run build` passed.
   - `php artisan test tests/Feature/OnlineSelectionExamSecurityTest.php` passed: 4 tests, 12 assertions.
   - Candidate answer-key leakage grep returned no matches.
+
+### Task 2
+
+- Added package-specific XLSX template download from master template `resources/templates/exam/template-import-soal-ujian-seleksi-spmb.final.xlsx`.
+- Added route `/dashboard/admin/exams/packages/{package}/template` named `admin.exams.packages.template.download`.
+- Added `ExamPackageTemplateService` to copy the master XLSX, replace package placeholders, stream the generated file, and delete the temp file after response.
+- Updated importer to read only `Data Soal`, ignore `Panduan`, parse package metadata and teacher-owned exam configuration, and support Indonesian question headers.
+- Kept legacy English import headers compatible.
+- Updated package configuration on import using existing fields only: duration, passing score, result visibility, and max attempts.
+- Added focused import test for Indonesian template headers/config update.
+- Refined admin exam pages with contextual section navigation, clearer package/session/import copy, dynamic template actions, import result summary, and visible back paths.
+- Verification run for this checkpoint included PHP syntax, dynamic template read check, focused import test, focused exam security test, full feature suite, dashboard route list, and frontend build.
 
 ## Security Review Notes
 

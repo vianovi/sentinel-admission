@@ -381,6 +381,8 @@ Route::middleware(['auth', RoleMiddleware::class . ':admin'])
                     ->name('packages.publish');
                 Route::post('/packages/{package}/close', [AdminExamPackage::class, 'close'])
                     ->name('packages.close');
+                Route::get('/packages/{package}/template', [AdminExamPackage::class, 'downloadTemplate'])
+                    ->name('packages.template.download');
                 Route::resource('packages', AdminExamPackage::class);
 
                 Route::get('/packages/{package}/imports', [AdminExamImport::class, 'index'])

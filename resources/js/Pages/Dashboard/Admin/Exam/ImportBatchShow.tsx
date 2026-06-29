@@ -1,9 +1,10 @@
 import { Head, Link } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
-import { BackLink, EmptyState, PageHeader, StatCard, StatusPill } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
+import { BackLink, EmptyState, ExamSectionNav, PageHeader, StatCard, StatusPill } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
 
 type FailureRow = {
     row: number | null;
+    type?: string;
     question_text?: string | null;
     reasons: string[];
 };
@@ -30,7 +31,9 @@ type Props = {
 };
 
 export default function ExamImportBatchShow({ batch }: Props) {
-    const hasFailures = batch.failed_rows > 0 || batch.failure_report.length > 0 || batch.missing_columns.length > 0;
+    const summary = batch.failure_report.find((item) => item.type === "summary");
+    const rowFailures = batch.failure_report.filter((item) => item.type !== "summary");
+    const hasFailures = batch.failed_rows > 0 || rowFailures.length > 0 || batch.missing_columns.length > 0;
     const isSuccessful = batch.status === "completed" && !hasFailures;
 
     return (
@@ -48,12 +51,14 @@ export default function ExamImportBatchShow({ batch }: Props) {
                             <Link href={`/dashboard/admin/exams/packages/${batch.package_id}/imports`} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-slate-200 px-3 text-sm font-bold text-slate-700 hover:border-rose-300 hover:text-rose-500 dark:border-white/10 dark:text-slate-200">
                                 <i className="fa-solid fa-clock-rotate-left text-xs" /> Riwayat
                             </Link>
-                            <a href="/templates/exam-question-template.xlsx" download className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-rose-500 px-3 text-sm font-bold text-white hover:bg-rose-400">
+                            <a href={`/dashboard/admin/exams/packages/${batch.package_id}/template`} download className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-rose-500 px-3 text-sm font-bold text-white hover:bg-rose-400">
                                 <i className="fa-solid fa-file-arrow-down text-xs" /> Template
                             </a>
                         </>
                     }
                 />
+
+                <ExamSectionNav active="import" packageId={batch.package_id} />
 
                 <section className={`rounded-lg border p-4 ${isSuccessful ? "border-emerald-500/20 bg-emerald-500/10" : hasFailures ? "border-amber-500/20 bg-amber-500/10" : "border-slate-200 bg-white dark:border-white/10 dark:bg-slate-900"}`}>
                     <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
@@ -87,6 +92,19 @@ export default function ExamImportBatchShow({ batch }: Props) {
                     <StatCard label="Gagal" value={batch.failed_rows} icon="fa-solid fa-triangle-exclamation" tone="text-red-500" />
                 </div>
 
+                {summary ? (
+                    <section className="rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-900">
+                        <h2 className="text-sm font-bold text-slate-900 dark:text-white">Ringkasan Konfigurasi Terdeteksi</h2>
+                        <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+                            {summary.reasons.map((item) => (
+                                <div key={item} className="rounded-lg bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600 dark:bg-white/[0.03] dark:text-slate-300">
+                                    {item}
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                ) : null}
+
                 {batch.missing_columns.length > 0 ? (
                     <section className="rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-red-800 dark:text-red-200">
                         <h2 className="text-sm font-bold">Kolom wajib belum lengkap</h2>
@@ -103,10 +121,10 @@ export default function ExamImportBatchShow({ batch }: Props) {
                 <section className="rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-900">
                     <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                         <h2 className="text-sm font-bold text-slate-900 dark:text-white">Failure Report</h2>
-                        <span className="text-xs font-semibold text-slate-500">{batch.failure_report.length.toLocaleString("id-ID")} baris perlu diperiksa</span>
+                        <span className="text-xs font-semibold text-slate-500">{rowFailures.length.toLocaleString("id-ID")} baris perlu diperiksa</span>
                     </div>
 
-                    {batch.failure_report.length === 0 ? (
+                    {rowFailures.length === 0 ? (
                         <EmptyState icon="fa-solid fa-shield-check" title="Tidak ada kegagalan baris" description="Semua baris valid berhasil diproses. Lanjutkan ke halaman paket untuk preview dan publish bila sudah siap." />
                     ) : (
                         <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-white/10">
@@ -119,7 +137,7 @@ export default function ExamImportBatchShow({ batch }: Props) {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100 dark:divide-white/10">
-                                    {batch.failure_report.map((failure, index) => (
+                                    {rowFailures.map((failure, index) => (
                                         <tr key={`${failure.row ?? "file"}-${index}`} className="align-top">
                                             <td className="px-4 py-3 font-bold text-slate-900 dark:text-white">{failure.row ?? "-"}</td>
                                             <td className="max-w-md px-4 py-3 text-slate-600 dark:text-slate-300">{failure.question_text || "-"}</td>

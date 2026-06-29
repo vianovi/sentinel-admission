@@ -85,3 +85,13 @@
 - Store the official XLSX import template as a static public asset at `public/templates/exam-question-template.xlsx` because the template is small, stable, and does not require backend generation.
 - Keep the polish sprint frontend-focused. No database schema, scoring, timer, ownership, or import-domain logic was changed.
 - Use existing exam UI patterns and Font Awesome icons rather than introducing a new component library.
+
+## Task 2 Decisions
+
+- Treat `resources/templates/exam/template-import-soal-ujian-seleksi-spmb.final.xlsx` as the master template for package-specific downloads.
+- Generate downloadable XLSX files dynamically from the selected package instead of serving the old static template as the primary admin workflow.
+- Keep the static public template as a legacy asset for backward compatibility, but point admin exam UI to the dynamic package template route.
+- Do not add schema for import metadata. Store the user-facing import summary inside the existing `failure_report` JSON structure.
+- Map `izinkan_ujian_ulang` to the existing `max_attempts` field: `ya` means 2 attempts, `tidak` means 1 attempt.
+- Continue using OpenSpout for XLSX reading and use `ZipArchive` only for placeholder replacement in the master XLSX file.
+- Reject package metadata mismatch from the generated XLSX instead of importing partial rows into the wrong package.

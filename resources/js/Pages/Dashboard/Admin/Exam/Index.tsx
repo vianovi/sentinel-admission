@@ -1,5 +1,6 @@
 import { Head, Link } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
+import { ExamSectionNav } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
 
 type Stats = {
     subjects: number;
@@ -81,6 +82,8 @@ export default function ExamAdminIndex({ stats, recent_imports, upcoming_session
                         </Link>
                     </div>
                 </div>
+
+                <ExamSectionNav active="overview" />
 
                 <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                     {cards(stats).map((card) => (

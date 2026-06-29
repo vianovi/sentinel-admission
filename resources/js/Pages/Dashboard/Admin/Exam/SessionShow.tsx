@@ -1,7 +1,7 @@
 import { FormEvent, useMemo, useState } from "react";
 import { Head, Link, useForm, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
-import { BackLink, EmptyState, FlashMessage, PageHeader, StatCard, StatusPill, inputClass, labelClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
+import { BackLink, EmptyState, ExamSectionNav, FlashMessage, PageHeader, StatCard, StatusPill, inputClass, labelClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
 import type { PageProps } from "@/types";
 
 type SessionDetail = {
@@ -111,6 +111,8 @@ export default function ExamSessionShow({ session, assigned_candidates, availabl
                         </>
                     }
                 />
+
+                <ExamSectionNav active="participants" sessionId={session.id} />
 
                 <FlashMessage value={flash.success} type="success" />
                 <FlashMessage value={flash.error ?? pageErrors.session ?? pageErrors.candidate_ids} />
