@@ -265,7 +265,7 @@ export default function TabIdentitas({
                         />
                     </Field>
 
-                    <Field label="Nomor HP/WA Siswa" error={errors.phone_number}
+                    <Field label="Nomor HP/WA Siswa" required error={errors.phone_number}
                         hint="Diawali 08 — +62 dan tanda baca otomatis dihapus">
                         <input
                             value={phoneNumber}
@@ -299,7 +299,7 @@ export default function TabIdentitas({
                         />
                     </Field>
 
-                    <Field label="Nomor Kartu Keluarga" error={errors.family_card_number}
+                    <Field label="Nomor Kartu Keluarga" required error={errors.family_card_number}
                         hint="16 digit angka sesuai KK">
                         <input
                             value={familyCardNo}

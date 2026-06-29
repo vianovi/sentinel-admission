@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Dashboard\Candidate;
 
 use App\Http\Controllers\Controller;
+use App\Models\Candidate;
 use App\Support\CandidateRequestPresenter;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -18,6 +20,11 @@ class DataDiriController extends Controller
     {
         $user      = $request->user();
         $candidate = $user->candidate()->with(['admissionWave.programs'])->first();
+        if ($candidate && empty($candidate->phone_number) && $candidate->registrationDraft?->whatsapp_number) {
+            $candidate->updateQuietly([
+                'phone_number' => Candidate::normalizePhoneNumber($candidate->registrationDraft->whatsapp_number),
+            ]);
+        }
         $dataChangeResult = CandidateRequestPresenter::formatDataChangeResult($candidate?->data_change_request);
 
         return Inertia::render('Dashboard/Candidate/DataDiri', [
@@ -96,11 +103,30 @@ class DataDiriController extends Controller
     {
         $user      = $request->user();
         $candidate = $user->candidate()->with(['admissionWave.programs'])->firstOrFail();
+        $validatingIdentity = $request->hasAny([
+            'email',
+            'phone_number',
+            'religion',
+            'birth_certificate_number',
+            'family_card_number',
+            'child_order',
+            'siblings_count',
+        ]);
+        $validatingAddress = $request->hasAny([
+            'postal_code',
+            'school_npsn',
+            'certificate_number',
+            'is_transfer',
+        ]);
+        $validatingProgram = $request->hasAny([
+            'program_choice',
+            'major_choice',
+        ]);
 
         $validated = $request->validate([
             'email'                       => ['nullable', 'email', 'max:255', 'regex:/^[^\s@]+@gmail\.com$/i'],
-            'phone_number'                => ['nullable', 'string', 'regex:/^08[0-9]{8,12}$/'],
-            'religion'                    => ['nullable', 'string', 'max:50', 'in:Islam,Kristen,Katolik,Hindu,Buddha,Konghucu'],
+            'phone_number'                => [Rule::requiredIf($validatingIdentity), 'nullable', 'string', 'regex:/^08[0-9]{8,12}$/'],
+            'religion'                    => [Rule::requiredIf($validatingIdentity), 'nullable', 'string', 'max:50', 'in:Islam,Kristen,Katolik,Hindu,Buddha,Konghucu'],
             'child_order'                 => ['nullable', 'integer', 'min:1', 'max:20'],
             'siblings_count'              => ['nullable', 'integer', 'min:0', 'max:20'],
             'hobbies'                     => ['nullable', 'string', 'max:500'],
@@ -108,20 +134,26 @@ class DataDiriController extends Controller
             'habits'                      => ['nullable', 'string', 'max:1000'],
             'extracurricular_interests'   => ['nullable', 'array'],
             'extracurricular_interests.*' => ['string', 'max:100'],
-            'postal_code'                 => ['nullable', 'digits:5'],
-            'school_npsn'                 => ['nullable', 'digits:8'],
+            'postal_code'                 => [Rule::requiredIf($validatingAddress), 'nullable', 'digits:5'],
+            'school_npsn'                 => [Rule::requiredIf($validatingAddress), 'nullable', 'digits:8'],
             'certificate_number'          => ['nullable', 'string', 'max:100'],
             'birth_certificate_number'    => ['nullable', 'string', 'max:100'],
-            'family_card_number'          => ['nullable', 'digits:16'],
-            'program_choice'              => ['nullable', 'string', 'max:100'],
+            'family_card_number'          => [Rule::requiredIf($validatingIdentity), 'nullable', 'digits:16'],
+            'program_choice'              => [Rule::requiredIf($validatingProgram), 'nullable', 'string', 'max:100'],
             'major_choice'                => ['nullable', 'string', 'max:100'],
             'is_transfer'                 => ['nullable', 'boolean'],
         ], [
             'email.regex'               => 'Email harus berupa Gmail. Contoh: nama@gmail.com',
+            'phone_number.required'     => 'Nomor HP/WA siswa wajib diisi.',
+            'religion.required'         => 'Agama wajib dipilih.',
             'phone_number.regex'        => 'Nomor HP harus diawali 08 dan terdiri dari 10-14 digit.',
+            'postal_code.required'      => 'Kode pos wajib diisi.',
             'postal_code.digits'        => 'Kode pos harus 5 digit angka.',
+            'school_npsn.required'      => 'NPSN sekolah wajib diisi.',
             'school_npsn.digits'        => 'NPSN harus 8 digit angka.',
+            'family_card_number.required' => 'Nomor KK wajib diisi.',
             'family_card_number.digits' => 'Nomor KK harus 16 digit angka.',
+            'program_choice.required'   => 'Pilihan program wajib diisi.',
         ]);
 
         // Validasi program_choice harus dari programs aktif di gelombang

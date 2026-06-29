@@ -9,6 +9,7 @@ interface Props {
     errors:        Partial<Record<string, string>>
     onChange:      (field: string, value: unknown) => void
     candidateAddr: CandidateAddress
+    required?:     boolean
 }
 
 // inputCls — adaptive dark/light, konsisten dengan PersonForm & TabProfilKeluarga
@@ -26,7 +27,7 @@ function inputCls(hasError = false) {
     ].join(' ')
 }
 
-export default function AddressForm({ prefix, data, errors, onChange, candidateAddr }: Props) {
+export default function AddressForm({ prefix, data, errors, onChange, candidateAddr, required = false }: Props) {
     const get = (field: string) => (data as Record<string, unknown>)[`${prefix}_${field}`]
     const set = (field: string, val: unknown) => onChange(`${prefix}_${field}`, val)
     const err = (field: string) => errors[`${prefix}_${field}`]
@@ -60,7 +61,7 @@ export default function AddressForm({ prefix, data, errors, onChange, candidateA
             )}
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <Field label="Provinsi" error={err('province')}>
+                <Field label="Provinsi" required={required} error={err('province')}>
                     <input
                         type="text"
                         className={inputCls(!!err('province'))}
@@ -70,7 +71,7 @@ export default function AddressForm({ prefix, data, errors, onChange, candidateA
                     />
                 </Field>
 
-                <Field label="Kota / Kabupaten" error={err('city')}>
+                <Field label="Kota / Kabupaten" required={required} error={err('city')}>
                     <input
                         type="text"
                         className={inputCls(!!err('city'))}
@@ -80,7 +81,7 @@ export default function AddressForm({ prefix, data, errors, onChange, candidateA
                     />
                 </Field>
 
-                <Field label="Kecamatan" error={err('district')}>
+                <Field label="Kecamatan" required={required} error={err('district')}>
                     <input
                         type="text"
                         className={inputCls(!!err('district'))}
@@ -90,7 +91,7 @@ export default function AddressForm({ prefix, data, errors, onChange, candidateA
                     />
                 </Field>
 
-                <Field label="Kelurahan / Desa" error={err('village')}>
+                <Field label="Kelurahan / Desa" required={required} error={err('village')}>
                     <input
                         type="text"
                         className={inputCls(!!err('village'))}
@@ -100,7 +101,7 @@ export default function AddressForm({ prefix, data, errors, onChange, candidateA
                     />
                 </Field>
 
-                <Field label="Kode Pos" error={err('postal_code')}>
+                <Field label="Kode Pos" required={required} error={err('postal_code')}>
                     <input
                         type="text"
                         className={inputCls(!!err('postal_code'))}
@@ -112,7 +113,7 @@ export default function AddressForm({ prefix, data, errors, onChange, candidateA
                 </Field>
             </div>
 
-            <Field label="Alamat Lengkap" error={err('address')}>
+            <Field label="Alamat Lengkap" required={required} error={err('address')}>
                 <textarea
                     className={`${inputCls(!!err('address'))} min-h-[80px] resize-none`}
                     value={(get('address') as string) ?? ''}

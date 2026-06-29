@@ -101,6 +101,8 @@ export type GuardianData = {
 export type CandidateAddress = {
     full_name: string
     candidate_code: string
+    phone_number: string | null
+    family_card_number: string | null
     province: string | null
     city: string | null
     district: string | null

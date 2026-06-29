@@ -16,7 +16,7 @@ export const makeSelectStyles = (hasError = false, isDark = false) => ({
             ? isDark ? "rgba(244, 63, 94, 0.55)" : "#e11d48"
             : state.isFocused ? "#d4a017"
             : isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)",
-        borderRadius: "0.75rem",
+        borderRadius: "0.625rem",
         padding:      "2px 4px",
         boxShadow:    "none",
         minHeight:    "44px",
@@ -30,25 +30,40 @@ export const makeSelectStyles = (hasError = false, isDark = false) => ({
     menu: (base: any) => ({
         ...base,
         backgroundColor: isDark ? "#1e293b" : "#ffffff",
-        borderRadius:    "0.75rem",
+        borderRadius:    "0.625rem",
         border:          isDark
             ? "1px solid rgba(255,255,255,0.1)"
             : "1px solid rgba(0,0,0,0.08)",
         boxShadow: isDark
             ? "0 8px 32px rgba(0,0,0,0.4)"
             : "0 8px 32px rgba(0,0,0,0.12)",
+        marginTop: 6,
         overflow: "hidden",
-        zIndex:   100,
+        zIndex:   9999,
+        minWidth: "100%",
     }),
-    menuList: (base: any) => ({ ...base, maxHeight: "200px" }),
+    menuPortal: (base: any) => ({
+        ...base,
+        zIndex: 9999,
+    }),
+    menuList: (base: any) => ({
+        ...base,
+        maxHeight: "280px",
+        padding: "6px",
+        overscrollBehavior: "contain",
+    }),
     option: (base: any, state: any) => ({
         ...base,
+        borderRadius: "0.5rem",
         backgroundColor: state.isSelected
             ? "#d4a017"
             : state.isFocused ? "rgba(212,160,23,0.15)" : "transparent",
         color:    state.isSelected ? "#0f172a" : isDark ? "#e2e8f0" : "#1e293b",
         cursor:   "pointer",
         fontSize: "13px",
+        lineHeight: "1.35",
+        padding: "10px 12px",
+        whiteSpace: "normal",
     }),
     singleValue: (base: any) => ({
         ...base,

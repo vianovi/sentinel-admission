@@ -19,10 +19,14 @@ use Illuminate\Support\Facades\Log;
  *    secara otomatis ketika semua kriteria wajib terpenuhi.
  *    Status TIDAK PERNAH mundur dari 'submitted' → 'draft' secara otomatis.
  *
- * Kriteria auto-submitted (13 field dari 3 tabel):
+ * Kriteria auto-submitted dari 3 tabel:
  *
  *   candidates:
+ *     - phone_number     → not null
  *     - religion        → not null
+ *     - family_card_number → not null
+ *     - postal_code     → not null
+ *     - school_npsn     → not null
  *     - program_choice  → not null
  *
  *   guardians:
@@ -31,6 +35,8 @@ use Illuminate\Support\Facades\Log;
  *     - father_status   → not null
  *     - mother_status   → not null
  *     - no_kk           → not null
+ *     - marital_status  → not null
+ *     - guardian fields → required when marital_status is not nikah_tercatat
  *
  *   health_records:
  *     - blood_type               → not null
@@ -77,7 +83,15 @@ class CandidateObserver
         // Early exit kalau sudah submitted — tidak perlu cek apapun
         if ($candidate->status === 'submitted') return;
 
-        $watchedFields = ['religion', 'program_choice', 'status'];
+        $watchedFields = [
+            'phone_number',
+            'religion',
+            'family_card_number',
+            'postal_code',
+            'school_npsn',
+            'program_choice',
+            'status',
+        ];
         if ($candidate->isDirty($watchedFields)) {
             $this->checkAndSubmit($candidate);
         }
@@ -133,12 +147,22 @@ class CandidateObserver
             if ($candidate->status === 'submitted') return;
 
             // ── Cek candidates table (sudah ada di memory) ───────────────────
-            if (empty($candidate->religion))       return;
-            if (empty($candidate->program_choice)) return;
+            if (empty($candidate->phone_number))        return;
+            if (empty($candidate->religion))            return;
+            if (empty($candidate->family_card_number))  return;
+            if (empty($candidate->postal_code))         return;
+            if (empty($candidate->school_npsn))         return;
+            if (empty($candidate->program_choice))      return;
 
             // ── Cek guardians table — select hanya kolom yang dicek ──────────
             $guardian = $candidate->guardian()
-                ->select(['mother_name', 'income_type', 'father_status', 'mother_status', 'no_kk'])
+                ->select([
+                    'mother_name', 'income_type', 'father_status', 'mother_status', 'no_kk',
+                    'marital_status', 'guardian_name', 'guardian_relation',
+                    'guardian_date_of_birth', 'guardian_education', 'guardian_phone',
+                    'guardian_province', 'guardian_city', 'guardian_district',
+                    'guardian_village', 'guardian_address', 'guardian_postal_code',
+                ])
                 ->first();
 
             if (! $guardian)                        return;
@@ -147,6 +171,18 @@ class CandidateObserver
             if (empty($guardian->father_status))    return;
             if (empty($guardian->mother_status))    return;
             if (empty($guardian->no_kk))            return;
+            if (empty($guardian->marital_status))   return;
+
+            if ($guardian->marital_status !== 'nikah_tercatat') {
+                foreach ([
+                    'guardian_name', 'guardian_relation', 'guardian_date_of_birth',
+                    'guardian_education', 'guardian_phone', 'guardian_province',
+                    'guardian_city', 'guardian_district', 'guardian_village',
+                    'guardian_address', 'guardian_postal_code',
+                ] as $field) {
+                    if (empty($guardian->{$field})) return;
+                }
+            }
 
             // ── Cek health_records table — select hanya kolom yang dicek ─────
             $health = $candidate->healthRecord()

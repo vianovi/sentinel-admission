@@ -8,9 +8,10 @@ interface Props {
     errors:        Partial<Record<string, string>>
     onChange:      (field: string, value: unknown) => void
     candidateAddr: CandidateAddress
+    guardianRequired: boolean
 }
 
-export default function TabWali({ data, errors, onChange, candidateAddr }: Props) {
+export default function TabWali({ data, errors, onChange, candidateAddr, guardianRequired }: Props) {
     return (
         <div className="space-y-6">
 
@@ -21,12 +22,13 @@ export default function TabWali({ data, errors, onChange, candidateAddr }: Props
                     <i className="fa-solid fa-shield-halved mt-0.5 text-amber-400 shrink-0" />
                     <div>
                         <p className="text-sm font-medium dark:text-amber-300 text-amber-700">
-                            Data Wali (Opsional)
+                            Data Wali {guardianRequired ? '(Wajib)' : '(Opsional)'}
                         </p>
                         <p className="mt-1 text-xs dark:text-amber-400/70 text-amber-600/80">
-                            Wali dapat berupa siapapun yang bertanggung jawab atas anak —
-                            nenek, paman, bibi, atau orang tua asuh. Pengisian ini tidak wajib,
-                            namun sangat disarankan terutama jika anak tinggal terpisah dari orang tua.
+                            {guardianRequired
+                                ? 'Karena status pernikahan orang tua bukan Nikah Tercatat, data wali dan alamat wali wajib diisi.'
+                                : 'Wali dapat berupa siapapun yang bertanggung jawab atas anak — nenek, paman, bibi, atau orang tua asuh. Pengisian ini tidak wajib, namun sangat disarankan terutama jika anak tinggal terpisah dari orang tua.'
+                            }
                         </p>
                     </div>
                 </div>
@@ -41,7 +43,8 @@ export default function TabWali({ data, errors, onChange, candidateAddr }: Props
                 candidateAddr={candidateAddr}
                 showIncome={true}
                 showAddress={true}
-                isOptional={true}
+                isOptional={!guardianRequired}
+                forceRequired={guardianRequired}
                 showRelation={true}
             />
         </div>

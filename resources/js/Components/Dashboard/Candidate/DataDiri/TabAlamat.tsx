@@ -69,7 +69,7 @@ export default function TabAlamat({
                     )}
                 </div>
 
-                <Field label="Kode Pos" error={errors.postal_code} hint="5 digit angka">
+                <Field label="Kode Pos" required error={errors.postal_code} hint="5 digit angka">
                     <input
                         value={postalCode}
                         onChange={e => setPostalCode(e.target.value.replace(/\D/g, "").slice(0, 5))}
@@ -96,7 +96,7 @@ export default function TabAlamat({
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
-                    <Field label="NPSN Sekolah" error={errors.school_npsn}
+                    <Field label="NPSN Sekolah" required error={errors.school_npsn}
                         hint="8 digit — cek di referensi.data.kemdikbud.go.id">
                         <input
                             value={schoolNpsn}

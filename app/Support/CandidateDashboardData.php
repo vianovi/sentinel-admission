@@ -12,16 +12,11 @@ use Illuminate\Support\Collection;
 class CandidateDashboardData
 {
     private const DATA_DIRI_FIELDS = [
-        'full_name'      => 'Nama lengkap',
-        'nisn'           => 'NISN',
-        'nik'            => 'NIK',
-        'gender'         => 'Jenis kelamin',
-        'place_of_birth' => 'Tempat lahir',
-        'date_of_birth'  => 'Tanggal lahir',
-        'address_full'   => 'Alamat',
-        'school_origin'  => 'Asal sekolah',
-        'phone_number'   => 'Nomor HP',
+        'phone_number'   => 'Nomor HP/WA siswa',
         'religion'       => 'Agama',
+        'family_card_number' => 'Nomor KK',
+        'postal_code'    => 'Kode pos',
+        'school_npsn'    => 'NPSN sekolah',
         'program_choice' => 'Pilihan program',
     ];
 
@@ -31,6 +26,7 @@ class CandidateDashboardData
         'father_status' => 'Status ayah',
         'mother_status' => 'Status ibu',
         'no_kk'         => 'Nomor KK',
+        'marital_status'=> 'Status pernikahan orang tua',
     ];
 
     private const HEALTH_FIELDS = [
@@ -139,7 +135,9 @@ class CandidateDashboardData
             ];
         }
 
-        $missing = collect(self::GUARDIAN_FIELDS)
+        $fields = self::guardianFields($guardian);
+
+        $missing = collect($fields)
             ->filter(fn (string $label, string $field) => ! self::filled($guardian->{$field}))
             ->values()
             ->all();
@@ -151,6 +149,29 @@ class CandidateDashboardData
             'missing' => $missing,
             'state' => empty($missing) ? 'complete' : ($percentage >= 70 ? 'warning' : 'incomplete'),
         ];
+    }
+
+    private static function guardianFields($guardian): array
+    {
+        $fields = self::GUARDIAN_FIELDS;
+
+        if ($guardian->marital_status && $guardian->marital_status !== 'nikah_tercatat') {
+            $fields += [
+                'guardian_name' => 'Nama wali',
+                'guardian_relation' => 'Hubungan wali',
+                'guardian_date_of_birth' => 'Tanggal lahir wali',
+                'guardian_education' => 'Pendidikan wali',
+                'guardian_phone' => 'Nomor HP wali',
+                'guardian_province' => 'Provinsi wali',
+                'guardian_city' => 'Kota/Kabupaten wali',
+                'guardian_district' => 'Kecamatan wali',
+                'guardian_village' => 'Kelurahan/Desa wali',
+                'guardian_address' => 'Alamat wali',
+                'guardian_postal_code' => 'Kode pos wali',
+            ];
+        }
+
+        return $fields;
     }
 
     private static function healthCompletion(Candidate $candidate): array

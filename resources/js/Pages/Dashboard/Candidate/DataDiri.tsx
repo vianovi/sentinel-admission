@@ -5,14 +5,19 @@
 // Field berikut WAJIB diisi agar status kandidat bisa berubah ke "submitted":
 //
 // Tab Identitas:
+//   - phone_number   (required)
 //   - religion       (required)
+//   - family_card_number (required)
+//
+// Tab Alamat:
+//   - postal_code    (required)
+//   - school_npsn    (required)
 //
 // Tab Program:
 //   - program_choice (required)
 //
 // Field OPSIONAL (tidak masuk kriteria submitted):
-//   - email, phone_number, birth_certificate_number, family_card_number
-//   - child_order, siblings_count, postal_code, school_npsn
+//   - email, birth_certificate_number, child_order, siblings_count
 //   - certificate_number, hobbies, ambitions, habits
 //   - extracurricular_interests, major_choice, is_transfer
 // ─────────────────────────────────────────────────────────────────────────────
@@ -122,14 +127,18 @@ type TabId = typeof TABS[number]["id"];
 
 // Field wajib mengikuti CandidateObserver auto-submit.
 const REQUIRED_FIELDS: EmptyField[] = [
+    { key: "phoneNumber",   label: "Nomor HP/WA Siswa",  tab: "identitas" },
     { key: "religion",      label: "Agama",              tab: "identitas" },
+    { key: "familyCardNo",  label: "Nomor Kartu Keluarga", tab: "identitas" },
+    { key: "postalCode",    label: "Kode Pos",           tab: "alamat" },
+    { key: "schoolNpsn",    label: "NPSN Sekolah",       tab: "alamat" },
     { key: "programChoice", label: "Pilihan Program",    tab: "program" },
 ];
 
 // Field wajib per tab — validasi sebelum simpan & pindah tab
 const REQUIRED_BY_TAB: Record<string, string[]> = {
-    identitas: ["religion"],
-    alamat:    [],
+    identitas: ["phone_number", "religion", "family_card_number"],
+    alamat:    ["postal_code", "school_npsn"],
     minat:     [],
     program:   ["program_choice"],
     rangkuman: [],
@@ -309,7 +318,11 @@ export default function DataDiriPage({ user, candidate, data_change_request_resu
     const validateTab = (tabId: TabId): boolean => {
         const required = REQUIRED_BY_TAB[tabId] ?? [];
         const currentValues: Record<string, string> = {
+            phone_number: phoneNumber,
             religion,
+            family_card_number: familyCardNo,
+            postal_code: postalCode,
+            school_npsn: schoolNpsn,
             program_choice: programChoice,
         };
 

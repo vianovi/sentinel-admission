@@ -1,6 +1,6 @@
 // resources/js/Pages/Dashboard/Candidate/DataWali.tsx
 
-import { useRef, useState, useEffect, useCallback } from 'react'
+import { useRef, useState, useEffect, useCallback, useMemo } from 'react'
 import { Head, router, usePage }                     from '@inertiajs/react'
 import { animate, stagger }                          from 'animejs'
 import Swal                                          from 'sweetalert2'
@@ -45,6 +45,21 @@ const REQUIRED_FIELDS: { key: keyof GuardianData; label: string; tab: WaliTabKey
     { key: 'mother_name', label: 'Nama ibu', tab: 'ibu' },
     { key: 'no_kk', label: 'Nomor KK', tab: 'profil-keluarga' },
     { key: 'income_type', label: 'Tipe penghasilan', tab: 'profil-keluarga' },
+    { key: 'marital_status', label: 'Status pernikahan orang tua', tab: 'profil-keluarga' },
+]
+
+const CONDITIONAL_WALI_FIELDS: { key: keyof GuardianData; label: string; tab: WaliTabKey }[] = [
+    { key: 'guardian_name', label: 'Nama wali', tab: 'wali' },
+    { key: 'guardian_relation', label: 'Hubungan wali', tab: 'wali' },
+    { key: 'guardian_date_of_birth', label: 'Tanggal lahir wali', tab: 'wali' },
+    { key: 'guardian_education', label: 'Pendidikan wali', tab: 'wali' },
+    { key: 'guardian_phone', label: 'Nomor HP wali', tab: 'wali' },
+    { key: 'guardian_province', label: 'Provinsi wali', tab: 'wali' },
+    { key: 'guardian_city', label: 'Kota/Kabupaten wali', tab: 'wali' },
+    { key: 'guardian_district', label: 'Kecamatan wali', tab: 'wali' },
+    { key: 'guardian_village', label: 'Kelurahan/Desa wali', tab: 'wali' },
+    { key: 'guardian_address', label: 'Alamat wali', tab: 'wali' },
+    { key: 'guardian_postal_code', label: 'Kode pos wali', tab: 'wali' },
 ]
 
 const isBlank = (value: unknown): boolean => {
@@ -71,6 +86,8 @@ interface Props {
         school_origin:       string
         status:              string
         program_choice:      string | null
+        phone_number:        string | null
+        family_card_number:  string | null
         admission_wave:      { title: string } | null
     }
 }
@@ -88,7 +105,12 @@ export default function DataWali({ guardian, completion: initialCompletion, user
     const contentRef     = useRef<HTMLDivElement>(null)
     const rangkumanIndex = TABS.length - 1
     const isRangkuman    = activeTab === rangkumanIndex
-    const emptyRequiredFields = REQUIRED_FIELDS.filter(field => isBlank(form[field.key]))
+    const guardianRequired = !!form.marital_status && form.marital_status !== 'nikah_tercatat'
+    const requiredFields = useMemo(
+        () => guardianRequired ? [...REQUIRED_FIELDS, ...CONDITIONAL_WALI_FIELDS] : REQUIRED_FIELDS,
+        [guardianRequired],
+    )
+    const emptyRequiredFields = requiredFields.filter(field => isBlank(form[field.key]))
     const hasEmptyRequired = emptyRequiredFields.length > 0
 
     // ── Entrance animation ────────────────────────────────────────────────────
@@ -102,33 +124,16 @@ export default function DataWali({ guardian, completion: initialCompletion, user
         })
     }, [])
 
+    useEffect(() => {
+        if (form.no_kk || !candidate.family_card_number) return
+        setForm(prev => ({ ...prev, no_kk: candidate.family_card_number }))
+    }, [candidate.family_card_number, form.no_kk])
+
     // ── Recalculate completion ────────────────────────────────────────────────
     useEffect(() => {
-        let score = 0
-        const f = form
-        const fatherAbsent = f.father_status === 'meninggal' || f.father_status === 'tidak_diketahui'
-
-        if (f.mother_name)         score += 15
-        if (f.mother_phone)        score += 10
-        if (f.mother_job_ktp)      score += 8
-        if (f.mother_income_range) score += 7
-
-        if (fatherAbsent) {
-            score += 35
-        } else {
-            if (f.father_name)         score += 12
-            if (f.father_phone)        score += 10
-            if (f.father_job_ktp)      score += 7
-            if (f.father_income_range) score += 6
-        }
-
-        if (f.no_kk)                     score += 10
-        if (f.marital_status)            score += 5
-        if (f.house_ownership)           score += 5
-        if (f.family_dependents != null) score += 5
-
-        setCompletion(Math.min(score, 100))
-    }, [form])
+        const filled = requiredFields.filter(field => !isBlank(form[field.key])).length
+        setCompletion(Math.round((filled / requiredFields.length) * 100))
+    }, [form, requiredFields])
 
     // ── Tab transition ────────────────────────────────────────────────────────
     const switchTab = useCallback((nextIndex: number) => {
@@ -243,7 +248,9 @@ export default function DataWali({ guardian, completion: initialCompletion, user
                     tips={[
                         'Data ibu wajib diisi minimal nama & nomor HP',
                         'Ayah meninggal? Pilih status "Meninggal" — field lain disembunyikan',
-                        'Wali bersifat opsional tapi sangat disarankan',
+                        guardianRequired
+                            ? 'Data wali wajib karena status pernikahan orang tua bukan Nikah Tercatat'
+                            : 'Wali bersifat opsional tapi sangat disarankan',
                         'Data ekonomi digunakan untuk seleksi beasiswa',
                     ]}
                 />
@@ -320,8 +327,8 @@ export default function DataWali({ guardian, completion: initialCompletion, user
                 >
                     {activeTab === 0 && <TabAyah          data={form} errors={errors} onChange={handleChange} candidateAddr={candidate} />}
                     {activeTab === 1 && <TabIbu            data={form} errors={errors} onChange={handleChange} candidateAddr={candidate} />}
-                    {activeTab === 2 && <TabWali           data={form} errors={errors} onChange={handleChange} candidateAddr={candidate} />}
-                    {activeTab === 3 && <TabProfilKeluarga data={form} errors={errors} onChange={handleChange} />}
+                    {activeTab === 2 && <TabWali           data={form} errors={errors} onChange={handleChange} candidateAddr={candidate} guardianRequired={guardianRequired} />}
+                    {activeTab === 3 && <TabProfilKeluarga data={form} errors={errors} onChange={handleChange} candidateFamilyCardNumber={candidate.family_card_number} />}
                     {activeTab === 4 && (
                         <TabRangkuman
                             data={form}

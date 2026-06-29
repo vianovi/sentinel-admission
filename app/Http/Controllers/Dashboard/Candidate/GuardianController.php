@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Guardian;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -25,8 +26,14 @@ class GuardianController extends Controller
             [
                 'candidate_code' => $candidate->candidate_code,
                 'mother_name'    => $candidate->mother_name ?? '',
+                'no_kk'          => $candidate->family_card_number,
             ]
         );
+        $addressDetail = is_array($candidate->address_detail) ? $candidate->address_detail : [];
+
+        if (empty($guardian->no_kk) && ! empty($candidate->family_card_number)) {
+            $guardian->updateQuietly(['no_kk' => $candidate->family_card_number]);
+        }
 
         return Inertia::render('Dashboard/Candidate/DataWali', [
             'guardian'   => $guardian,
@@ -45,14 +52,16 @@ class GuardianController extends Controller
                 'school_origin'       => $candidate->school_origin,
                 'status'              => $candidate->status,
                 'program_choice'      => $candidate->program_choice,
+                'phone_number'        => $candidate->phone_number,
+                'family_card_number'  => $candidate->family_card_number,
                 'admission_wave'      => $candidate->admissionWave
                     ? ['title' => $candidate->admissionWave->title]
                     : null,
-                'province'    => $candidate->province ?? null,
-                'city'        => $candidate->city ?? null,
-                'district'    => $candidate->district ?? null,
-                'village'     => $candidate->village ?? null,
-                'address'     => $candidate->address ?? null,
+                'province'    => $addressDetail['provinsi'] ?? null,
+                'city'        => $addressDetail['kabupaten'] ?? null,
+                'district'    => $addressDetail['kecamatan'] ?? null,
+                'village'     => $addressDetail['kelurahan'] ?? null,
+                'address'     => $addressDetail['jalan'] ?? $candidate->address_full,
                 'postal_code' => $candidate->postal_code ?? null,
             ],
         ]);
@@ -77,6 +86,7 @@ class GuardianController extends Controller
         $fatherAbsent = in_array($request->father_status, ['meninggal', 'tidak_diketahui']);
         $combined     = $request->income_type === 'combined';
         $shared       = $request->boolean('alamat_shared');
+        $guardianRequired = $request->marital_status && $request->marital_status !== 'nikah_tercatat';
 
         return [
             'no_kk'         => ['required', 'digits:16'],
@@ -121,26 +131,26 @@ class GuardianController extends Controller
 
             // ── Wali (semua nullable) ──────────────────────────────────────
             'guardian_status'         => ['nullable', 'in:hidup,meninggal,tidak_diketahui'],
-            'guardian_name'           => ['nullable', 'string', 'max:100'],
-            'guardian_relation'       => ['nullable', 'string', 'max:100'],
+            'guardian_name'           => [Rule::requiredIf($guardianRequired), 'nullable', 'string', 'max:100'],
+            'guardian_relation'       => [Rule::requiredIf($guardianRequired), 'nullable', 'string', 'max:100'],
             'guardian_nik'            => ['nullable', 'digits:16'],
             'guardian_place_of_birth' => ['nullable', 'string', 'max:100'],
-            'guardian_date_of_birth'  => ['nullable', 'date', 'before:today'],
-            'guardian_education'      => ['nullable', 'in:tidak_sekolah,sd_sederajat,smp_sederajat,sma_smk_sederajat,d1,d2,d3,d4_s1,s2,s3'],
+            'guardian_date_of_birth'  => [Rule::requiredIf($guardianRequired), 'nullable', 'date', 'before:today'],
+            'guardian_education'      => [Rule::requiredIf($guardianRequired), 'nullable', 'in:tidak_sekolah,sd_sederajat,smp_sederajat,sma_smk_sederajat,d1,d2,d3,d4_s1,s2,s3'],
             'guardian_job_ktp'        => ['nullable', 'string', 'max:100'],
             'guardian_job_actual'     => ['nullable', 'string', 'max:100'],
             'guardian_income_range'   => ['nullable', 'in:tidak_berpenghasilan,di_bawah_1jt,1jt_2_5jt,2_5jt_3_5jt,3_5jt_5jt,5jt_10jt,di_atas_10jt'],
-            'guardian_phone'          => ['nullable', 'regex:/^08[0-9]{8,12}$/'],
-            'guardian_province'       => ['nullable', 'string', 'max:100'],
-            'guardian_city'           => ['nullable', 'string', 'max:100'],
-            'guardian_district'       => ['nullable', 'string', 'max:100'],
-            'guardian_village'        => ['nullable', 'string', 'max:100'],
-            'guardian_address'        => ['nullable', 'string', 'max:500'],
-            'guardian_postal_code'    => ['nullable', 'digits:5'],
+            'guardian_phone'          => [Rule::requiredIf($guardianRequired), 'nullable', 'regex:/^08[0-9]{8,12}$/'],
+            'guardian_province'       => [Rule::requiredIf($guardianRequired), 'nullable', 'string', 'max:100'],
+            'guardian_city'           => [Rule::requiredIf($guardianRequired), 'nullable', 'string', 'max:100'],
+            'guardian_district'       => [Rule::requiredIf($guardianRequired), 'nullable', 'string', 'max:100'],
+            'guardian_village'        => [Rule::requiredIf($guardianRequired), 'nullable', 'string', 'max:100'],
+            'guardian_address'        => [Rule::requiredIf($guardianRequired), 'nullable', 'string', 'max:500'],
+            'guardian_postal_code'    => [Rule::requiredIf($guardianRequired), 'nullable', 'digits:5'],
 
             // ── Profil Keluarga ────────────────────────────────────────────
             'family_email'      => ['nullable', 'email', 'regex:/@gmail\.com$/'],
-            'marital_status'    => ['nullable', 'in:nikah_tercatat,cerai_hidup,cerai_mati'],
+            'marital_status'    => ['required', 'in:nikah_tercatat,cerai_hidup,cerai_mati'],
             'house_ownership'   => ['nullable', 'in:milik_sendiri,kontrak,menumpang,rumah_dinas'],
             'vehicle_ownership' => ['nullable', 'in:tidak_ada,motor,mobil,motor_dan_mobil'],
             'family_dependents' => ['nullable', 'integer', 'min:0', 'max:30'],

@@ -24,6 +24,7 @@ interface Props {
     showAddress:   boolean
     isOptional?:   boolean
     showRelation?: boolean
+    forceRequired?: boolean
 }
 
 // ─── inputCls — adaptive dark/light ──────────────────────────────────────────
@@ -58,7 +59,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 export default function PersonForm({
     prefix, label, data, errors, onChange,
     candidateAddr, showIncome, showAddress,
-    isOptional = false, showRelation = false,
+    isOptional = false, showRelation = false, forceRequired = false,
 }: Props) {
     // isDark harus dari dalam komponen — tidak bisa module level
     const { theme } = useTheme()
@@ -79,6 +80,7 @@ export default function PersonForm({
 
     const statusValue = get('status') as string
     const isAbsent    = statusValue === 'meninggal' || statusValue === 'tidak_diketahui'
+    const wizardPhone = candidateAddr.phone_number ?? ''
 
     // Collapsed state kalau absent
     if (isAbsent && prefix !== 'mother') {
@@ -114,7 +116,7 @@ export default function PersonForm({
             <SectionTitle>Identitas</SectionTitle>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <Field label={`Nama Lengkap ${label}`} required={prefix === 'mother'} error={err('name')}>
+                <Field label={`Nama Lengkap ${label}`} required={prefix === 'mother' || forceRequired} error={err('name')}>
                     <input
                         type="text"
                         className={inputCls(!!err('name'))}
@@ -125,7 +127,7 @@ export default function PersonForm({
                 </Field>
 
                 {showRelation && (
-                    <Field label="Hubungan dengan Anak" error={err('relation')}>
+                    <Field label="Hubungan dengan Anak" required={forceRequired} error={err('relation')}>
                         <input
                             type="text"
                             className={inputCls(!!err('relation'))}
@@ -157,7 +159,7 @@ export default function PersonForm({
                     />
                 </Field>
 
-                <Field label="Tanggal Lahir" error={err('date_of_birth')}>
+                <Field label="Tanggal Lahir" required={forceRequired} error={err('date_of_birth')}>
                     <input
                         type="date"
                         className={inputCls(!!err('date_of_birth'))}
@@ -166,7 +168,7 @@ export default function PersonForm({
                     />
                 </Field>
 
-                <Field label="Pendidikan Terakhir" error={err('education')}>
+                <Field label="Pendidikan Terakhir" required={forceRequired} error={err('education')}>
                     <Select
                         options={EDUCATION_OPTIONS}
                         placeholder="Pilih pendidikan..."
@@ -182,14 +184,30 @@ export default function PersonForm({
             <SectionTitle>Kontak</SectionTitle>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <Field label="Nomor WhatsApp / HP" error={err('phone')}>
-                    <input
-                        type="tel"
-                        className={inputCls(!!err('phone'))}
-                        value={(get('phone') as string) ?? ''}
-                        onChange={e => set('phone', e.target.value)}
-                        placeholder="08xxxxxxxxxx"
-                    />
+                <Field label="Nomor WhatsApp / HP" required={forceRequired} error={err('phone')}>
+                    <div className="flex gap-2">
+                        <input
+                            type="tel"
+                            className={inputCls(!!err('phone'))}
+                            value={(get('phone') as string) ?? ''}
+                            onChange={e => set('phone', e.target.value.replace(/\D/g, '').slice(0, 14))}
+                            placeholder="08xxxxxxxxxx"
+                        />
+                        {(prefix === 'father' || prefix === 'mother') && wizardPhone && (
+                            <button
+                                type="button"
+                                onClick={() => set('phone', wizardPhone)}
+                                className="inline-flex h-[44px] shrink-0 items-center justify-center rounded-lg border px-3 text-xs font-semibold transition
+                                           dark:border-content-border border-black/[0.10]
+                                           dark:bg-content-card bg-slate-50
+                                           dark:text-slate-300 text-slate-600
+                                           dark:hover:border-gold/50 hover:border-amber-300"
+                                title="Salin nomor WhatsApp dari pendaftaran awal"
+                            >
+                                <i className="fa-solid fa-copy" />
+                            </button>
+                        )}
+                    </div>
                 </Field>
             </div>
 
@@ -255,6 +273,7 @@ export default function PersonForm({
                         errors={errors}
                         onChange={onChange}
                         candidateAddr={candidateAddr}
+                        required={forceRequired}
                     />
                 </>
             )}
@@ -300,7 +319,7 @@ function StatusRow({ prefix, label, get, set, err }: {
                         <i className={[
                             'fa-solid text-xs',
                             opt.value === 'hidup'     ? 'fa-heart text-emerald-400' :
-                            opt.value === 'meninggal' ? 'fa-cross text-slate-400'   :
+                            opt.value === 'meninggal' ? 'fa-circle-minus text-slate-400'   :
                                                         'fa-question text-slate-400',
                         ].join(' ')} />
                         {opt.label}

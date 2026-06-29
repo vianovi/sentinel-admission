@@ -10,9 +10,10 @@ import {
 } from './types'
 
 interface Props {
-    data:     GuardianData
-    errors:   Partial<Record<string, string>>
-    onChange: (field: string, value: unknown) => void
+    data:                      GuardianData
+    errors:                    Partial<Record<string, string>>
+    onChange:                  (field: string, value: unknown) => void
+    candidateFamilyCardNumber: string | null
 }
 
 function inputCls(hasError = false) {
@@ -41,7 +42,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
     )
 }
 
-export default function TabProfilKeluarga({ data, errors, onChange }: Props) {
+export default function TabProfilKeluarga({ data, errors, onChange, candidateFamilyCardNumber }: Props) {
     // isDark harus dari dalam komponen — tidak bisa module level
     const { theme } = useTheme()
     const isDark    = theme === 'dark'
@@ -73,17 +74,33 @@ export default function TabProfilKeluarga({ data, errors, onChange }: Props) {
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Field label="Nomor Kartu Keluarga (KK)" required error={errors.no_kk}>
-                    <input
-                        type="text"
-                        className={inputCls(!!errors.no_kk)}
-                        value={data.no_kk ?? ''}
-                        onChange={e => onChange('no_kk', e.target.value.replace(/\D/g, '').slice(0, 16))}
-                        placeholder="16 digit nomor KK"
-                        maxLength={16}
-                    />
+                    <div className="flex gap-2">
+                        <input
+                            type="text"
+                            className={inputCls(!!errors.no_kk)}
+                            value={data.no_kk ?? ''}
+                            onChange={e => onChange('no_kk', e.target.value.replace(/\D/g, '').slice(0, 16))}
+                            placeholder="16 digit nomor KK"
+                            maxLength={16}
+                        />
+                        {candidateFamilyCardNumber && (
+                            <button
+                                type="button"
+                                onClick={() => onChange('no_kk', candidateFamilyCardNumber)}
+                                className="inline-flex h-[44px] shrink-0 items-center justify-center rounded-lg border px-3 text-xs font-semibold transition
+                                           dark:border-content-border border-black/[0.10]
+                                           dark:bg-content-card bg-slate-50
+                                           dark:text-slate-300 text-slate-600
+                                           dark:hover:border-gold/50 hover:border-amber-300"
+                                title="Salin nomor KK dari Data Diri"
+                            >
+                                <i className="fa-solid fa-copy" />
+                            </button>
+                        )}
+                    </div>
                 </Field>
 
-                <Field label="Status Pernikahan Orang Tua" error={errors.marital_status}>
+                <Field label="Status Pernikahan Orang Tua" required error={errors.marital_status}>
                     <Select
                         options={MARITAL_OPTIONS}
                         placeholder="Pilih status..."

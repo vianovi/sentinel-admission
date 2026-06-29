@@ -124,8 +124,9 @@ class Candidate extends Model
             'address_full'          => $draft->address_full,
             'address_detail'        => $draft->address_detail,
             'school_origin'         => $draft->school_origin,
+            'email'                 => $draft->email,
+            'phone_number'          => self::normalizePhoneNumber($draft->whatsapp_number),
             'status'                => 'draft',
-            // phone_number     → diisi kandidat sendiri setelah login
             // program_choice   → diisi kandidat sendiri setelah login
         ]);
 
@@ -152,6 +153,28 @@ class Candidate extends Model
 
     public function isDataComplete(): bool
     {
-        return ! empty($this->program_choice);
+        return ! empty($this->phone_number)
+            && ! empty($this->religion)
+            && ! empty($this->family_card_number)
+            && ! empty($this->postal_code)
+            && ! empty($this->school_npsn)
+            && ! empty($this->program_choice);
+    }
+
+    public static function normalizePhoneNumber(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $number = preg_replace('/\D+/', '', $value) ?? '';
+
+        if (str_starts_with($number, '0062')) {
+            $number = '0' . substr($number, 4);
+        } elseif (str_starts_with($number, '62')) {
+            $number = '0' . substr($number, 2);
+        }
+
+        return $number !== '' ? substr($number, 0, 14) : null;
     }
 }

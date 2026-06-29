@@ -107,38 +107,58 @@ class Guardian extends Model
     // ─── Progress Calculation ─────────────────────────────────────────────
 
     /**
-     * Hitung completion percentage Data Wali.
-     * Wali tidak masuk hitungan (opsional).
-     * Ayah auto 35% jika status meninggal/tidak_diketahui.
+     * Hitung completion percentage Data Wali berdasarkan field wajib.
+     * Data wali ikut dihitung saat status pernikahan bukan nikah tercatat.
      */
     public function getCompletionPercentageAttribute(): int
     {
-        $score = 0;
+        $required = $this->requiredCompletionFields();
+        $filled = collect($required)
+            ->filter(fn (string $field) => $this->filledForCompletion($field))
+            ->count();
 
-        // ── IBU (40%) ──────────────────────────────────────
-        if (!empty($this->mother_name))         $score += 15;
-        if (!empty($this->mother_phone))        $score += 10;
-        if (!empty($this->mother_job_ktp))      $score += 8;
-        if (!empty($this->mother_income_range)) $score += 7;
+        return (int) round(($filled / count($required)) * 100);
+    }
 
-        // ── AYAH (35%) ─────────────────────────────────────
-        $fatherAbsent = in_array($this->father_status, ['meninggal', 'tidak_diketahui']);
-        if ($fatherAbsent) {
-            $score += 35;
-        } else {
-            if (!empty($this->father_name))         $score += 12;
-            if (!empty($this->father_phone))        $score += 10;
-            if (!empty($this->father_job_ktp))      $score += 7;
-            if (!empty($this->father_income_range)) $score += 6;
+    public function requiredCompletionFields(): array
+    {
+        $fields = [
+            'father_status',
+            'mother_status',
+            'mother_name',
+            'no_kk',
+            'income_type',
+            'marital_status',
+        ];
+
+        if ($this->marital_status && $this->marital_status !== 'nikah_tercatat') {
+            $fields = array_merge($fields, [
+                'guardian_name',
+                'guardian_relation',
+                'guardian_date_of_birth',
+                'guardian_education',
+                'guardian_phone',
+                'guardian_province',
+                'guardian_city',
+                'guardian_district',
+                'guardian_village',
+                'guardian_address',
+                'guardian_postal_code',
+            ]);
         }
 
-        // ── PROFIL KELUARGA (25%) ──────────────────────────
-        if (!empty($this->no_kk))              $score += 10;
-        if (!empty($this->marital_status))     $score += 5;
-        if (!empty($this->house_ownership))    $score += 5;
-        if (!empty($this->family_dependents) || $this->family_dependents === 0) $score += 5;
+        return $fields;
+    }
 
-        return min($score, 100);
+    private function filledForCompletion(string $field): bool
+    {
+        $value = $this->{$field};
+
+        if ($value === null) {
+            return false;
+        }
+
+        return is_string($value) ? trim($value) !== '' : true;
     }
 
     // ─── Helpers ──────────────────────────────────────────────────────────
