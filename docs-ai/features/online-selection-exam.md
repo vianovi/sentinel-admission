@@ -109,9 +109,9 @@ Required heading row columns:
 | `opsi_e` | optional value | Column must exist. Value may be empty unless answer is E. |
 | `jawaban_benar` | yes | A, B, C, D, or E. |
 | `poin` | yes | Positive number. |
-| `tingkat_kesulitan` | yes | `mudah`, `sedang`, `sulit`; legacy `easy`, `medium`, `hard` also accepted. |
+| `tingkat_kesulitan` | no | `mudah`, `sedang`, `sulit`; legacy `easy`, `medium`, `hard` also accepted. Empty values import as `medium`. |
 | `pembahasan` | optional value | Column must exist. Admin/staff review only. |
-| `aktif` | optional value | Empty means active. Accepts ya/tidak, true/false, yes/no, y/n, 1/0, aktif/nonaktif. |
+| `aktif` | yes | Accepts ya/tidak, true/false, yes/no, y/n, 1/0, aktif/nonaktif. |
 
 Legacy English headers remain supported for existing import files:
 

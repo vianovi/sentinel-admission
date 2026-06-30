@@ -70,7 +70,8 @@ export default function ExamImportBatchShow({ batch }: Props) {
                             </h2>
                             <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Diunggah oleh {batch.uploaded_by ?? "-"} pada {batch.started_at ?? "-"}.</p>
                             <p className="mt-1 text-xs text-slate-500">Selesai: {batch.finished_at ?? "-"}</p>
-                            <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                            <p className="mt-3 text-sm font-bold text-slate-800 dark:text-slate-100">Aksi berikutnya</p>
+                            <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">
                                 {isSuccessful
                                     ? "Langkah berikutnya: buka paket untuk preview soal, lalu publish paket jika bank soal sudah siap dipakai."
                                     : "Perbaiki baris yang gagal dengan pesan di bawah, simpan sebagai XLSX, lalu import ulang file yang sudah diperbaiki."}
@@ -92,7 +93,7 @@ export default function ExamImportBatchShow({ batch }: Props) {
 
                 {summary ? (
                     <section className="rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-900">
-                        <h2 className="text-sm font-bold text-slate-900 dark:text-white">Ringkasan Konfigurasi Terdeteksi</h2>
+                        <h2 className="text-sm font-bold text-slate-900 dark:text-white">Ringkasan Hasil Import</h2>
                         <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
                             {summary.reasons.map((item) => (
                                 <div key={item} className="rounded-lg bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600 dark:bg-white/[0.03] dark:text-slate-300">
@@ -118,7 +119,7 @@ export default function ExamImportBatchShow({ batch }: Props) {
 
                 <section className="rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-900">
                     <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                        <h2 className="text-sm font-bold text-slate-900 dark:text-white">Failure Report</h2>
+                        <h2 className="text-sm font-bold text-slate-900 dark:text-white">Laporan Baris Gagal</h2>
                         <span className="text-xs font-semibold text-slate-500">{rowFailures.length.toLocaleString("id-ID")} baris perlu diperiksa</span>
                     </div>
 

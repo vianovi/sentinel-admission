@@ -2,7 +2,7 @@
 
 ## Audit Status
 
-Final Phase 5 audit completed. UX polish checkpoint completed afterward. Task 2 admin workflow/template/import refinement completed without schema changes. Task 3 XLSX runtime stabilization and Admin Exam V2 redesign completed without schema changes. Task 4 Stitch-based admin exam UI recovery completed without schema changes. No known critical or high-risk issue remains for the Online Selection Exam Engine at this checkpoint.
+Final Phase 5 audit completed. UX polish checkpoint completed afterward. Task 2 admin workflow/template/import refinement completed without schema changes. Task 3 XLSX runtime stabilization and Admin Exam V2 redesign completed without schema changes. Task 4 Stitch-based admin exam UI recovery completed without schema changes. Admin import workflow/template handling checkpoint completed without schema changes. No known critical or high-risk issue remains for the Online Selection Exam Engine at this checkpoint.
 
 ## Phase Audit Notes
 
@@ -268,6 +268,15 @@ Final Phase 5 audit completed. UX polish checkpoint completed afterward. Task 2 
   - No backend route, auth, import, timer, scoring, ownership, or schema behavior was changed.
   - Import/download focused tests still pass after the UI recovery.
   - Candidate answer-key leakage coverage still passes after the UI recovery.
+- Admin import workflow/template checkpoint confirmed:
+  - Scope stayed inside Admin Exam package import UI and XLSX download/import handling.
+  - `Workflow Import Soal` is now the primary wide panel; `Riwayat Import` is a compact secondary panel.
+  - Required 7-step Indonesian import workflow is visible on the package detail/import page.
+  - Master template remains `resources/templates/exam/template-import-soal-ujian-seleksi-spmb.final.xlsx`.
+  - Template download preserves the master workbook structure and fails safely if `ZipArchive` or the master template is unavailable.
+  - Download test verifies a real PK/XLSX workbook with `Data Soal` and `Panduan`, not HTML.
+  - Importer reads only `Data Soal`, ignores `Panduan`, supports Indonesian headers, and keeps legacy English header compatibility.
+  - Value validation now treats `opsi_e`, `tingkat_kesulitan`, and `pembahasan` as optional values; `aktif` is required and accepts Indonesian/boolean-like values.
 
 ## Out-of-Scope File Touches
 

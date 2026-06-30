@@ -17,7 +17,19 @@ class ExamQuestionImportService
 {
     private const MAX_ROWS = 2000;
 
-    private const REQUIRED_COLUMNS = [
+    private const REQUIRED_IMPORT_COLUMNS = [
+        'question_text',
+        'option_a',
+        'option_b',
+        'option_c',
+        'option_d',
+        'correct_answer',
+        'point',
+        'is_active',
+    ];
+
+    private const QUESTION_COLUMNS = [
+        'row_number',
         'question_text',
         'option_a',
         'option_b',
@@ -29,6 +41,8 @@ class ExamQuestionImportService
         'difficulty',
         'explanation',
         'is_active',
+        'subject',
+        'package',
     ];
 
     private const COLUMN_ALIASES = [
@@ -179,7 +193,7 @@ class ExamQuestionImportService
                     ],
                     'correct_answer' => $mapped['correct_answer'],
                     'point' => (float) $mapped['point'],
-                    'difficulty' => $this->normalizeDifficulty($mapped['difficulty']),
+                    'difficulty' => $this->normalizeDifficulty($mapped['difficulty']) ?: 'medium',
                     'explanation' => $mapped['explanation'] ?: null,
                     'is_active' => $this->parseActive($mapped['is_active']),
                     'sort_order' => $maxSort + $imported,
@@ -322,7 +336,7 @@ class ExamQuestionImportService
     {
         $mapped = [];
 
-        foreach ([...self::REQUIRED_COLUMNS, 'subject', 'package', 'row_number'] as $column) {
+        foreach (self::QUESTION_COLUMNS as $column) {
             $index = $headingMap[$column] ?? null;
             $mapped[$column] = $index === null ? '' : $this->stringValue($values[$index] ?? null);
         }
@@ -340,7 +354,7 @@ class ExamQuestionImportService
         $reasons = [];
         $package->loadMissing('subject');
 
-        foreach (['question_text', 'option_a', 'option_b', 'option_c', 'option_d', 'correct_answer', 'point', 'difficulty'] as $field) {
+        foreach (self::REQUIRED_IMPORT_COLUMNS as $field) {
             if (($row[$field] ?? '') === '') {
                 $reasons[] = "Kolom {$field} wajib diisi.";
             }
@@ -367,12 +381,12 @@ class ExamQuestionImportService
             $reasons[] = 'point harus berupa angka positif.';
         }
 
-        if (! in_array($this->normalizeDifficulty($row['difficulty'] ?? ''), ['easy', 'medium', 'hard'], true)) {
-            $reasons[] = 'difficulty harus easy, medium, atau hard.';
+        if (($row['difficulty'] ?? '') !== '' && ! in_array($this->normalizeDifficulty($row['difficulty'] ?? ''), ['easy', 'medium', 'hard'], true)) {
+            $reasons[] = 'tingkat_kesulitan harus mudah, sedang, sulit, easy, medium, atau hard.';
         }
 
         if (! $this->isActiveValueValid($row['is_active'] ?? '')) {
-            $reasons[] = 'is_active harus bernilai true/false, yes/no, 1/0, aktif/nonaktif, atau dikosongkan.';
+            $reasons[] = 'aktif wajib diisi dengan ya/tidak, true/false, yes/no, 1/0, aktif, atau nonaktif.';
         }
 
         $hash = hash('sha256', Str::lower(trim($row['question_text'] ?? '')) . '|' . $package->id);
@@ -393,7 +407,7 @@ class ExamQuestionImportService
 
     private function missingColumns(array $headingMap, array $packageConfig): array
     {
-        $missing = array_values(array_diff(self::REQUIRED_COLUMNS, array_keys($headingMap)));
+        $missing = array_values(array_diff(self::REQUIRED_IMPORT_COLUMNS, array_keys($headingMap)));
 
         if ($packageConfig === []) {
             foreach (['subject', 'package'] as $legacyColumn) {
@@ -452,8 +466,8 @@ class ExamQuestionImportService
 
         $reasons = [];
 
-        if (! is_numeric($config['duration_minutes'] ?? null) || (int) $config['duration_minutes'] < 5 || (int) $config['duration_minutes'] > 300) {
-            $reasons[] = 'durasi_menit wajib berupa angka 5-300.';
+        if (! is_numeric($config['duration_minutes'] ?? null) || (int) $config['duration_minutes'] <= 0) {
+            $reasons[] = 'durasi_menit wajib berupa angka positif.';
         }
 
         if (! is_numeric($config['passing_score'] ?? null) || (float) $config['passing_score'] < 0 || (float) $config['passing_score'] > 100) {
@@ -534,7 +548,7 @@ class ExamQuestionImportService
 
     private function isActiveValueValid(string $value): bool
     {
-        return $value === '' || in_array(Str::lower(trim($value)), [
+        return in_array(Str::lower(trim($value)), [
             '1', '0', 'true', 'false', 'yes', 'no', 'y', 'n', 'ya', 'tidak', 'aktif', 'nonaktif',
         ], true);
     }

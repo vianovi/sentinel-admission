@@ -42,9 +42,12 @@ it('downloads a package specific XLSX template without raw placeholders', functi
     $downloadPath = $response->baseResponse->getFile()->getPathname();
 
     try {
+        expect(file_get_contents($downloadPath, false, null, 0, 4))->toBe("PK\x03\x04");
+
         $zip = new ZipArchive();
         expect($zip->open($downloadPath))->toBeTrue();
 
+        $workbook = $zip->getFromName('xl/workbook.xml');
         $sheetData = '';
 
         for ($index = 0; $index < $zip->numFiles; $index++) {
@@ -66,6 +69,10 @@ it('downloads a package specific XLSX template without raw placeholders', functi
             ->not->toContain('{kode_paket}')
             ->not->toContain('{deskripsi}')
             ->not->toContain('{status_paket}');
+
+        expect($workbook)
+            ->toContain('Data Soal')
+            ->toContain('Panduan');
     } finally {
         @unlink($downloadPath);
     }

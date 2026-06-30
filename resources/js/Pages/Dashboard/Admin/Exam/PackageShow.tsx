@@ -148,34 +148,37 @@ export default function ExamPackageShow({ package: examPackage, questions, sessi
                     <StatCard label="Sesi" value={examPackage.sessions_count} icon="fa-solid fa-calendar-check" tone="text-amber-500" />
                 </div>
 
-                <div className="grid gap-4 xl:grid-cols-[420px_1fr]">
+                <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
                     <section id="import-soal" className="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-900">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                            <div>
-                                <h2 className="text-sm font-bold text-slate-900 dark:text-white">Workflow Import Soal</h2>
-                                <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
-                                    Template dibuat khusus dari paket ini, lalu guru mengisi konfigurasi ujian dan daftar soal pada file XLSX.
+                            <div className="max-w-3xl">
+                                <h2 className="text-base font-black text-slate-900 dark:text-white">Workflow Import Soal</h2>
+                                <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                                    Gunakan template resmi paket ini agar konfigurasi paket dari panel admin tetap terkunci, sementara guru hanya mengisi konfigurasi ujian dan data soal.
                                 </p>
                             </div>
                             <a
                                 href={templateUrl}
                                 download
-                                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-gold/30 bg-gold/10 px-3 text-sm font-bold text-gold hover:border-gold/60 focus:outline-none focus:ring-2 focus:ring-gold/20"
+                                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-gold px-3 text-sm font-bold text-navy transition hover:bg-goldhover hover:text-white focus:outline-none focus:ring-2 focus:ring-gold/20"
                             >
                                 <i className="fa-solid fa-file-arrow-down text-xs" /> Unduh Template Soal
                             </a>
                         </div>
 
-                        <div className="mt-4 grid gap-3">
+                        <div className="mt-4 grid gap-2 md:grid-cols-2">
                             {[
-                                ["1", "Unduh Template", "Sistem mengisi kategori, judul paket, kode paket, deskripsi, dan status paket."],
-                                ["2", "Guru Mengisi", "Guru mengisi durasi, ambang lulus, visibilitas hasil, izin ujian ulang, dan baris soal."],
-                                ["3", "Upload File Soal", `Upload kembali XLSX yang sudah lengkap; maksimal ${max_rows.toLocaleString("id-ID")} baris soal.`],
-                                ["4", "Review Import", "Sistem menampilkan ringkasan konfigurasi, jumlah berhasil, dan alasan kegagalan per baris."],
+                                ["1", "Buka Paket Ujian", "Admin memastikan paket, kategori, kode, dan status sudah sesuai di panel ini."],
+                                ["2", "Unduh Template Paket", "File XLSX dibuat khusus untuk paket ini dan memakai sheet Data Soal sebagai sumber import."],
+                                ["3", "Sistem Isi Konfigurasi Paket", "Kategori, judul, kode, deskripsi, dan status paket terisi otomatis dari panel admin."],
+                                ["4", "Bagikan ke Guru Mapel", "Kirim template ke guru atau pembuat soal tanpa mengubah nama sheet dan header tabel."],
+                                ["5", "Guru Mengisi Template", "Guru mengisi durasi, ambang lulus, visibilitas hasil, izin ujian ulang, dan data soal."],
+                                ["6", "Upload XLSX Terisi", `Admin mengunggah file kembali; sistem membaca maksimal ${max_rows.toLocaleString("id-ID")} baris soal.`],
+                                ["7", "Review & Simpan", "Sistem menampilkan ringkasan import, alasan gagal per baris, lalu menyimpan soal yang valid."],
                             ].map(([step, title, description]) => (
                                 <div key={step} className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-white/10 dark:bg-white/[0.03]">
                                     <div className="flex items-start gap-3">
-                                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-gold text-xs font-black text-navy">{step}</span>
+                                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-slate-900 text-xs font-black text-white dark:bg-white dark:text-slate-950">{step}</span>
                                         <div>
                                             <p className="text-sm font-bold text-slate-900 dark:text-white">{title}</p>
                                             <p className="mt-1 text-xs leading-5 text-slate-600 dark:text-slate-300">{description}</p>
@@ -185,37 +188,38 @@ export default function ExamPackageShow({ package: examPackage, questions, sessi
                             ))}
                         </div>
 
-                        <form onSubmit={submitImport} className="mt-4 space-y-4">
-                            <div>
-                                <label className={labelClass} htmlFor="question-import-file">File Excel</label>
-                                <input
-                                    id="question-import-file"
-                                    type="file"
-                                    accept=".xlsx"
-                                    onChange={(event) => form.setData("file", event.target.files?.[0] ?? null)}
-                                    className={inputClass}
-                                />
-                                {form.errors.file ? <p className="mt-1 text-xs text-red-500">{form.errors.file}</p> : null}
-                                {form.data.file ? (
-                                    <p className="mt-2 rounded-lg bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-700 dark:text-emerald-200">
-                                        File dipilih: {form.data.file.name}
-                                    </p>
-                                ) : (
-                                    <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Pilih file `.xlsx` hasil pengisian template paket ini.</p>
-                                )}
+                        <form onSubmit={submitImport} className="mt-4 rounded-lg border border-slate-200 bg-white p-3 dark:border-white/10 dark:bg-slate-950/40">
+                            <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_180px] lg:items-end">
+                                <div>
+                                    <label className={labelClass} htmlFor="question-import-file">Upload Template Terisi</label>
+                                    <input
+                                        id="question-import-file"
+                                        type="file"
+                                        accept=".xlsx"
+                                        onChange={(event) => form.setData("file", event.target.files?.[0] ?? null)}
+                                        className={inputClass}
+                                    />
+                                    {form.errors.file ? <p className="mt-1 text-xs text-red-500">{form.errors.file}</p> : null}
+                                    {form.data.file ? (
+                                        <p className="mt-2 rounded-lg bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-700 dark:text-emerald-200">
+                                            File dipilih: {form.data.file.name}
+                                        </p>
+                                    ) : (
+                                        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Hanya file `.xlsx` dari template paket ini. Sheet `Panduan` tidak dibaca sebagai data soal.</p>
+                                    )}
+                                </div>
+                                <button
+                                    type="submit"
+                                    disabled={form.processing || !form.data.file}
+                                    className={`${primaryButtonClass} min-h-11 w-full`}
+                                >
+                                    {form.processing ? <i className="fa-solid fa-spinner fa-spin text-xs" /> : <i className="fa-solid fa-file-import text-xs" />}
+                                    {form.processing ? "Memproses..." : "Validasi & Import"}
+                                </button>
                             </div>
-
-                            <button
-                                type="submit"
-                                disabled={form.processing || !form.data.file}
-                                className={`${primaryButtonClass} w-full min-h-11`}
-                            >
-                                {form.processing ? <i className="fa-solid fa-spinner fa-spin text-xs" /> : <i className="fa-solid fa-file-import text-xs" />}
-                                {form.processing ? "Memvalidasi & Import..." : "Validasi & Import"}
-                            </button>
                         </form>
 
-                        <details className="mt-5 rounded-lg bg-slate-50 p-3 dark:bg-white/[0.03]">
+                        <details className="mt-4 rounded-lg bg-slate-50 p-3 dark:bg-white/[0.03]">
                             <summary className="cursor-pointer text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Format Template</summary>
                             <div className="mt-3 flex flex-wrap gap-2">
                                 {required_columns.map((column) => (
@@ -225,26 +229,33 @@ export default function ExamPackageShow({ package: examPackage, questions, sessi
                                 ))}
                             </div>
                             <p className="mt-3 text-xs leading-5 text-slate-500 dark:text-slate-400">
-                                Jangan ubah nama sheet `Data Soal`, section konfigurasi, atau header tabel. `opsi_e`, `pembahasan`, dan `aktif` boleh kosong; jika jawaban benar E maka `opsi_e` wajib diisi.
+                                Jangan ubah nama sheet `Data Soal`, section konfigurasi, atau header tabel. `opsi_e`, `tingkat_kesulitan`, dan `pembahasan` boleh kosong; jika jawaban benar E maka `opsi_e` wajib diisi. Kolom `aktif` wajib berisi ya/tidak atau nilai boolean sejenis.
                             </p>
                         </details>
                     </section>
 
-                    <section className="rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-900">
-                        <div className="mb-4 flex items-center justify-between">
-                            <h2 className="text-sm font-bold text-slate-900 dark:text-white">Riwayat Import</h2>
+                    <section className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-white/10 dark:bg-white/[0.03]">
+                        <div className="mb-3 flex items-center justify-between">
+                            <div>
+                                <h2 className="text-sm font-bold text-slate-900 dark:text-white">Riwayat Import</h2>
+                                <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Ringkas, 10 terakhir.</p>
+                            </div>
                             <Link href={`/dashboard/admin/exams/packages/${examPackage.id}/imports`} className={textLinkClass}>Semua</Link>
                         </div>
 
                         {imports.length === 0 ? (
-                            <EmptyState icon="fa-solid fa-file-circle-plus" title="Belum ada import" description="Unduh template resmi, isi baris soal, lalu upload file XLSX pertama untuk mengisi bank soal paket ini." />
+                            <div className="rounded-lg border border-dashed border-slate-200 bg-white px-4 py-6 text-center dark:border-white/10 dark:bg-slate-900">
+                                <i className="fa-solid fa-clock-rotate-left text-2xl text-slate-300 dark:text-slate-600" />
+                                <p className="mt-2 text-sm font-bold text-slate-800 dark:text-slate-100">Belum ada import</p>
+                                <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">Riwayat akan muncul setelah file XLSX pertama diunggah.</p>
+                            </div>
                         ) : (
-                            <div className="grid gap-3">
+                            <div className="grid max-h-[420px] gap-2 overflow-y-auto pr-1">
                                 {imports.map((item) => (
-                                    <Link key={item.id} href={`/dashboard/admin/exams/imports/${item.id}`} className="rounded-lg border border-slate-200 p-3 hover:border-gold/60 dark:border-white/10">
-                                        <div className="flex items-start justify-between gap-3">
+                                    <Link key={item.id} href={`/dashboard/admin/exams/imports/${item.id}`} className="rounded-lg border border-slate-200 bg-white p-2.5 hover:border-gold/60 dark:border-white/10 dark:bg-slate-900">
+                                        <div className="flex items-start justify-between gap-2">
                                             <div className="min-w-0">
-                                                <p className="truncate text-sm font-bold text-slate-900 dark:text-white">{item.original_filename}</p>
+                                                <p className="truncate text-xs font-bold text-slate-900 dark:text-white">{item.original_filename}</p>
                                                 <p className="mt-1 text-xs text-slate-500">{item.created_at ?? "-"}</p>
                                                 <p className="mt-1 text-xs text-slate-500">{item.imported_rows} berhasil · {item.failed_rows} gagal · {item.total_rows} baris</p>
                                             </div>
