@@ -2,7 +2,7 @@
 
 ## Audit Status
 
-Final Phase 5 audit completed. UX polish checkpoint completed afterward. Task 2 admin workflow/template/import refinement completed without schema changes. Task 3 XLSX runtime stabilization and Admin Exam V2 redesign completed without schema changes. Task 4 Stitch-based admin exam UI recovery completed without schema changes. Admin import workflow/template handling checkpoint completed without schema changes. No known critical or high-risk issue remains for the Online Selection Exam Engine at this checkpoint.
+Final Phase 5 audit completed. UX polish checkpoint completed afterward. Task 2 admin workflow/template/import refinement completed without schema changes. Task 3 XLSX runtime stabilization and Admin Exam V2 redesign completed without schema changes. Task 4 Stitch-based admin exam UI recovery completed without schema changes. Admin import workflow/template handling checkpoint completed without schema changes. Runtime XLSX zip support checkpoint completed without schema changes. No known critical or high-risk issue remains for the Online Selection Exam Engine at this checkpoint.
 
 ## Phase Audit Notes
 
@@ -277,6 +277,13 @@ Final Phase 5 audit completed. UX polish checkpoint completed afterward. Task 2 
   - Download test verifies a real PK/XLSX workbook with `Data Soal` and `Panduan`, not HTML.
   - Importer reads only `Data Soal`, ignores `Panduan`, supports Indonesian headers, and keeps legacy English header compatibility.
   - Value validation now treats `opsi_e`, `tingkat_kesulitan`, and `pembahasan` as optional values; `aktif` is required and accepts Indonesian/boolean-like values.
+- Runtime XLSX zip support checkpoint confirmed:
+  - Scope stayed inside PHP Docker/runtime support for XLSX template download/import.
+  - App image is Debian-based `php:8.4-apache`.
+  - Dockerfile installs `libzip-dev` and compiles PHP `zip` with `docker-php-ext-install pdo_mysql zip`.
+  - Dockerfile now includes a build-time smoke check for `php -m | grep -i '^zip$'` and `class_exists(ZipArchive::class)`.
+  - Running app container was rebuilt/recreated; `ZipArchive::class` now returns `true` inside the container.
+  - Focused import/download and exam security tests passed inside the Docker app container.
 
 ## Out-of-Scope File Touches
 

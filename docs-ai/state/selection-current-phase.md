@@ -14,7 +14,7 @@ feat/online-selection-exam
 
 ## Last Safe Checkpoint
 
-Task 4 completed on 2026-06-30. XLSX template download/import remains stabilized, and Admin Exam V2 now uses the main admin sidebar as the only global navigation layer with exactly two visible `Ujian Seleksi` submenus: `Pengaturan Paket` and `Pengaturan Sesi`. The Task 3 inner contextual sidebar was removed without schema changes.
+Runtime XLSX zip support checkpoint completed on 2026-06-30. The Docker app runtime was rebuilt/recreated with PHP `ext-zip` active, `ZipArchive::class` now resolves inside the app container, and the Dockerfile includes a build-time smoke check for `zip`/`ZipArchive`.
 
 ## Resume Instruction
 

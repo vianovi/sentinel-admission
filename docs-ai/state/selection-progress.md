@@ -10,6 +10,8 @@ Task 3 completed on 2026-06-30: XLSX download/import runtime was audited and har
 
 Task 4 completed on 2026-06-30: the rejected admin exam UI was recovered using Stitch MCP project `271540505065919969` as reference. The inner exam workspace sidebar was removed, the main admin sidebar remains the only global navigation, package/session workflow rails and real actions were aligned to the Stitch-refined direction, and no schema changes were made.
 
+Runtime XLSX zip support checkpoint completed on 2026-06-30: the app Docker container was rebuilt/recreated from the Debian-based `php:8.4-apache` image with `libzip-dev` and `docker-php-ext-install zip`; `ZipArchive` now resolves inside the running app container.
+
 ## Completed Phases
 
 - Phase 0 — Project audit and implementation plan

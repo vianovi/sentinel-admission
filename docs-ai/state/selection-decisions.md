@@ -95,3 +95,9 @@
 - Map `izinkan_ujian_ulang` to the existing `max_attempts` field: `ya` means 2 attempts, `tidak` means 1 attempt.
 - Continue using OpenSpout for XLSX reading and use `ZipArchive` only for placeholder replacement in the master XLSX file.
 - Reject package metadata mismatch from the generated XLSX instead of importing partial rows into the wrong package.
+
+## Runtime XLSX Zip Support Decision
+
+- The app Docker image is Debian-based (`php:8.4-apache`), so PHP ZIP support is provided by installing `libzip-dev` and compiling `zip` with `docker-php-ext-install`.
+- Keep the Dockerfile smoke check for `zip`/`ZipArchive` so image builds fail early if XLSX runtime support regresses.
+- Treat container rebuild/recreate as required after Dockerfile runtime-extension changes; host PHP extension status is not sufficient proof for the Laravel app container.

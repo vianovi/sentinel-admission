@@ -11,7 +11,7 @@ Mission complete. UX polish checkpoint, Task 3 Admin Exam V2 stabilization, and 
 3. Keep future work scoped to a new feature/bugfix request.
 4. Re-run route/build/test/audit checks after future exam changes.
 5. For import UX questions, use the dynamic package template route `/dashboard/admin/exams/packages/{package}/template`; the master file is `resources/templates/exam/template-import-soal-ujian-seleksi-spmb.final.xlsx`.
-6. Ensure every runtime has PHP `ext-zip` / `ZipArchive`; Docker now installs it through `libzip-dev` + `docker-php-ext-install zip`.
+6. Ensure every runtime has PHP `ext-zip` / `ZipArchive`; Docker installs it through `libzip-dev` + `docker-php-ext-install zip` and now fails the image build if `zip`/`ZipArchive` is not active.
 7. For browser visual audits, ensure Chrome/Chromium is installed for Playwright. Task 4 could not complete screenshot capture because this runtime has no browser and the installer required interactive sudo.
 
 ## Do Not Touch
