@@ -8,6 +8,8 @@ UX polish checkpoint completed after the WIP exam engine commit.
 
 Task 3 completed on 2026-06-30: XLSX download/import runtime was audited and hardened, and the admin exam workspace was redesigned into a desktop-first contextual-sidebar V2 without schema changes.
 
+Task 4 completed on 2026-06-30: the rejected admin exam UI was recovered using Stitch MCP project `271540505065919969` as reference. The inner exam workspace sidebar was removed, the main admin sidebar remains the only global navigation, package/session workflow rails and real actions were aligned to the Stitch-refined direction, and no schema changes were made.
+
 ## Completed Phases
 
 - Phase 0 — Project audit and implementation plan
@@ -177,6 +179,23 @@ Task 3 completed on 2026-06-30: XLSX download/import runtime was audited and har
 - tests/Feature/OnlineSelectionExamSecurityTest.php
 - public/templates/exam-question-template.xlsx
 
+## Task 4 Files Modified
+
+- docs-ai/design/admin-exam-v2-stitch-reference.md
+- docs-ai/state/selection-progress.md
+- docs-ai/state/selection-known-bugs.md
+- docs-ai/state/selection-next-actions.md
+- docs-ai/audit/selection-exam-audit.md
+- resources/js/Components/Dashboard/Admin/Exam/ExamAdminUi.tsx
+- resources/js/Pages/Dashboard/Admin/Exam/ImportBatchShow.tsx
+- resources/js/Pages/Dashboard/Admin/Exam/PackageShow.tsx
+- resources/js/Pages/Dashboard/Admin/Exam/Packages.tsx
+- resources/js/Pages/Dashboard/Admin/Exam/ResultShow.tsx
+- resources/js/Pages/Dashboard/Admin/Exam/Results.tsx
+- resources/js/Pages/Dashboard/Admin/Exam/SessionShow.tsx
+- resources/js/Pages/Dashboard/Admin/Exam/Sessions.tsx
+- resources/js/Pages/Dashboard/Admin/Exam/Subjects.tsx
+
 ## Commands Run
 
 - Phase 2 commands listed in the previous checkpoint remain valid, including dependency install/remove/update, PHP syntax, route, build, migration, audit, and feature tests.
@@ -230,6 +249,17 @@ Task 3 completed on 2026-06-30: XLSX download/import runtime was audited and har
   - `rg -n "correct_answer|explanation|is_correct|point_awarded" app/Http/Controllers/Dashboard/Candidate resources/js/Pages/Dashboard/Candidate/Exam resources/js/Components/Dashboard/Candidate/Exam -S`
   - `git status --short`
   - `git diff --stat`
+- Task 4 commands:
+  - Stitch MCP `get_project`, `list_screens`, `edit_screens`, and `get_screen` for project `271540505065919969`.
+  - `sed -n ...` and `rg -n ...` on Stitch docs, admin exam pages/components, navigation, task, and state/audit docs.
+  - `npm run build`
+  - `php artisan route:list --path=dashboard/admin/exams`
+  - `php artisan route:list --path=dashboard`
+  - `php artisan test tests/Feature/OnlineSelectionExamImportTest.php`
+  - `php artisan test tests/Feature/OnlineSelectionExamSecurityTest.php`
+  - `git diff --check`
+  - `git diff --stat`
+  - Playwright audit setup attempted with temporary SQLite DB and local Laravel server; browser launch was blocked because Chrome/Chromium was not installed and `npx playwright install chrome` required interactive sudo.
 
 ## Verification Notes
 
@@ -258,6 +288,13 @@ Task 3 completed on 2026-06-30: XLSX download/import runtime was audited and har
 - UX polish build passed.
 - UX polish focused exam security test passed: 4 tests, 12 assertions.
 - UX polish template read check confirmed the expected import headings and one safe example row.
+- Task 4 `npm run build` passed.
+- Task 4 admin exam route list passed and shows 28 admin exam routes.
+- Task 4 full dashboard route list passed and shows 125 dashboard routes.
+- Task 4 import/download feature test passed: 3 tests, 28 assertions.
+- Task 4 focused exam security test passed: 4 tests, 12 assertions.
+- Task 4 `git diff --check` passed.
+- Task 4 static UI audit found no remaining inner exam workspace sidebar, no top-tab admin exam structure, no fake package/session submenu, and no stale ambiguous back/action labels in admin exam files.
 - UX polish candidate answer-key leakage grep returned no matches.
 
 ## Task 2 — Admin Workflow and Dynamic XLSX Template
@@ -289,7 +326,7 @@ Task 3 completed on 2026-06-30: XLSX download/import runtime was audited and har
 - Audited import parsing and ensured `Panduan` is never used as question data while preserving fallback support for legacy non-`Data Soal` workbooks.
 - Fixed package metadata matching for code-less packages by accepting the generator fallback `PKG-{id}`.
 - Confirmed Indonesian headers/config remain supported and legacy English internal headers remain compatible through the existing heading normalization path.
-- Replaced the rejected horizontal/tab-like admin exam navigation with an exam-only left contextual sidebar split into `Pengaturan Paket` and `Pengaturan Sesi`.
+- Replaced the rejected horizontal/tab-like admin exam navigation with an exam-only left contextual sidebar split into `Pengaturan Paket` and `Pengaturan Sesi`; this Task 3 contextual sidebar was later removed by Task 4 so the main admin sidebar is the only global navigation layer.
 - Reworked the admin package form so admin-owned fields stay primary while teacher-owned execution settings are reduced into an advanced initial-values panel.
 - No schema change was made.
 

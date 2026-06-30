@@ -103,7 +103,7 @@ export default function ExamResults({ attempts, filters, sessions }: Props) {
                     title="Hasil Ujian"
                     description="Review attempt, skor, status kelulusan, dan detail jawaban kandidat."
                     icon="fa-solid fa-square-poll-vertical"
-                    actions={<BackLink href="/dashboard/admin/exams/sessions" label="Pengaturan Sesi" />}
+                    actions={<BackLink href="/dashboard/admin/exams/sessions" label="Kembali ke Pengaturan Sesi" />}
                 />
 
                 <section className="rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-900">

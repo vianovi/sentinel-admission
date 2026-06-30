@@ -47,12 +47,12 @@ export default function ExamImportBatchShow({ batch }: Props) {
                     icon="fa-solid fa-file-import"
                     actions={
                         <>
-                            <BackLink href={`/dashboard/admin/exams/packages/${batch.package_id}`} label="Detail Paket" />
+                            <BackLink href={`/dashboard/admin/exams/packages/${batch.package_id}`} label="Kembali ke Detail Paket" />
                             <Link href={`/dashboard/admin/exams/packages/${batch.package_id}/imports`} className={secondaryButtonClass}>
                                 <i className="fa-solid fa-clock-rotate-left text-xs" /> Riwayat
                             </Link>
                             <a href={`/dashboard/admin/exams/packages/${batch.package_id}/template`} download className={primaryButtonClass}>
-                                <i className="fa-solid fa-file-arrow-down text-xs" /> Template
+                                <i className="fa-solid fa-file-arrow-down text-xs" /> Unduh Template
                             </a>
                         </>
                     }

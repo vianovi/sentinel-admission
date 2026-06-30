@@ -71,6 +71,7 @@ export default function ExamPackages({ packages, subjects, editing_package, mode
     const isEditing = mode === "edit" && editing_package !== null;
     const packagesWithQuestions = packages.filter((item) => item.questions_count > 0).length;
     const readyPackages = packages.filter((item) => item.status === "published" && item.questions_count > 0).length;
+    const packagesInSessions = packages.filter((item) => item.sessions_count > 0).length;
     const totalQuestions = packages.reduce((total, item) => total + item.questions_count, 0);
 
     useEffect(() => {
@@ -138,7 +139,7 @@ export default function ExamPackages({ packages, subjects, editing_package, mode
                                 <i className="fa-solid fa-layer-group text-xs" /> Kategori
                             </Link>
                             <Link href="/dashboard/admin/exams/packages/create" className={primaryButtonClass}>
-                                <i className="fa-solid fa-plus text-xs" /> Paket Baru
+                                <i className="fa-solid fa-plus text-xs" /> Buat Paket Ujian
                             </Link>
                         </>
                     }
@@ -151,31 +152,45 @@ export default function ExamPackages({ packages, subjects, editing_package, mode
                     items={[
                         {
                             label: "Langkah 1",
-                            title: "Data Paket",
+                            title: "Buat Paket",
                             description: `${packages.length.toLocaleString("id-ID")} paket, ${subjects.length.toLocaleString("id-ID")} kategori tersedia.`,
                             icon: "fa-solid fa-clipboard-list",
                             state: packages.length > 0 ? "done" : "active",
                         },
                         {
                             label: "Langkah 2",
-                            title: "Template XLSX",
-                            description: "Template resmi tersedia dari detail tiap paket setelah metadata dibuat.",
+                            title: "Unduh Template",
+                            description: "Template resmi tersedia dari aksi unduh pada setiap paket yang sudah dibuat.",
                             icon: "fa-solid fa-file-arrow-down",
-                            state: packages.length > 0 ? "active" : "idle",
+                            state: packages.length > 0 ? "done" : "idle",
                         },
                         {
                             label: "Langkah 3",
+                            title: "Guru Mengisi",
+                            description: "Guru mengisi konfigurasi ujian dan daftar soal pada file XLSX paket.",
+                            icon: "fa-solid fa-pen-to-square",
+                            state: packagesWithQuestions > 0 ? "done" : packages.length > 0 ? "active" : "idle",
+                        },
+                        {
+                            label: "Langkah 4",
                             title: "Import Soal",
                             description: `${packagesWithQuestions.toLocaleString("id-ID")} paket sudah memiliki soal hasil import.`,
                             icon: "fa-solid fa-file-import",
                             state: packagesWithQuestions > 0 ? "done" : packages.length > 0 ? "active" : "idle",
                         },
                         {
-                            label: "Langkah 4",
-                            title: "Bank Soal Siap",
+                            label: "Langkah 5",
+                            title: "Review Bank Soal",
                             description: `${readyPackages.toLocaleString("id-ID")} paket publish dengan total ${totalQuestions.toLocaleString("id-ID")} soal.`,
-                            icon: "fa-solid fa-circle-check",
+                            icon: "fa-solid fa-list-check",
                             state: readyPackages > 0 ? "done" : packagesWithQuestions > 0 ? "active" : "idle",
+                        },
+                        {
+                            label: "Langkah 6",
+                            title: "Siap Masuk Sesi",
+                            description: `${packagesInSessions.toLocaleString("id-ID")} paket sudah terhubung ke sesi ujian.`,
+                            icon: "fa-solid fa-calendar-check",
+                            state: packagesInSessions > 0 ? "done" : readyPackages > 0 ? "active" : "idle",
                         },
                     ]}
                 />
@@ -338,7 +353,7 @@ export default function ExamPackages({ packages, subjects, editing_package, mode
                                     className={`${primaryButtonClass} w-full min-h-11`}
                                 >
                                     {form.processing ? <i className="fa-solid fa-spinner fa-spin text-xs" /> : <i className="fa-solid fa-floppy-disk text-xs" />}
-                                    {isEditing ? "Simpan Paket" : "Buat Paket"}
+                                    {isEditing ? "Simpan Paket" : "Buat Paket Ujian"}
                                 </button>
                             </form>
                         )}
@@ -370,10 +385,16 @@ export default function ExamPackages({ packages, subjects, editing_package, mode
                                             </div>
                                             <div className="flex flex-wrap gap-2">
                                                 <a href={`/dashboard/admin/exams/packages/${item.id}/template`} download className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-gold/30 bg-gold/10 px-3 text-xs font-bold text-gold hover:border-gold/60">
-                                                    <i className="fa-solid fa-file-arrow-down" /> Template
+                                                    <i className="fa-solid fa-file-arrow-down" /> Unduh Template
                                                 </a>
                                                 <Link href={`/dashboard/admin/exams/packages/${item.id}`} className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-200 px-3 text-xs font-bold text-slate-700 hover:border-gold/60 hover:text-gold dark:border-white/10 dark:text-slate-200">
                                                     <i className="fa-solid fa-eye" /> Detail
+                                                </Link>
+                                                <Link href={`/dashboard/admin/exams/packages/${item.id}#import-soal`} className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-200 px-3 text-xs font-bold text-slate-700 hover:border-gold/60 hover:text-gold dark:border-white/10 dark:text-slate-200">
+                                                    <i className="fa-solid fa-file-import" /> Import Soal
+                                                </Link>
+                                                <Link href={`/dashboard/admin/exams/packages/${item.id}#bank-soal`} className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-200 px-3 text-xs font-bold text-slate-700 hover:border-gold/60 hover:text-gold dark:border-white/10 dark:text-slate-200">
+                                                    <i className="fa-solid fa-list-check" /> Lihat Bank Soal
                                                 </Link>
                                                 <Link href={`/dashboard/admin/exams/packages/${item.id}/edit`} className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-200 px-3 text-xs font-bold text-slate-700 hover:border-gold/60 hover:text-gold dark:border-white/10 dark:text-slate-200">
                                                     <i className="fa-solid fa-pen" /> Edit

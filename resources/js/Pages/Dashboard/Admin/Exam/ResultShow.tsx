@@ -64,7 +64,7 @@ export default function ExamResultShow({ attempt }: Props) {
                     icon="fa-solid fa-square-poll-vertical"
                     actions={
                         <>
-                            <BackLink href="/dashboard/admin/exams/results" label="Daftar Hasil" />
+                            <BackLink href="/dashboard/admin/exams/results" label="Kembali ke Hasil Ujian" />
                             {attempt.candidate.id ? (
                                 <Link href={`/dashboard/admin/candidates/${attempt.candidate.id}`} className={secondaryButtonClass}>
                                     <i className="fa-solid fa-user text-xs" /> Profil Kandidat

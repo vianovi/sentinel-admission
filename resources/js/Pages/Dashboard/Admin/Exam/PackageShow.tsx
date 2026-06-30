@@ -97,7 +97,7 @@ export default function ExamPackageShow({ package: examPackage, questions, sessi
                     icon="fa-solid fa-box-archive"
                     actions={
                         <>
-                            <BackLink href="/dashboard/admin/exams/packages" label="Pengaturan Paket" />
+                            <BackLink href="/dashboard/admin/exams/packages" label="Kembali ke Pengaturan Paket" />
                             <Link href={`/dashboard/admin/exams/packages/${examPackage.id}/edit`} className={secondaryButtonClass}>
                                 <i className="fa-solid fa-pen text-xs" /> Edit
                             </Link>

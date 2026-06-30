@@ -2,7 +2,7 @@
 
 ## Audit Status
 
-Final Phase 5 audit completed. UX polish checkpoint completed afterward. Task 2 admin workflow/template/import refinement completed without schema changes. Task 3 XLSX runtime stabilization and Admin Exam V2 redesign completed without schema changes. No known critical or high-risk issue remains for the Online Selection Exam Engine at this checkpoint.
+Final Phase 5 audit completed. UX polish checkpoint completed afterward. Task 2 admin workflow/template/import refinement completed without schema changes. Task 3 XLSX runtime stabilization and Admin Exam V2 redesign completed without schema changes. Task 4 Stitch-based admin exam UI recovery completed without schema changes. No known critical or high-risk issue remains for the Online Selection Exam Engine at this checkpoint.
 
 ## Phase Audit Notes
 
@@ -160,8 +160,8 @@ Final Phase 5 audit completed. UX polish checkpoint completed afterward. Task 2 
   - legacy fallback remains available for older non-`Data Soal` workbooks
 - Fixed code-less package metadata validation by accepting the generator fallback `PKG-{id}`.
 - Added focused feature coverage for dynamic template download, filename, package data injection, and raw-placeholder removal.
-- Replaced the rejected tab/horizontal admin exam structure with a desktop-first left contextual sidebar inside the exam admin workspace only.
-- Sidebar information architecture is split into:
+- Replaced the rejected tab/horizontal admin exam structure with a desktop-first left contextual sidebar inside the exam admin workspace only. This Task 3 approach was superseded by Task 4, which removed the inner sidebar and kept the main admin sidebar as the only global navigation layer.
+- Task 3 sidebar information architecture was split into:
   - `Pengaturan Paket`: Ringkasan Ujian, Kategori Ujian, Paket Ujian, Template Soal, Import Soal, Bank Soal
   - `Pengaturan Sesi`: Sesi Ujian, Peserta, Hasil Ujian
 - Admin package form now emphasizes admin-owned metadata/status and keeps teacher-owned execution defaults in an advanced initial-values panel.
@@ -176,6 +176,54 @@ Final Phase 5 audit completed. UX polish checkpoint completed afterward. Task 2 
   - Composer validation/platform checks
   - host and container `ZipArchive` checks
   - Docker image build
+
+### Task 4
+
+- Read and executed `docs-ai/task/selection-online-exam.task-4.md`.
+- Used Stitch MCP project `271540505065919969` titled `Al-Muntaha School Admin Dashboard` before changing code.
+- Reviewed the existing Stitch project/screens and refined the admin exam direction through Stitch MCP for package, session, detail/import, participant assignment, and result review screens.
+- Confirmed refined Stitch screens:
+  - `Pengaturan Paket Ujian (Refined)` (`02a7e0cbe81549d5ac70a2d7a8d74628`)
+  - `Hasil Ujian - Detail Review` (`ce11d339f85348a2a0c162056da14946`)
+- Updated `docs-ai/design/admin-exam-v2-stitch-reference.md` with what was adopted, adapted, and intentionally not copied.
+- Removed the rejected inner admin exam workspace sidebar from `ExamAdminUi.tsx`; the main dashboard sidebar is now the only global navigation layer.
+- Kept the admin `Ujian Seleksi` sidebar children to the two real workflows only:
+  - `Pengaturan Paket`
+  - `Pengaturan Sesi`
+- Updated the package page into a single workflow surface with the required sequence:
+  - Buat Paket
+  - Unduh Template
+  - Guru Mengisi
+  - Import Soal
+  - Review Bank Soal
+  - Siap Masuk Sesi
+- Updated package row actions to real routes/anchors:
+  - Detail
+  - Unduh Template
+  - Import Soal
+  - Lihat Bank Soal
+- Updated the session page into a single workflow surface with the required sequence:
+  - Buat Sesi
+  - Pilih Paket Aktif
+  - Atur Peserta
+  - Monitor Pengerjaan
+  - Review Hasil
+- Updated session row actions to real routes/anchors:
+  - Detail
+  - Atur Peserta
+  - Lihat Hasil
+- Updated detail-page back buttons to clear Indonesian labels.
+- No backend domain behavior, database schema, import parser, XLSX generator, candidate exam behavior, or routes were changed in Task 4.
+- Mandatory audit loop results:
+  - Static UI grep found no inner exam workspace sidebar, no top-tab admin exam structure, no fake package/session submenu, and no stale ambiguous admin exam back/action labels.
+  - `npm run build` passed.
+  - `php artisan route:list --path=dashboard/admin/exams` passed and showed 28 admin exam routes.
+  - `php artisan route:list --path=dashboard` passed and showed 125 dashboard routes.
+  - `php artisan test tests/Feature/OnlineSelectionExamImportTest.php` passed: 3 tests, 28 assertions.
+  - `php artisan test tests/Feature/OnlineSelectionExamSecurityTest.php` passed: 4 tests, 12 assertions.
+  - `git diff --check` passed.
+  - `git diff --stat` reviewed.
+- Playwright browser visual audit was attempted with a temporary SQLite DB and local Laravel server, but screenshot capture was blocked because Chrome/Chromium is not installed in this environment and `npx playwright install chrome` required interactive sudo. This is recorded as an environment verification limitation, not an application finding.
 
 ## Security Review Notes
 
@@ -216,6 +264,10 @@ Final Phase 5 audit completed. UX polish checkpoint completed afterward. Task 2 
   - Import failures remain sanitized.
   - `Panduan` is not imported as question data.
   - Candidate timer/autosave/scoring/ownership logic was not changed.
+- Task 4 security check confirmed:
+  - No backend route, auth, import, timer, scoring, ownership, or schema behavior was changed.
+  - Import/download focused tests still pass after the UI recovery.
+  - Candidate answer-key leakage coverage still passes after the UI recovery.
 
 ## Out-of-Scope File Touches
 
@@ -230,6 +282,7 @@ Final Phase 5 audit completed. UX polish checkpoint completed afterward. Task 2 
 - `public/templates/exam-question-template.xlsx`: added official static import template for admin UX. This is an exam asset, not a global public feature rewrite.
 - `Dockerfile`: changed only to add the PHP ZIP runtime needed by XLSX generation/import.
 - `composer.json`: Task 3 added explicit `ext-zip` platform requirement; no package architecture rewrite.
+- Task 4 frontend changes stayed inside `resources/js/Components/Dashboard/Admin/Exam` and `resources/js/Pages/Dashboard/Admin/Exam`, plus durable docs. No non-exam dashboard shell rewrite was performed.
 
 ## External References Consulted
 
@@ -247,13 +300,14 @@ Final Phase 5 audit completed. UX polish checkpoint completed afterward. Task 2 
 - OWASP Input Validation Cheat Sheet: https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html
 - OWASP Session Management Cheat Sheet: https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html
 - Moodle quiz settings/timing behavior: https://docs.moodle.org/en/Quiz_settings
+- Stitch MCP project `271540505065919969`: `Al-Muntaha School Admin Dashboard`
 
 ## Final Self-Audit
 
 - Backend: pass. Exam schema, models, services/actions, request validation, routes, import parsing, template generation, attempt lifecycle, scoring, and audit logging are implemented within the exam domain. Syntax, route list, feature tests, Composer platform checks, Docker image build, and `ZipArchive` checks pass.
-- Frontend: pass. Admin, candidate, and staff exam pages are built in exam-specific page/component folders, integrate existing dashboard layout/menu patterns, and `npm run build` passes. Admin Exam V2 now uses an exam-only contextual sidebar rather than the rejected tab-like navigation.
+- Frontend: pass. Admin, candidate, and staff exam pages are built in exam-specific page/component folders, integrate existing dashboard layout/menu patterns, and `npm run build` passes. Admin Exam V2 now uses the main admin sidebar as the only global navigation layer and keeps package/session workflows inside the page body.
 - Security: pass for target medium-risk scope. Candidate ownership, role route groups, server timer, autosave lock, server-side scoring, import validation/private storage, and candidate answer-key non-disclosure are implemented and covered by focused checks. No known critical/high issue remains.
 - Product flow: pass. Admin can manage subjects/packages/sessions/imports/assignments/results; candidates can enter assigned exams, answer, autosave, submit, and expire safely; staff/admin can review results.
 - Scope firewall: pass with documented integration touches only. No auth, payment, document, profile, registration, dashboard layout, global role, or global theme rewrite was performed.
 - Residual limitations: option randomization is configured but not rendered yet; pass/fail does not automatically change admission accepted/rejected status; XLSX only, no XLS; untouched expired attempts finalize on next exam request rather than via scheduler; richer retake policy would need a future schema/product decision.
-- UX polish residual limitations: no browser/E2E screenshot pass was run for exact 375px/390px visual inspection in this checkpoint; Task 3 prioritized desktop admin workflow.
+- UX polish residual limitations: no browser/E2E screenshot pass was completed for Task 4 because the local Playwright runtime has no Chrome/Chromium and the installer required interactive sudo. Static UI audit, frontend build, route list, and focused tests passed.

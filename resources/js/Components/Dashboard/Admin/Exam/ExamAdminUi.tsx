@@ -131,9 +131,15 @@ export function WorkflowRail({
         state?: "done" | "active" | "idle";
     }>;
 }) {
+    const gridColumns = items.length >= 6
+        ? "xl:grid-cols-6"
+        : items.length === 5
+            ? "xl:grid-cols-5"
+            : "xl:grid-cols-4";
+
     return (
         <section className={cardClass}>
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <div className={`grid gap-3 md:grid-cols-2 ${gridColumns}`}>
                 {items.map((item) => {
                     const state = item.state ?? "idle";
                     const tone = state === "done"
@@ -163,7 +169,6 @@ export function WorkflowRail({
 }
 
 export function ExamWorkspace({
-    active,
     children,
 }: {
     active: ExamWorkspaceActive;
@@ -171,79 +176,5 @@ export function ExamWorkspace({
     sessionId?: number;
     children: ReactNode;
 }) {
-    return (
-        <div className="grid gap-5 pb-8 xl:grid-cols-[260px_minmax(0,1fr)]">
-            <ExamContextSidebar active={active} />
-            <main className="min-w-0 space-y-5">{children}</main>
-        </div>
-    );
-}
-
-function ExamContextSidebar({ active }: { active: ExamWorkspaceActive }) {
-    const items: SidebarItem[] = [
-        {
-            key: "packages",
-            label: "Pengaturan Paket",
-            description: "Paket, kategori, template, import, dan kesiapan bank soal.",
-            icon: "fa-solid fa-box-archive",
-            href: "/dashboard/admin/exams/packages",
-        },
-        {
-            key: "sessions",
-            label: "Pengaturan Sesi",
-            description: "Sesi, penugasan kandidat, monitoring, dan hasil ujian.",
-            icon: "fa-solid fa-calendar-check",
-            href: "/dashboard/admin/exams/sessions",
-        },
-    ];
-
-    return (
-        <aside className="xl:sticky xl:top-24 xl:self-start" aria-label="Navigasi workspace ujian seleksi">
-            <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-soft dark:border-white/10 dark:bg-[#131b2e]">
-                <div className="border-b border-slate-100 px-2 pb-3 dark:border-white/10">
-                    <p className="text-[11px] font-black uppercase tracking-wide text-gold">Ujian Seleksi</p>
-                    <h2 className="mt-1 text-sm font-black text-slate-900 dark:text-white">Ruang Kerja Admin</h2>
-                    <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">Kelola paket terlebih dahulu, lalu buka sesi untuk kandidat.</p>
-                </div>
-
-                <div className="mt-3 grid gap-1.5">
-                    {items.map((item) => (
-                        <SidebarLink key={item.key} item={item} active={active === item.key} />
-                    ))}
-                </div>
-
-                <div className="mt-3 rounded-lg border border-gold/20 bg-gold/10 p-3 text-xs leading-5 text-slate-700 dark:text-slate-200">
-                    Template dan import berada di alur paket. Penugasan, monitoring, dan hasil berada di alur sesi.
-                </div>
-            </div>
-        </aside>
-    );
-}
-
-type SidebarItem = {
-    key: ExamWorkspaceActive;
-    label: string;
-    description: string;
-    icon: string;
-    href: string;
-};
-
-function SidebarLink({ item, active }: { item: SidebarItem; active: boolean }) {
-    const className = `group flex min-h-[64px] items-start gap-3 rounded-lg px-3 py-2.5 text-left transition ${
-        active
-            ? "bg-gold text-navy shadow-sm shadow-gold/20"
-            : "text-slate-600 hover:bg-slate-50 hover:text-gold dark:text-slate-300 dark:hover:bg-white/5"
-    }`;
-
-    return (
-        <Link href={item.href} className={className}>
-            <span className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${active ? "bg-navy/10" : "bg-slate-100 text-slate-500 group-hover:text-gold dark:bg-white/5"}`}>
-                <i className={`${item.icon} text-xs`} />
-            </span>
-            <span className="min-w-0">
-                <span className="block text-sm font-black">{item.label}</span>
-                <span className={`mt-0.5 block text-xs leading-4 ${active ? "text-navy/75" : "text-slate-500 dark:text-slate-400"}`}>{item.description}</span>
-            </span>
-        </Link>
-    );
+    return <main className="min-w-0 space-y-5 pb-8">{children}</main>;
 }

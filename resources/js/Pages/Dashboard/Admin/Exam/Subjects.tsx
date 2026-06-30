@@ -88,7 +88,7 @@ export default function ExamSubjects({ subjects }: Props) {
                     title="Kategori Ujian"
                     description="Kelola subject atau kategori soal yang akan dipakai paket ujian."
                     icon="fa-solid fa-layer-group"
-                    actions={<BackLink href="/dashboard/admin/exams/packages" label="Pengaturan Paket" />}
+                    actions={<BackLink href="/dashboard/admin/exams/packages" label="Kembali ke Pengaturan Paket" />}
                 />
 
                 <FlashMessage value={flash.success} type="success" />

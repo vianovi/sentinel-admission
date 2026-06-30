@@ -14,7 +14,7 @@ feat/online-selection-exam
 
 ## Last Safe Checkpoint
 
-Task 3 completed on 2026-06-30. XLSX template download/import runtime was stabilized with explicit `ext-zip`/`ZipArchive` support, the import reader was hardened, and Admin Exam V2 was redesigned with an exam-only left contextual sidebar split into `Pengaturan Paket` and `Pengaturan Sesi` without schema changes.
+Task 4 completed on 2026-06-30. XLSX template download/import remains stabilized, and Admin Exam V2 now uses the main admin sidebar as the only global navigation layer with exactly two visible `Ujian Seleksi` submenus: `Pengaturan Paket` and `Pengaturan Sesi`. The Task 3 inner contextual sidebar was removed without schema changes.
 
 ## Resume Instruction
 

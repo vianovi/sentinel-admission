@@ -85,6 +85,7 @@ export default function ExamSessions({ sessions, packages, waves, editing_sessio
     const isEditing = mode === "edit" && editing_session !== null;
     const assignedCandidateTotal = sessions.reduce((total, session) => total + session.candidates_count, 0);
     const attemptTotal = sessions.reduce((total, session) => total + session.attempts_count, 0);
+    const sessionsWithCandidates = sessions.filter((session) => session.candidates_count > 0).length;
     const monitoredSessions = sessions.filter((session) => session.attempts_count > 0).length;
 
     useEffect(() => {
@@ -150,10 +151,10 @@ export default function ExamSessions({ sessions, packages, waves, editing_sessio
                     actions={
                         <>
                             <Link href="/dashboard/admin/exams/results" className={secondaryButtonClass}>
-                                <i className="fa-solid fa-square-poll-vertical text-xs" /> Hasil
+                                <i className="fa-solid fa-square-poll-vertical text-xs" /> Hasil Ujian
                             </Link>
                             <Link href="/dashboard/admin/exams/sessions/create" className={primaryButtonClass}>
-                                <i className="fa-solid fa-plus text-xs" /> Sesi Baru
+                                <i className="fa-solid fa-plus text-xs" /> Buat Sesi Ujian
                             </Link>
                         </>
                     }
@@ -173,21 +174,28 @@ export default function ExamSessions({ sessions, packages, waves, editing_sessio
                         },
                         {
                             label: "Langkah 2",
-                            title: "Tugaskan Kandidat",
-                            description: `${assignedCandidateTotal.toLocaleString("id-ID")} kandidat sudah ditempatkan ke sesi.`,
+                            title: "Pilih Paket Aktif",
+                            description: `${packages.length.toLocaleString("id-ID")} paket tersedia sebagai sumber soal dan aturan sesi.`,
+                            icon: "fa-solid fa-box-archive",
+                            state: sessions.length > 0 ? "done" : packages.length > 0 ? "active" : "idle",
+                        },
+                        {
+                            label: "Langkah 3",
+                            title: "Atur Peserta",
+                            description: `${assignedCandidateTotal.toLocaleString("id-ID")} kandidat sudah ditempatkan di ${sessionsWithCandidates.toLocaleString("id-ID")} sesi.`,
                             icon: "fa-solid fa-users",
                             state: assignedCandidateTotal > 0 ? "done" : sessions.length > 0 ? "active" : "idle",
                         },
                         {
-                            label: "Langkah 3",
-                            title: "Monitoring",
+                            label: "Langkah 4",
+                            title: "Monitor Pengerjaan",
                             description: `${monitoredSessions.toLocaleString("id-ID")} sesi sudah memiliki aktivitas pengerjaan.`,
                             icon: "fa-solid fa-desktop",
                             state: monitoredSessions > 0 ? "done" : assignedCandidateTotal > 0 ? "active" : "idle",
                         },
                         {
-                            label: "Langkah 4",
-                            title: "Hasil",
+                            label: "Langkah 5",
+                            title: "Review Hasil",
                             description: `${attemptTotal.toLocaleString("id-ID")} attempt tersedia untuk direview.`,
                             icon: "fa-solid fa-square-poll-vertical",
                             state: attemptTotal > 0 ? "done" : monitoredSessions > 0 ? "active" : "idle",
@@ -372,7 +380,7 @@ export default function ExamSessions({ sessions, packages, waves, editing_sessio
                                     className={`${primaryButtonClass} w-full min-h-11`}
                                 >
                                     {form.processing ? <i className="fa-solid fa-spinner fa-spin text-xs" /> : <i className="fa-solid fa-floppy-disk text-xs" />}
-                                    {isEditing ? "Simpan Sesi" : "Buat Sesi"}
+                                    {isEditing ? "Simpan Sesi" : "Buat Sesi Ujian"}
                                 </button>
                             </form>
                         )}
@@ -402,11 +410,14 @@ export default function ExamSessions({ sessions, packages, waves, editing_sessio
                                                 <p className="mt-1 text-xs text-slate-500">{session.opens_at ?? "-"} - {session.closes_at ?? "-"}</p>
                                             </div>
                                             <div className="flex flex-wrap gap-2">
-                                                <Link href={`/dashboard/admin/exams/results?session=${session.id}`} className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-gold/30 bg-gold/10 px-3 text-xs font-bold text-gold hover:border-gold/60">
-                                                    <i className="fa-solid fa-chart-simple" /> Monitor
-                                                </Link>
                                                 <Link href={`/dashboard/admin/exams/sessions/${session.id}`} className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-200 px-3 text-xs font-bold text-slate-700 hover:border-gold/60 hover:text-gold dark:border-white/10 dark:text-slate-200">
                                                     <i className="fa-solid fa-eye" /> Detail
+                                                </Link>
+                                                <Link href={`/dashboard/admin/exams/sessions/${session.id}#atur-peserta`} className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-gold/30 bg-gold/10 px-3 text-xs font-bold text-gold hover:border-gold/60">
+                                                    <i className="fa-solid fa-users-gear" /> Atur Peserta
+                                                </Link>
+                                                <Link href={`/dashboard/admin/exams/results?session=${session.id}`} className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-200 px-3 text-xs font-bold text-slate-700 hover:border-gold/60 hover:text-gold dark:border-white/10 dark:text-slate-200">
+                                                    <i className="fa-solid fa-chart-simple" /> Lihat Hasil
                                                 </Link>
                                                 <Link href={`/dashboard/admin/exams/sessions/${session.id}/edit`} className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-200 px-3 text-xs font-bold text-slate-700 hover:border-gold/60 hover:text-gold dark:border-white/10 dark:text-slate-200">
                                                     <i className="fa-solid fa-pen" /> Edit

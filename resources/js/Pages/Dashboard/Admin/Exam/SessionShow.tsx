@@ -104,9 +104,9 @@ export default function ExamSessionShow({ session, assigned_candidates, availabl
                     icon="fa-solid fa-calendar-check"
                     actions={
                         <>
-                            <BackLink href="/dashboard/admin/exams/sessions" label="Pengaturan Sesi" />
+                            <BackLink href="/dashboard/admin/exams/sessions" label="Kembali ke Pengaturan Sesi" />
                             <Link href={`/dashboard/admin/exams/results?session=${session.id}`} className={secondaryButtonClass}>
-                                <i className="fa-solid fa-chart-simple text-xs" /> Monitor Hasil
+                                <i className="fa-solid fa-chart-simple text-xs" /> Lihat Hasil
                             </Link>
                             <Link href={`/dashboard/admin/exams/sessions/${session.id}/edit`} className={secondaryButtonClass}>
                                 <i className="fa-solid fa-pen text-xs" /> Edit
@@ -149,7 +149,7 @@ export default function ExamSessionShow({ session, assigned_candidates, availabl
                 </div>
 
                 <div className="grid gap-4 xl:grid-cols-[460px_1fr]">
-                    <section className="rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-900">
+                    <section id="atur-peserta" className="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-900">
                         <h2 className="text-sm font-bold text-slate-900 dark:text-white">Tugaskan Kandidat</h2>
                         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Daftar ini dibatasi 200 kandidat terbaru yang memenuhi status dasar dan belum ditugaskan.</p>
 
