@@ -1,6 +1,6 @@
 import { Head, Link } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
-import { BackLink, ExamWorkspace, PageHeader, StatCard, StatusPill } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
+import { BackLink, ExamWorkspace, PageHeader, StatCard, StatusPill, secondaryButtonClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
 
 type CandidateSummary = {
     id: number | null;
@@ -57,16 +57,16 @@ export default function ExamResultShow({ attempt }: Props) {
         <DashboardLayout>
             <Head title={`Hasil ${attempt.candidate.full_name ?? "Kandidat"}`} />
 
-            <ExamWorkspace active="results">
+            <ExamWorkspace active="sessions">
                 <PageHeader
                     title={attempt.candidate.full_name ?? "Hasil Kandidat"}
                     description={`${attempt.session_title ?? "Tanpa sesi"} · Attempt ${attempt.attempt_number}`}
                     icon="fa-solid fa-square-poll-vertical"
                     actions={
                         <>
-                            <BackLink href="/dashboard/admin/exams/results" label="Hasil" />
+                            <BackLink href="/dashboard/admin/exams/results" label="Daftar Hasil" />
                             {attempt.candidate.id ? (
-                                <Link href={`/dashboard/admin/candidates/${attempt.candidate.id}`} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-slate-200 px-3 text-sm font-bold text-slate-700 hover:border-rose-300 hover:text-rose-500 dark:border-white/10 dark:text-slate-200">
+                                <Link href={`/dashboard/admin/candidates/${attempt.candidate.id}`} className={secondaryButtonClass}>
                                     <i className="fa-solid fa-user text-xs" /> Profil Kandidat
                                 </Link>
                             ) : null}

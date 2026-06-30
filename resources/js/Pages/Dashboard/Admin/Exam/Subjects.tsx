@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Head, router, useForm, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
-import { EmptyState, ExamWorkspace, FlashMessage, PageHeader, StatusPill, inputClass, labelClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
+import { BackLink, EmptyState, ExamWorkspace, FlashMessage, PageHeader, StatusPill, inputClass, labelClass, primaryButtonClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
 import type { PageProps } from "@/types";
 
 type Subject = {
@@ -83,11 +83,12 @@ export default function ExamSubjects({ subjects }: Props) {
         <DashboardLayout>
             <Head title="Kategori Ujian" />
 
-            <ExamWorkspace active="subjects">
+            <ExamWorkspace active="packages">
                 <PageHeader
                     title="Kategori Ujian"
                     description="Kelola subject atau kategori soal yang akan dipakai paket ujian."
                     icon="fa-solid fa-layer-group"
+                    actions={<BackLink href="/dashboard/admin/exams/packages" label="Pengaturan Paket" />}
                 />
 
                 <FlashMessage value={flash.success} type="success" />
@@ -104,7 +105,7 @@ export default function ExamSubjects({ subjects }: Props) {
                                 <button
                                     type="button"
                                     onClick={() => setEditing(null)}
-                                    className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 hover:text-rose-500 dark:border-white/10 dark:text-slate-300"
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 hover:text-gold dark:border-white/10 dark:text-slate-300"
                                 >
                                     Batal
                                 </button>
@@ -156,7 +157,7 @@ export default function ExamSubjects({ subjects }: Props) {
                                     type="checkbox"
                                     checked={form.data.is_active}
                                     onChange={(event) => form.setData("is_active", event.target.checked)}
-                                    className="rounded border-slate-300 text-rose-500 focus:ring-rose-500"
+                                    className="rounded border-slate-300 text-gold focus:ring-gold"
                                 />
                                 Aktif untuk paket baru
                             </label>
@@ -164,7 +165,7 @@ export default function ExamSubjects({ subjects }: Props) {
                             <button
                                 type="submit"
                                 disabled={form.processing}
-                                className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-rose-500 px-4 text-sm font-bold text-white hover:bg-rose-400 disabled:cursor-not-allowed disabled:opacity-60"
+                                className={`${primaryButtonClass} w-full min-h-11`}
                             >
                                 {form.processing ? <i className="fa-solid fa-spinner fa-spin text-xs" /> : <i className="fa-solid fa-floppy-disk text-xs" />}
                                 {editing ? "Simpan Perubahan" : "Buat Kategori"}
@@ -208,7 +209,7 @@ export default function ExamSubjects({ subjects }: Props) {
                                                         <button
                                                             type="button"
                                                             onClick={() => setEditing(subject)}
-                                                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:border-rose-300 hover:text-rose-500 dark:border-white/10 dark:text-slate-300"
+                                                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:border-gold/60 hover:text-gold dark:border-white/10 dark:text-slate-300"
                                                             aria-label={`Edit ${subject.name}`}
                                                         >
                                                             <i className="fa-solid fa-pen text-xs" />

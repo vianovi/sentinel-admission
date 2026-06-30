@@ -1,7 +1,7 @@
 import { FormEvent, useMemo, useState } from "react";
 import { Head, Link, useForm, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
-import { BackLink, EmptyState, ExamWorkspace, FlashMessage, PageHeader, StatCard, StatusPill, inputClass, labelClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
+import { BackLink, EmptyState, ExamWorkspace, FlashMessage, PageHeader, StatCard, StatusPill, inputClass, labelClass, primaryButtonClass, secondaryButtonClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
 import type { PageProps } from "@/types";
 
 type SessionDetail = {
@@ -97,15 +97,18 @@ export default function ExamSessionShow({ session, assigned_candidates, availabl
         <DashboardLayout>
             <Head title={`${session.title} - Sesi Ujian`} />
 
-            <ExamWorkspace active="participants" sessionId={session.id}>
+            <ExamWorkspace active="sessions">
                 <PageHeader
                     title={session.title}
                     description={`${session.package_title ?? "Tanpa paket"} · ${session.package_subject ?? "Tanpa kategori"}`}
                     icon="fa-solid fa-calendar-check"
                     actions={
                         <>
-                            <BackLink href="/dashboard/admin/exams/sessions" />
-                            <Link href={`/dashboard/admin/exams/sessions/${session.id}/edit`} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-slate-200 px-3 text-sm font-bold text-slate-700 hover:border-rose-300 hover:text-rose-500 dark:border-white/10 dark:text-slate-200">
+                            <BackLink href="/dashboard/admin/exams/sessions" label="Pengaturan Sesi" />
+                            <Link href={`/dashboard/admin/exams/results?session=${session.id}`} className={secondaryButtonClass}>
+                                <i className="fa-solid fa-chart-simple text-xs" /> Monitor Hasil
+                            </Link>
+                            <Link href={`/dashboard/admin/exams/sessions/${session.id}/edit`} className={secondaryButtonClass}>
                                 <i className="fa-solid fa-pen text-xs" /> Edit
                             </Link>
                         </>
@@ -142,7 +145,7 @@ export default function ExamSessionShow({ session, assigned_candidates, availabl
                     <StatCard label="Passing" value={`${session.passing_score}%`} icon="fa-solid fa-bullseye" tone="text-emerald-500" />
                     <StatCard label="Attempt" value={session.max_attempts} icon="fa-solid fa-repeat" tone="text-violet-500" />
                     <StatCard label="Kandidat" value={session.candidates_count} icon="fa-solid fa-users" tone="text-amber-500" />
-                    <StatCard label="Pengerjaan" value={session.attempts_count} icon="fa-solid fa-clipboard-check" tone="text-rose-500" />
+                    <StatCard label="Pengerjaan" value={session.attempts_count} icon="fa-solid fa-clipboard-check" tone="text-gold" />
                 </div>
 
                 <div className="grid gap-4 xl:grid-cols-[460px_1fr]">
@@ -164,7 +167,7 @@ export default function ExamSessionShow({ session, assigned_candidates, availabl
 
                             <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-500 dark:bg-white/[0.03]">
                                 <span>{form.data.candidate_ids.length.toLocaleString("id-ID")} dipilih</span>
-                                <button type="button" onClick={selectVisible} className="font-bold text-rose-500">
+                                <button type="button" onClick={selectVisible} className="font-bold text-gold">
                                     Pilih terlihat
                                 </button>
                             </div>
@@ -173,12 +176,12 @@ export default function ExamSessionShow({ session, assigned_candidates, availabl
                                 {filteredCandidates.length === 0 ? (
                                     <EmptyState icon="fa-solid fa-user-slash" title="Tidak ada kandidat" description="Coba kata kunci lain atau pastikan kandidat sudah memiliki status yang sesuai." />
                                 ) : filteredCandidates.map((candidate) => (
-                                    <label key={candidate.id} className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 p-3 text-sm hover:border-rose-300 dark:border-white/10">
+                                    <label key={candidate.id} className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 p-3 text-sm hover:border-gold/60 dark:border-white/10">
                                         <input
                                             type="checkbox"
                                             checked={form.data.candidate_ids.includes(candidate.id)}
                                             onChange={() => toggleCandidate(candidate.id)}
-                                            className="mt-1 rounded border-slate-300 text-rose-500 focus:ring-rose-500"
+                                            className="mt-1 rounded border-slate-300 text-gold focus:ring-gold"
                                         />
                                         <span className="min-w-0">
                                             <span className="block font-bold text-slate-900 dark:text-white">{candidate.full_name ?? "Tanpa nama"}</span>
@@ -203,7 +206,7 @@ export default function ExamSessionShow({ session, assigned_candidates, availabl
                             <button
                                 type="submit"
                                 disabled={form.processing || form.data.candidate_ids.length === 0}
-                                className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-rose-500 px-4 text-sm font-bold text-white hover:bg-rose-400 disabled:cursor-not-allowed disabled:opacity-60"
+                                className={`${primaryButtonClass} w-full min-h-11`}
                             >
                                 {form.processing ? <i className="fa-solid fa-spinner fa-spin text-xs" /> : <i className="fa-solid fa-user-plus text-xs" />}
                                 Tugaskan Kandidat

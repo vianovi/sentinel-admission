@@ -1,7 +1,7 @@
 import { FormEvent, useEffect } from "react";
 import { Head, Link, router, useForm, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
-import { EmptyState, ExamWorkspace, FlashMessage, PageHeader, StatusPill, inputClass, labelClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
+import { EmptyState, ExamWorkspace, FlashMessage, PageHeader, StatusPill, WorkflowRail, dangerButtonClass, inputClass, labelClass, primaryButtonClass, secondaryButtonClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
 import type { PageProps } from "@/types";
 
 type PackageOption = {
@@ -83,6 +83,9 @@ export default function ExamSessions({ sessions, packages, waves, editing_sessio
     const firstPackage = packages[0];
     const form = useForm<SessionForm>(defaultForm(firstPackage));
     const isEditing = mode === "edit" && editing_session !== null;
+    const assignedCandidateTotal = sessions.reduce((total, session) => total + session.candidates_count, 0);
+    const attemptTotal = sessions.reduce((total, session) => total + session.attempts_count, 0);
+    const monitoredSessions = sessions.filter((session) => session.attempts_count > 0).length;
 
     useEffect(() => {
         if (!editing_session) {
@@ -141,18 +144,56 @@ export default function ExamSessions({ sessions, packages, waves, editing_sessio
 
             <ExamWorkspace active="sessions">
                 <PageHeader
-                    title="Sesi Ujian"
-                    description="Sesi menentukan kapan paket tersedia dan untuk siapa kandidat ditugaskan."
+                    title="Pengaturan Sesi"
+                    description="Kelola jadwal, penugasan kandidat, monitoring pengerjaan, dan akses hasil ujian."
                     icon="fa-solid fa-calendar-check"
                     actions={
-                        <Link href="/dashboard/admin/exams/sessions/create" className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-rose-500 px-3 text-sm font-bold text-white hover:bg-rose-400">
-                            <i className="fa-solid fa-plus text-xs" /> Sesi Baru
-                        </Link>
+                        <>
+                            <Link href="/dashboard/admin/exams/results" className={secondaryButtonClass}>
+                                <i className="fa-solid fa-square-poll-vertical text-xs" /> Hasil
+                            </Link>
+                            <Link href="/dashboard/admin/exams/sessions/create" className={primaryButtonClass}>
+                                <i className="fa-solid fa-plus text-xs" /> Sesi Baru
+                            </Link>
+                        </>
                     }
                 />
 
                 <FlashMessage value={flash.success} type="success" />
                 <FlashMessage value={flash.error ?? pageErrors.session} />
+
+                <WorkflowRail
+                    items={[
+                        {
+                            label: "Langkah 1",
+                            title: "Buat Sesi",
+                            description: `${sessions.length.toLocaleString("id-ID")} sesi dari ${packages.length.toLocaleString("id-ID")} paket yang dapat dipilih.`,
+                            icon: "fa-solid fa-calendar-plus",
+                            state: sessions.length > 0 ? "done" : "active",
+                        },
+                        {
+                            label: "Langkah 2",
+                            title: "Tugaskan Kandidat",
+                            description: `${assignedCandidateTotal.toLocaleString("id-ID")} kandidat sudah ditempatkan ke sesi.`,
+                            icon: "fa-solid fa-users",
+                            state: assignedCandidateTotal > 0 ? "done" : sessions.length > 0 ? "active" : "idle",
+                        },
+                        {
+                            label: "Langkah 3",
+                            title: "Monitoring",
+                            description: `${monitoredSessions.toLocaleString("id-ID")} sesi sudah memiliki aktivitas pengerjaan.`,
+                            icon: "fa-solid fa-desktop",
+                            state: monitoredSessions > 0 ? "done" : assignedCandidateTotal > 0 ? "active" : "idle",
+                        },
+                        {
+                            label: "Langkah 4",
+                            title: "Hasil",
+                            description: `${attemptTotal.toLocaleString("id-ID")} attempt tersedia untuk direview.`,
+                            icon: "fa-solid fa-square-poll-vertical",
+                            state: attemptTotal > 0 ? "done" : monitoredSessions > 0 ? "active" : "idle",
+                        },
+                    ]}
+                />
 
                 <div className="grid gap-4 xl:grid-cols-[440px_1fr]">
                     <section className="rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-900">
@@ -320,7 +361,7 @@ export default function ExamSessions({ sessions, packages, waves, editing_sessio
                                         type="checkbox"
                                         checked={form.data.show_result_to_candidate}
                                         onChange={(event) => form.setData("show_result_to_candidate", event.target.checked)}
-                                        className="rounded border-slate-300 text-rose-500 focus:ring-rose-500"
+                                        className="rounded border-slate-300 text-gold focus:ring-gold"
                                     />
                                     Tampilkan hasil ke kandidat setelah selesai
                                 </label>
@@ -328,7 +369,7 @@ export default function ExamSessions({ sessions, packages, waves, editing_sessio
                                 <button
                                     type="submit"
                                     disabled={form.processing}
-                                    className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-rose-500 px-4 text-sm font-bold text-white hover:bg-rose-400 disabled:cursor-not-allowed disabled:opacity-60"
+                                    className={`${primaryButtonClass} w-full min-h-11`}
                                 >
                                     {form.processing ? <i className="fa-solid fa-spinner fa-spin text-xs" /> : <i className="fa-solid fa-floppy-disk text-xs" />}
                                     {isEditing ? "Simpan Sesi" : "Buat Sesi"}
@@ -352,7 +393,7 @@ export default function ExamSessions({ sessions, packages, waves, editing_sessio
                                         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                                             <div className="min-w-0">
                                                 <div className="flex flex-wrap items-center gap-2">
-                                                    <Link href={`/dashboard/admin/exams/sessions/${session.id}`} className="text-base font-bold text-slate-900 hover:text-rose-500 dark:text-white">
+                                                    <Link href={`/dashboard/admin/exams/sessions/${session.id}`} className="text-base font-bold text-slate-900 hover:text-gold dark:text-white">
                                                         {session.title}
                                                     </Link>
                                                     <StatusPill value={session.status} />
@@ -361,16 +402,19 @@ export default function ExamSessions({ sessions, packages, waves, editing_sessio
                                                 <p className="mt-1 text-xs text-slate-500">{session.opens_at ?? "-"} - {session.closes_at ?? "-"}</p>
                                             </div>
                                             <div className="flex flex-wrap gap-2">
-                                                <Link href={`/dashboard/admin/exams/sessions/${session.id}`} className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-200 px-3 text-xs font-bold text-slate-700 hover:border-rose-300 hover:text-rose-500 dark:border-white/10 dark:text-slate-200">
+                                                <Link href={`/dashboard/admin/exams/results?session=${session.id}`} className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-gold/30 bg-gold/10 px-3 text-xs font-bold text-gold hover:border-gold/60">
+                                                    <i className="fa-solid fa-chart-simple" /> Monitor
+                                                </Link>
+                                                <Link href={`/dashboard/admin/exams/sessions/${session.id}`} className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-200 px-3 text-xs font-bold text-slate-700 hover:border-gold/60 hover:text-gold dark:border-white/10 dark:text-slate-200">
                                                     <i className="fa-solid fa-eye" /> Detail
                                                 </Link>
-                                                <Link href={`/dashboard/admin/exams/sessions/${session.id}/edit`} className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-200 px-3 text-xs font-bold text-slate-700 hover:border-rose-300 hover:text-rose-500 dark:border-white/10 dark:text-slate-200">
+                                                <Link href={`/dashboard/admin/exams/sessions/${session.id}/edit`} className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-200 px-3 text-xs font-bold text-slate-700 hover:border-gold/60 hover:text-gold dark:border-white/10 dark:text-slate-200">
                                                     <i className="fa-solid fa-pen" /> Edit
                                                 </Link>
                                                 <button
                                                     type="button"
                                                     onClick={() => destroy(session)}
-                                                    className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-200 px-3 text-xs font-bold text-slate-700 hover:border-red-300 hover:text-red-500 dark:border-white/10 dark:text-slate-200"
+                                                    className={dangerButtonClass}
                                                 >
                                                     <i className="fa-solid fa-trash" /> Hapus
                                                 </button>

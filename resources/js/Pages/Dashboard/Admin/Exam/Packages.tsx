@@ -1,7 +1,7 @@
 import { FormEvent, useEffect } from "react";
 import { Head, Link, router, useForm, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
-import { EmptyState, ExamWorkspace, FlashMessage, PageHeader, StatusPill, inputClass, labelClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
+import { EmptyState, ExamWorkspace, FlashMessage, PageHeader, StatusPill, WorkflowRail, dangerButtonClass, inputClass, labelClass, primaryButtonClass, secondaryButtonClass, subtleCardClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
 import type { PageProps } from "@/types";
 
 type SubjectOption = {
@@ -69,6 +69,9 @@ export default function ExamPackages({ packages, subjects, editing_package, mode
     const firstSubjectId = subjects[0]?.id ?? 0;
     const form = useForm<PackageForm>(defaultForm(firstSubjectId));
     const isEditing = mode === "edit" && editing_package !== null;
+    const packagesWithQuestions = packages.filter((item) => item.questions_count > 0).length;
+    const readyPackages = packages.filter((item) => item.status === "published" && item.questions_count > 0).length;
+    const totalQuestions = packages.reduce((total, item) => total + item.questions_count, 0);
 
     useEffect(() => {
         if (!editing_package) {
@@ -126,15 +129,15 @@ export default function ExamPackages({ packages, subjects, editing_package, mode
 
             <ExamWorkspace active="packages">
                 <PageHeader
-                    title="Paket Ujian"
-                    description="Paket ujian adalah satu mapel/unit seleksi. Setelah paket dibuat, sistem dapat membuat template soal untuk guru."
+                    title="Pengaturan Paket"
+                    description="Kelola paket, unduh template, import soal, dan pastikan bank soal siap dipakai sesi."
                     icon="fa-solid fa-box-archive"
                     actions={
                         <>
-                            <Link href="/dashboard/admin/exams/subjects" className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-slate-200 px-3 text-sm font-bold text-slate-700 hover:border-rose-300 hover:text-rose-500 dark:border-white/10 dark:text-slate-200">
+                            <Link href="/dashboard/admin/exams/subjects" className={secondaryButtonClass}>
                                 <i className="fa-solid fa-layer-group text-xs" /> Kategori
                             </Link>
-                            <Link href="/dashboard/admin/exams/packages/create" className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-rose-500 px-3 text-sm font-bold text-white hover:bg-rose-400">
+                            <Link href="/dashboard/admin/exams/packages/create" className={primaryButtonClass}>
                                 <i className="fa-solid fa-plus text-xs" /> Paket Baru
                             </Link>
                         </>
@@ -143,6 +146,39 @@ export default function ExamPackages({ packages, subjects, editing_package, mode
 
                 <FlashMessage value={flash.success} type="success" />
                 <FlashMessage value={flash.error ?? pageErrors.package} />
+
+                <WorkflowRail
+                    items={[
+                        {
+                            label: "Langkah 1",
+                            title: "Data Paket",
+                            description: `${packages.length.toLocaleString("id-ID")} paket, ${subjects.length.toLocaleString("id-ID")} kategori tersedia.`,
+                            icon: "fa-solid fa-clipboard-list",
+                            state: packages.length > 0 ? "done" : "active",
+                        },
+                        {
+                            label: "Langkah 2",
+                            title: "Template XLSX",
+                            description: "Template resmi tersedia dari detail tiap paket setelah metadata dibuat.",
+                            icon: "fa-solid fa-file-arrow-down",
+                            state: packages.length > 0 ? "active" : "idle",
+                        },
+                        {
+                            label: "Langkah 3",
+                            title: "Import Soal",
+                            description: `${packagesWithQuestions.toLocaleString("id-ID")} paket sudah memiliki soal hasil import.`,
+                            icon: "fa-solid fa-file-import",
+                            state: packagesWithQuestions > 0 ? "done" : packages.length > 0 ? "active" : "idle",
+                        },
+                        {
+                            label: "Langkah 4",
+                            title: "Bank Soal Siap",
+                            description: `${readyPackages.toLocaleString("id-ID")} paket publish dengan total ${totalQuestions.toLocaleString("id-ID")} soal.`,
+                            icon: "fa-solid fa-circle-check",
+                            state: readyPackages > 0 ? "done" : packagesWithQuestions > 0 ? "active" : "idle",
+                        },
+                    ]}
+                />
 
                 <div className="grid gap-4 xl:grid-cols-[420px_1fr]">
                     <section className="rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-900">
@@ -226,7 +262,7 @@ export default function ExamPackages({ packages, subjects, editing_package, mode
                                     {form.errors.status ? <p className="mt-1 text-xs text-red-500">{form.errors.status}</p> : null}
                                 </div>
 
-                                <details className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-white/10 dark:bg-white/[0.03]">
+                                <details className={subtleCardClass}>
                                     <summary className="cursor-pointer text-xs font-black uppercase tracking-wide text-slate-500 dark:text-slate-400">
                                         Nilai awal teknis
                                     </summary>
@@ -283,12 +319,12 @@ export default function ExamPackages({ packages, subjects, editing_package, mode
                                             ["randomize_options", "Acak pilihan jawaban"],
                                             ["show_result_to_candidate", "Tampilkan hasil ke kandidat"],
                                         ].map(([field, label]) => (
-                                            <label key={field} className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-slate-700 dark:border-white/10 dark:bg-slate-950 dark:text-slate-200">
+                                            <label key={field} className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-slate-700 dark:border-white/10 dark:bg-[#060e20] dark:text-slate-200">
                                                 <input
                                                     type="checkbox"
                                                     checked={Boolean(form.data[field as keyof PackageForm])}
                                                     onChange={(event) => form.setData(field as keyof PackageForm, event.target.checked)}
-                                                    className="rounded border-slate-300 text-rose-500 focus:ring-rose-500"
+                                                    className="rounded border-slate-300 text-gold focus:ring-gold"
                                                 />
                                                 {label}
                                             </label>
@@ -299,7 +335,7 @@ export default function ExamPackages({ packages, subjects, editing_package, mode
                                 <button
                                     type="submit"
                                     disabled={form.processing}
-                                    className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-rose-500 px-4 text-sm font-bold text-white hover:bg-rose-400 disabled:cursor-not-allowed disabled:opacity-60"
+                                    className={`${primaryButtonClass} w-full min-h-11`}
                                 >
                                     {form.processing ? <i className="fa-solid fa-spinner fa-spin text-xs" /> : <i className="fa-solid fa-floppy-disk text-xs" />}
                                     {isEditing ? "Simpan Paket" : "Buat Paket"}
@@ -323,7 +359,7 @@ export default function ExamPackages({ packages, subjects, editing_package, mode
                                         <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                                             <div className="min-w-0">
                                                 <div className="flex flex-wrap items-center gap-2">
-                                                    <Link href={`/dashboard/admin/exams/packages/${item.id}`} className="text-base font-bold text-slate-900 hover:text-rose-500 dark:text-white">
+                                                    <Link href={`/dashboard/admin/exams/packages/${item.id}`} className="text-base font-bold text-slate-900 hover:text-gold dark:text-white">
                                                         {item.title}
                                                     </Link>
                                                     <StatusPill value={item.status} />
@@ -333,10 +369,13 @@ export default function ExamPackages({ packages, subjects, editing_package, mode
                                                 </p>
                                             </div>
                                             <div className="flex flex-wrap gap-2">
-                                                <Link href={`/dashboard/admin/exams/packages/${item.id}`} className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-200 px-3 text-xs font-bold text-slate-700 hover:border-rose-300 hover:text-rose-500 dark:border-white/10 dark:text-slate-200">
+                                                <a href={`/dashboard/admin/exams/packages/${item.id}/template`} download className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-gold/30 bg-gold/10 px-3 text-xs font-bold text-gold hover:border-gold/60">
+                                                    <i className="fa-solid fa-file-arrow-down" /> Template
+                                                </a>
+                                                <Link href={`/dashboard/admin/exams/packages/${item.id}`} className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-200 px-3 text-xs font-bold text-slate-700 hover:border-gold/60 hover:text-gold dark:border-white/10 dark:text-slate-200">
                                                     <i className="fa-solid fa-eye" /> Detail
                                                 </Link>
-                                                <Link href={`/dashboard/admin/exams/packages/${item.id}/edit`} className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-200 px-3 text-xs font-bold text-slate-700 hover:border-rose-300 hover:text-rose-500 dark:border-white/10 dark:text-slate-200">
+                                                <Link href={`/dashboard/admin/exams/packages/${item.id}/edit`} className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-200 px-3 text-xs font-bold text-slate-700 hover:border-gold/60 hover:text-gold dark:border-white/10 dark:text-slate-200">
                                                     <i className="fa-solid fa-pen" /> Edit
                                                 </Link>
                                             </div>
@@ -370,7 +409,7 @@ export default function ExamPackages({ packages, subjects, editing_package, mode
                                             <button
                                                 type="button"
                                                 onClick={() => destroy(item)}
-                                                className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-200 px-3 text-xs font-bold text-slate-700 hover:border-red-300 hover:text-red-500 dark:border-white/10 dark:text-slate-200"
+                                                className={dangerButtonClass}
                                             >
                                                 <i className="fa-solid fa-trash" /> Hapus
                                             </button>

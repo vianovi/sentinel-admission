@@ -1,6 +1,6 @@
 import { Head, Link } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
-import { BackLink, EmptyState, ExamWorkspace, PageHeader, StatCard, StatusPill } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
+import { BackLink, EmptyState, ExamWorkspace, PageHeader, StatCard, StatusPill, primaryButtonClass, secondaryButtonClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
 
 type FailureRow = {
     row: number | null;
@@ -40,18 +40,18 @@ export default function ExamImportBatchShow({ batch }: Props) {
         <DashboardLayout>
             <Head title={`Import ${batch.original_filename}`} />
 
-            <ExamWorkspace active="import" packageId={batch.package_id}>
+            <ExamWorkspace active="packages">
                 <PageHeader
                     title="Laporan Import Soal"
                     description={`${batch.package_title ?? "Tanpa paket"} · ${batch.original_filename}`}
                     icon="fa-solid fa-file-import"
                     actions={
                         <>
-                            <BackLink href={`/dashboard/admin/exams/packages/${batch.package_id}`} label="Paket" />
-                            <Link href={`/dashboard/admin/exams/packages/${batch.package_id}/imports`} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-slate-200 px-3 text-sm font-bold text-slate-700 hover:border-rose-300 hover:text-rose-500 dark:border-white/10 dark:text-slate-200">
+                            <BackLink href={`/dashboard/admin/exams/packages/${batch.package_id}`} label="Detail Paket" />
+                            <Link href={`/dashboard/admin/exams/packages/${batch.package_id}/imports`} className={secondaryButtonClass}>
                                 <i className="fa-solid fa-clock-rotate-left text-xs" /> Riwayat
                             </Link>
-                            <a href={`/dashboard/admin/exams/packages/${batch.package_id}/template`} download className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-rose-500 px-3 text-sm font-bold text-white hover:bg-rose-400">
+                            <a href={`/dashboard/admin/exams/packages/${batch.package_id}/template`} download className={primaryButtonClass}>
                                 <i className="fa-solid fa-file-arrow-down text-xs" /> Template
                             </a>
                         </>

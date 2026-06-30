@@ -119,7 +119,14 @@ export default function Sidebar({ role }: Props) {
     const isSubItemActive = (subItem: NavSubItem) => {
         const candidateSection = subItem.staffCandidateSection ?? subItem.adminCandidateSection;
 
-        if (!candidateSection) return subItem.href ? isActive(subItem.href) : false;
+        if (!candidateSection) {
+            if (subItem.activePrefixes?.some((prefix) => url.startsWith(prefix))) {
+                return true;
+            }
+
+            return subItem.href ? isActive(subItem.href) : false;
+        }
+
         return isCandidateSectionActive(candidateSection);
     };
 

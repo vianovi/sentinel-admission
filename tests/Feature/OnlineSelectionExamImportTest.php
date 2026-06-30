@@ -7,6 +7,8 @@ use App\Models\User;
 use App\Services\Exam\ExamPackageTemplateService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use OpenSpout\Common\Entity\Row;
+use OpenSpout\Writer\XLSX\Writer;
 
 uses(RefreshDatabase::class);
 
@@ -34,6 +36,7 @@ it('downloads a package specific XLSX template without raw placeholders', functi
         ->get("/dashboard/admin/exams/packages/{$package->id}/template");
 
     $response->assertOk();
+    expect($response->headers->get('content-type'))->toContain('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     expect($response->headers->get('content-disposition'))->toContain('template-soal-mtk-gl1-tes-matematika-gelombang-1.xlsx');
 
     $downloadPath = $response->baseResponse->getFile()->getPathname();
@@ -126,6 +129,54 @@ it('imports Indonesian template headers and updates package configuration', func
     }
 });
 
+it('preserves English import header compatibility', function () {
+    $admin = User::factory()->admin()->create();
+    $subject = ExamSubject::create([
+        'name' => 'English',
+        'code' => 'ENG',
+        'is_active' => true,
+    ]);
+    $package = ExamPackage::create([
+        'exam_subject_id' => $subject->id,
+        'created_by' => $admin->id,
+        'title' => 'English Placement Test',
+        'code' => 'ENG-GL1',
+        'description' => 'English compatibility test.',
+        'duration_minutes' => 60,
+        'passing_score' => 70,
+        'max_attempts' => 1,
+        'show_result_to_candidate' => false,
+        'status' => ExamPackage::STATUS_DRAFT,
+    ]);
+    $path = createEnglishHeaderWorkbook();
+
+    try {
+        $upload = new UploadedFile(
+            $path,
+            'english-headers.xlsx',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            null,
+            true
+        );
+
+        $this->actingAs($admin)
+            ->post("/dashboard/admin/exams/packages/{$package->id}/imports", [
+                'file' => $upload,
+            ])
+            ->assertRedirect();
+
+        $question = ExamQuestion::where('exam_package_id', $package->id)->firstOrFail();
+
+        expect($question->question_text)->toBe('Choose the correct greeting.')
+            ->and($question->correct_answer)->toBe('B')
+            ->and((float) $question->point)->toBe(1.0)
+            ->and($question->difficulty)->toBe('medium')
+            ->and($question->is_active)->toBeTrue();
+    } finally {
+        @unlink($path);
+    }
+});
+
 function fillIndonesianExamTemplate(string $path): void
 {
     $zip = new ZipArchive();
@@ -152,4 +203,52 @@ function fillIndonesianExamTemplate(string $path): void
     $xml = str_replace(array_keys($replacements), array_values($replacements), $xml);
     $zip->addFromString('xl/worksheets/sheet1.xml', $xml);
     $zip->close();
+}
+
+function createEnglishHeaderWorkbook(): string
+{
+    $basePath = tempnam(sys_get_temp_dir(), 'exam-english-');
+
+    if ($basePath === false) {
+        throw new RuntimeException('Unable to create temporary workbook path.');
+    }
+
+    $path = $basePath.'.xlsx';
+    @unlink($basePath);
+
+    $writer = new Writer();
+    $writer->openToFile($path);
+    $writer->addRow(Row::fromValues([
+        'subject',
+        'package',
+        'question_text',
+        'option_a',
+        'option_b',
+        'option_c',
+        'option_d',
+        'option_e',
+        'correct_answer',
+        'point',
+        'difficulty',
+        'explanation',
+        'is_active',
+    ]));
+    $writer->addRow(Row::fromValues([
+        'ENG',
+        'ENG-GL1',
+        'Choose the correct greeting.',
+        'Good night',
+        'Good morning',
+        'Goodbye',
+        'See you',
+        '',
+        'B',
+        1,
+        'medium',
+        'Good morning is a greeting.',
+        'true',
+    ]));
+    $writer->close();
+
+    return $path;
 }

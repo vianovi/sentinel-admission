@@ -1,7 +1,7 @@
 import { FormEvent, useState } from "react";
 import { Head, Link, router } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
-import { BackLink, EmptyState, ExamWorkspace, PageHeader, StatusPill, inputClass, labelClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
+import { BackLink, EmptyState, ExamWorkspace, PageHeader, StatusPill, inputClass, labelClass, primaryButtonClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
 
 type CandidateSummary = {
     id: number | null;
@@ -98,12 +98,12 @@ export default function ExamResults({ attempts, filters, sessions }: Props) {
         <DashboardLayout>
             <Head title="Hasil Ujian" />
 
-            <ExamWorkspace active="results">
+            <ExamWorkspace active="sessions">
                 <PageHeader
                     title="Hasil Ujian"
                     description="Review attempt, skor, status kelulusan, dan detail jawaban kandidat."
                     icon="fa-solid fa-square-poll-vertical"
-                    actions={<BackLink href="/dashboard/admin/exams" label="Dashboard Ujian" />}
+                    actions={<BackLink href="/dashboard/admin/exams/sessions" label="Pengaturan Sesi" />}
                 />
 
                 <section className="rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-900">
@@ -141,7 +141,7 @@ export default function ExamResults({ attempts, filters, sessions }: Props) {
                                 ))}
                             </select>
                         </div>
-                        <button type="submit" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-rose-500 px-4 text-sm font-bold text-white hover:bg-rose-400">
+                        <button type="submit" className={`${primaryButtonClass} min-h-11 px-4`}>
                             <i className="fa-solid fa-filter text-xs" /> Terapkan
                         </button>
                     </form>
@@ -192,7 +192,7 @@ export default function ExamResults({ attempts, filters, sessions }: Props) {
                                             </td>
                                             <td className="px-4 py-3 text-right font-semibold text-slate-700 dark:text-slate-200">{attempt.correct_answers}/{attempt.total_questions}</td>
                                             <td className="px-4 py-3 text-right">
-                                                <Link href={`/dashboard/admin/exams/results/${attempt.id}`} className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-200 px-3 text-xs font-bold text-slate-700 hover:border-rose-300 hover:text-rose-500 dark:border-white/10 dark:text-slate-200">
+                                                <Link href={`/dashboard/admin/exams/results/${attempt.id}`} className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-200 px-3 text-xs font-bold text-slate-700 hover:border-gold/60 hover:text-gold dark:border-white/10 dark:text-slate-200">
                                                     <i className="fa-solid fa-eye" /> Detail
                                                 </Link>
                                             </td>
@@ -209,7 +209,7 @@ export default function ExamResults({ attempts, filters, sessions }: Props) {
                                 <Link
                                     key={`${link.label}-${index}`}
                                     href={link.url ?? "#"}
-                                    className={`rounded-lg border px-3 py-2 text-xs font-bold ${link.active ? "border-rose-500 bg-rose-500 text-white" : "border-slate-200 text-slate-600 hover:border-rose-300 hover:text-rose-500 dark:border-white/10 dark:text-slate-300"} ${!link.url ? "pointer-events-none opacity-40" : ""}`}
+                                    className={`rounded-lg border px-3 py-2 text-xs font-bold ${link.active ? "border-gold bg-gold text-navy" : "border-slate-200 text-slate-600 hover:border-gold/60 hover:text-gold dark:border-white/10 dark:text-slate-300"} ${!link.url ? "pointer-events-none opacity-40" : ""}`}
                                     preserveScroll
                                     preserveState
                                 >

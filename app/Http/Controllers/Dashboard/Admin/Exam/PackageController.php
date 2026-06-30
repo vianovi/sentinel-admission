@@ -9,6 +9,7 @@ use App\Models\Exam\ExamSubject;
 use App\Services\Exam\ExamAuditLogger;
 use App\Services\Exam\ExamPackageTemplateService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Inertia\Inertia;
@@ -112,7 +113,7 @@ class PackageController extends Controller
         ]);
     }
 
-    public function downloadTemplate(ExamPackage $package): BinaryFileResponse|RedirectResponse
+    public function downloadTemplate(ExamPackage $package): BinaryFileResponse|HttpResponse
     {
         try {
             $template = $this->templateService->generate($package);
@@ -123,9 +124,10 @@ class PackageController extends Controller
                 'exception' => $exception::class,
             ]);
 
-            return redirect()
-                ->route('admin.exams.packages.show', $package)
-                ->with('error', 'Template soal belum dapat dibuat. Periksa dukungan XLSX/ZIP di server lalu coba lagi.');
+            return response('Template soal belum dapat dibuat. Periksa dukungan XLSX/ZIP di server lalu coba lagi.', 503, [
+                'Content-Type' => 'text/plain; charset=UTF-8',
+                'X-Content-Type-Options' => 'nosniff',
+            ]);
         }
 
         return response()

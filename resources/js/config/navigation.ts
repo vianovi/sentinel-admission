@@ -31,6 +31,7 @@ export type NavSubItem = {
     label: string;
     icon:  string;
     href?: string;
+    activePrefixes?: string[];
     staffCandidateSection?: "data-diri" | "data-kesehatan" | "data-wali" | "dokumen" | "pembayaran";
     adminCandidateSection?: "data-diri" | "data-kesehatan" | "data-wali" | "dokumen" | "pembayaran";
 };
@@ -146,7 +147,32 @@ export const navigationConfig: Record<string, NavGroup[]> = {
                     ],
                 },
                 { label: "Permintaan Perubahan", href: "/dashboard/admin/change-requests", icon: "fa-solid fa-arrows-rotate" },
-                { label: "Ujian Seleksi", href: "/dashboard/admin/exams", icon: "fa-solid fa-file-pen" },
+                {
+                    label: "Ujian Seleksi",
+                    href: "/dashboard/admin/exams",
+                    icon: "fa-solid fa-file-pen",
+                    children: [
+                        {
+                            label: "Pengaturan Paket",
+                            href: "/dashboard/admin/exams/packages",
+                            icon: "fa-solid fa-box-archive",
+                            activePrefixes: [
+                                "/dashboard/admin/exams/packages",
+                                "/dashboard/admin/exams/subjects",
+                                "/dashboard/admin/exams/imports",
+                            ],
+                        },
+                        {
+                            label: "Pengaturan Sesi",
+                            href: "/dashboard/admin/exams/sessions",
+                            icon: "fa-solid fa-calendar-check",
+                            activePrefixes: [
+                                "/dashboard/admin/exams/sessions",
+                                "/dashboard/admin/exams/results",
+                            ],
+                        },
+                    ],
+                },
                 { label: "Laporan Umum", href: "/dashboard/admin/reports", icon: "fa-solid fa-chart-line", comingSoon: true },
             ],
         },

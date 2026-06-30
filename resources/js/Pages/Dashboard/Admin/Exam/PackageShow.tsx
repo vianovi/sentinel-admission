@@ -1,7 +1,7 @@
 import { FormEvent } from "react";
 import { Head, Link, router, useForm, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
-import { BackLink, EmptyState, ExamWorkspace, FlashMessage, PageHeader, StatCard, StatusPill, inputClass, labelClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
+import { BackLink, EmptyState, ExamWorkspace, FlashMessage, PageHeader, StatCard, StatusPill, inputClass, labelClass, primaryButtonClass, secondaryButtonClass, textLinkClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
 import type { PageProps } from "@/types";
 
 type PackageDetail = {
@@ -90,15 +90,15 @@ export default function ExamPackageShow({ package: examPackage, questions, sessi
         <DashboardLayout>
             <Head title={`${examPackage.title} - Paket Ujian`} />
 
-            <ExamWorkspace active="packages" packageId={examPackage.id}>
+            <ExamWorkspace active="packages">
                 <PageHeader
                     title={examPackage.title}
                     description={`${examPackage.subject_name ?? "Tanpa kategori"} · ${examPackage.code ?? "Tanpa kode"}`}
                     icon="fa-solid fa-box-archive"
                     actions={
                         <>
-                            <BackLink href="/dashboard/admin/exams/packages" />
-                            <Link href={`/dashboard/admin/exams/packages/${examPackage.id}/edit`} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-slate-200 px-3 text-sm font-bold text-slate-700 hover:border-rose-300 hover:text-rose-500 dark:border-white/10 dark:text-slate-200">
+                            <BackLink href="/dashboard/admin/exams/packages" label="Pengaturan Paket" />
+                            <Link href={`/dashboard/admin/exams/packages/${examPackage.id}/edit`} className={secondaryButtonClass}>
                                 <i className="fa-solid fa-pen text-xs" /> Edit
                             </Link>
                         </>
@@ -160,7 +160,7 @@ export default function ExamPackageShow({ package: examPackage, questions, sessi
                             <a
                                 href={templateUrl}
                                 download
-                                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 text-sm font-bold text-rose-600 hover:border-rose-300 hover:bg-rose-100 focus:outline-none focus:ring-2 focus:ring-rose-500/20 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-200"
+                                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-gold/30 bg-gold/10 px-3 text-sm font-bold text-gold hover:border-gold/60 focus:outline-none focus:ring-2 focus:ring-gold/20"
                             >
                                 <i className="fa-solid fa-file-arrow-down text-xs" /> Unduh Template Soal
                             </a>
@@ -175,7 +175,7 @@ export default function ExamPackageShow({ package: examPackage, questions, sessi
                             ].map(([step, title, description]) => (
                                 <div key={step} className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-white/10 dark:bg-white/[0.03]">
                                     <div className="flex items-start gap-3">
-                                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-rose-500 text-xs font-black text-white">{step}</span>
+                                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-gold text-xs font-black text-navy">{step}</span>
                                         <div>
                                             <p className="text-sm font-bold text-slate-900 dark:text-white">{title}</p>
                                             <p className="mt-1 text-xs leading-5 text-slate-600 dark:text-slate-300">{description}</p>
@@ -208,7 +208,7 @@ export default function ExamPackageShow({ package: examPackage, questions, sessi
                             <button
                                 type="submit"
                                 disabled={form.processing || !form.data.file}
-                                className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-rose-500 px-4 text-sm font-bold text-white hover:bg-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-500/30 disabled:cursor-not-allowed disabled:opacity-60"
+                                className={`${primaryButtonClass} w-full min-h-11`}
                             >
                                 {form.processing ? <i className="fa-solid fa-spinner fa-spin text-xs" /> : <i className="fa-solid fa-file-import text-xs" />}
                                 {form.processing ? "Memvalidasi & Import..." : "Validasi & Import"}
@@ -233,7 +233,7 @@ export default function ExamPackageShow({ package: examPackage, questions, sessi
                     <section className="rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-900">
                         <div className="mb-4 flex items-center justify-between">
                             <h2 className="text-sm font-bold text-slate-900 dark:text-white">Riwayat Import</h2>
-                            <Link href={`/dashboard/admin/exams/packages/${examPackage.id}/imports`} className="text-xs font-bold text-rose-500">Semua</Link>
+                            <Link href={`/dashboard/admin/exams/packages/${examPackage.id}/imports`} className={textLinkClass}>Semua</Link>
                         </div>
 
                         {imports.length === 0 ? (
@@ -241,7 +241,7 @@ export default function ExamPackageShow({ package: examPackage, questions, sessi
                         ) : (
                             <div className="grid gap-3">
                                 {imports.map((item) => (
-                                    <Link key={item.id} href={`/dashboard/admin/exams/imports/${item.id}`} className="rounded-lg border border-slate-200 p-3 hover:border-rose-300 dark:border-white/10">
+                                    <Link key={item.id} href={`/dashboard/admin/exams/imports/${item.id}`} className="rounded-lg border border-slate-200 p-3 hover:border-gold/60 dark:border-white/10">
                                         <div className="flex items-start justify-between gap-3">
                                             <div className="min-w-0">
                                                 <p className="truncate text-sm font-bold text-slate-900 dark:text-white">{item.original_filename}</p>
@@ -291,7 +291,7 @@ export default function ExamPackageShow({ package: examPackage, questions, sessi
                     <section className="rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-900">
                         <div className="mb-4 flex items-center justify-between">
                             <h2 className="text-sm font-bold text-slate-900 dark:text-white">Sesi Menggunakan Paket Ini</h2>
-                            <Link href="/dashboard/admin/exams/sessions/create" className="text-xs font-bold text-rose-500">Buat sesi</Link>
+                            <Link href="/dashboard/admin/exams/sessions/create" className={textLinkClass}>Buat sesi</Link>
                         </div>
 
                         {sessions.length === 0 ? (
@@ -299,7 +299,7 @@ export default function ExamPackageShow({ package: examPackage, questions, sessi
                         ) : (
                             <div className="space-y-3">
                                 {sessions.map((session) => (
-                                    <Link key={session.id} href={`/dashboard/admin/exams/sessions/${session.id}`} className="block rounded-lg border border-slate-200 p-3 hover:border-rose-300 dark:border-white/10">
+                                    <Link key={session.id} href={`/dashboard/admin/exams/sessions/${session.id}`} className="block rounded-lg border border-slate-200 p-3 hover:border-gold/60 dark:border-white/10">
                                         <div className="flex items-start justify-between gap-3">
                                             <div>
                                                 <p className="text-sm font-bold text-slate-900 dark:text-white">{session.title}</p>
