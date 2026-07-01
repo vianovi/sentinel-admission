@@ -6,56 +6,29 @@ use App\Models\Candidate;
 use App\Models\CandidateDocument;
 use App\Models\Payment;
 use App\Models\User;
-use App\Services\CandidateVerificationChecklist;
+use App\Services\CandidateStatus\CandidateCompletionEvaluator;
+use App\Services\CandidateStatus\CandidateEvaluationResult;
+use App\Services\CandidateStatus\CandidateGateService;
+use App\Services\CandidateStatus\CandidateVerificationEvaluator;
 use Illuminate\Support\Collection;
 
 class CandidateDashboardData
 {
-    private const DATA_DIRI_FIELDS = [
-        'phone_number'   => 'Nomor HP/WA siswa',
-        'religion'       => 'Agama',
-        'family_card_number' => 'Nomor KK',
-        'postal_code'    => 'Kode pos',
-        'school_npsn'    => 'NPSN sekolah',
-        'program_choice' => 'Pilihan program',
-    ];
-
-    private const GUARDIAN_FIELDS = [
-        'mother_name'   => 'Nama ibu',
-        'income_type'   => 'Tipe penghasilan',
-        'father_status' => 'Status ayah',
-        'mother_status' => 'Status ibu',
-        'no_kk'         => 'Nomor KK',
-        'marital_status'=> 'Status pernikahan orang tua',
-    ];
-
-    private const HEALTH_FIELDS = [
-        'blood_type'               => 'Golongan darah',
-        'rhesus'                   => 'Rhesus',
-        'height_cm'                => 'Tinggi badan',
-        'weight_kg'                => 'Berat badan',
-        'general_health_condition' => 'Kondisi kesehatan umum',
-        'eye_right_type'           => 'Mata kanan',
-        'eye_left_type'            => 'Mata kiri',
-        'major_illnesses'          => 'Riwayat penyakit berat',
-        'last_illness'             => 'Penyakit terakhir',
-        'allergy_food'             => 'Alergi makanan',
-        'allergy_medicine'         => 'Alergi obat',
-        'allergy_condition'        => 'Kondisi alergi',
-        'physical_disabilities'    => 'Disabilitas fisik',
-    ];
-
     public static function make(Candidate $candidate, User $user): array
     {
         $documents = $candidate->documents;
         $payment = $candidate->payments->sortByDesc('created_at')->first();
+        $completionEvaluator = app(CandidateCompletionEvaluator::class);
+        $verificationEvaluator = app(CandidateVerificationEvaluator::class);
+        $gateService = app(CandidateGateService::class);
 
-        $dataDiri = self::candidateCompletion($candidate);
-        $guardian = self::guardianCompletion($candidate);
-        $health = self::healthCompletion($candidate);
-        $documentSummary = self::documentSummary($candidate, $documents);
+        $dataDiri = self::completionSection($completionEvaluator->candidateSection($candidate));
+        $guardian = self::completionSection($completionEvaluator->guardianSection($candidate));
+        $health = self::completionSection($completionEvaluator->healthSection($candidate));
+        $documentSummary = self::documentSummary($candidate, $documents, $verificationEvaluator);
         $paymentSummary = self::paymentSummary($payment);
         $statusSummary = self::statusSummary($candidate);
+        $gates = $gateService->summary($candidate, $user);
 
         $sections = [
             self::section('data-diri', 'Data Diri', 'fa-solid fa-id-card', '/dashboard/data-diri', $dataDiri),
@@ -89,7 +62,8 @@ class CandidateDashboardData
                 'total_sections' => count($sections),
                 'sections' => $sections,
             ],
-            'next_action' => self::nextAction($candidate, $user, $dataDiri, $guardian, $health, $documentSummary, $paymentSummary),
+            'next_action' => self::nextAction($candidate, $user, $dataDiri, $guardian, $health, $documentSummary, $paymentSummary, $gates),
+            'gates' => $gates,
             'documents_summary' => $documentSummary,
             'payment_summary' => $paymentSummary,
             'status_summary' => $statusSummary,
@@ -118,31 +92,10 @@ class CandidateDashboardData
         ];
     }
 
-    private static function candidateCompletion(Candidate $candidate): array
+    private static function completionSection(CandidateEvaluationResult $result): array
     {
-        return self::fieldCompletion($candidate, self::DATA_DIRI_FIELDS);
-    }
-
-    private static function guardianCompletion(Candidate $candidate): array
-    {
-        $guardian = $candidate->guardian;
-
-        if (! $guardian) {
-            return [
-                'percentage' => 0,
-                'missing' => array_values(self::GUARDIAN_FIELDS),
-                'state' => 'incomplete',
-            ];
-        }
-
-        $fields = self::guardianFields($guardian);
-
-        $missing = collect($fields)
-            ->filter(fn (string $label, string $field) => ! self::filled($guardian->{$field}))
-            ->values()
-            ->all();
-
-        $percentage = (int) $guardian->completion_percentage;
+        $percentage = $result->percentage();
+        $missing = $result->missingLabels();
 
         return [
             'percentage' => $percentage,
@@ -151,77 +104,14 @@ class CandidateDashboardData
         ];
     }
 
-    private static function guardianFields($guardian): array
+    private static function documentSummary(
+        Candidate $candidate,
+        Collection $documents,
+        CandidateVerificationEvaluator $verificationEvaluator
+    ): array
     {
-        $fields = self::GUARDIAN_FIELDS;
-
-        if ($guardian->marital_status && $guardian->marital_status !== 'nikah_tercatat') {
-            $fields += [
-                'guardian_name' => 'Nama wali',
-                'guardian_relation' => 'Hubungan wali',
-                'guardian_date_of_birth' => 'Tanggal lahir wali',
-                'guardian_education' => 'Pendidikan wali',
-                'guardian_phone' => 'Nomor HP wali',
-                'guardian_province' => 'Provinsi wali',
-                'guardian_city' => 'Kota/Kabupaten wali',
-                'guardian_district' => 'Kecamatan wali',
-                'guardian_village' => 'Kelurahan/Desa wali',
-                'guardian_address' => 'Alamat wali',
-                'guardian_postal_code' => 'Kode pos wali',
-            ];
-        }
-
-        return $fields;
-    }
-
-    private static function healthCompletion(Candidate $candidate): array
-    {
-        $health = $candidate->healthRecord;
-
-        if (! $health) {
-            return [
-                'percentage' => 0,
-                'missing' => array_values(self::HEALTH_FIELDS),
-                'state' => 'incomplete',
-            ];
-        }
-
-        $missing = collect(self::HEALTH_FIELDS)
-            ->filter(fn (string $label, string $field) => ! self::filled($health->{$field}))
-            ->values()
-            ->all();
-
-        $percentage = $health->completionPercentage();
-
-        return [
-            'percentage' => $percentage,
-            'missing' => $missing,
-            'state' => empty($missing) ? 'complete' : ($percentage >= 70 ? 'warning' : 'incomplete'),
-        ];
-    }
-
-    private static function fieldCompletion(Candidate $candidate, array $fields): array
-    {
-        $missing = collect($fields)
-            ->filter(fn (string $label, string $field) => ! self::filled($candidate->{$field}))
-            ->values()
-            ->all();
-
-        $percentage = (int) round(((count($fields) - count($missing)) / count($fields)) * 100);
-
-        return [
-            'percentage' => $percentage,
-            'missing' => $missing,
-            'state' => empty($missing) ? 'complete' : ($percentage >= 70 ? 'warning' : 'incomplete'),
-        ];
-    }
-
-    private static function documentSummary(Candidate $candidate, Collection $documents): array
-    {
-        $checklist = app(CandidateVerificationChecklist::class);
-        $requiredTypes = $checklist->requiredDocumentTypes($candidate);
-        $requiredLabels = collect($requiredTypes)
-            ->mapWithKeys(fn (string $type) => [$type => CandidateDocument::DOC_TYPES[$type]['label'] ?? $type]);
+        $requiredTypes = $verificationEvaluator->requiredDocumentTypes($candidate);
+        $requiredLabels = collect($verificationEvaluator->requiredDocumentLabels($candidate));
 
         $uploadedRequiredTypes = $documents
             ->whereIn('doc_type', $requiredTypes)
@@ -359,10 +249,14 @@ class CandidateDashboardData
         array $guardian,
         array $health,
         array $documentSummary,
-        array $paymentSummary
+        array $paymentSummary,
+        array $gates
     ): array {
         if (! $user->hasVerifiedEmail()) {
-            return self::action('Verifikasi email akun', 'Cek inbox dan selesaikan verifikasi email agar akunmu siap dipakai.', '/email/verify', 'Verifikasi Email', 'fa-solid fa-envelope-circle-check', 'warning');
+            $emailReason = collect($gates['documents']['reasons'] ?? [])
+                ->first(fn (string $reason) => str_contains($reason, 'Verifikasi email'));
+
+            return self::action('Verifikasi email akun', $emailReason ?? 'Cek inbox dan selesaikan verifikasi email agar akunmu siap dipakai.', '/email/verify', 'Verifikasi Email', 'fa-solid fa-envelope-circle-check', 'warning');
         }
 
         if ($candidate->status === 'rejected') {
@@ -508,16 +402,4 @@ class CandidateDashboardData
             : 'Yang perlu dilengkapi: '.implode(', ', $items).'.';
     }
 
-    private static function filled(mixed $value): bool
-    {
-        if (is_array($value)) {
-            return ! empty($value);
-        }
-
-        if (is_bool($value) || is_int($value) || is_float($value)) {
-            return true;
-        }
-
-        return ! is_null($value) && trim((string) $value) !== '';
-    }
 }

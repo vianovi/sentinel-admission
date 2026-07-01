@@ -7,7 +7,7 @@ use App\Models\AdmissionWave;
 use App\Models\Candidate;
 use App\Models\CandidateDocument;
 use App\Models\Payment;
-use App\Services\CandidateVerificationChecklist;
+use App\Services\CandidateStatus\CandidateStatusService;
 use App\Services\PaymentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -46,7 +46,7 @@ class IndexController extends Controller
 
     public function __construct(
         private readonly PaymentService $paymentService,
-        private readonly CandidateVerificationChecklist $verificationChecklist
+        private readonly CandidateStatusService $statusService
     ) {}
 
     // =============================================
@@ -217,7 +217,7 @@ class IndexController extends Controller
             'verified_at'      => now(),
         ]);
 
-        $this->verificationChecklist->syncCandidateStatus($document->candidate);
+        $this->statusService->syncAfterEvent($document->candidate, 'document.reviewed');
 
         return back()->with('success', 'Dokumen berhasil diverifikasi.');
     }
@@ -236,14 +236,12 @@ class IndexController extends Controller
         try {
             if ($validated['status'] === 'verified') {
                 $payment = $this->paymentService->verifyProof($payment, Auth::id());
-                $this->verificationChecklist->syncCandidateStatus($payment->candidate);
             } else {
                 $payment = $this->paymentService->rejectProof(
                     $payment,
                     Auth::id(),
                     $validated['rejection_reason'] ?? ''
                 );
-                $this->verificationChecklist->syncCandidateStatus($payment->candidate);
             }
 
             return back()->with('success', 'Status pembayaran berhasil diperbarui.');

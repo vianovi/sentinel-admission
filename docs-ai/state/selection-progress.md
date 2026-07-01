@@ -12,6 +12,8 @@ Task 4 completed on 2026-06-30: the rejected admin exam UI was recovered using S
 
 Runtime XLSX zip support checkpoint completed on 2026-06-30: the app Docker container was rebuilt/recreated from the Debian-based `php:8.4-apache` image with `libzip-dev` and `docker-php-ext-install zip`; `ZipArchive` now resolves inside the running app container.
 
+Task 5 completed on 2026-07-01: candidate lifecycle/status/gate logic was centralized under `app/Services/CandidateStatus`, document/payment/exam backend gates were enforced from the server, email verification was kept separate from candidate admission status, stale draft/verification risks were covered with focused tests, and durable lifecycle documentation was added.
+
 ## Completed Phases
 
 - Phase 0 — Project audit and implementation plan
@@ -20,6 +22,25 @@ Runtime XLSX zip support checkpoint completed on 2026-06-30: the app Docker cont
 - Phase 3 — Candidate exam access, attempt lifecycle, timer, and autosave
 - Phase 4 — Scoring, results, and staff/admin review
 - Phase 5 — UI polish, documentation, manual testing guide, focused tests, final verification, and self-audit
+
+## Task 5 — Candidate Lifecycle and Gates
+
+- Added central lifecycle services:
+  - `CandidateCompletionEvaluator`
+  - `CandidateVerificationEvaluator`
+  - `CandidateStatusService`
+  - `CandidateGateService`
+  - typed requirement/evaluation/status result objects
+- Refactored observers so they trigger lifecycle sync instead of owning required-field rules.
+- Kept `users.email_verified_at` as an account gate only; it no longer controls `candidates.status`.
+- Backend gates now enforce candidate document, payment, and exam access.
+- Candidate document/payment/exam pages receive backend gate props and show locked reasons.
+- Midtrans webhook handling now delegates to `PaymentService`, so gateway paid events trigger lifecycle sync.
+- Candidate dashboard progress now reads central completion/verification/gate services instead of duplicating lifecycle requirements.
+- Added focused lifecycle and gate tests:
+  - `tests/Feature/CandidateStatusFlowTest.php`
+  - `tests/Feature/CandidateFeatureGateTest.php`
+- Updated existing verification and exam security tests to use realistic lifecycle-complete candidate fixtures.
 
 ## Phase 2 Completed Work
 
@@ -180,6 +201,47 @@ Runtime XLSX zip support checkpoint completed on 2026-06-30: the app Docker cont
 - docs-ai/features/online-selection-exam.md
 - tests/Feature/OnlineSelectionExamSecurityTest.php
 - public/templates/exam-question-template.xlsx
+
+## Task 5 Files Created
+
+- app/Services/CandidateStatus/CandidateRequirement.php
+- app/Services/CandidateStatus/CandidateEvaluationResult.php
+- app/Services/CandidateStatus/CandidateCompletionEvaluator.php
+- app/Services/CandidateStatus/CandidateVerificationEvaluator.php
+- app/Services/CandidateStatus/CandidateStatusResult.php
+- app/Services/CandidateStatus/CandidateStatusService.php
+- app/Services/CandidateStatus/CandidateGateService.php
+- tests/Feature/CandidateStatusFlowTest.php
+- tests/Feature/CandidateFeatureGateTest.php
+- docs-ai/features/candidate-status-flow.md
+- docs-ai/audit/candidate-lifecycle-critical-audit.md
+
+## Task 5 Files Modified
+
+- app/Observers/CandidateObserver.php
+- app/Observers/GuardianObserver.php
+- app/Observers/HealthRecordObserver.php
+- app/Services/CandidateVerificationChecklist.php
+- app/Services/PaymentService.php
+- app/Http/Controllers/Dashboard/Candidate/IndexController.php
+- app/Http/Controllers/Dashboard/Candidate/DataDiriController.php
+- app/Http/Controllers/Dashboard/Candidate/DocumentController.php
+- app/Http/Controllers/Dashboard/Candidate/PaymentController.php
+- app/Http/Controllers/Dashboard/Candidate/Exam/ExamController.php
+- app/Http/Controllers/Dashboard/Candidate/Exam/AttemptController.php
+- app/Http/Controllers/Dashboard/SecureFileController.php
+- app/Http/Controllers/Dashboard/Staff/IndexController.php
+- app/Http/Controllers/Webhook/MidtransController.php
+- app/Models/Candidate.php
+- app/Models/Guardian.php
+- app/Models/HealthRecord.php
+- app/Support/CandidateDashboardData.php
+- resources/js/Pages/Dashboard/Candidate/DataDokumen.tsx
+- resources/js/Pages/Dashboard/Candidate/Pembayaran.tsx
+- resources/js/Pages/Dashboard/Candidate/Exam/Index.tsx
+- resources/js/Components/Dashboard/Candidate/Pembayaran/DraftGate.tsx
+- tests/Feature/CandidateVerificationChecklistTest.php
+- tests/Feature/OnlineSelectionExamSecurityTest.php
 
 ## Task 4 Files Modified
 

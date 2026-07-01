@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Exam\ExamAttempt;
 use App\Models\Exam\ExamSessionCandidate;
+use App\Services\CandidateStatus\CandidateCompletionEvaluator;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -165,12 +166,8 @@ class Candidate extends Model
 
     public function isDataComplete(): bool
     {
-        return ! empty($this->phone_number)
-            && ! empty($this->religion)
-            && ! empty($this->family_card_number)
-            && ! empty($this->postal_code)
-            && ! empty($this->school_npsn)
-            && ! empty($this->program_choice);
+        return collect(array_keys(CandidateCompletionEvaluator::DATA_DIRI_FIELDS))
+            ->every(fn (string $field) => ! empty($this->{$field}));
     }
 
     public static function normalizePhoneNumber(?string $value): ?string

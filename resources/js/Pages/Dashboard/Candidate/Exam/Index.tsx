@@ -60,11 +60,13 @@ type Assignment = {
 type Props = {
     candidate: Candidate;
     sessions: Assignment[];
+    gate: { allowed: boolean; locked: boolean; reason: string | null; reasons: string[] } | null;
     server_time: string;
 };
 
-export default function CandidateExamIndex({ candidate, sessions }: Props) {
+export default function CandidateExamIndex({ candidate, sessions, gate }: Props) {
     const { flash } = usePage<PageProps>().props;
+    const locked = !!gate?.locked;
     const activeCount = sessions.filter((item) => item.active_attempt_url).length;
     const openCount = sessions.filter((item) => item.session.schedule_state === "open").length;
     const completedCount = sessions.filter((item) => ["submitted", "auto_submitted"].includes(item.latest_attempt?.status ?? "")).length;
@@ -85,6 +87,30 @@ export default function CandidateExamIndex({ candidate, sessions }: Props) {
 
                 {!candidate ? (
                     <EmptyState icon="fa-solid fa-user-slash" title="Data kandidat belum tersedia" description="Akun ini belum memiliki data kandidat aktif untuk mengikuti ujian seleksi." />
+                ) : locked ? (
+                    <>
+                        <section className="rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-900">
+                            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                                <div>
+                                    <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Kandidat</p>
+                                    <h2 className="mt-1 text-lg font-black text-slate-900 dark:text-white">{candidate.full_name ?? "-"}</h2>
+                                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                                        {candidate.candidate_code ?? "-"} · NISN {candidate.nisn ?? "-"} · {candidate.program_choice ?? "Program belum dipilih"}
+                                    </p>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    <StatusPill value={candidate.status} />
+                                    <StatusPill value={candidate.admission_wave?.title ?? "tanpa gelombang"} />
+                                </div>
+                            </div>
+                        </section>
+
+                        <EmptyState
+                            icon="fa-solid fa-lock"
+                            title="Ujian seleksi masih terkunci"
+                            description={gate?.reason ?? "Selesaikan tahapan pendaftaran sebelum mengakses ujian seleksi."}
+                        />
+                    </>
                 ) : (
                     <>
                         <section className="rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-900">

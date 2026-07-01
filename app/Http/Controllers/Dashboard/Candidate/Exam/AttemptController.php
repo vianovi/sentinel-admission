@@ -12,6 +12,8 @@ use App\Models\Exam\ExamAttempt;
 use App\Models\Exam\ExamQuestion;
 use App\Models\Exam\ExamSession;
 use App\Models\Exam\ExamSessionCandidate;
+use App\Services\CandidateStatus\CandidateGateService;
+use App\Services\CandidateStatus\CandidateStatusService;
 use App\Services\Exam\ExamAttemptService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -26,12 +28,19 @@ class AttemptController extends Controller
         private readonly StartExamAttempt $startAttempt,
         private readonly SaveExamAnswer $saveAnswerAction,
         private readonly SubmitExamAttempt $submitAttempt,
-        private readonly ExamAttemptService $attemptService
+        private readonly ExamAttemptService $attemptService,
+        private readonly CandidateGateService $gateService,
+        private readonly CandidateStatusService $statusService
     ) {}
 
     public function start(Request $request, ExamSession $session): RedirectResponse
     {
         $candidate = $this->candidateOrFail($request);
+        $gate = $this->examGate($candidate, $request);
+
+        if (! $gate['allowed']) {
+            return back()->withErrors(['exam' => $gate['reason'] ?? 'Ujian seleksi masih terkunci.']);
+        }
 
         $assignment = ExamSessionCandidate::query()
             ->where('exam_session_id', $session->id)
@@ -56,6 +65,9 @@ class AttemptController extends Controller
     public function show(Request $request, ExamAttempt $attempt): Response
     {
         $candidate = $this->candidateOrFail($request);
+        $gate = $this->examGate($candidate, $request);
+        abort_if(! $gate['allowed'], 403, $gate['reason'] ?? 'Ujian seleksi masih terkunci.');
+
         $attempt = $this->ownedAttempt($attempt, $candidate);
         $attempt = $this->attemptService->syncExpired($attempt, $request);
         $attempt->loadMissing(['session.package.subject', 'package', 'answers']);
@@ -109,6 +121,12 @@ class AttemptController extends Controller
     public function sync(Request $request, ExamAttempt $attempt): JsonResponse
     {
         $candidate = $this->candidateOrFail($request);
+        $gate = $this->examGate($candidate, $request);
+
+        if (! $gate['allowed']) {
+            return response()->json(['message' => $gate['reason'] ?? 'Ujian seleksi masih terkunci.'], 403);
+        }
+
         $attempt = $this->ownedAttempt($attempt, $candidate);
         $attempt = $this->attemptService->syncExpired($attempt, $request);
         $attempt->loadMissing(['session', 'package']);
@@ -122,6 +140,12 @@ class AttemptController extends Controller
     public function saveAnswer(Request $request, ExamAttempt $attempt): JsonResponse
     {
         $candidate = $this->candidateOrFail($request);
+        $gate = $this->examGate($candidate, $request);
+
+        if (! $gate['allowed']) {
+            return response()->json(['message' => $gate['reason'] ?? 'Ujian seleksi masih terkunci.'], 403);
+        }
+
         $attempt = $this->ownedAttempt($attempt, $candidate);
 
         $validated = $request->validate([
@@ -166,6 +190,12 @@ class AttemptController extends Controller
     public function submit(Request $request, ExamAttempt $attempt): RedirectResponse
     {
         $candidate = $this->candidateOrFail($request);
+        $gate = $this->examGate($candidate, $request);
+
+        if (! $gate['allowed']) {
+            return back()->withErrors(['exam' => $gate['reason'] ?? 'Ujian seleksi masih terkunci.']);
+        }
+
         $attempt = $this->ownedAttempt($attempt, $candidate);
 
         try {
@@ -198,6 +228,14 @@ class AttemptController extends Controller
         abort_unless($attempt->candidate_id === $candidate->id, 403, 'Percobaan ujian tidak tersedia.');
 
         return $attempt;
+    }
+
+    private function examGate(Candidate $candidate, Request $request): array
+    {
+        $this->statusService->syncAfterEvent($candidate, 'exam.route');
+        $candidate->refresh();
+
+        return $this->gateService->exam($candidate, $request->user());
     }
 
     private function attemptPayload(ExamAttempt $attempt, bool $includeScore): array

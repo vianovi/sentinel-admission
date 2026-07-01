@@ -89,6 +89,7 @@ type Props = {
     proof_url:     string | null
     whatsapp_url:  string | null
     base_amount:   number
+    gate:          { allowed: boolean; locked: boolean; reason: string | null; reasons: string[] }
     flash?:        { success?: string; error?: string }
 }
 
@@ -169,7 +170,7 @@ type PaymentStatusResponse = {
 }
 
 export default function PembayaranPage({
-    user, candidate, payment, config, gateway, proof_url, whatsapp_url, base_amount, flash,
+    user, candidate, payment, config, gateway, proof_url, whatsapp_url, base_amount, gate, flash,
 }: Props) {
     const [processing, setProcessing] = useState(false)
     const [cancelling, setCancelling] = useState(false)
@@ -195,6 +196,7 @@ export default function PembayaranPage({
 
     const isDraft = candidate.status === 'draft'
     const isPaid  = livePayment?.status === 'paid'
+    const isPaymentLocked = gate?.locked && !isPaid
 
     useEffect(() => {
         setLivePayment(payment)
@@ -371,6 +373,10 @@ export default function PembayaranPage({
     }, [])
 
     const fetchPaymentStatus = useCallback(async (): Promise<PaymentStatusResponse | null> => {
+        if (isPaymentLocked) {
+            return null
+        }
+
         try {
             const response = await axios.get<PaymentStatusResponse>(route('dashboard.pembayaran.status'), {
                 headers: { Accept: 'application/json' },
@@ -380,7 +386,7 @@ export default function PembayaranPage({
             console.error('Failed to refresh payment status', error)
             return null
         }
-    }, [])
+    }, [isPaymentLocked])
 
     const refreshPaymentStatus = useCallback(async (
         options: { allowDefer?: boolean } = {}
@@ -700,9 +706,12 @@ export default function PembayaranPage({
             {/* Content */}
             <div ref={contentRef} style={{ opacity: 0 }} className="space-y-5">
 
-                {/* Draft gate */}
-                {isDraft && !isPaid && (
-                    <DraftGate candidateName={candidate.full_name} />
+                {/* Lifecycle gate */}
+                {isPaymentLocked && (
+                    <DraftGate
+                        candidateName={candidate.full_name}
+                        reason={gate.reason ?? undefined}
+                    />
                 )}
 
                 {/* Paid */}
@@ -719,7 +728,7 @@ export default function PembayaranPage({
                 )}
 
                 {/* Submitted + belum paid */}
-                {!isDraft && !isPaid && (
+                {!isDraft && !isPaymentLocked && !isPaid && (
                     <>
                         {/* Narasi panduan — tampil saat di checkout, gantikan welcome */}
                         {isInCheckout && livePayment && (

@@ -19,13 +19,14 @@ const STEPS = [
 
 type Props = {
     candidateName: string
+    reason?: string
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function DraftGate({ candidateName }: Props) {
+export default function DraftGate({ candidateName, reason }: Props) {
     const containerRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
@@ -59,13 +60,15 @@ export default function DraftGate({ candidateName }: Props) {
                                 Halaman Belum Terbuka
                             </p>
                             <p className="text-[11px] dark:text-amber-400/70 text-amber-700/70">
-                                Lengkapi data terlebih dahulu
+                                {reason ?? 'Lengkapi data terlebih dahulu'}
                             </p>
                         </div>
                     </div>
                     <p className="text-[12px] dark:text-slate-400 text-slate-600 leading-relaxed">
                         Halo <strong className="dark:text-slate-200 text-slate-800">{candidateName.split(' ')[0]}</strong>!
-                        Halaman pembayaran akan terbuka otomatis setelah semua data wajib di bawah ini sudah diisi dengan lengkap.
+                        {reason
+                            ? ` ${reason}`
+                            : ' Halaman pembayaran akan terbuka otomatis setelah semua data wajib di bawah ini sudah diisi dengan lengkap.'}
                     </p>
                 </div>
             </div>

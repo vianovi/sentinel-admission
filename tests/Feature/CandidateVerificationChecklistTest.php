@@ -3,6 +3,7 @@
 use App\Models\AdmissionWave;
 use App\Models\Candidate;
 use App\Models\CandidateDocument;
+use App\Models\Guardian;
 use App\Models\HealthRecord;
 use App\Models\Payment;
 use App\Models\User;
@@ -34,7 +35,7 @@ function verificationCandidate(array $overrides = []): Candidate
         'email' => 'candidate-'.uniqid().'@gmail.com',
     ]);
 
-    return Candidate::create(array_merge([
+    $candidate = Candidate::create(array_merge([
         'user_id' => $user->id,
         'admission_wave_id' => $wave->id,
         'candidate_code' => 'CDT-'.strtoupper(substr(uniqid(), -4)).'-26-G1',
@@ -45,8 +46,45 @@ function verificationCandidate(array $overrides = []): Candidate
         'place_of_birth' => 'Bandung',
         'date_of_birth' => '2010-01-01',
         'school_origin' => 'SMP Test',
-        'status' => 'submitted',
+        'phone_number' => '081234567890',
+        'religion' => 'Islam',
+        'family_card_number' => fake()->unique()->numerify('################'),
+        'postal_code' => '12345',
+        'school_npsn' => '12345678',
+        'program_choice' => 'Reguler',
+        'status' => 'draft',
     ], $overrides));
+
+    Guardian::create([
+        'candidate_id' => $candidate->id,
+        'candidate_code' => $candidate->candidate_code,
+        'mother_name' => 'Ibu Kandidat',
+        'income_type' => 'separate',
+        'father_status' => 'hidup',
+        'mother_status' => 'hidup',
+        'no_kk' => $candidate->family_card_number,
+        'marital_status' => 'nikah_tercatat',
+    ]);
+
+    HealthRecord::create([
+        'candidate_id' => $candidate->id,
+        'candidate_code' => $candidate->candidate_code,
+        'blood_type' => 'A',
+        'rhesus' => 'positive',
+        'height_cm' => 160,
+        'weight_kg' => 50,
+        'general_health_condition' => 'Sehat',
+        'eye_right_type' => 'normal',
+        'eye_left_type' => 'normal',
+        'major_illnesses' => 'Tidak ada',
+        'last_illness' => 'Flu ringan',
+        'allergy_food' => 'Tidak ada',
+        'allergy_medicine' => 'Tidak ada',
+        'allergy_condition' => 'Tidak ada',
+        'physical_disabilities' => 'Tidak ada',
+    ]);
+
+    return $candidate->fresh();
 }
 
 function verificationDocument(Candidate $candidate, string $type, string $status = 'verified'): CandidateDocument
@@ -123,9 +161,7 @@ it('verifies a candidate only after required documents health document and payme
     $candidate = verificationCandidate();
 
     verifiedRequiredDocuments($candidate, ['parent_statement']);
-    HealthRecord::create([
-        'candidate_id' => $candidate->id,
-        'candidate_code' => $candidate->candidate_code,
+    $candidate->healthRecord()->update([
         'bpjs_card_path' => "sentinel/candidates/{$candidate->candidate_code}/health/bpjs-card/bpjs.pdf",
     ]);
     paidTransferPayment($candidate);
@@ -146,9 +182,7 @@ it('re-evaluates candidate verification after staff verifies a transfer payment'
     $candidate = verificationCandidate();
 
     verifiedRequiredDocuments($candidate);
-    HealthRecord::create([
-        'candidate_id' => $candidate->id,
-        'candidate_code' => $candidate->candidate_code,
+    $candidate->healthRecord()->update([
         'bpjs_card_path' => "sentinel/candidates/{$candidate->candidate_code}/health/bpjs-card/bpjs.pdf",
     ]);
 

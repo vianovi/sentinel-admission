@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\CandidateStatus\CandidateCompletionEvaluator;
 use Illuminate\Database\Eloquent\Model;
 
 class HealthRecord extends Model
@@ -186,19 +187,8 @@ class HealthRecord extends Model
      */
     public function isComplete(): bool
     {
-        return ! empty($this->blood_type)
-            && ! empty($this->rhesus)
-            && ! empty($this->height_cm)
-            && ! empty($this->weight_kg)
-            && ! empty($this->general_health_condition)
-            && ! empty($this->eye_right_type)
-            && ! empty($this->eye_left_type)
-            && ! empty($this->major_illnesses)
-            && ! empty($this->last_illness)
-            && ! empty($this->allergy_food)
-            && ! empty($this->allergy_medicine)
-            && ! empty($this->allergy_condition)
-            && ! empty($this->physical_disabilities);
+        return collect(array_keys(CandidateCompletionEvaluator::HEALTH_FIELDS))
+            ->every(fn (string $field) => ! empty($this->{$field}));
     }
 
     /**
@@ -207,13 +197,7 @@ class HealthRecord extends Model
      */
     public function completionPercentage(): int
     {
-        $required = [
-            'blood_type', 'rhesus', 'height_cm', 'weight_kg',
-            'general_health_condition', 'eye_right_type', 'eye_left_type',
-            'major_illnesses', 'last_illness',
-            'allergy_food', 'allergy_medicine', 'allergy_condition',
-            'physical_disabilities',
-        ];
+        $required = array_keys(CandidateCompletionEvaluator::HEALTH_FIELDS);
 
         $filled = collect($required)
             ->filter(fn($field) => ! empty($this->$field))

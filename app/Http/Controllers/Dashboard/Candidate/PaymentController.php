@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Dashboard\Candidate;
 use App\Http\Controllers\Controller;
 use App\Models\Candidate;
 use App\Models\Payment;
+use App\Services\CandidateStatus\CandidateGateService;
+use App\Services\CandidateStatus\CandidateStatusService;
 use App\Services\PaymentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,7 +18,9 @@ use Inertia\Response;
 class PaymentController extends Controller
 {
     public function __construct(
-        private readonly PaymentService $paymentService
+        private readonly PaymentService $paymentService,
+        private readonly CandidateGateService $gateService,
+        private readonly CandidateStatusService $statusService
     ) {}
 
     // ─────────────────────────────────────────────────────────────────────
@@ -26,9 +30,13 @@ class PaymentController extends Controller
     public function show(Request $request): Response
     {
         $user      = $request->user();
-        $candidate = $user->candidate()->with('admissionWave')->first();
+        $candidate = $user->candidate()->with('admissionWave')->firstOrFail();
+        $this->statusService->syncAfterEvent($candidate, 'payment.show');
+        $candidate->refresh();
 
         $payment = $this->resolveActivePayment($candidate);
+        $this->statusService->syncAfterEvent($candidate, 'payment.show.gateway_sync');
+        $candidate->refresh();
 
         $config = $this->paymentService->resolveConfig($candidate->admission_wave_id);
 
@@ -73,6 +81,7 @@ class PaymentController extends Controller
             'proof_url'    => $proofUrl,
             'whatsapp_url' => $whatsappUrl,
             'base_amount'  => (float) $wave?->registration_fee,
+            'gate'         => $this->gateService->payment($candidate, $user),
             'gateway'      => [
                 'client_key' => config('midtrans.client_key'),
                 'script_url' => config('midtrans.is_production')
@@ -84,7 +93,18 @@ class PaymentController extends Controller
 
     public function status(Request $request): \Illuminate\Http\JsonResponse
     {
-        $candidate = $request->user()->candidate()->with('admissionWave')->first();
+        $candidate = $request->user()->candidate()->with('admissionWave')->firstOrFail();
+        $this->statusService->syncAfterEvent($candidate, 'payment.status.gate_check');
+        $candidate->refresh();
+        $gate = $this->gateService->payment($candidate, $request->user());
+
+        if (! $gate['allowed']) {
+            return response()->json([
+                'message' => $gate['reason'] ?? 'Pembayaran masih terkunci.',
+                'errors' => ['gate' => $gate['reason'] ?? 'Pembayaran masih terkunci.'],
+            ], 403);
+        }
+
         $payment   = $this->resolveActivePayment($candidate);
         $config    = $this->paymentService->resolveConfig($candidate->admission_wave_id);
 
@@ -118,7 +138,15 @@ class PaymentController extends Controller
             'channel' => ['required', 'in:gateway,transfer,cash'],
         ]);
 
-        $candidate = $request->user()->candidate()->with('admissionWave')->first();
+        $candidate = $request->user()->candidate()->with('admissionWave')->firstOrFail();
+        $this->statusService->syncAfterEvent($candidate, 'payment.create.gate_check');
+        $candidate->refresh();
+        $gate = $this->gateService->payment($candidate, $request->user());
+
+        if (! $gate['allowed']) {
+            return back()->withErrors(['gate' => $gate['reason'] ?? 'Pembayaran masih terkunci.']);
+        }
+
         $channel   = $request->input('channel');
 
         try {
@@ -143,6 +171,8 @@ class PaymentController extends Controller
                     $this->paymentService->createManualPayment($candidate, $channel);
                 }
             });
+
+            $this->statusService->syncAfterEvent($candidate, 'payment.created');
 
             return back()->with('success', 'Transaksi berhasil dibuat.');
 
@@ -172,7 +202,14 @@ class PaymentController extends Controller
 
     public function snapToken(Request $request): \Illuminate\Http\JsonResponse
     {
-        $candidate = $request->user()->candidate()->with(['admissionWave', 'user'])->first();
+        $candidate = $request->user()->candidate()->with(['admissionWave', 'user'])->firstOrFail();
+        $this->statusService->syncAfterEvent($candidate, 'payment.snap_token.gate_check');
+        $candidate->refresh();
+        $gate = $this->gateService->payment($candidate, $request->user());
+
+        if (! $gate['allowed']) {
+            return response()->json(['error' => $gate['reason'] ?? 'Pembayaran masih terkunci.'], 403);
+        }
 
         $payment = Payment::where('candidate_id', $candidate->id)
             ->where('status', Payment::STATUS_PENDING)
@@ -231,6 +268,15 @@ class PaymentController extends Controller
 
     public function uploadProof(Request $request): RedirectResponse
     {
+        $candidate = $request->user()->candidate()->firstOrFail();
+        $this->statusService->syncAfterEvent($candidate, 'payment.upload_proof.gate_check');
+        $candidate->refresh();
+        $gate = $this->gateService->payment($candidate, $request->user());
+
+        if (! $gate['allowed']) {
+            return back()->withErrors(['gate' => $gate['reason'] ?? 'Pembayaran masih terkunci.']);
+        }
+
         $request->validate([
             'proof' => [
                 'required',
@@ -240,8 +286,6 @@ class PaymentController extends Controller
                 'max:5120',
             ],
         ]);
-
-        $candidate = $request->user()->candidate()->first();
 
         $payment = Payment::where('candidate_id', $candidate->id)
             ->where('status', Payment::STATUS_PENDING)
@@ -259,6 +303,7 @@ class PaymentController extends Controller
 
         try {
             $this->paymentService->uploadProof($payment, $request->file('proof'));
+            $this->statusService->syncAfterEvent($candidate, 'payment.proof_uploaded');
             return back()->with('success', 'Bukti pembayaran berhasil diupload. Menunggu verifikasi staff.');
 
         } catch (\Exception $e) {
@@ -279,7 +324,14 @@ class PaymentController extends Controller
 
     public function cancel(Request $request, Payment $payment): RedirectResponse
     {
-        $candidate = $request->user()->candidate()->first();
+        $candidate = $request->user()->candidate()->firstOrFail();
+        $this->statusService->syncAfterEvent($candidate, 'payment.cancel.gate_check');
+        $candidate->refresh();
+        $gate = $this->gateService->payment($candidate, $request->user());
+
+        if (! $gate['allowed']) {
+            return back()->withErrors(['gate' => $gate['reason'] ?? 'Pembayaran masih terkunci.']);
+        }
 
         if ($payment->candidate_id !== $candidate->id) {
             abort(403);
@@ -296,6 +348,8 @@ class PaymentController extends Controller
                     'manual_status' => null,
                 ]);
             });
+
+            $this->statusService->syncAfterEvent($candidate, 'payment.cancelled');
 
             return back()->with('success', 'Transaksi berhasil dibatalkan.');
 

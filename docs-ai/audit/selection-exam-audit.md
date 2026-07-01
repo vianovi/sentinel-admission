@@ -2,7 +2,9 @@
 
 ## Audit Status
 
-Final Phase 5 audit completed. UX polish checkpoint completed afterward. Task 2 admin workflow/template/import refinement completed without schema changes. Task 3 XLSX runtime stabilization and Admin Exam V2 redesign completed without schema changes. Task 4 Stitch-based admin exam UI recovery completed without schema changes. Admin import workflow/template handling checkpoint completed without schema changes. Runtime XLSX zip support checkpoint completed without schema changes. No known critical or high-risk issue remains for the Online Selection Exam Engine at this checkpoint.
+Final Phase 5 audit completed. UX polish checkpoint completed afterward. Task 2 admin workflow/template/import refinement completed without schema changes. Task 3 XLSX runtime stabilization and Admin Exam V2 redesign completed without schema changes. Task 4 Stitch-based admin exam UI recovery completed without schema changes. Admin import workflow/template handling checkpoint completed without schema changes. Runtime XLSX zip support checkpoint completed without schema changes. Task 5 candidate lifecycle gate checkpoint completed without schema changes. No known critical or high-risk issue remains for the Online Selection Exam Engine at this checkpoint.
+
+Task 5 lifecycle gate checkpoint completed on 2026-07-01. Candidate exam access is now guarded by `CandidateGateService::exam()` before session detail, start, attempt show, sync, autosave, and submit actions. The exam engine still does not change final admission accepted/rejected status automatically.
 
 ## Phase Audit Notes
 
@@ -224,6 +226,20 @@ Final Phase 5 audit completed. UX polish checkpoint completed afterward. Task 2 
   - `git diff --check` passed.
   - `git diff --stat` reviewed.
 - Playwright browser visual audit was attempted with a temporary SQLite DB and local Laravel server, but screenshot capture was blocked because Chrome/Chromium is not installed in this environment and `npx playwright install chrome` required interactive sudo. This is recorded as an environment verification limitation, not an application finding.
+
+### Task 5
+
+- Audited candidate lifecycle dependencies before changing exam access:
+  - `CandidateObserver`, `GuardianObserver`, `HealthRecordObserver`
+  - candidate document and payment controllers
+  - staff/admin document and payment verification actions
+  - Midtrans webhook handling
+  - candidate exam index/session/attempt controllers
+  - dashboard summary helper
+- Exam candidate routes now sync lifecycle and check the central exam gate.
+- Candidate exam landing remains visible with a locked reason when not eligible.
+- Direct session/attempt/start/autosave/submit routes reject when the exam gate fails.
+- Existing exam security tests were updated so verified exam candidates are verified through real lifecycle prerequisites instead of direct status assignment.
 
 ## Security Review Notes
 

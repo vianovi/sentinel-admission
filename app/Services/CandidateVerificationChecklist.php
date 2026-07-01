@@ -3,52 +3,29 @@
 namespace App\Services;
 
 use App\Models\Candidate;
-use App\Models\CandidateDocument;
-use App\Models\Payment;
+use App\Services\CandidateStatus\CandidateStatusService;
+use App\Services\CandidateStatus\CandidateVerificationEvaluator;
 
 class CandidateVerificationChecklist
 {
-    private const REQUIRED_DOCUMENT_TYPES = [
-        'photo_formal',
-        'birth_certificate',
-        'family_card',
-        'parent_id_card',
-        'graduation_certificate',
-        'report_card',
-        'parent_statement',
-    ];
+    public function __construct(
+        private readonly CandidateVerificationEvaluator $verificationEvaluator,
+        private readonly CandidateStatusService $statusService
+    ) {}
 
     public function requiredDocumentTypes(Candidate $candidate): array
     {
-        $types = self::REQUIRED_DOCUMENT_TYPES;
-
-        if ($candidate->is_transfer) {
-            $types[] = 'transfer_letter';
-        }
-
-        return $types;
+        return $this->verificationEvaluator->requiredDocumentTypes($candidate);
     }
 
     public function requiredDocumentLabels(Candidate $candidate): array
     {
-        return collect($this->requiredDocumentTypes($candidate))
-            ->mapWithKeys(fn (string $type) => [$type => CandidateDocument::DOC_TYPES[$type]['label'] ?? $type])
-            ->all();
+        return $this->verificationEvaluator->requiredDocumentLabels($candidate);
     }
 
     public function missingRequiredDocuments(Candidate $candidate): array
     {
-        $verifiedTypes = $candidate->documents()
-            ->whereNull('deleted_at')
-            ->where('status', 'verified')
-            ->pluck('doc_type')
-            ->unique()
-            ->all();
-
-        return collect($this->requiredDocumentTypes($candidate))
-            ->diff($verifiedTypes)
-            ->values()
-            ->all();
+        return $this->verificationEvaluator->missingRequiredDocumentTypes($candidate);
     }
 
     public function hasRequiredHealthDocuments(Candidate $candidate): bool
@@ -58,38 +35,16 @@ class CandidateVerificationChecklist
 
     public function hasVerifiedPayment(Candidate $candidate): bool
     {
-        return $candidate->payments()
-            ->where('status', Payment::STATUS_PAID)
-            ->exists();
+        return ! in_array('payment.paid', $this->verificationEvaluator->evaluate($candidate)->missingKeys(), true);
     }
 
     public function isReadyForCandidateVerification(Candidate $candidate): bool
     {
-        $candidate->loadMissing(['healthRecord']);
-
-        return empty($this->missingRequiredDocuments($candidate))
-            && $this->hasRequiredHealthDocuments($candidate)
-            && $this->hasVerifiedPayment($candidate);
+        return $this->verificationEvaluator->evaluate($candidate)->complete();
     }
 
     public function syncCandidateStatus(Candidate $candidate): void
     {
-        $candidate->refresh();
-
-        if (in_array($candidate->status, ['accepted', 'rejected'], true)) {
-            return;
-        }
-
-        if ($this->isReadyForCandidateVerification($candidate)) {
-            if ($candidate->status !== 'verified') {
-                $candidate->update(['status' => 'verified']);
-            }
-
-            return;
-        }
-
-        if ($candidate->status === 'verified') {
-            $candidate->update(['status' => 'submitted']);
-        }
+        $this->statusService->syncAfterEvent($candidate, 'legacy.verification_checklist');
     }
 }

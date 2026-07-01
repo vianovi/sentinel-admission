@@ -4,6 +4,8 @@
 
 Mission complete. UX polish checkpoint, Task 3 Admin Exam V2 stabilization, and Task 4 Stitch-based admin exam UI recovery are completed. No required continuation action remains for this directive.
 
+Task 5 candidate lifecycle/gate restructure is completed. The next useful task is a manual QA pass with real candidate accounts across these states: draft, submitted with unverified email, submitted with verified email, verified, accepted, and rejected.
+
 ## Instructions for Next Agent Run
 
 1. Treat this directive as completed unless the user opens a new task.
@@ -13,6 +15,8 @@ Mission complete. UX polish checkpoint, Task 3 Admin Exam V2 stabilization, and 
 5. For import UX questions, use the dynamic package template route `/dashboard/admin/exams/packages/{package}/template`; the master file is `resources/templates/exam/template-import-soal-ujian-seleksi-spmb.final.xlsx`.
 6. Ensure every runtime has PHP `ext-zip` / `ZipArchive`; Docker installs it through `libzip-dev` + `docker-php-ext-install zip` and now fails the image build if `zip`/`ZipArchive` is not active.
 7. For browser visual audits, ensure Chrome/Chromium is installed for Playwright. Task 4 could not complete screenshot capture because this runtime has no browser and the installer required interactive sudo.
+8. For future candidate lifecycle work, start from `docs-ai/features/candidate-status-flow.md` and `docs-ai/audit/candidate-lifecycle-critical-audit.md`.
+9. Do not reintroduce required-field checks into observers/controllers/frontend props; call `CandidateStatusService`, `CandidateCompletionEvaluator`, `CandidateVerificationEvaluator`, or `CandidateGateService`.
 
 ## Do Not Touch
 
@@ -23,6 +27,10 @@ Mission complete. UX polish checkpoint, Task 3 Admin Exam V2 stabilization, and 
 - Existing registration wizard flow
 - Existing dashboard layout/global theme
 - Admission accepted/rejected status semantics
+
+Task 5 exception already completed:
+- Payment/document/exam flows were touched only to centralize lifecycle sync and enforce gates.
+- Admission accepted/rejected semantics remain manual and final.
 
 ## Completed Phase 5 Concrete Steps
 

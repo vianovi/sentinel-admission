@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\CandidateStatus\CandidateCompletionEvaluator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -122,29 +123,10 @@ class Guardian extends Model
 
     public function requiredCompletionFields(): array
     {
-        $fields = [
-            'father_status',
-            'mother_status',
-            'mother_name',
-            'no_kk',
-            'income_type',
-            'marital_status',
-        ];
+        $fields = array_keys(CandidateCompletionEvaluator::GUARDIAN_FIELDS);
 
         if ($this->marital_status && $this->marital_status !== 'nikah_tercatat') {
-            $fields = array_merge($fields, [
-                'guardian_name',
-                'guardian_relation',
-                'guardian_date_of_birth',
-                'guardian_education',
-                'guardian_phone',
-                'guardian_province',
-                'guardian_city',
-                'guardian_district',
-                'guardian_village',
-                'guardian_address',
-                'guardian_postal_code',
-            ]);
+            $fields = array_merge($fields, array_keys(CandidateCompletionEvaluator::CONDITIONAL_GUARDIAN_FIELDS));
         }
 
         return $fields;

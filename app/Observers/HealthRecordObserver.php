@@ -3,16 +3,14 @@
 namespace App\Observers;
 
 use App\Models\HealthRecord;
+use App\Services\CandidateStatus\CandidateStatusService;
+use Illuminate\Support\Facades\Log;
 
 /**
  * HealthRecordObserver
  *
- * Trigger auto-submitted check ke CandidateObserver
- * setiap kali data health record di-save (created atau updated).
- *
- * Field yang diawasi untuk auto-submitted:
- *   - blood_type, rhesus, height_cm, weight_kg,
- *     general_health_condition, eye_right_type, eye_left_type
+ * Trigger candidate lifecycle sync setiap kali data kesehatan berubah.
+ * Requirement detail hidup di CandidateStatusService, bukan observer ini.
  */
 class HealthRecordObserver
 {
@@ -23,18 +21,25 @@ class HealthRecordObserver
 
     public function updated(HealthRecord $healthRecord): void
     {
-        // Early exit — hanya trigger kalau field relevan yang berubah
-        $watchedFields = [
-            'blood_type', 'rhesus', 'height_cm', 'weight_kg',
-            'general_health_condition', 'eye_right_type', 'eye_left_type',
-        ];
-        if (! $healthRecord->isDirty($watchedFields)) return;
-
         $this->triggerCheck($healthRecord);
     }
 
     private function triggerCheck(HealthRecord $healthRecord): void
     {
-        (new CandidateObserver())->checkFromHealthRecord($healthRecord);
+        $candidate = $healthRecord->candidate;
+
+        if (! $candidate) {
+            return;
+        }
+
+        try {
+            app(CandidateStatusService::class)->syncAfterEvent($candidate, 'health_record.saved');
+        } catch (\Throwable $e) {
+            Log::error('HealthRecordObserver lifecycle sync failed', [
+                'health_record_id' => $healthRecord->id,
+                'candidate_id' => $healthRecord->candidate_id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

@@ -3,15 +3,14 @@
 namespace App\Observers;
 
 use App\Models\Guardian;
+use App\Services\CandidateStatus\CandidateStatusService;
+use Illuminate\Support\Facades\Log;
 
 /**
  * GuardianObserver
  *
- * Trigger auto-submitted check ke CandidateObserver
- * setiap kali data guardian di-save (created atau updated).
- *
- * Field yang diawasi untuk auto-submitted:
- *   - mother_name, income_type, father_status, mother_status, no_kk
+ * Trigger candidate lifecycle sync setiap kali data guardian berubah.
+ * Requirement detail hidup di CandidateStatusService, bukan observer ini.
  */
 class GuardianObserver
 {
@@ -22,15 +21,25 @@ class GuardianObserver
 
     public function updated(Guardian $guardian): void
     {
-        // Early exit — hanya trigger kalau field relevan yang berubah
-        $watchedFields = ['mother_name', 'income_type', 'father_status', 'mother_status', 'no_kk'];
-        if (! $guardian->isDirty($watchedFields)) return;
-
         $this->triggerCheck($guardian);
     }
 
     private function triggerCheck(Guardian $guardian): void
     {
-        (new CandidateObserver())->checkFromGuardian($guardian);
+        $candidate = $guardian->candidate;
+
+        if (! $candidate) {
+            return;
+        }
+
+        try {
+            app(CandidateStatusService::class)->syncAfterEvent($candidate, 'guardian.saved');
+        } catch (\Throwable $e) {
+            Log::error('GuardianObserver lifecycle sync failed', [
+                'guardian_id' => $guardian->id,
+                'candidate_id' => $guardian->candidate_id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

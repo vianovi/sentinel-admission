@@ -11,6 +11,7 @@
 - No known critical or high-risk exam-engine bugs remain after Task 3 verification.
 - Task 4 resolved the rejected admin exam UI structure by removing the inner exam workspace sidebar and keeping the main admin sidebar as the only global navigation for `Ujian Seleksi`.
 - No known critical or high-risk admin exam UI issue remains after Task 4 static/build/test audit.
+- Task 5 resolved the critical candidate lifecycle risk where status rules were scattered across observers, document/payment review flows, webhook handling, and dashboard helpers. No known critical or high-risk lifecycle/gate issue remains after the focused Task 5 test pass.
 
 ## Build or Test Failures
 
@@ -45,3 +46,5 @@
 - Dynamic Task 2 template reads `izinkan_ujian_ulang` into `max_attempts` using a simple 1-or-2 attempt mapping. More granular retake policy would require a future product/schema decision.
 - Admin Exam V2 still uses existing backend package/session fields. A richer future teacher/retake policy would need a separate product/schema decision, not a Task 3 hotfix.
 - Playwright browser screenshot audit for Task 4 was attempted but blocked because Chrome/Chromium is not installed in this environment and `npx playwright install chrome` requires interactive sudo. Static UI audit, route list, build, and focused tests passed.
+- Candidate lifecycle Task 5 intentionally keeps `accepted` and `rejected` as final manual statuses. Automatic sync will not overwrite them, even if a document/payment is later changed.
+- Health completion now follows the broader backend/model/dashboard requirement set: physical fields plus health-history responses. This is stricter than the old observer-only physical-field check and is documented in `docs-ai/features/candidate-status-flow.md`.

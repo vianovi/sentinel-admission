@@ -7,6 +7,8 @@ use App\Models\Candidate;
 use App\Models\Exam\ExamAttempt;
 use App\Models\Exam\ExamSession;
 use App\Models\Exam\ExamSessionCandidate;
+use App\Services\CandidateStatus\CandidateGateService;
+use App\Services\CandidateStatus\CandidateStatusService;
 use App\Services\Exam\ExamAttemptService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -15,14 +17,23 @@ use Inertia\Response;
 class ExamController extends Controller
 {
     public function __construct(
-        private readonly ExamAttemptService $attemptService
+        private readonly ExamAttemptService $attemptService,
+        private readonly CandidateGateService $gateService,
+        private readonly CandidateStatusService $statusService
     ) {}
 
     public function index(Request $request): Response
     {
         $candidate = $this->candidate($request);
+        $gate = null;
 
-        $assignments = $candidate
+        if ($candidate) {
+            $this->statusService->syncAfterEvent($candidate, 'exam.index');
+            $candidate->refresh()->load('admissionWave:id,title,academic_year');
+            $gate = $this->gateService->exam($candidate, $request->user());
+        }
+
+        $assignments = $candidate && ($gate['allowed'] ?? false)
             ? ExamSessionCandidate::query()
                 ->with([
                     'session.package.subject:id,name,code',
@@ -44,6 +55,7 @@ class ExamController extends Controller
         return Inertia::render('Dashboard/Candidate/Exam/Index', [
             'candidate' => $candidate ? $this->candidatePayload($candidate) : null,
             'sessions' => $sessions,
+            'gate' => $gate,
             'server_time' => now()->toISOString(),
         ]);
     }
@@ -51,6 +63,9 @@ class ExamController extends Controller
     public function show(Request $request, ExamSession $session): Response
     {
         $candidate = $this->candidateOrFail($request);
+        $gate = $this->examGate($candidate, $request);
+
+        abort_if(! $gate['allowed'], 403, $gate['reason'] ?? 'Ujian seleksi masih terkunci.');
 
         $assignment = ExamSessionCandidate::query()
             ->with([
@@ -88,6 +103,14 @@ class ExamController extends Controller
         abort_unless($candidate, 403, 'Data kandidat tidak tersedia.');
 
         return $candidate;
+    }
+
+    private function examGate(Candidate $candidate, Request $request): array
+    {
+        $this->statusService->syncAfterEvent($candidate, 'exam.route');
+        $candidate->refresh();
+
+        return $this->gateService->exam($candidate, $request->user());
     }
 
     private function assignmentPayload(ExamSessionCandidate $assignment): array

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Candidate;
 use App\Models\CandidateDocument;
 use App\Models\Payment;
+use App\Services\CandidateStatus\CandidateGateService;
 use App\Services\SecureFileAccessService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -13,16 +14,21 @@ use Illuminate\Support\Facades\Log;
 class SecureFileController extends Controller
 {
     public function __construct(
-        private readonly SecureFileAccessService $files
+        private readonly SecureFileAccessService $files,
+        private readonly CandidateGateService $gateService
     ) {}
 
     public function candidateDocumentPreview(Request $request, CandidateDocument $document)
     {
+        $this->ensureCandidateGate($request, 'documents');
+
         return $this->serve(fn () => $this->files->candidateDocument($request, $document, 'preview'), 'preview');
     }
 
     public function candidateDocumentDownload(Request $request, CandidateDocument $document)
     {
+        $this->ensureCandidateGate($request, 'documents');
+
         return $this->serve(fn () => $this->files->candidateDocument($request, $document, 'download'), 'download');
     }
 
@@ -33,6 +39,8 @@ class SecureFileController extends Controller
 
     public function candidatePaymentProofPreview(Request $request, Payment $payment)
     {
+        $this->ensureCandidateGate($request, 'payment');
+
         return $this->serve(fn () => $this->files->candidatePaymentProof($request, $payment, 'preview'), 'preview');
     }
 
@@ -82,5 +90,19 @@ class SecureFileController extends Controller
 
             abort(404);
         }
+    }
+
+    private function ensureCandidateGate(Request $request, string $gate): void
+    {
+        $user = $request->user();
+        $candidate = $user?->candidate;
+
+        abort_unless($candidate, 403);
+
+        $result = $gate === 'payment'
+            ? $this->gateService->payment($candidate, $user)
+            : $this->gateService->documents($candidate, $user);
+
+        abort_if(! $result['allowed'], 403, $result['reason'] ?? 'Akses masih terkunci.');
     }
 }

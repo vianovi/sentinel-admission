@@ -9,6 +9,7 @@ namespace App\Services;
 use App\Models\Payment;
 use App\Models\PaymentConfig;
 use App\Models\Candidate;
+use App\Services\CandidateStatus\CandidateStatusService;
 use App\Support\SentinelStoragePaths;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +19,8 @@ use Illuminate\Support\Facades\Storage;
 class PaymentService
 {
     public function __construct(
-        private readonly DocumentSecurityService $securityService
+        private readonly DocumentSecurityService $securityService,
+        private readonly CandidateStatusService $statusService
     ) {}
 
     // ─────────────────────────────────────────────────────────────────────
@@ -178,7 +180,12 @@ class PaymentService
             Storage::disk('private')->delete($oldPath);
         }
 
-        return $payment->fresh();
+        $payment = $payment->fresh();
+        if ($payment?->candidate) {
+            $this->statusService->syncAfterEvent($payment->candidate, 'payment.proof_uploaded');
+        }
+
+        return $payment;
     }
 
     // ─────────────────────────────────────────────────────────────────────
@@ -205,7 +212,12 @@ class PaymentService
             ]);
         });
 
-        return $payment->fresh();
+        $payment = $payment->fresh();
+        if ($payment?->candidate) {
+            $this->statusService->syncAfterEvent($payment->candidate, 'payment.manually_verified');
+        }
+
+        return $payment;
     }
 
     /**
@@ -231,7 +243,12 @@ class PaymentService
             ]);
         });
 
-        return $payment->fresh();
+        $payment = $payment->fresh();
+        if ($payment?->candidate) {
+            $this->statusService->syncAfterEvent($payment->candidate, 'payment.manually_rejected');
+        }
+
+        return $payment;
     }
 
     // ─────────────────────────────────────────────────────────────────────
@@ -272,6 +289,7 @@ class PaymentService
             Payment::STATUS_PAID,
             Payment::STATUS_FAILED,
             Payment::STATUS_EXPIRED,
+            Payment::STATUS_CANCELLED,
         ])) {
             return;
         }
@@ -301,6 +319,11 @@ class PaymentService
                 'metadata'                 => $payload,
             ]);
         });
+
+        $payment->refresh();
+        if ($payment->candidate) {
+            $this->statusService->syncAfterEvent($payment->candidate, 'payment.gateway_webhook');
+        }
 
         Log::info('PaymentService: webhook processed', [
             'payment_id' => $payment->id,
@@ -344,11 +367,13 @@ class PaymentService
                 default                                                       => Payment::STATUS_PENDING,
             };
 
-            if (
+            $changed = (
                 $payment->status !== $newStatus
                 || empty($payment->payment_method)
                 || empty($payment->midtrans_transaction_id)
-            ) {
+            );
+
+            if ($changed) {
                 DB::transaction(function () use ($payment, $newStatus, $payload) {
                     $payment->updateQuietly([
                         'status'                  => $newStatus,
@@ -360,6 +385,11 @@ class PaymentService
                         'metadata'                => $payload,
                     ]);
                 });
+
+                $payment->refresh();
+                if ($payment->candidate) {
+                    $this->statusService->syncAfterEvent($payment->candidate, 'payment.gateway_status_synced');
+                }
             }
         } catch (\Throwable $e) {
             Log::warning('PaymentService: gateway sync failed', [

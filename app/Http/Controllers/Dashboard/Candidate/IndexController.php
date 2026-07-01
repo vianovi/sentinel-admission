@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard\Candidate;
 
 use App\Http\Controllers\Controller;
+use App\Services\CandidateStatus\CandidateStatusService;
 use App\Support\CandidateDashboardData;
 use App\Support\CandidateRequestPresenter;
 use Illuminate\Http\Request;
@@ -11,6 +12,10 @@ use Inertia\Response;
 
 class IndexController extends Controller
 {
+    public function __construct(
+        private readonly CandidateStatusService $statusService
+    ) {}
+
     // =========================================================================
     // DASHBOARD INDEX — GET /dashboard
     // =========================================================================
@@ -47,6 +52,8 @@ class IndexController extends Controller
                 ],
             ]);
         }
+
+        $this->statusService->syncAfterEvent($candidate, 'candidate.dashboard.viewed');
 
         return Inertia::render('Dashboard/Index', [
             'candidate' => ['id' => $candidate->id],

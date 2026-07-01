@@ -44,6 +44,7 @@ interface Props {
     achievementDocs: Record<string, DocumentRecord[]>
     isTransfer:      boolean
     completion:      number
+    gate:            { allowed: boolean; locked: boolean; reason: string | null; reasons: string[] }
 }
 
 // ─── Tab definitions ──────────────────────────────────────────────────────────
@@ -61,7 +62,7 @@ type TabId = typeof TABS[number]['id']
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function DataDokumen({
-    user, candidate, documents, achievementDocs, isTransfer, completion,
+    user, candidate, documents, achievementDocs, isTransfer, completion, gate,
 }: Props) {
     const [activeTab, setActiveTab] = useState<TabId>('identity')
     const containerRef              = useRef<HTMLDivElement>(null)
@@ -209,6 +210,22 @@ export default function DataDokumen({
                     </div>
                 </div>
 
+                {gate?.locked && (
+                    <div className="dokumen-card rounded-xl border border-amber-300/60 bg-amber-50 p-4 text-amber-900 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-100">
+                        <div className="flex items-start gap-3">
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500 text-white">
+                                <i className="fa-solid fa-lock text-xs" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold">Dokumen masih terkunci</p>
+                                <p className="mt-1 text-sm leading-relaxed">{gate.reason}</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {!gate?.locked && (
+                    <>
                 {/* ── Tab Navigation — icon-only mobile ────────────────── */}
                 <div className="dokumen-card">
                     <div className="flex overflow-x-auto rounded-xl
@@ -251,6 +268,8 @@ export default function DataDokumen({
                     {activeTab === 'welfare'        && <TabBantuan      {...tabProps} />}
                     {activeTab === 'administration' && <TabAdministrasi {...tabProps} />}
                 </div>
+                    </>
+                )}
 
             </div>
         </DashboardSplitLayout>

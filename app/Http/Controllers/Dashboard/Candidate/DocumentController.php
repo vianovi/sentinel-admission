@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Candidate;
 use App\Models\CandidateDocument;
 use App\Models\CandidateDocumentSecurity;
-use App\Services\CandidateVerificationChecklist;
+use App\Services\CandidateStatus\CandidateGateService;
+use App\Services\CandidateStatus\CandidateStatusService;
+use App\Services\CandidateStatus\CandidateVerificationEvaluator;
 use App\Services\DocumentSecurityService;
 use App\Support\SentinelStoragePaths;
 use Illuminate\Http\RedirectResponse;
@@ -21,7 +23,9 @@ class DocumentController extends Controller
 {
     public function __construct(
         private readonly DocumentSecurityService $security,
-        private readonly CandidateVerificationChecklist $verificationChecklist
+        private readonly CandidateVerificationEvaluator $verificationEvaluator,
+        private readonly CandidateGateService $gateService,
+        private readonly CandidateStatusService $statusService
     ) {}
 
     // =============================================
@@ -32,6 +36,8 @@ class DocumentController extends Controller
     {
         $user      = $request->user();
         $candidate = $user->candidate()->with('admissionWave')->firstOrFail();
+        $this->statusService->syncAfterEvent($candidate, 'documents.index');
+        $candidate->refresh();
 
         $documents = CandidateDocument::where('candidate_id', $candidate->id)
             ->whereNull('deleted_at')
@@ -75,6 +81,7 @@ class DocumentController extends Controller
             'achievementDocs' => $achievementDocs,
             'isTransfer'      => (bool) $candidate->is_transfer,
             'completion'      => $this->calculateCompletion($candidate->id),
+            'gate'            => $this->gateService->documents($candidate, $user),
         ]);
     }
 
@@ -93,6 +100,13 @@ class DocumentController extends Controller
 
         $user      = $request->user();
         $candidate = $user->candidate()->firstOrFail();
+        $this->statusService->syncAfterEvent($candidate, 'document.upload.gate_check');
+        $candidate->refresh();
+        $gate      = $this->gateService->documents($candidate, $user);
+
+        if (! $gate['allowed']) {
+            return $this->lockedResponse($request, $gate['reason'] ?? 'Halaman dokumen masih terkunci.');
+        }
 
         $validated = $request->validate([
             'file' => [
@@ -176,6 +190,8 @@ class DocumentController extends Controller
                 }
             });
 
+            $this->statusService->syncAfterEvent($candidate, 'document.uploaded');
+
             if ($isJson) return response()->json(['message' => 'Dokumen berhasil diupload.'], 200);
             return back()->with('success', 'Dokumen berhasil diupload dan sedang menunggu verifikasi.');
 
@@ -204,6 +220,13 @@ class DocumentController extends Controller
     {
         $user      = $request->user();
         $candidate = $user->candidate()->firstOrFail();
+        $this->statusService->syncAfterEvent($candidate, 'document.delete.gate_check');
+        $candidate->refresh();
+        $gate      = $this->gateService->documents($candidate, $user);
+
+        if (! $gate['allowed']) {
+            return back()->withErrors(['gate' => $gate['reason'] ?? 'Halaman dokumen masih terkunci.']);
+        }
 
         $document = CandidateDocument::where('id', $documentId)
             ->where('candidate_id', $candidate->id)
@@ -219,6 +242,7 @@ class DocumentController extends Controller
             $document->delete();
 
             DB::commit();
+            $this->statusService->syncAfterEvent($candidate, 'document.deleted');
             return back()->with('success', 'Dokumen berhasil dihapus.');
 
         } catch (\Exception $e) {
@@ -250,11 +274,23 @@ class DocumentController extends Controller
             ->unique()
             ->toArray();
 
-        $allTypes = $this->verificationChecklist->requiredDocumentTypes($candidate);
+        $allTypes = $this->verificationEvaluator->requiredDocumentTypes($candidate);
 
         if (count($allTypes) === 0) return 0;
 
         $uploaded = count(array_intersect($uploadedTypes, $allTypes));
         return (int) round(($uploaded / count($allTypes)) * 100);
+    }
+
+    private function lockedResponse(Request $request, string $message)
+    {
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => $message,
+                'errors' => ['gate' => $message],
+            ], 403);
+        }
+
+        return back()->withErrors(['gate' => $message]);
     }
 }

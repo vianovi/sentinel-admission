@@ -334,14 +334,15 @@ app/Http/Controllers/
 ### Observers
 ```
 app/Observers/
-├── CandidateObserver.php    → propagate candidate_code + checkAndSubmit()
-├── GuardianObserver.php     → trigger checkAndSubmit via CandidateObserver
-└── HealthRecordObserver.php → trigger checkAndSubmit via CandidateObserver
+├── CandidateObserver.php    → propagate candidate_code + trigger CandidateStatusService
+├── GuardianObserver.php     → trigger CandidateStatusService after guardian changes
+└── HealthRecordObserver.php → trigger CandidateStatusService after health changes
 ```
 
 ### Services
 ```
 app/Services/DocumentSecurityService.php → 4-layer Sentinel file security
+app/Services/CandidateStatus/*          → candidate completion, verification, status sync, and feature gates
 ```
 
 ---

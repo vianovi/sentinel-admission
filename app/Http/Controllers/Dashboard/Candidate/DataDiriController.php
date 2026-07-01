@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Dashboard\Candidate;
 
 use App\Http\Controllers\Controller;
 use App\Models\Candidate;
+use App\Services\CandidateStatus\CandidateStatusService;
 use App\Support\CandidateRequestPresenter;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -12,6 +13,10 @@ use Inertia\Response;
 
 class DataDiriController extends Controller
 {
+    public function __construct(
+        private readonly CandidateStatusService $statusService
+    ) {}
+
     // =========================================================================
     // SHOW DATA DIRI — GET /dashboard/data-diri
     // =========================================================================
@@ -24,6 +29,7 @@ class DataDiriController extends Controller
             $candidate->updateQuietly([
                 'phone_number' => Candidate::normalizePhoneNumber($candidate->registrationDraft->whatsapp_number),
             ]);
+            $this->statusService->syncAfterEvent($candidate, 'candidate.phone_normalized');
         }
         $dataChangeResult = CandidateRequestPresenter::formatDataChangeResult($candidate?->data_change_request);
 
