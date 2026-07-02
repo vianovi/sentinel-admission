@@ -774,13 +774,17 @@ Password is usually `password` for seeded local accounts. Verify seeders if logi
 
 Canonical file: `docs-ai/compressed/build_rules.md`.
 
-Build/performance rules remain valid and should be loaded from the canonical file to avoid duplicated stale copies. Key reminders:
+Build/performance rules stay in the canonical file to avoid stale duplication. This context only keeps the global summary:
 
-- Above-the-fold hero/banner images use eager loading and high fetch priority.
-- Below-the-fold images use lazy loading and async decoding.
-- Prefer WebP for complex photos and SVG only for simple icons.
-- Dashboard-heavy components such as charts, large tables, inactive tabs, and modals should be lazy-loaded where practical.
-- Controllers should send only required data; pagination belongs on the backend.
-- Use CSS transitions for simple interactions and Anime.js only for complex/cinematic animation.
-- External fonts/resources need preconnect and `display=swap`.
-- Before pushing a page, check image loading, preload needs, backend pagination, and dashboard lazy-loading expectations.
+- Source truth: `vite.config.js`, `tailwind.config.js`, `resources/views/app.blade.php`, `resources/js/app.tsx`, `resources/css/app.css`, and `package.json`.
+- Do not introduce a second bundler/build pipeline without explicit approval.
+- Above-the-fold LCP images use `fetchPriority="high"`, `loading="eager"`, `decoding="async"`, and optional Inertia `<Head>` preload.
+- Below-fold images use `loading="lazy"` and `decoding="async"`.
+- Third-party scripts must be page-scoped or loaded on demand, not global by default.
+- Expensive UI such as charts, tables, rich previews, complex widgets, inactive tabs, and rarely opened modals should be lazy-loaded or conditionally rendered.
+- Controllers send minimal shaped data; growing datasets use backend pagination/search/filtering.
+- Protected file/document previews render only when requested and must use secure routes.
+- Transactional or time-sensitive flows need stable layout, pending/error/success states, backend validation, and duplicate-submission protection.
+- Use CSS transitions for simple interactions; use animation libraries only for meaningful motion and avoid broad repeated mount animations.
+- Dark mode classes must be literal static strings.
+- Run `npm run build` for TS/React changes; docs-only changes do not require a build.

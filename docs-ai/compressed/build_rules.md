@@ -1,242 +1,445 @@
 # Build Rules & Performance Guidelines
-> Stack: Laravel 12 + React + Inertia.js
-> Tujuan: Menjaga performa tinggi di semua halaman, baik landing page maupun dashboard.
+> Global build/performance rules for this Laravel + Inertia + React project.
+> Read this when adding pages, changing assets, importing libraries, tuning Vite/Tailwind, or touching frontend delivery.
 
 ---
 
-## 🖼️ 1. Gambar (Images)
+## Purpose
 
-### Above the Fold (Hero / Banner)
-```tsx
-// ✅ Hero image — WAJIB fetchPriority high + eager
-<img
-    src="/assets/hero-background.webp"
-    alt="Deskripsi gambar"
-    fetchPriority="high"
-    loading="eager"
-    decoding="async"
-    className="w-full h-full object-cover"
-/>
+This file is not a feature map. It is a global rulebook for keeping the application fast, stable, and maintainable.
+
+Feature-specific architecture belongs in project/feature docs. Build rules here should apply across landing pages, auth/admission pages, and dashboards.
+
+---
+
+## 1. Build Source Of Truth
+
+Check these before changing build behavior:
+
+```txt
+vite.config.js
+tailwind.config.js
+resources/views/app.blade.php
+resources/js/app.tsx
+resources/css/app.css
+package.json
 ```
 
+Current baseline:
+
+```txt
+Backend/bridge: Laravel 12 + Inertia.js v2
+Frontend: React 18 + TypeScript
+Styling: Tailwind CSS 3
+Bundler: Vite 7
+Vite input: resources/css/app.css + resources/js/app.tsx
+```
+
+Rules:
+
+```txt
+Do not introduce a second bundler/build pipeline without explicit approval.
+Keep Vite entrypoints minimal.
+Add manual chunks only for libraries with real cache/performance benefit.
+Do not change Tailwind content scanning without checking generated CSS impact.
+```
+
+---
+
+## 2. Images & Media
+
+### Above The Fold
+
+Any image that is likely to become LCP must be eager and high priority.
+
 ```tsx
-// ✅ Kalau ada versi mobile, pakai <picture> + srcSet
 <picture>
-    <source media="(max-width: 768px)" srcSet="/assets/hero-mobile.webp" type="image/webp" />
-    <source media="(min-width: 769px)" srcSet="/assets/hero-desktop.webp" type="image/webp" />
+    <source media="(max-width: 768px)" srcSet="/assets/path/hero-mobile.webp" type="image/webp" />
+    <source media="(min-width: 769px)" srcSet="/assets/path/hero-desktop.webp" type="image/webp" />
     <img
-        src="/assets/hero-desktop.webp"
-        alt="Deskripsi gambar"
+        src="/assets/path/hero-desktop.webp"
+        alt="Descriptive alt text"
         fetchPriority="high"
         loading="eager"
         decoding="async"
-        className="w-full h-full object-cover"
+        className="h-full w-full object-cover"
     />
 </picture>
 ```
 
-### Below the Fold (Galeri, Fasilitas, dll)
+If the page owns the LCP image, preload it through Inertia `<Head>`.
+
 ```tsx
-// ✅ Semua gambar di bawah fold — WAJIB lazy
+<Head title="Page Title">
+    <link
+        rel="preload"
+        as="image"
+        href="/assets/path/hero-desktop.webp"
+        fetchPriority="high"
+    />
+</Head>
+```
+
+Use React prop casing in TSX: `fetchPriority`, not `fetchpriority`.
+
+### Below The Fold
+
+Images below the first viewport should be lazy and async.
+
+```tsx
 <img
-    src="/assets/foto.webp"
-    alt="Deskripsi"
+    src="/assets/path/image.webp"
+    alt="Descriptive alt text"
     loading="lazy"
     decoding="async"
 />
 ```
 
-### Preload di Head (Inertia)
-```tsx
-// ✅ Di Page component (Welcome.tsx, dll) — preload hero image
-<Head title="Nama Halaman">
-    <link
-        rel="preload"
-        as="image"
-        href="/assets/hero-background.webp"
-        fetchpriority="high"
-    />
-</Head>
+### Format Rules
+
+| Asset | Preferred Format |
+|---|---|
+| Photos / complex raster images | WebP |
+| Simple icons | Existing icon font/class system or inline SVG when needed |
+| Favicons / app icons | Existing favicon formats are allowed |
+| User documents/templates | Keep required original formats such as PDF, DOCX, XLSX |
+
+Size guidance:
+
+```txt
+Hero desktop: <= 1920px wide
+Hero mobile: <= 768px wide
+Cards/gallery: close to rendered dimensions
+Large decorative assets: avoid if they do not carry meaning
 ```
 
-### Aturan Format
-| Kondisi | Format |
-|---|---|
-| Foto / gambar kompleks | WebP |
-| Icon sederhana | SVG inline |
-| Jangan pakai | PNG / JPG (kecuali terpaksa) |
+Video rules:
 
-### Ukuran Gambar
-- Hero desktop: maks **1920px** lebar
-- Hero mobile: maks **768px** lebar
-- Kompres dulu di [Squoosh.app](https://squoosh.app) sebelum upload
+```txt
+Do not eager-load video unless it is essential to the first viewport.
+Use preload="none" for modal/user-triggered video.
+Use preload="metadata" only when duration/thumbnail metadata is useful.
+```
 
 ---
 
-## 📦 2. Code Splitting & Lazy Loading Component
+## 3. External Resources & Third-Party Scripts
 
-### Landing Page
-Component landing page tidak perlu lazy load karena sudah di-bundle per page oleh Inertia.
+External fonts/CDNs should use connection hints where appropriate:
 
-### Dashboard — WAJIB Lazy Load
-Semua component berat di dashboard harus di-lazy load:
+```html
+<link rel="preconnect" href="https://example-cdn.com">
+<link rel="dns-prefetch" href="//example-cdn.com">
+```
+
+Font rules:
+
+```txt
+Use display=swap for web fonts.
+Avoid adding additional font families unless the design system requires it.
+Do not block first render with icon/font stylesheets when async loading is practical.
+Keep noscript fallback when async stylesheet loading is used.
+```
+
+Third-party script rules:
+
+```txt
+Load scripts only on pages that use them.
+Never place transactional, analytics, chat, map, embed, or verification scripts globally by default.
+Keep API/client keys in config/env-backed templates, never hardcoded in React.
+If a script is only needed after user action, prefer loading it on demand.
+```
+
+---
+
+## 4. Code Splitting & Lazy Loading
+
+Lazy-load expensive UI, not tiny always-visible components.
+
+Good lazy-load candidates:
+
+```txt
+charts and visualizations
+large data tables
+rich editors
+file/PDF/image preview modals
+calendar, scheduler, or timeline widgets
+wizard steps that are not immediately shown
+inactive dashboard tabs
+rarely opened modals or drawers
+operations tools that are not part of first paint
+```
+
+Use `lazy` + `Suspense` with a stable fallback that preserves layout size.
 
 ```tsx
-// ❌ Jangan begini
-import HeavyChart from '@/Components/Charts/RevenueChart'
-import DataTable from '@/Components/Tables/CandidateTable'
+import { lazy, Suspense } from "react";
 
-// ✅ Lazy load — hanya di-load saat dibutuhkan
-import { lazy, Suspense } from 'react'
+const HeavyPanel = lazy(() => import("@/Components/Feature/HeavyPanel"));
 
-const RevenueChart = lazy(() => import('@/Components/Charts/RevenueChart'))
-const CandidateTable = lazy(() => import('@/Components/Tables/CandidateTable'))
-
-// Pakenya wajib dibungkus Suspense
-<Suspense fallback={<div className="animate-pulse h-64 bg-slate-100 rounded-xl" />}>
-    <RevenueChart />
+<Suspense fallback={<div className="h-64 animate-pulse rounded-lg bg-content-muted" />}>
+    <HeavyPanel />
 </Suspense>
 ```
 
-### Yang WAJIB di-lazy load di dashboard
-- Semua chart (grafik, diagram)
-- Semua tabel data besar
-- Modal / popup yang tidak langsung muncul
-- Component yang ada di tab yang tidak aktif
+Rules:
+
+```txt
+Fallbacks must not cause layout shift.
+Do not lazy-load core shell components that appear on every dashboard page.
+Do not split so aggressively that normal workflows feel slower.
+Prefer route/page-level split points and heavy component split points.
+```
 
 ---
 
-## 📡 3. Data Fetching (Inertia + Laravel)
+## 5. Data Fetching & Payload Size
 
-### Kirim data seperlunya dari Controller
+Backend controllers should send only the data needed by the rendered page.
+
 ```php
-// ❌ Jangan kirim semua data
-return Inertia::render('Dashboard/Index', [
-    'candidates' => Candidate::all(), // bisa ribuan row!
-]);
-
-// ✅ Kirim yang dibutuhkan saja + pagination
-return Inertia::render('Dashboard/Index', [
-    'candidates' => Candidate::paginate(15),
-    'stats'      => CandidateService::getSummaryStats(),
+return Inertia::render('Feature/Index', [
+    'items' => ItemResource::collection($query->paginate(15)),
+    'filters' => $request->only(['search', 'status']),
 ]);
 ```
 
-### Pagination — selalu dari backend
+Rules:
+
+```txt
+Use backend pagination for growing datasets.
+Use backend search/filter/sort for operational lists.
+Avoid sending entire model graphs to Inertia.
+Avoid loading all rows just to count/filter client-side.
+Use resources/arrays to shape payloads deliberately.
+Keep sensitive/internal fields out of frontend props.
+```
+
+For filter interactions:
+
 ```tsx
-// ❌ Jangan filter / paginate di frontend
-const displayed = candidates.filter(...).slice(0, 10)
-
-// ✅ Request page baru ke server via Inertia
-import { router } from '@inertiajs/react'
-
-router.get(route('dashboard.candidates'), { page: 2 }, {
+router.get(route("feature.index"), filters, {
     preserveState: true,
     preserveScroll: true,
-})
+});
 ```
 
 ---
 
-## ⚡ 4. Animasi
+## 6. Heavy UI Components
 
-### Prinsip
-- Gunakan **CSS transition/animation** untuk interaksi sederhana (hover, toggle)
-- Gunakan **animejs** hanya untuk animasi kompleks (hero entrance, cinematic effect)
-- Jangan animasi semua element sekaligus di `useEffect` mount
+### Charts
+
+Charts should live in isolated components and receive compact prepared data.
 
 ```tsx
-// ❌ Terlalu banyak animasi di mount — block rendering
-useEffect(() => {
-    animate('.card', { opacity: [0, 1], ... }) // puluhan element sekaligus
-}, [])
+<div className="h-[260px]">
+    <ResponsiveContainer width="100%" height="100%">
+        {/* chart */}
+    </ResponsiveContainer>
+</div>
+```
 
-// ✅ Batasi hanya element above the fold
-useEffect(() => {
-    animate('.hero-animate', {
-        opacity: [0, 1],
-        translateY: [40, 0],
-        duration: 1200,
-        delay: stagger(180, { start: 200 }),
-    })
-}, [])
+Rules:
 
-// ✅ Untuk hover & toggle — pakai CSS Tailwind saja
-className="transition duration-300 hover:-translate-y-1"
+```txt
+Give charts fixed/min heights.
+Avoid rendering large raw datasets directly in chart props.
+Lazy-load dashboard charts unless they are small and immediately important.
+Keep empty/loading states visually stable.
+```
+
+### Tables
+
+Rules:
+
+```txt
+Backend pagination first.
+Stable columns and row heights where practical.
+Avoid rendering thousands of rows in React.
+Use empty/loading/error states that do not resize the whole layout unexpectedly.
+```
+
+### File & Document Preview
+
+Rules:
+
+```txt
+Render preview UI only when requested.
+Fetch protected files through secure preview/download routes.
+Do not expose storage paths directly.
+Throttle sensitive preview/download endpoints.
+Prefer modal/overlay rendering that unmounts after close.
+```
+
+### Complex Widgets
+
+Rules:
+
+```txt
+Keep widget-specific libraries inside widget-specific components.
+Do not import heavy libraries into shared layouts.
+Keep event/item payloads compact.
+Render modals/popovers conditionally.
 ```
 
 ---
 
-## 🔤 5. Font & External Resources
+## 7. Transactional & Time-Sensitive Flows
 
-```html
-{{-- Di resources/views/app.blade.php --}}
-{{-- WAJIB preconnect sebelum load font --}}
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+For workflows that involve transactions, submissions, verification, timed sessions, uploads, assessments, or irreversible actions:
 
-{{-- Load font dengan display=swap agar tidak block render --}}
-<link href="https://fonts.googleapis.com/css2?family=...&display=swap" rel="stylesheet">
+```txt
+Preserve layout stability during loading/saving.
+Show clear pending/success/failure states without exposing technical errors.
+Avoid duplicate submissions with disabled/pending states.
+Persist or sync state incrementally when data loss would hurt users.
+Do not depend only on frontend timers or frontend validation.
+Keep backend authorization and validation as the source of truth.
 ```
 
 ---
 
-## 🗂️ 6. Struktur Folder
+## 8. Animation
 
+Use CSS transitions for simple interactions:
+
+```txt
+hover
+focus
+toggle
+small opacity/transform changes
 ```
+
+Use animation libraries only for higher-value motion:
+
+```txt
+page/section entrance when it improves perception
+modal entrance/exit
+wizard transitions
+global progress indicators
+cinematic landing moments
+```
+
+Rules:
+
+```txt
+Do not animate hundreds of elements on mount.
+Prefer scoped refs/selectors over broad global selectors.
+Avoid running animation repeatedly on every render.
+Animation must not cause content overlap or layout instability.
+For below-fold animation-heavy sections, consider dynamic import.
+```
+
+---
+
+## 9. CSS, Tailwind & Layout Stability
+
+Tailwind rules:
+
+```txt
+Dark mode classes must be literal static strings.
+Do not build class names dynamically, especially `dark:${value}`.
+Use existing CSS variables/design tokens before adding new ones.
+Avoid introducing one-off palette systems.
+Do not put large amounts of generated class text in runtime strings.
+```
+
+Layout rules:
+
+```txt
+Use fixed/min dimensions for controls, counters, grids, tabs, and icon buttons.
+Avoid text overflow inside buttons/cards.
+Use responsive constraints instead of viewport-scaled font sizes.
+Keep dashboard screens dense and operational, not landing-page styled.
+Do not nest cards inside cards unless the existing design system clearly does so.
+```
+
+---
+
+## 10. Folder & Ownership Rules
+
+General structure:
+
+```txt
 resources/js/
 ├── Components/
-│   ├── Landing/        ← component landing page (tidak perlu lazy)
+│   ├── Landing/
 │   ├── Dashboard/
-│   │   ├── Shared/     ← Sidebar, Topbar (load sekali, ringan)
-│   │   ├── Charts/     ← SEMUA chart → wajib lazy load
-│   │   ├── Tables/     ← SEMUA tabel → wajib lazy load + pagination
-│   │   └── [Feature]/  ← komponen spesifik per fitur
-│   └── UI/             ← komponen kecil reusable (Button, Field, dll)
-├── Pages/
-│   ├── Landing/        ← 1 file per halaman landing
-│   └── Dashboard/      ← 1 file per halaman dashboard
+│   ├── UI/
+│   └── Wizard/
+├── Layouts/
+└── Pages/
+```
+
+Rules:
+
+```txt
+Pages are orchestration boundaries.
+Business/UI details live in domain components, hooks, services, or backend classes.
+Shared layout should not import feature-heavy libraries.
+Reusable UI components must stay small and dependency-light.
+Avoid moving feature-specific code into global/shared folders prematurely.
 ```
 
 ---
 
-## ✅ 7. Checklist Sebelum Push
+## 11. Build & Verification
 
-### Setiap halaman baru:
-- [ ] Hero/banner image pakai `fetchPriority="high"` + `loading="eager"`
-- [ ] `<Head>` sudah ada `<link rel="preload">` untuk hero image
-- [ ] Semua gambar di bawah fold pakai `loading="lazy"` + `decoding="async"`
-- [ ] Gambar format WebP, ada versi mobile kalau ukurannya besar
-- [ ] Controller hanya kirim data yang dibutuhkan halaman itu
-- [ ] Pagination dari backend, bukan filter di frontend
+Use the smallest verification that proves the change:
 
-### Khusus halaman dashboard:
-- [ ] Chart di-lazy load dengan `Suspense`
-- [ ] Tabel besar di-lazy load dengan `Suspense`
-- [ ] Component di tab tidak aktif di-lazy load
-- [ ] Modal tidak di-render sampai dibuka (conditional render atau lazy)
+| Change Type | Minimum Check |
+|---|---|
+| Docs only | No build required; run text sanity checks if useful |
+| TS/React UI | `npm run build` |
+| Lint-only cleanup | `npm run lint`; build if behavior changed |
+| Backend logic | Focused Pest/PHPUnit test |
+| Routes/controllers | `php artisan route:list` or focused feature test |
+| Security/upload/transactional/time-sensitive flow | Focused feature/security test, then broader regression if needed |
+
+In demo/public mode, prefer the established build/deploy flow instead of a dev server.
 
 ---
 
-## 🎯 8. Target Score PageSpeed
+## 12. Pre-Push Checklist
 
-| | Mobile | Desktop |
-|---|---|---|
-| Performance | ≥ 80 | ≥ 90 |
-| Accessibility | ≥ 90 | ≥ 90 |
-| Best Practices | ≥ 90 | ≥ 90 |
-| SEO | ≥ 90 | ≥ 90 |
+```txt
+[ ] LCP image eager/high-priority only when truly above the fold
+[ ] Below-fold images lazy + async
+[ ] Third-party scripts are page-scoped or on-demand
+[ ] Controller payload is minimal and shaped
+[ ] Growing datasets use backend pagination/filtering
+[ ] Heavy UI is lazy-loaded or conditionally rendered
+[ ] Layout dimensions are stable on mobile and desktop
+[ ] Dark mode classes are static
+[ ] Sensitive files/routes do not expose internals
+[ ] Transactional flows handle pending/error/success safely
+[ ] Required build/tests were run or explicitly skipped with reason
+```
 
-### Metrik LCP Target
-| Metrik | Target |
-|---|---|
-| LCP (mobile) | < 4.0s |
-| LCP (desktop) | < 2.5s |
+---
+
+## 13. Performance Targets
+
+Use these as targets, not as a reason to fake metrics:
+
+| Metric | Mobile | Desktop |
+|---|---:|---:|
+| Performance | >= 80 | >= 90 |
+| Accessibility | >= 90 | >= 90 |
+| Best Practices | >= 90 | >= 90 |
+| SEO | >= 90 | >= 90 |
+
+Core Web Vitals targets:
+
+| Metric | Target |
+|---|---:|
+| LCP mobile | < 4.0s |
+| LCP desktop | < 2.5s |
 | FCP | < 2.0s |
 | TBT | < 200ms |
 | CLS | < 0.1 |
 
 ---
 
-> 📌 File ini di-update setiap ada pattern baru yang ditemukan saat development.
+Update this file only with rules that are broadly reusable across features.
