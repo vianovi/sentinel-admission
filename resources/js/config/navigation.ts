@@ -13,17 +13,28 @@
 // TYPES
 // ─────────────────────────────────────────────────────────────────────────────
 
+export type CandidateSection = "data-diri" | "data-kesehatan" | "data-wali" | "dokumen" | "pembayaran";
+
+export type NavActiveRule = {
+    path?: string;
+    exact?: boolean;
+    query?: Record<string, string>;
+    absentQuery?: string[];
+    prefixes?: string[];
+};
+
 export type NavItem = {
     label: string;
-    href: string;
+    href?: string;
     icon: string;    // Font Awesome class — contoh: "fa-solid fa-house"
     exact?: boolean; // true = match exact URL, false/undefined = startsWith
     disabled?: boolean;
     comingSoon?: boolean;
+    activeRules?: NavActiveRule[];
     staffCandidateHome?: boolean;
-    staffCandidateSection?: "data-diri" | "data-kesehatan" | "data-wali" | "dokumen" | "pembayaran";
+    staffCandidateSection?: CandidateSection;
     adminCandidateHome?: boolean;
-    adminCandidateSection?: "data-diri" | "data-kesehatan" | "data-wali" | "dokumen" | "pembayaran";
+    adminCandidateSection?: CandidateSection;
     children?: NavSubItem[];
 };
 
@@ -31,9 +42,13 @@ export type NavSubItem = {
     label: string;
     icon:  string;
     href?: string;
+    exact?: boolean;
+    disabled?: boolean;
+    comingSoon?: boolean;
     activePrefixes?: string[];
-    staffCandidateSection?: "data-diri" | "data-kesehatan" | "data-wali" | "dokumen" | "pembayaran";
-    adminCandidateSection?: "data-diri" | "data-kesehatan" | "data-wali" | "dokumen" | "pembayaran";
+    activeRules?: NavActiveRule[];
+    staffCandidateSection?: CandidateSection;
+    adminCandidateSection?: CandidateSection;
 };
 
 export type NavGroup = {
@@ -49,8 +64,6 @@ export const navigationConfig: Record<string, NavGroup[]> = {
 
     // =========================================================================
     // CANDIDATE — Pendaftar / Siswa
-    // Halaman bertanda ⏳ belum memiliki route/halaman aktif,
-    // sidebar akan tetap merender link-nya tapi belum bisa diakses.
     // =========================================================================
     candidate: [
         {
@@ -64,13 +77,30 @@ export const navigationConfig: Record<string, NavGroup[]> = {
         {
             group: "Pendaftaran",
             items: [
-                { label: "Data Diri",      href: "/dashboard/data-diri",      icon: "fa-solid fa-id-card" },
-                { label: "Data Kesehatan", href: "/dashboard/data-kesehatan", icon: "fa-solid fa-heart-pulse" },
-                { label: "Data Wali",      href: "/dashboard/data-wali",      icon: "fa-solid fa-people-roof" },
-                { label: "Dokumen",        href: "/dashboard/data-dokumen",   icon: "fa-solid fa-file-lines" },
-                { label: "Pembayaran",     href: "/dashboard/pembayaran",     icon: "fa-solid fa-credit-card" },
-                { label: "Ujian Seleksi",  href: "/dashboard/seleksi",        icon: "fa-solid fa-file-pen" },
-                { label: "Status",         href: "/dashboard/status",         icon: "fa-solid fa-clock-rotate-left", comingSoon: true },
+                {
+                    label: "Data Pendaftaran",
+                    icon: "fa-solid fa-folder-open",
+                    children: [
+                        { label: "Data Diri", href: "/dashboard/data-diri", icon: "fa-solid fa-id-card" },
+                        { label: "Data Wali", href: "/dashboard/data-wali", icon: "fa-solid fa-people-roof" },
+                        { label: "Data Kesehatan", href: "/dashboard/data-kesehatan", icon: "fa-solid fa-heart-pulse" },
+                    ],
+                },
+                {
+                    label: "Verifikasi Berkas",
+                    icon: "fa-solid fa-file-shield",
+                    children: [
+                        { label: "Dokumen", href: "/dashboard/data-dokumen", icon: "fa-solid fa-file-lines" },
+                        { label: "Pembayaran", href: "/dashboard/pembayaran", icon: "fa-solid fa-credit-card" },
+                    ],
+                },
+                {
+                    label: "Seleksi",
+                    icon: "fa-solid fa-file-pen",
+                    children: [
+                        { label: "Ujian Seleksi", href: "/dashboard/seleksi", icon: "fa-solid fa-clipboard-question" },
+                    ],
+                },
             ],
         },
         {
@@ -83,7 +113,6 @@ export const navigationConfig: Record<string, NavGroup[]> = {
 
     // =========================================================================
     // STAFF — Petugas verifikasi
-    // Verifikasi dilakukan via filter di halaman Kandidat — tidak ada menu terpisah.
     // =========================================================================
     staff: [
         {
@@ -92,31 +121,85 @@ export const navigationConfig: Record<string, NavGroup[]> = {
                 { label: "Dashboard", href: "/dashboard/staff",            icon: "fa-solid fa-house",  exact: true },
                 {
                     label: "Kandidat",
-                    href: "/dashboard/staff/candidates",
                     icon: "fa-solid fa-users",
-                    staffCandidateHome: true,
+                    activeRules: [{ path: "/dashboard/staff/candidates" }],
                     children: [
-                        { label: "Data Diri", icon: "fa-solid fa-id-card", staffCandidateSection: "data-diri" },
-                        { label: "Data Kesehatan", icon: "fa-solid fa-heart-pulse", staffCandidateSection: "data-kesehatan" },
-                        { label: "Data Wali", icon: "fa-solid fa-people-roof", staffCandidateSection: "data-wali" },
+                        {
+                            label: "Semua Kandidat",
+                            href: "/dashboard/staff/candidates",
+                            icon: "fa-solid fa-list",
+                            activeRules: [{ path: "/dashboard/staff/candidates", exact: true, absentQuery: ["status"] }],
+                        },
+                        {
+                            label: "Draft",
+                            href: "/dashboard/staff/candidates?status=draft",
+                            icon: "fa-regular fa-pen-to-square",
+                            activeRules: [{ path: "/dashboard/staff/candidates", exact: true, query: { status: "draft" } }],
+                        },
+                        {
+                            label: "Submitted",
+                            href: "/dashboard/staff/candidates?status=submitted",
+                            icon: "fa-solid fa-inbox",
+                            activeRules: [{ path: "/dashboard/staff/candidates", exact: true, query: { status: "submitted" } }],
+                        },
+                        {
+                            label: "Verified",
+                            href: "/dashboard/staff/candidates?status=verified",
+                            icon: "fa-solid fa-circle-check",
+                            activeRules: [{ path: "/dashboard/staff/candidates", exact: true, query: { status: "verified" } }],
+                        },
+                        {
+                            label: "Diterima",
+                            href: "/dashboard/staff/candidates?status=accepted",
+                            icon: "fa-solid fa-user-check",
+                            activeRules: [{ path: "/dashboard/staff/candidates", exact: true, query: { status: "accepted" } }],
+                        },
+                        {
+                            label: "Ditolak",
+                            href: "/dashboard/staff/candidates?status=rejected",
+                            icon: "fa-solid fa-user-xmark",
+                            activeRules: [{ path: "/dashboard/staff/candidates", exact: true, query: { status: "rejected" } }],
+                        },
                     ],
                 },
-                { label: "Permintaan Perubahan", href: "/dashboard/staff/change-requests", icon: "fa-solid fa-arrows-rotate" },
-                { label: "Hasil Ujian", href: "/dashboard/staff/exams/results", icon: "fa-solid fa-list-check" },
-                { label: "Laporan Umum", href: "/dashboard/staff/reports", icon: "fa-solid fa-chart-line", comingSoon: true },
+                {
+                    label: "Verifikasi",
+                    icon: "fa-solid fa-clipboard-check",
+                    children: [
+                        {
+                            label: "Review Dokumen",
+                            href: "/dashboard/staff/candidates",
+                            icon: "fa-solid fa-file-circle-check",
+                            staffCandidateSection: "dokumen",
+                        },
+                        {
+                            label: "Review Pembayaran",
+                            href: "/dashboard/staff/candidates",
+                            icon: "fa-solid fa-money-check-dollar",
+                            staffCandidateSection: "pembayaran",
+                        },
+                        {
+                            label: "Perlu Tindakan",
+                            href: "/dashboard/staff/change-requests",
+                            icon: "fa-solid fa-triangle-exclamation",
+                        },
+                    ],
+                },
+                {
+                    label: "Seleksi",
+                    icon: "fa-solid fa-file-pen",
+                    children: [
+                        { label: "Hasil Ujian", href: "/dashboard/staff/exams/results", icon: "fa-solid fa-list-check" },
+                    ],
+                },
+                { label: "Laporan", href: "/dashboard/staff/reports", icon: "fa-solid fa-chart-line", comingSoon: true },
             ],
         },
         {
             group: "ADMINISTRASI",
             items: [
                 { label: "Dokumen", href: "/dashboard/staff/candidates", icon: "fa-solid fa-file-lines", staffCandidateSection: "dokumen" },
-            ],
-        },
-        {
-            group: "PEMBAYARAN",
-            items: [
                 { label: "Pembayaran", href: "/dashboard/staff/candidates", icon: "fa-solid fa-credit-card", staffCandidateSection: "pembayaran" },
-                { label: "Rekap Pembayaran", href: "/dashboard/staff/payment-recap", icon: "fa-solid fa-receipt", comingSoon: true },
             ],
         },
         {
@@ -137,20 +220,79 @@ export const navigationConfig: Record<string, NavGroup[]> = {
                 { label: "Dashboard", href: "/dashboard/admin",            icon: "fa-solid fa-house",       exact: true },
                 {
                     label: "Kandidat",
-                    href: "/dashboard/admin/candidates",
                     icon: "fa-solid fa-users",
-                    adminCandidateHome: true,
+                    activeRules: [{ path: "/dashboard/admin/candidates" }],
                     children: [
-                        { label: "Data Diri", icon: "fa-solid fa-id-card", adminCandidateSection: "data-diri" },
-                        { label: "Data Kesehatan", icon: "fa-solid fa-heart-pulse", adminCandidateSection: "data-kesehatan" },
-                        { label: "Data Wali", icon: "fa-solid fa-people-roof", adminCandidateSection: "data-wali" },
+                        {
+                            label: "Semua Kandidat",
+                            href: "/dashboard/admin/candidates",
+                            icon: "fa-solid fa-list",
+                            activeRules: [{ path: "/dashboard/admin/candidates", exact: true, absentQuery: ["status"] }],
+                        },
+                        {
+                            label: "Draft",
+                            href: "/dashboard/admin/candidates?status=draft",
+                            icon: "fa-regular fa-pen-to-square",
+                            activeRules: [{ path: "/dashboard/admin/candidates", exact: true, query: { status: "draft" } }],
+                        },
+                        {
+                            label: "Submitted",
+                            href: "/dashboard/admin/candidates?status=submitted",
+                            icon: "fa-solid fa-inbox",
+                            activeRules: [{ path: "/dashboard/admin/candidates", exact: true, query: { status: "submitted" } }],
+                        },
+                        {
+                            label: "Verified",
+                            href: "/dashboard/admin/candidates?status=verified",
+                            icon: "fa-solid fa-circle-check",
+                            activeRules: [{ path: "/dashboard/admin/candidates", exact: true, query: { status: "verified" } }],
+                        },
+                        {
+                            label: "Diterima",
+                            href: "/dashboard/admin/candidates?status=accepted",
+                            icon: "fa-solid fa-user-check",
+                            activeRules: [{ path: "/dashboard/admin/candidates", exact: true, query: { status: "accepted" } }],
+                        },
+                        {
+                            label: "Ditolak",
+                            href: "/dashboard/admin/candidates?status=rejected",
+                            icon: "fa-solid fa-user-xmark",
+                            activeRules: [{ path: "/dashboard/admin/candidates", exact: true, query: { status: "rejected" } }],
+                        },
+                        {
+                            label: "Permintaan Perubahan",
+                            href: "/dashboard/admin/change-requests",
+                            icon: "fa-solid fa-arrows-rotate",
+                        },
                     ],
                 },
-                { label: "Permintaan Perubahan", href: "/dashboard/admin/change-requests", icon: "fa-solid fa-arrows-rotate" },
+                {
+                    label: "Verifikasi",
+                    icon: "fa-solid fa-clipboard-check",
+                    children: [
+                        {
+                            label: "Review Dokumen",
+                            href: "/dashboard/admin/candidates",
+                            icon: "fa-solid fa-file-circle-check",
+                            adminCandidateSection: "dokumen",
+                        },
+                        {
+                            label: "Review Pembayaran",
+                            href: "/dashboard/admin/candidates",
+                            icon: "fa-solid fa-money-check-dollar",
+                            adminCandidateSection: "pembayaran",
+                        },
+                        {
+                            label: "Perlu Tindakan",
+                            href: "/dashboard/admin/change-requests",
+                            icon: "fa-solid fa-triangle-exclamation",
+                        },
+                    ],
+                },
                 {
                     label: "Ujian Seleksi",
-                    href: "/dashboard/admin/exams",
                     icon: "fa-solid fa-file-pen",
+                    activeRules: [{ path: "/dashboard/admin/exams" }],
                     children: [
                         {
                             label: "Pengaturan Paket",
@@ -168,34 +310,32 @@ export const navigationConfig: Record<string, NavGroup[]> = {
                             icon: "fa-solid fa-calendar-check",
                             activePrefixes: [
                                 "/dashboard/admin/exams/sessions",
-                                "/dashboard/admin/exams/results",
                             ],
+                        },
+                        {
+                            label: "Hasil Ujian",
+                            href: "/dashboard/admin/exams/results",
+                            icon: "fa-solid fa-list-check",
                         },
                     ],
                 },
-                { label: "Laporan Umum", href: "/dashboard/admin/reports", icon: "fa-solid fa-chart-line", comingSoon: true },
+                { label: "Laporan", href: "/dashboard/admin/reports", icon: "fa-solid fa-chart-line", comingSoon: true },
             ],
         },
         {
             group: "ADMINISTRASI",
             items: [
                 { label: "Dokumen", href: "/dashboard/admin/candidates", icon: "fa-solid fa-file-lines", adminCandidateSection: "dokumen" },
-            ],
-        },
-        {
-            group: "PEMBAYARAN",
-            items: [
                 { label: "Pembayaran", href: "/dashboard/admin/candidates", icon: "fa-solid fa-credit-card", adminCandidateSection: "pembayaran" },
-                { label: "Rekap Pembayaran", href: "/dashboard/admin/payment-recap", icon: "fa-solid fa-receipt", comingSoon: true },
             ],
         },
         {
-            group: "PENGATURAN ADMIN",
+            group: "PENGATURAN",
             items: [
                 { label: "Gelombang", href: "/dashboard/admin/waves", icon: "fa-solid fa-layer-group" },
                 { label: "Program / Jalur", href: "/dashboard/admin/programs", icon: "fa-solid fa-diagram-project", comingSoon: true },
                 { label: "Staff", href: "/dashboard/admin/staff-list", icon: "fa-solid fa-user-tie" },
-                { label: "Pengaturan Sistem", href: "/dashboard/admin/settings", icon: "fa-solid fa-sliders", comingSoon: true },
+                { label: "Sistem", href: "/dashboard/admin/settings", icon: "fa-solid fa-sliders", comingSoon: true },
             ],
         },
         {

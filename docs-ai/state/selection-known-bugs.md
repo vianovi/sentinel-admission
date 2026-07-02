@@ -12,12 +12,14 @@
 - Task 4 resolved the rejected admin exam UI structure by removing the inner exam workspace sidebar and keeping the main admin sidebar as the only global navigation for `Ujian Seleksi`.
 - No known critical or high-risk admin exam UI issue remains after Task 4 static/build/test audit.
 - Task 5 resolved the critical candidate lifecycle risk where status rules were scattered across observers, document/payment review flows, webhook handling, and dashboard helpers. No known critical or high-risk lifecycle/gate issue remains after the focused Task 5 test pass.
+- Task 6 completed the dashboard shell/navigation V2 without changing backend routes or business logic. No known critical/high dashboard shell issue remains after static audit, TypeScript no-emit, production build, dashboard route list, and diff checks.
 
 ## Build or Test Failures
 
 - Phase 1 verification passed: PHP syntax, route list, migration pretend, frontend build, and feature tests.
 - Phase 2 verification passed: PHP syntax, route list, migration pretend, frontend build, Composer audit, and feature tests.
 - Task 4 verification passed for `npm run build`, `php artisan route:list --path=dashboard/admin/exams`, `php artisan test tests/Feature/OnlineSelectionExamImportTest.php`, `php artisan test tests/Feature/OnlineSelectionExamSecurityTest.php`, and `git diff --check`.
+- Task 6 verification passed for `npx tsc --noEmit`, `npm run build`, `php artisan route:list --path=dashboard`, and `git diff --check`.
 - Runtime zip support verification passed inside Docker: `php -m | grep -i zip`, `php -r "var_dump(class_exists(ZipArchive::class));"`, `php artisan test tests/Feature/OnlineSelectionExamImportTest.php`, and `php artisan test tests/Feature/OnlineSelectionExamSecurityTest.php`.
 - Dependency investigation failure intentionally handled:
   - `composer require maatwebsite/excel:^3.1.69 phpoffice/phpspreadsheet:^1.30.5 --with-all-dependencies` failed because patched PhpSpreadsheet 1.30.5 requires PHP `<8.5` while the local runtime is PHP 8.5.7.
@@ -46,5 +48,6 @@
 - Dynamic Task 2 template reads `izinkan_ujian_ulang` into `max_attempts` using a simple 1-or-2 attempt mapping. More granular retake policy would require a future product/schema decision.
 - Admin Exam V2 still uses existing backend package/session fields. A richer future teacher/retake policy would need a separate product/schema decision, not a Task 3 hotfix.
 - Playwright browser screenshot audit for Task 4 was attempted but blocked because Chrome/Chromium is not installed in this environment and `npx playwright install chrome` requires interactive sudo. Static UI audit, route list, build, and focused tests passed.
+- Playwright MCP browser audit for Task 6 was attempted after starting a local Laravel server on `127.0.0.1:8096`, but the MCP browser launch timed out twice while starting headless Firefox. Static UI audit, TypeScript no-emit, route list, build, and diff checks passed; manual browser review is still recommended.
 - Candidate lifecycle Task 5 intentionally keeps `accepted` and `rejected` as final manual statuses. Automatic sync will not overwrite them, even if a document/payment is later changed.
 - Health completion now follows the broader backend/model/dashboard requirement set: physical fields plus health-history responses. This is stricter than the old observer-only physical-field check and is documented in `docs-ai/features/candidate-status-flow.md`.

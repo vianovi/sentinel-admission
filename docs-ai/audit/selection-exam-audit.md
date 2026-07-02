@@ -2,9 +2,11 @@
 
 ## Audit Status
 
-Final Phase 5 audit completed. UX polish checkpoint completed afterward. Task 2 admin workflow/template/import refinement completed without schema changes. Task 3 XLSX runtime stabilization and Admin Exam V2 redesign completed without schema changes. Task 4 Stitch-based admin exam UI recovery completed without schema changes. Admin import workflow/template handling checkpoint completed without schema changes. Runtime XLSX zip support checkpoint completed without schema changes. Task 5 candidate lifecycle gate checkpoint completed without schema changes. No known critical or high-risk issue remains for the Online Selection Exam Engine at this checkpoint.
+Final Phase 5 audit completed. UX polish checkpoint completed afterward. Task 2 admin workflow/template/import refinement completed without schema changes. Task 3 XLSX runtime stabilization and Admin Exam V2 redesign completed without schema changes. Task 4 Stitch-based admin exam UI recovery completed without schema changes. Admin import workflow/template handling checkpoint completed without schema changes. Runtime XLSX zip support checkpoint completed without schema changes. Task 5 candidate lifecycle gate checkpoint completed without schema changes. Task 6 dashboard shell/navigation V2 completed without schema changes or business-logic changes. No known critical or high-risk issue remains for the Online Selection Exam Engine at this checkpoint.
 
 Task 5 lifecycle gate checkpoint completed on 2026-07-01. Candidate exam access is now guarded by `CandidateGateService::exam()` before session detail, start, attempt show, sync, autosave, and submit actions. The exam engine still does not change final admission accepted/rejected status automatically.
+
+Task 6 dashboard shell/navigation checkpoint completed on 2026-07-02. Candidate, staff, and admin now share a role-aware one-sidebar shell with click-expanded submenus, minimized flyouts, query-aware active states, and a cleaner topbar. Backend routes and business logic were not changed.
 
 ## Phase Audit Notes
 
@@ -241,6 +243,40 @@ Task 5 lifecycle gate checkpoint completed on 2026-07-01. Candidate exam access 
 - Direct session/attempt/start/autosave/submit routes reject when the exam gate fails.
 - Existing exam security tests were updated so verified exam candidates are verified through real lifecycle prerequisites instead of direct status assignment.
 
+### Task 6
+
+- Read `docs-ai/task/dashboard-shell.task-6.md`, `docs-ai/CORE_CONTEXT.md`, and `docs-ai/compressed/intruction_system.md`.
+- Created branch `ui/dashboard-shell-navigation-v2` from clean HEAD.
+- Safe branch cleanup:
+  - deleted fully merged local-only branches with `git branch -d`: `critical/candidate-lifecycle-gates`, `feat/candidate-dashboard`, `feat/dashboard`, `feat/online-selection-exam`, `feat/staf-dashboard`, `fix/audit-findings`, `style/layout-landing`
+  - skipped `main`, `develop`, and remote-tracking local branches
+- Used Stitch MCP project `271540505065919969`:
+  - source screen: `Pengaturan Paket Ujian (Refined)` (`02a7e0cbe81549d5ac70a2d7a8d74628`)
+  - generated role concepts: candidate, staff, and admin dashboard shells
+- Updated `resources/js/config/navigation.ts` with role-specific workflow groups and active rules.
+- Updated `resources/js/Components/Dashboard/Shared/Sidebar.tsx`:
+  - removed full-sidebar hover-open submenu behavior
+  - parent rows with children are accessible buttons, not fake links
+  - submenus open downward by click with subtle transitions
+  - active parent and active child states are distinct
+  - minimized sidebar remains icon-only and exposes compact flyouts on hover/focus
+- Updated `resources/js/Components/Dashboard/Shared/Topbar.tsx`:
+  - replaced permanent desktop search input with search icon/popover
+  - added English local-time greeting and current date
+  - removed fake unread notification badge/content
+  - preserved role-aware profile link and logout behavior
+- Removed old hover-expanded sidebar state from `resources/js/context/SidebarContext.tsx`, `resources/js/Layouts/DashboardLayout.tsx`, and `resources/js/Layouts/DashboardSplitLayout.tsx`.
+- Route decisions:
+  - omitted candidate `Status Pendaftaran` because it is only a ComingSoon route
+  - omitted staff `Sesi Ujian` and `Peserta Seleksi` because no staff routes exist
+  - split final candidate status into `Diterima` and `Ditolak` because the backend supports one `status` query at a time
+- Verification passed:
+  - `npx tsc --noEmit`
+  - `npm run build`
+  - `php artisan route:list --path=dashboard`
+  - `git diff --check`
+- Playwright MCP was available, but browser inspection was blocked because headless Firefox launch timed out twice. Static UI audit passed and manual browser review remains recommended.
+
 ## Security Review Notes
 
 - Implemented controls:
@@ -300,6 +336,11 @@ Task 5 lifecycle gate checkpoint completed on 2026-07-01. Candidate exam access 
   - Dockerfile now includes a build-time smoke check for `php -m | grep -i '^zip$'` and `class_exists(ZipArchive::class)`.
   - Running app container was rebuilt/recreated; `ZipArchive::class` now returns `true` inside the container.
   - Focused import/download and exam security tests passed inside the Docker app container.
+- Task 6 dashboard shell security/scope check confirmed:
+  - No backend route, auth, payment, document verification, exam engine, lifecycle, or schema behavior was changed.
+  - Sidebar candidate locked/gate behavior remains server-owned; no frontend gate rules were added.
+  - Navigation links only use existing real routes or documented existing ComingSoon routes.
+  - Fake candidate status, staff session, and staff participant links were not rendered.
 
 ## Out-of-Scope File Touches
 
@@ -315,6 +356,7 @@ Task 5 lifecycle gate checkpoint completed on 2026-07-01. Candidate exam access 
 - `Dockerfile`: changed only to add the PHP ZIP runtime needed by XLSX generation/import.
 - `composer.json`: Task 3 added explicit `ext-zip` platform requirement; no package architecture rewrite.
 - Task 4 frontend changes stayed inside `resources/js/Components/Dashboard/Admin/Exam` and `resources/js/Pages/Dashboard/Admin/Exam`, plus durable docs. No non-exam dashboard shell rewrite was performed.
+- Task 6 intentionally touched the shared dashboard shell: `resources/js/config/navigation.ts`, `resources/js/Components/Dashboard/Shared/Sidebar.tsx`, `resources/js/Components/Dashboard/Shared/Topbar.tsx`, `resources/js/context/SidebarContext.tsx`, `resources/js/Layouts/DashboardLayout.tsx`, and `resources/js/Layouts/DashboardSplitLayout.tsx`.
 
 ## External References Consulted
 
@@ -333,11 +375,12 @@ Task 5 lifecycle gate checkpoint completed on 2026-07-01. Candidate exam access 
 - OWASP Session Management Cheat Sheet: https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html
 - Moodle quiz settings/timing behavior: https://docs.moodle.org/en/Quiz_settings
 - Stitch MCP project `271540505065919969`: `Al-Muntaha School Admin Dashboard`
+- Stitch MCP generated Task 6 dashboard shell concepts for candidate, staff, and admin from project `271540505065919969`.
 
 ## Final Self-Audit
 
 - Backend: pass. Exam schema, models, services/actions, request validation, routes, import parsing, template generation, attempt lifecycle, scoring, and audit logging are implemented within the exam domain. Syntax, route list, feature tests, Composer platform checks, Docker image build, and `ZipArchive` checks pass.
-- Frontend: pass. Admin, candidate, and staff exam pages are built in exam-specific page/component folders, integrate existing dashboard layout/menu patterns, and `npm run build` passes. Admin Exam V2 now uses the main admin sidebar as the only global navigation layer and keeps package/session workflows inside the page body.
+- Frontend: pass. Admin, candidate, and staff exam pages are built in exam-specific page/component folders, integrate existing dashboard layout/menu patterns, and `npm run build` passes. Admin Exam V2 now uses the main admin sidebar as the only global navigation layer and keeps package/session workflows inside the page body. Task 6 updates the shared dashboard shell only and keeps one main sidebar for candidate, staff, and admin.
 - Security: pass for target medium-risk scope. Candidate ownership, role route groups, server timer, autosave lock, server-side scoring, import validation/private storage, and candidate answer-key non-disclosure are implemented and covered by focused checks. No known critical/high issue remains.
 - Product flow: pass. Admin can manage subjects/packages/sessions/imports/assignments/results; candidates can enter assigned exams, answer, autosave, submit, and expire safely; staff/admin can review results.
 - Scope firewall: pass with documented integration touches only. No auth, payment, document, profile, registration, dashboard layout, global role, or global theme rewrite was performed.

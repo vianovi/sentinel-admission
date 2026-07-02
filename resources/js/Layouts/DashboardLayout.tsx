@@ -24,11 +24,11 @@ type Props = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function LayoutInner({ children, aside, asideWidth = "280px" }: Props) {
-    const { isExpanded, isHovered } = useSidebar();
+    const { isExpanded } = useSidebar();
     const { auth } = usePage<PageProps>().props;
 
     const role   = (auth.user.role ?? "candidate") as "candidate" | "staff" | "admin";
-    const isWide = isExpanded || isHovered;
+    const isWide = isExpanded;
 
     // Auto-logout setelah 5 menit idle (testing) — ganti ke 1800/120 untuk production
     useIdleLogout({ timeoutSeconds: 300, warningSeconds: 300 })

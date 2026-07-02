@@ -3,10 +3,8 @@ import { createContext, useContext, useState, useEffect } from "react";
 type SidebarContextType = {
     isExpanded: boolean;
     isMobileOpen: boolean;
-    isHovered: boolean;
     toggleSidebar: () => void;
     toggleMobileSidebar: () => void;
-    setIsHovered: (val: boolean) => void;
 };
 
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
@@ -21,7 +19,6 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const [isExpanded, setIsExpanded] = useState(true);
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
-    const [isHovered, setIsHovered] = useState(false);
 
     useEffect(() => {
         const handleResize = () => {
@@ -42,10 +39,8 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({ child
             value={{
                 isExpanded: isMobile ? false : isExpanded,
                 isMobileOpen,
-                isHovered,
                 toggleSidebar,
                 toggleMobileSidebar,
-                setIsHovered,
             }}
         >
             {children}

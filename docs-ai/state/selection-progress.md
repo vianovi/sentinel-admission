@@ -14,6 +14,8 @@ Runtime XLSX zip support checkpoint completed on 2026-06-30: the app Docker cont
 
 Task 5 completed on 2026-07-01: candidate lifecycle/status/gate logic was centralized under `app/Services/CandidateStatus`, document/payment/exam backend gates were enforced from the server, email verification was kept separate from candidate admission status, stale draft/verification risks were covered with focused tests, and durable lifecycle documentation was added.
 
+Task 6 completed on 2026-07-02: dashboard shell navigation V2 was implemented for candidate, staff, and admin on branch `ui/dashboard-shell-navigation-v2`. The shared sidebar now uses role-based workflow groups, click-expanded submenus, minimized icon flyouts, and query-aware active states. The shared topbar now uses a cleaner greeting/date/search-icon layout. No business logic, routes, schema, or database behavior was changed.
+
 ## Completed Phases
 
 - Phase 0 — Project audit and implementation plan
@@ -41,6 +43,55 @@ Task 5 completed on 2026-07-01: candidate lifecycle/status/gate logic was centra
   - `tests/Feature/CandidateStatusFlowTest.php`
   - `tests/Feature/CandidateFeatureGateTest.php`
 - Updated existing verification and exam security tests to use realistic lifecycle-complete candidate fixtures.
+
+## Task 6 — Dashboard Shell Navigation V2
+
+- Created branch `ui/dashboard-shell-navigation-v2` from the clean HEAD.
+- Used Stitch MCP project `271540505065919969` and generated candidate, staff, and admin dashboard shell concepts from the existing `Pengaturan Paket Ujian (Refined)` screen.
+- Updated centralized navigation in `resources/js/config/navigation.ts`:
+  - candidate: roadmap-oriented grouped registration nav
+  - staff: workflow nav for candidates, verification, selection results, administration, profile
+  - admin: staff-like nav plus exam management and settings authority
+- Reworked `resources/js/Components/Dashboard/Shared/Sidebar.tsx`:
+  - no full-sidebar hover-open behavior
+  - accessible parent buttons with `aria-expanded`
+  - smooth click-expanded child menus
+  - active parent/child states
+  - minimized icon-only sidebar with compact flyout previews
+- Reworked `resources/js/Components/Dashboard/Shared/Topbar.tsx`:
+  - English time-based greeting
+  - current date display
+  - search icon with compact input popover
+  - no fake unread notification badge
+  - preserved theme/profile/logout controls
+- Removed the old hover-expanded sidebar state from `resources/js/context/SidebarContext.tsx`, `DashboardLayout`, and `DashboardSplitLayout`.
+- Created documentation:
+  - `docs-ai/design/dashboard-shell-navigation-v2.md`
+  - `docs-ai/features/dashboard-navigation-v2.md`
+- Verification passed:
+  - `npx tsc --noEmit`
+  - `npm run build`
+  - `php artisan route:list --path=dashboard`
+  - `git diff --check`
+- Playwright MCP was available but browser launch timed out while starting headless Firefox, so browser screenshot/click inspection is documented as blocked by environment.
+
+## Task 6 Files Created
+
+- docs-ai/design/dashboard-shell-navigation-v2.md
+- docs-ai/features/dashboard-navigation-v2.md
+
+## Task 6 Files Modified
+
+- resources/js/config/navigation.ts
+- resources/js/Components/Dashboard/Shared/Sidebar.tsx
+- resources/js/Components/Dashboard/Shared/Topbar.tsx
+- resources/js/context/SidebarContext.tsx
+- resources/js/Layouts/DashboardLayout.tsx
+- resources/js/Layouts/DashboardSplitLayout.tsx
+- docs-ai/state/selection-progress.md
+- docs-ai/state/selection-known-bugs.md
+- docs-ai/state/selection-next-actions.md
+- docs-ai/audit/selection-exam-audit.md
 
 ## Phase 2 Completed Work
 

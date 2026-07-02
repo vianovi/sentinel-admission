@@ -4,7 +4,7 @@
 
 Mission complete. UX polish checkpoint, Task 3 Admin Exam V2 stabilization, and Task 4 Stitch-based admin exam UI recovery are completed. No required continuation action remains for this directive.
 
-Task 5 candidate lifecycle/gate restructure is completed. The next useful task is a manual QA pass with real candidate accounts across these states: draft, submitted with unverified email, submitted with verified email, verified, accepted, and rejected.
+Task 5 candidate lifecycle/gate restructure is completed. Task 6 dashboard shell/navigation V2 is completed. The next useful task is a manual browser QA pass with real candidate, staff, and admin accounts because Playwright MCP could not launch headless Firefox in this environment.
 
 ## Instructions for Next Agent Run
 
@@ -17,6 +17,7 @@ Task 5 candidate lifecycle/gate restructure is completed. The next useful task i
 7. For browser visual audits, ensure Chrome/Chromium is installed for Playwright. Task 4 could not complete screenshot capture because this runtime has no browser and the installer required interactive sudo.
 8. For future candidate lifecycle work, start from `docs-ai/features/candidate-status-flow.md` and `docs-ai/audit/candidate-lifecycle-critical-audit.md`.
 9. Do not reintroduce required-field checks into observers/controllers/frontend props; call `CandidateStatusService`, `CandidateCompletionEvaluator`, `CandidateVerificationEvaluator`, or `CandidateGateService`.
+10. For future dashboard shell work, start from `docs-ai/features/dashboard-navigation-v2.md` and `docs-ai/design/dashboard-shell-navigation-v2.md`.
 
 ## Do Not Touch
 
@@ -31,6 +32,10 @@ Task 5 candidate lifecycle/gate restructure is completed. The next useful task i
 Task 5 exception already completed:
 - Payment/document/exam flows were touched only to centralize lifecycle sync and enforce gates.
 - Admission accepted/rejected semantics remain manual and final.
+
+Task 6 exception already completed:
+- Dashboard shell/sidebar/topbar/navigation config were changed only for navigation UX.
+- Business logic, routes, schema, database, auth/session, payment, document verification, and exam engine behavior were not changed.
 
 ## Completed Phase 5 Concrete Steps
 
@@ -60,6 +65,17 @@ Task 5 exception already completed:
 7. Updated detail-page back buttons to explicit Indonesian labels.
 8. Ran static UI audit, frontend build, admin exam route list, focused import/download test, focused security test, and diff checks.
 
+## Completed Task 6 Concrete Steps
+
+1. Created `ui/dashboard-shell-navigation-v2` from clean HEAD.
+2. Used Stitch MCP project `271540505065919969` to generate candidate, staff, and admin shell concepts.
+3. Updated centralized role-based navigation maps in `resources/js/config/navigation.ts`.
+4. Rebuilt the shared sidebar for click-expanded submenus and minimized flyout previews.
+5. Rebuilt the shared topbar with greeting/date/search-icon behavior.
+6. Created `docs-ai/design/dashboard-shell-navigation-v2.md` and `docs-ai/features/dashboard-navigation-v2.md`.
+7. Ran `npx tsc --noEmit`, `npm run build`, `php artisan route:list --path=dashboard`, and `git diff --check`.
+8. Attempted Playwright MCP browser inspection; blocked by headless Firefox launch timeout.
+
 ## Known Limitations to Document
 
 - This is not a proctoring/browser-lockdown system.
@@ -75,3 +91,4 @@ Task 5 exception already completed:
 - Consider a dedicated retake policy schema if admins need more than the current `izinkan_ujian_ulang` -> `max_attempts` 1/2 mapping.
 - Add an E2E/browser pass for the new admin exam workspace once demo data is ready, especially package detail/import and session participant workflows.
 - Install Chrome/Chromium in the local Playwright runtime before the next screenshot-based admin exam audit.
+- Re-run manual dashboard shell QA in a browser for candidate, staff, and admin: expanded sidebar, minimized sidebar flyouts, submenu click behavior, topbar search popover, and profile dropdown.

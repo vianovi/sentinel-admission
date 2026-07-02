@@ -24,11 +24,11 @@ type Props = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function LayoutInner({ children, aside, asideWidth = "280px" }: Props) {
-    const { isExpanded, isHovered } = useSidebar();
+    const { isExpanded } = useSidebar();
     const { auth } = usePage<PageProps>().props;
 
     const role   = (auth.user.role ?? "candidate") as "candidate" | "staff" | "admin";
-    const isWide = isExpanded || isHovered;
+    const isWide = isExpanded;
 
     // Auto-logout testing value (disamakan dengan DashboardLayout)
     // NOTE: production value akan di-set setelah staff dashboard selesai & tested
