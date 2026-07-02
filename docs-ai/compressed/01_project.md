@@ -1,5 +1,5 @@
-# Sentinel Admission — Project, Architecture & Environment
-> Load this file every session. Contains stable project context, architecture, environment reference, and current route/menu truth.
+# Sentinel Admission - Project, Architecture & Environment
+> Stable project reference refreshed against the current repository. Always verify source files before execution.
 
 ---
 
@@ -7,28 +7,14 @@
 
 | | Value |
 |---|---|
-| **Internal name** | `Sentinel Admission` — never shown to end users |
+| **Internal name** | `Sentinel Admission` - never shown to end users |
 | **Website brand** | `Al-Muntaha School` / `Al-Muntaha Islamic Boarding School` |
-| **APP_NAME** | `"Al-Muntaha School"` → navbar, footer, browser title |
-| **APP_TAGLINE** | `"Menuju Puncak Ilmu & Akhlak"` → sub-navbar |
+| **APP_NAME** | `"Al-Muntaha School"` - navbar, footer, browser title |
+| **APP_TAGLINE** | `"Menuju Puncak Ilmu & Akhlak"` - sub-navbar |
 | **Purpose** | Digital admission system / SPMB for Indonesian education institutions |
-| **Target users** | Islamic boarding schools, SMP/SMA/SMK, and general school admission committees |
+| **Target users** | Islamic boarding schools, SMP/SMA/SMK, and school admission committees |
 
-⚠️ The name **Sentinel** must never appear on any user-facing page.
-
----
-
-## Execution Reminder
-
-Before executing any code change, make sure the working branch is correct and aligned with the feature being built.
-
-Environment note:
-- The project runs on Fedora KDE Plasma with Fish shell.
-- Use Fish syntax. Prefer `set -gx`, never Bash `export`.
-- `dev-mode` exists for active coding / many local changes.
-- `demo-mode` exists for public access, testing with friends, and tunnel/domain demos.
-
-This file is not a real-time status tracker. It is a project reference, architecture note, and build checklist. Always verify the latest source directly before execution.
+The name **Sentinel** must not appear on user-facing pages.
 
 ---
 
@@ -36,66 +22,49 @@ This file is not a real-time status tracker. It is a project reference, architec
 
 | Layer | Technology |
 |---|---|
-| Backend | Laravel 12 |
+| Backend | Laravel 12, PHP 8.2+ |
 | Bridge | Inertia.js v2 |
-| Frontend | React + TypeScript |
-| Styling | Tailwind CSS (`darkMode: 'class'`) |
-| Animation | Anime.js |
-| Charts | Recharts |
-| UI Libraries | SweetAlert2, react-select, flatpickr |
-| Icons | Font Awesome 6 |
+| Frontend | React 18 + TypeScript |
+| Styling | Tailwind CSS 3 (`darkMode: 'class'`) |
+| Build | Vite 7 |
+| Auth scaffolding | Laravel Breeze-derived auth |
+| Tests | Pest 4 + PHPUnit config |
+| Payments | Midtrans PHP SDK + manual proof upload |
+| Excel import/export | OpenSpout |
 | Route helper | Ziggy |
 | HTTP client | Axios |
+| UI/interaction libraries | Anime.js, SweetAlert2, react-select, flatpickr |
+| Calendar | FullCalendar (`daygrid`, `timegrid`, `list`, `interaction`) |
+| Charts | Recharts |
+| PDF/image preview helpers | react-pdf, yet-another-react-lightbox |
+| Icons | Font Awesome 6 classes |
 
 ---
 
-## Color System
-
-```js
-// Brand
-navy: '#0f172a' | gold: '#d4a017' | goldhover: '#b5850b' | light: '#f1f5f9'
-
-// Shell tokens (Sidebar, Topbar)
---shell-bg:      #080d18 (dark) | #f0ebe0 (light)
---shell-surface: #0a0f1e (dark) | #faf7f0 (light)
---shell-border:  rgba(255,255,255,0.05) (dark) | rgba(0,0,0,0.06) (light)
-
-// Content tokens (DataDiri, DataKesehatan, etc.)
---content-bg:      #0d1424 (dark) | #fdf9f3 (light)
---content-surface: #111827 (dark) | #ffffff (light)
---content-card:    rgba(255,255,255,0.04) (dark) | rgba(0,0,0,0.025) (light)
---content-border:  rgba(255,255,255,0.08) (dark) | rgba(0,0,0,0.08) (light)
---content-muted:   rgba(255,255,255,0.04) (dark) | rgba(0,0,0,0.03) (light)
-```
-
-### Dashboard Accent Colors
-
-| Area | Accent |
-|---|---|
-| Candidate Data Diri | `blue-500` |
-| Candidate Data Kesehatan | `cyan-500` |
-| Candidate Data Wali | `violet-500` |
-| Candidate Dokumen | `amber-500` |
-| Candidate Pembayaran | `orange-500` |
-| Staff Dashboard | `emerald-500` |
-| Admin Dashboard | `rose-500` |
-
----
-
-## Environment & Aliases
+## Environment Reference
 
 | Item | Value |
 |---|---|
-| Shell | Fish |
-| OS | Fedora KDE Plasma |
-| Package manager | `dnf` |
+| Local OS | Fedora KDE Plasma |
+| Local shell preference | Fish aliases for Silvia's environment |
+| Current Codex shell | Bash in this workspace |
 | Project path | `/home/silinux/Documents/MyPlaygraund/Laravel-Project/sentinel-admission` |
 | Setup | Docker + Cloudflare Tunnel |
 | Domain | `spmb.playground-ku.my.id` |
-| DB | MariaDB at `172.17.0.1:3306` · DB: `sentinel_admission_db` · User: `sentinel_core` |
+| DB | MariaDB at `172.17.0.1:3306`, DB `sentinel_admission_db`, user `sentinel_core` |
 | Email | Mailtrap sandbox |
 
-### Fish Aliases
+### NPM Scripts
+
+```json
+{
+  "build": "tsc && vite build",
+  "dev": "vite",
+  "lint": "eslint resources/js --ext .js,.jsx,.ts,.tsx --ignore-path .gitignore --fix"
+}
+```
+
+### Known Fish Aliases
 
 | Alias | Action |
 |---|---|
@@ -111,29 +80,21 @@ navy: '#0f172a' | gold: '#d4a017' | goldhover: '#b5850b' | light: '#f1f5f9'
 | `tunnel-on/off` | start/stop Cloudflare tunnel |
 | `dev-mode` / `demo-mode` | swap `.env` mode + tunnel/cache handling |
 
-### ENV Files
-
-```
-.env        → active file read by Laravel
-.env.local  → dev mode config
-.env.tunnel → demo mode config (HTTPS, secure cookies)
-.env.bak    → original backup, not read by system
-```
-
 ---
 
 ## Git Branch Strategy
 
 | Branch | Purpose |
 |---|---|
-| `main` | Production-ready only. No unverified code. |
-| `develop` | Integration hub. All `feat/*` merge here first, audit before `main`. |
-| `lab-hack` | Security experiments. Intentional vulnerabilities. Never merge or push. |
-| `feat/*` | Daily work. Flow: `feat/*` → `develop` → audit → `main`. |
+| `main` | Production-ready only |
+| `develop` | Integration hub before audit/main |
+| `lab-hack` | Security experiments; never merge/push |
+| `feat/*` | Daily feature branches |
+| `critical/*` | Critical audit/fix branches |
 
-Branch may change by session. Always confirm with `git branch --show-current` before execution.
+Current branch when refreshed: `critical/candidate-lifecycle-gates`.
 
-⚠️ `config/sentinel.php` must never exist in `main` or `develop`.
+`config/sentinel.php` must not exist in `main` or `develop`.
 
 ---
 
@@ -147,184 +108,241 @@ staff
 admin
 ```
 
-Important decision:
-- Do not add global roles like `bendahara`, `operator`, `verifikator`, or `administrasi`.
-- Those are domain/menu groupings, not auth roles.
-- Staff may represent different real-world parts of the committee, but auth remains `staff`.
-- Admin has all staff domains plus admin-only system control.
+Do not add global roles like `bendahara`, `operator`, `verifikator`, or `administrasi`; those are work domains/menu groupings. Staff can represent operational committee members; admin has staff domains plus admin-only system controls.
 
-SPMB payment scope:
-- The system validates registration/initial admission payments only.
-- It is not a full treasury, accounting, cashbook, debt, installment, or finance-management system.
-- Payment data can be exported/recapped for external/internal finance workflows.
+Payment scope remains SPMB registration/initial admission payment validation, not full accounting, cashbook, debt, installment, or finance-management.
 
 ---
 
-## Database Schema
+## Database Schema - Current Core
 
-> Schema is treated as final. Any schema change requires explicit confirmation from Silvia first.
-
-### Core Tables
-
-```
-users                         → auth, role, avatar, whatsapp_number, is_active,
-                                 pending_email, pending_email_token, pending_email_requested_at
-registration_drafts           → wizard data, double key (reg_code + secret_token),
-                                 candidate_id FK, soft delete, expires_at
-candidates                    → linked user+draft+wave, full candidate data, candidate_code,
-                                 data_change_request JSON
-latest candidate data tables  → guardians, health_records, candidate_documents, payments
-admission_waves               → available_programs JSON, available_majors JSON, majors_enabled
-candidate_document_security   → magic bytes result, polyglot scan, file hash, upload IP
-```
-
-### Candidate Status Flow
+### Admission & Candidate Tables
 
 ```txt
-draft → submitted → verified → accepted / rejected
+users                         auth, role, avatar, whatsapp_number, is_active,
+                              pending_email workflow fields
+registration_drafts           wizard data, registration_code + secret_token,
+                              candidate_id FK, soft delete, expires_at
+admission_waves               wave schedule, available_programs JSON,
+                              available_majors JSON, majors_enabled
+admission_programs            program/jalur reference
+extracurriculars              extracurricular reference
+candidates                    linked user/draft/wave, identity, address,
+                              program_choice, major_choice, status,
+                              data_change_request JSON
+guardians                     parent/guardian/family data
+health_records                medical/health fields and health documents
+candidate_documents           candidate uploaded admission documents
+candidate_document_security   magic bytes, polyglot scan, file hash, upload IP
+payments                      payment records, Midtrans/manual proof status
+payment_configs               payment configuration/amounts
 ```
+
+### Calendar Tables
+
+```txt
+candidate_calendar_events     candidate/user agenda and SPMB calendar events
+candidate_calendar_settings   per-user setting, including Javanese calendar visibility
+```
+
+### Online Selection Exam Tables
+
+```txt
+exam_subjects
+exam_packages
+exam_import_batches
+exam_questions
+exam_sessions
+exam_session_candidates
+exam_attempts
+exam_attempt_answers
+exam_audit_logs
+```
+
+---
+
+## Candidate Lifecycle
+
+```txt
+draft -> submitted -> verified -> accepted / rejected
+```
+
+Lifecycle/completion logic is service-owned under:
+
+```txt
+app/Services/CandidateStatus/
+```
+
+Important classes:
+
+```txt
+CandidateCompletionEvaluator
+CandidateVerificationEvaluator
+CandidateStatusService
+CandidateGateService
+CandidateVerificationChecklist
+```
+
+Observers trigger synchronization after candidate, guardian, and health updates. Do not duplicate lifecycle rules inside page controllers.
 
 ### Candidate Code System
 
 ```txt
 registration_code: REG-{random4}-{yy}-G{wave}
 candidate_code:    CDT-{random4}-{yy}-G{wave}
-
-candidate_code is generated by replacing only the prefix:
-REG- → CDT-
 ```
 
-### Auto-Submitted Criteria via Observers
+`candidate_code` is generated by replacing only the prefix `REG-` -> `CDT-`; suffix stays identical.
 
-```txt
-candidates:     religion, program_choice
-guardians:      mother_name, income_type, father_status, mother_status, no_kk
-health_records: blood_type, rhesus, height_cm, weight_kg,
-                general_health_condition, eye_right_type, eye_left_type
-```
+---
 
-### Candidate Change Request
+## Change Request Workflows
 
-Stored in `candidates.data_change_request` as JSON.
+### Candidate Data Change
 
-Current pending format:
+Stored in `candidates.data_change_request` as JSON. Pending payload starts with:
 
 ```json
 {
   "field": "full_name",
   "old_value": "old value",
   "new_value": "new value",
-  "reason": "reason with minimum length",
+  "reason": "reason",
   "status": "pending",
   "requested_at": "ISO timestamp"
 }
 ```
 
-Allowed requested fields:
+After review it may include reviewer/process metadata:
+
+```txt
+reviewed_by, reviewed_by_name, reviewed_at, processed_at,
+processed_by, processed_by_role, rejection_reason
+```
+
+Allowed requested fields are currently:
 
 ```txt
 full_name, nisn, nik, gender, place_of_birth, date_of_birth, address_detail, school_origin
 ```
 
-Known risk:
-- `address_detail` may become string `"Array"` when old value is cast improperly.
-- Fix this during Staff/Admin `Permintaan Perubahan` workflow build.
+Staff and admin approve/reject workflows are implemented through `ChangeRequestController` and `ChangeRequestService`.
 
-### Candidate Email Change Request
+### Candidate Email Change
 
 Stored in `users`:
 
 ```txt
-email
 pending_email
 pending_email_token
+pending_email_status
+pending_email_reviewed_by
+pending_email_reviewed_at
+pending_email_rejection_reason
 pending_email_requested_at
 ```
 
-Current state:
-- Candidate can request and cancel.
-- Token is generated but final verification endpoint is not implemented yet.
-- Staff/admin approval workflow is not implemented yet.
+Current flow:
+
+```txt
+candidate requests -> staff/admin approve or reject -> candidate applies approved email from profile
+```
+
+Approval is manual verification; approved requests clear token and set `pending_email_status = approved`.
 
 ---
 
-## Controller Structure — Current Namespaces
+## Controller Structure
 
 ```txt
 app/Http/Controllers/
-├── Auth/
 ├── Admission/
+├── Auth/
 ├── Public/
+├── Webhook/
+│   └── MidtransController.php
 └── Dashboard/
     ├── Candidate/
-    │   ├── IndexController.php
-    │   ├── ProfileController.php
+    │   ├── CalendarController.php
     │   ├── DataDiriController.php
+    │   ├── DocumentController.php
+    │   ├── Exam/
     │   ├── GuardianController.php
     │   ├── HealthRecordController.php
-    │   ├── DocumentController.php
-    │   └── PaymentController.php
+    │   ├── IndexController.php
+    │   ├── PaymentController.php
+    │   └── ProfileController.php
     ├── Staff/
+    │   ├── Exam/
     │   ├── IndexController.php
     │   └── ProfileController.php
-    └── Admin/
-        ├── IndexController.php
-        ├── CandidateController.php
-        ├── WaveController.php
-        ├── StaffController.php
-        └── ProfileController.php
+    ├── Admin/
+    │   ├── Exam/
+    │   ├── CandidateController.php
+    │   ├── IndexController.php
+    │   ├── ProfileController.php
+    │   ├── StaffController.php
+    │   └── WaveController.php
+    ├── ChangeRequestController.php
+    ├── ComingSoonController.php
+    └── SecureFileController.php
 ```
 
-Older docs may mention `app/Http/Controllers/Staff/*` or `Admin/*` directly. Treat those as outdated unless source confirms otherwise.
+Older docs that mention `app/Http/Controllers/Staff/*` or `Admin/*` directly are outdated unless source confirms otherwise.
 
 ---
 
-## Frontend Structure — Current Reference
+## Frontend Structure
 
 ```txt
 resources/js/
 ├── Components/
 │   ├── Landing/
 │   ├── Dashboard/
+│   │   ├── Admin/Exam/
 │   │   ├── Candidate/
+│   │   │   ├── Calendar/
 │   │   │   ├── DataDiri/
+│   │   │   ├── DataDokumen/
 │   │   │   ├── DataKesehatan/
-│   │   │   └── Shared/
-│   │   ├── Staff/
+│   │   │   ├── DataWali/
+│   │   │   ├── Exam/
 │   │   │   ├── Index/
-│   │   │   ├── Candidates/
-│   │   │   ├── Show/
-│   │   │   ├── Profile/
+│   │   │   ├── Pembayaran/
 │   │   │   └── Shared/
+│   │   ├── ChangeRequests/
+│   │   ├── Staff/
 │   │   └── Shared/
 │   ├── UI/
 │   └── Wizard/
 ├── Layouts/
-│   ├── DashboardLayout.tsx
-│   └── DashboardSplitLayout.tsx
 └── Pages/
-    ├── Dashboard/
-    │   ├── Candidate/
-    │   ├── Staff/
-    │   ├── Admin/
-    │   └── Index.tsx
     ├── Admission/
+    ├── Auth/
+    ├── Dashboard/
+    │   ├── Admin/
+    │   │   └── Exam/
+    │   ├── Candidate/
+    │   │   └── Exam/
+    │   ├── Operations/
+    │   └── Staff/
+    │       └── Exam/
+    ├── Errors/
     └── Landing/
 ```
 
-Architecture decision:
-- Pages should be thin orchestrators.
-- Logic and UI details live inside domain components.
-- No new dashboard layout unless explicitly approved.
+Pages should stay thin orchestrators. Feature UI and logic live in domain components.
 
 ---
 
-## Routes Reference — Current Truth
+## Routes Reference
 
-### Form Wizard / Guest
+### Public & Admission
 
 ```txt
-GET/POST /daftar
+GET      /
+GET      /media/gallery/{filename}
+GET      /daftar
 POST     /daftar/check-draft
 POST     /daftar/check-duplicate
 POST     /daftar/resume
@@ -332,42 +350,60 @@ POST     /daftar/step1
 PUT      /daftar/step2/{draft}
 PUT      /daftar/step3/init/{draft}
 PUT      /daftar/step3/{draft}
-GET/POST /register
+POST     /payment/webhook
 ```
+
+`/register` routes are provided from `routes/auth.php` / auth scaffolding, not inside the admission group in `routes/web.php`.
 
 ### Candidate Dashboard
 
 ```txt
 GET       /dashboard
+
+GET       /dashboard/calendar
+GET       /dashboard/calendar/events
+POST      /dashboard/calendar/agenda
+PATCH     /dashboard/calendar/settings
+GET       /dashboard/info              ComingSoon
+GET       /dashboard/status            ComingSoon
+
+GET       /dashboard/seleksi
+GET       /dashboard/seleksi/sesi/{session}
+POST      /dashboard/seleksi/sesi/{session}/start
+GET       /dashboard/seleksi/attempts/{attempt}
+GET       /dashboard/seleksi/attempts/{attempt}/sync
+POST      /dashboard/seleksi/attempts/{attempt}/answers
+POST      /dashboard/seleksi/attempts/{attempt}/submit
+
 GET/PUT   /dashboard/profile
-POST      /dashboard/profile/avatar
+GET/POST  /dashboard/profile/avatar
 POST      /dashboard/profile/email
 DELETE    /dashboard/profile/email
+POST      /dashboard/profile/email/apply
 
 GET/PUT   /dashboard/data-diri
 POST      /dashboard/data-diri/change-request
 DELETE    /dashboard/data-diri/change-request
 
-GET/POST  /dashboard/data-wali
+GET/PUT   /dashboard/data-wali
 GET/POST  /dashboard/data-kesehatan
 POST/DEL  /dashboard/data-kesehatan/dokumen/{docType}
+GET       /dashboard/data-kesehatan/dokumen/{docType}/preview
 
 GET       /dashboard/data-dokumen
-POST      /dashboard/data-dokumen/upload
+POST      /dashboard/data-dokumen/{docType}
 GET       /dashboard/data-dokumen/preview/{document}
 GET       /dashboard/data-dokumen/download/{document}
 DELETE    /dashboard/data-dokumen/{document}
 
 GET       /dashboard/pembayaran
 POST      /dashboard/pembayaran
-POST      /dashboard/pembayaran/{payment}/proof
-POST      /dashboard/pembayaran/{payment}/cancel
+DELETE    /dashboard/pembayaran/{payment}
+POST      /dashboard/pembayaran/snap-token
+GET       /dashboard/pembayaran/status
+GET       /dashboard/pembayaran/proof/{payment}
+POST      /dashboard/pembayaran/upload-proof
 ```
-
-Status page note:
-- Candidate status is visible in the main dashboard/profile areas.
-- Dedicated `/dashboard/status` route is not active yet.
-- Sidebar `Status` should point to ComingSoon until built.
 
 ### Staff Dashboard
 
@@ -376,111 +412,172 @@ GET       /dashboard/staff
 GET       /dashboard/staff/candidates
 GET       /dashboard/staff/candidates/{candidate}
 GET       /dashboard/staff/candidates/{candidate}/{section}
+POST      /dashboard/staff/candidates/{candidate}/status
+
+GET       /dashboard/staff/change-requests
+POST      /dashboard/staff/change-requests/data/{candidate}/approve
+POST      /dashboard/staff/change-requests/data/{candidate}/reject
+POST      /dashboard/staff/change-requests/email/{candidate}/approve
+POST      /dashboard/staff/change-requests/email/{candidate}/reject
+
+GET       /dashboard/staff/exams/results
+GET       /dashboard/staff/exams/results/{attempt}
+
+GET       /dashboard/staff/reports          ComingSoon
+GET       /dashboard/staff/payment-recap    ComingSoon
+POST      /dashboard/staff/documents/{document}/verify
+GET       /dashboard/staff/documents/{document}/preview
+POST      /dashboard/staff/payments/{payment}/verify
+GET       /dashboard/staff/payments/{payment}/proof
 GET/PUT   /dashboard/staff/profile
-POST      /dashboard/staff/profile/avatar
+GET/POST  /dashboard/staff/profile/avatar
 ```
-
-Current staff capabilities:
-- Dashboard real stats/trend/recent submissions.
-- Candidate list with search, status filter, wave filter, pagination.
-- Candidate detail/show with readonly data sections.
-- Staff document preview + verify/reject is active.
-- Staff payment proof preview + verify/reject is active.
-- Staff profile show/update/avatar is active.
-
-Current staff gap:
-- No approve/reject workflow for candidate data change request.
-- No approve/reject/finalize workflow for candidate email change request.
 
 ### Admin Dashboard
 
 ```txt
 GET       /dashboard/admin
 GET       /dashboard/admin/candidates
-GET       /dashboard/admin/waves
-GET       /dashboard/admin/staff-list
-GET/PUT   /dashboard/admin/profile
-```
+GET       /dashboard/admin/candidates/{candidate}
+GET       /dashboard/admin/candidates/{candidate}/{section}
+POST      /dashboard/admin/candidates/{candidate}/status
+DELETE    /dashboard/admin/candidates/{candidate}
 
-Current admin status:
-- Admin dashboard index is functional and uses DB data.
-- Admin candidates/waves/staff/profile routes and controllers exist.
-- React pages for those admin subpages are not yet implemented, so they are not usable yet.
+GET       /dashboard/admin/waves
+POST      /dashboard/admin/waves/{wave}/toggle
+GET       /dashboard/admin/staff-list
+POST      /dashboard/admin/staff/{user}/toggle
+
+GET       /dashboard/admin/change-requests
+POST      /dashboard/admin/change-requests/data/{candidate}/approve
+POST      /dashboard/admin/change-requests/data/{candidate}/reject
+POST      /dashboard/admin/change-requests/email/{candidate}/approve
+POST      /dashboard/admin/change-requests/email/{candidate}/reject
+
+GET       /dashboard/admin/exams
+CRUD      /dashboard/admin/exams/subjects
+CRUD      /dashboard/admin/exams/packages
+POST      /dashboard/admin/exams/packages/{package}/publish
+POST      /dashboard/admin/exams/packages/{package}/close
+GET       /dashboard/admin/exams/packages/{package}/template
+GET/POST  /dashboard/admin/exams/packages/{package}/imports
+GET       /dashboard/admin/exams/imports/{batch}
+CRUD      /dashboard/admin/exams/sessions
+POST      /dashboard/admin/exams/sessions/{session}/candidates
+GET       /dashboard/admin/exams/results
+GET       /dashboard/admin/exams/results/{attempt}
+
+GET       /dashboard/admin/reports          ComingSoon
+GET       /dashboard/admin/payment-recap    ComingSoon
+GET       /dashboard/admin/programs         ComingSoon
+GET       /dashboard/admin/settings         ComingSoon
+GET/PUT   /dashboard/admin/profile
+GET/POST  /dashboard/admin/profile/avatar
+```
 
 ---
 
-## Navigation & Sidebar Policy
+## Navigation Truth
 
-### Candidate Navigation
+Source file: `resources/js/config/navigation.ts`.
+
+### Candidate
 
 ```txt
 MENU
-- Dashboard ✅
-- Kalender SPMB → ComingSoon
-- Informasi → ComingSoon
+- Dashboard
+- Kalender SPMB
+- Informasi (ComingSoon)
 
 PENDAFTARAN
-- Data Diri ✅
-- Data Kesehatan ✅
-- Data Wali ✅
-- Dokumen ✅
-- Pembayaran ✅
-- Status → ComingSoon
+- Data Diri
+- Data Kesehatan
+- Data Wali
+- Dokumen
+- Pembayaran
+- Ujian Seleksi
+- Status (ComingSoon)
 
 AKUN
-- Profil ✅
+- Profil
 ```
 
-### Staff/Admin Domain Grouping
-
-Use menu grouping by work domain, not by new auth roles.
+### Staff
 
 ```txt
 MENU
 - Dashboard
 - Kandidat
 - Permintaan Perubahan
-- Seleksi & Status
-- Laporan Umum
+- Hasil Ujian
+- Laporan Umum (ComingSoon)
 
 ADMINISTRASI
 - Dokumen
 
 PEMBAYARAN
 - Pembayaran
-- Rekap Pembayaran
-
-PENGATURAN ADMIN
-- Gelombang
-- Program / Jalur
-- Staff
-- Pengaturan Sistem
+- Rekap Pembayaran (ComingSoon)
 
 AKUN
 - Profil
 ```
 
-Build policy:
-- Active menu items must route to real pages.
-- Future menu items may stay visible but must route to ComingSoon, not 404.
-- Do not create fake features; label inactive features clearly.
+### Admin
+
+```txt
+MENU
+- Dashboard
+- Kandidat
+- Permintaan Perubahan
+- Ujian Seleksi
+- Laporan Umum (ComingSoon)
+
+ADMINISTRASI
+- Dokumen
+
+PEMBAYARAN
+- Pembayaran
+- Rekap Pembayaran (ComingSoon)
+
+PENGATURAN ADMIN
+- Gelombang
+- Program / Jalur (ComingSoon)
+- Staff
+- Pengaturan Sistem (ComingSoon)
+
+AKUN
+- Profil
+```
+
+Active items must route to real pages. Future items may stay visible but must route to ComingSoon, not 404.
 
 ---
 
-## ComingSoon Policy
+## Current Feature Status
 
-Existing references:
-- `Error Pages` already support NotFound + comingSoon mode.
-- Candidate `TabTimKesehatan.tsx` is a good visual reference for in-tab placeholder.
-
-Decision:
-- For sidebar/future menu routes, prefer one universal role-aware ComingSoon page/mode.
-- ComingSoon should work for candidate, staff, and admin dashboards.
-- It should include feature name, short description, status, and a back-to-dashboard button.
+| Area | Status |
+|---|---|
+| Landing page | Active |
+| Guest registration wizard | Active |
+| Candidate dashboard | Active |
+| Candidate calendar | Active |
+| Candidate profile/avatar/email request/apply | Active |
+| Candidate data diri/wali/kesehatan/dokumen | Active |
+| Candidate payment | Active, supports Midtrans snap token/status and manual proof upload |
+| Candidate online selection exam | Active |
+| Staff dashboard/candidate review | Active |
+| Staff document/payment verification | Active |
+| Staff/admin change request review | Active |
+| Staff exam results | Active |
+| Admin dashboard/candidates/waves/staff | Active |
+| Admin online exam management | Active |
+| Reports/payment recap/program settings/system settings | ComingSoon |
+| Dedicated candidate status page | ComingSoon |
 
 ---
 
-## Document Feature — Required Level Policy
+## Document Feature Policy
 
 | Group | Doc Types | Required Level |
 |---|---|---|
@@ -493,19 +590,19 @@ Decision:
 | boarding | parent_statement | Required UI label only |
 | boarding | recommendation_letter | Optional |
 
-`requiredLevel` is currently a UI label only. It is not a hard backend block.
+`requiredLevel` is currently a UI label/document-state signal, not a universal hard backend block unless source code for the specific flow enforces it.
 
 ---
 
-## Form Wizard — Complete Flow
+## Form Wizard Flow
 
 ```txt
-FormWizard mount → POST check-draft
-Step 1 → POST /step1
-Step 2 → PUT /step2/{draft}
-Step 3 mount → PUT /step3/init/{draft}
-Step 3 submit → PUT /step3/{draft}
-POST /register → create user + candidate + guardian → soft delete draft → auto login → dashboard
+FormWizard mount -> POST check-draft
+Step 1 -> POST /step1
+Step 2 -> PUT /step2/{draft}
+Step 3 mount -> PUT /step3/init/{draft}
+Step 3 submit -> PUT /step3/{draft}
+Register/auth flow -> create user + candidate + guardian -> soft delete draft -> auto login -> dashboard
 ```
 
 ### localStorage Keys
@@ -522,11 +619,13 @@ wizard_last_step
 
 ## Testing Accounts
 
-| Email | Role | Status |
-|---|---|---|
-| `admin@spmb.com` | Admin | dashboard index usable |
-| `staff@spmb.com` | Staff | staff dashboard usable |
-| `silvia@spmb.com` | Candidate | submitted, can access payment |
-| `rizky@spmb.com` | Candidate | draft, restricted/comingSoon behavior |
+Seeder-provided accounts historically include:
 
-Password: `password` for all accounts.
+| Email | Role |
+|---|---|
+| `admin@spmb.com` | Admin |
+| `staff@spmb.com` | Staff |
+| `silvia@spmb.com` | Candidate |
+| `rizky@spmb.com` | Candidate |
+
+Password is usually `password` for seeded local accounts. Verify seeders if login behavior matters.

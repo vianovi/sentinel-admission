@@ -1,132 +1,145 @@
 # CORE CONTEXT - SENTINEL ADMISSION
-# Berisi: 00_core + 01_project + build_rules
+# Berisi: 00_core + 01_project + build_rules reference
 
 # ============================================================
 # 00_core.md
 # ============================================================
-# LIVI — Core Identity, Workflow & Rules
-> Load this file EVERY session. This is Livi's permanent operating system.
+
+# LIVI - Core Identity, Workflow & Rules
+> Load this file every session. This is Livi's stable operating context for the Sentinel Admission project.
 
 ---
 
 ## Identity
 
-- **Name:** Livi — Senior Architecture Mentor & Lead Fullstack Engineer
-- **Partner:** Silvia's devoted coding partner. Always address developer as **"Silvia"**.
+- **Name:** Livi - Senior Architecture Mentor & Lead Fullstack Engineer
+- **Partner:** Silvia's coding partner. Address the developer as **"Silvia"** when speaking in this project context.
 - **Personality:** Warm, caring, lovingly strict ("bawel"), premium-quality obsessed
-- **Language:** English with light Indonesian mix (Indlish) — natural, never stiff
+- **Language:** English with light Indonesian mix (Indlish) - natural, never stiff
 - **Core belief:** *"We build it once, and we build it right."*
 - **Max questions per response:** 1-2. Never overwhelm.
-- **Never start coding** without Silvia's explicit approval.
-
-**Sweet warning example:**
-> *"Silvia, the code looks great, but if we structure it this way, we'll be refactoring in two weeks. Let's make it modular now, okay dear?"*
 
 ---
 
-## Mandatory Workflow — Never Skip
+## Operating Workflow
 
-```
-Step 1 — Deep Discussion    Understand what Silvia actually needs, not just what she says.
-Step 2 — Strategy           Plan approach, edge cases, scalability, security. Research if needed.
-Step 3 — Blueprint          Outline folder structure, DB schema, component tree. NO full code yet.
-Step 4 — Audit              Review blueprint for flaws, security gaps, wrong abstractions.
-Step 5 — Confirmation       Ask "Is everything okay, Silvia?" — wait for feedback.
-Step 6 — Permission Gate ⚠️ WAIT for "Execute, Livi!" or "Lanjut, Livi!" — DO NOT proceed without this.
-Step 7 — Clean Execution    Write complete, production-ready code. No placeholders, no TODOs.
+Use this workflow for new features, schema changes, risky refactors, security-sensitive work, and unclear product decisions:
+
+```txt
+Step 1 - Deep Discussion    Understand what Silvia actually needs, not only the first wording.
+Step 2 - Strategy           Plan approach, edge cases, scalability, security. Research if needed.
+Step 3 - Blueprint          Outline route/controller/model/component/data-flow before code.
+Step 4 - Audit              Review blueprint for security gaps, wrong abstractions, and missing tests.
+Step 5 - Confirmation       Ask for confirmation before high-impact product/schema changes.
+Step 6 - Clean Execution    Write complete, production-ready code. No placeholders, no TODO-driven features.
+Step 7 - Verification       Run focused checks/tests/build where practical and report the result.
 ```
 
-**Branch awareness:** Before schema changes, new features, or merges — ask:
-> *"Silvia, which branch are we on right now?"*
+For documentation maintenance, audits, and direct "please update this" tasks, execution may proceed from the explicit user request while still verifying the source truth first.
+
+**Branch awareness:** Before schema changes, new features, or merges, check:
+
+```sh
+git branch --show-current
+```
+
+Current branch when this context was refreshed: `critical/candidate-lifecycle-gates`.
 
 ---
 
 ## Non-Negotiable Rules
 
 ### Architecture
-- **Zero-Rework Policy** — no temporary code, ever. Build it pro the first time.
-- **Assembler Pattern** — Page components are lightweight. Logic lives in Tab/Sub-components.
-- **Library Policy** — add, never remove: `animejs`, `react-select`, `sweetalert2`, `flatpickr`
-- **DB Schema is FINAL** — any schema change requires explicit confirmation from Silvia first.
-- **Always request the actual file** before writing code that depends on its structure.
-- **Always generate full replacement files** — never partial snippets.
+
+- **Zero-Rework Policy** - no intentionally temporary code for production paths.
+- **Assembler Pattern** - page components stay lightweight; feature logic lives in tab/sub-components, services, or focused helpers.
+- **Library Policy** - do not remove established libraries casually: `animejs`, `react-select`, `sweetalert2`, `flatpickr`.
+- **DB Schema is controlled** - any schema change requires explicit confirmation from Silvia first.
+- **Read actual files before coding** - do not depend on memory or old docs.
+- **Prefer full, coherent edits** over patch-on-patch churn.
 
 ### Frontend
-- **Dark mode classes must be hardcoded** — never `dark:${variable}`. Always literal static classes.
-- **react-select dark mode** — always get `isDark` from `useTheme()` inside the component. Never detect from DOM. `portalProps` must be defined inside the component, not at module level.
-- **Observer loop prevention** — always use `updateQuietly()` when an observer updates the same model.
+
+- **Dark mode classes must be hardcoded** - never `dark:${variable}`. Use literal static classes.
+- **react-select dark mode** - get `isDark` from `useTheme()` inside the component. Do not detect from DOM. `portalProps` must be defined inside the component, not module scope.
+- **Dashboard pages** should remain dense, usable, and domain-focused; avoid marketing-page composition inside operational screens.
+- **Mobile-first**: touch targets minimum 44x44px, input font-size minimum 16px, test narrow widths when UI changes affect layout.
+
+### Backend & Data
+
+- **Observer loop prevention** - use quiet updates or service-owned synchronization when an observer updates related lifecycle state.
+- **Errors are silent to users** - technical details go to Laravel logs, not UI.
+- **File upload security requires layered checks:** Laravel validation, MIME/magic-byte verification, polyglot detection, UUID/storage-safe naming.
+- **RBAC on every dashboard route** - candidates can only access their own data. Never trust candidate IDs from request input without ownership checks.
+- **Candidate lifecycle logic belongs in services**, especially `App\Services\CandidateStatus\*`, not hardcoded in random controllers.
 
 ### Environment
-- **Shell is FISH** — never write Bash syntax. Use `set -gx`, never `export`.
-- **Never use `npm run dev`** in demo-mode. Use `build` or `deploy` alias only.
-- **Ask dev/demo mode** at the start of every session before giving any frontend/server instructions.
 
-### Security
-- **Errors are SILENT to users** — technical details only in Laravel logs, never exposed to users.
-- **File upload requires 4 layers:** mime validation → magic bytes → polyglot scan → UUID rename.
-- **RBAC on every route** — candidates can only access their own data. Never `Candidate::find($request->id)`.
-
-### Mobile-First
-- Touch targets minimum **44×44px**
-- Input font-size minimum **16px** (prevent iOS auto-zoom)
-- Write mobile styles first, then `sm:` / `lg:` for desktop
-- Test at 375px (iPhone SE) and 390px (iPhone 14)
+- Silvia's local project environment is Fedora KDE Plasma with Fish aliases.
+- This Codex workspace may run commands through Bash; repository instructions should be adapted to the active shell when executing.
+- For user-facing demo mode, do not casually run `npm run dev`; use the established build/deploy flow.
 
 ---
 
-## Pre-Code Checklist (Run Before Sending Any File)
+## Pre-Code Checklist
 
-```
-[ ] All div/tags balanced and closed
-[ ] Import paths correct, nothing missing
-[ ] TypeScript types complete
-[ ] No dead code or duplicated logic
-[ ] Dark mode classes hardcoded (no dynamic strings)
-[ ] Mobile-first breakpoints present (sm: / md:)
-[ ] No patch-on-patch — if >2 patches on same file without seeing result, rebuild from scratch
+```txt
+[ ] Actual file/source has been read
+[ ] Imports and route names are correct
+[ ] TypeScript types are complete enough for current usage
+[ ] No dead code or duplicated business logic
+[ ] Dark mode classes are static strings
+[ ] Mobile layout remains usable
+[ ] Security/authorization path is checked
+[ ] Tests/build run or clearly reported as not run
 ```
 
 ---
 
-## Final Decisions (Cannot Change Without Discussion)
+## Final Decisions
 
 | Decision | Value |
 |---|---|
-| `users.whatsapp_number` | From draft — not from guardians |
+| `users.whatsapp_number` | From registration draft, not guardians |
 | Guardian phones | Separate columns: `father_phone`, `mother_phone`, `guardian_phone` |
-| `candidate_code` | Replace prefix only: `REG-` → `CDT-`, suffix stays identical |
-| `program_choice` & `major_choice` | Filled after login, dynamic from `admission_waves` |
-| Guardian wali | Optional — only `mother_name` is NOT NULL |
-| Light mode polish | Not a priority — only work on it if Silvia instructs |
-| Page accent colors | blue-500 DataDiri · cyan-500 Kesehatan · violet-500 Wali · amber-500 Dokumen · orange-500 Payment |
+| `candidate_code` | Replace prefix only: `REG-` -> `CDT-`, suffix stays identical |
+| `program_choice` & `major_choice` | Filled after login, dynamic from `admission_waves` / current form options |
+| Guardian wali | Conditional/optional depending family situation; mother data remains a key requirement |
+| Light mode polish | Lower priority unless Silvia requests it |
+| Page accent colors | blue DataDiri, cyan Kesehatan, violet Wali, amber Dokumen, orange Payment |
 
 ---
 
-## Validation Rules (Frontend + Backend must be identical)
+## Validation Rules
+
+Frontend and backend validation should stay aligned. Current stable examples:
 
 | Field | Rule |
 |---|---|
-| `email` | must end with `@gmail.com` |
-| `phone_number` | `^08[0-9]{8,12}$` |
-| `family_card_number` | 16 digits |
+| `email` | valid email; registration/profile flows may further restrict domains when source code says so |
+| `phone_number` / WhatsApp | normalized Indonesian phone, usually starts with `08` after normalization |
+| `family_card_number` / `no_kk` | 16 digits |
 | `postal_code` | 5 digits |
 | `school_npsn` | 8 digits |
-| `child_order` | integer 1–20 |
-| `siblings_count` | integer 0–20 |
+| `child_order` | integer 1-20 |
+| `siblings_count` | integer 0-20 |
+
+Always verify the exact controller/form rules before editing validation copy.
 
 ---
 
 ## Migration Policy
 
-- Do NOT create new migration just to add a column if table has no data — edit existing migration.
-- Exception: if table already has data, create `add_*` migration for ALTER TABLE.
-- Always add `Schema::dropIfExists()` at the top of `up()` as orphan protection.
+- Do not create a new migration just to add a column if the table has no data and the project phase permits editing the original migration.
+- If table already has real data, create an `add_*` migration for ALTER TABLE.
+- Existing project migrations commonly include `Schema::dropIfExists()` at the top of `up()` as orphan protection; preserve the established pattern unless explicitly changing migration strategy.
 
 # ============================================================
 # 01_project.md
 # ============================================================
-# Sentinel Admission — Project, Architecture & Environment
-> Load this file every session. Contains stable project context, architecture, environment reference, and current route/menu truth.
+
+# Sentinel Admission - Project, Architecture & Environment
+> Stable project reference refreshed against the current repository. Always verify source files before execution.
 
 ---
 
@@ -134,28 +147,14 @@ Step 7 — Clean Execution    Write complete, production-ready code. No placehol
 
 | | Value |
 |---|---|
-| **Internal name** | `Sentinel Admission` — never shown to end users |
+| **Internal name** | `Sentinel Admission` - never shown to end users |
 | **Website brand** | `Al-Muntaha School` / `Al-Muntaha Islamic Boarding School` |
-| **APP_NAME** | `"Al-Muntaha School"` → navbar, footer, browser title |
-| **APP_TAGLINE** | `"Menuju Puncak Ilmu & Akhlak"` → sub-navbar |
+| **APP_NAME** | `"Al-Muntaha School"` - navbar, footer, browser title |
+| **APP_TAGLINE** | `"Menuju Puncak Ilmu & Akhlak"` - sub-navbar |
 | **Purpose** | Digital admission system / SPMB for Indonesian education institutions |
-| **Target users** | Islamic boarding schools, SMP/SMA/SMK, and general school admission committees |
+| **Target users** | Islamic boarding schools, SMP/SMA/SMK, and school admission committees |
 
-⚠️ The name **Sentinel** must never appear on any user-facing page.
-
----
-
-## Execution Reminder
-
-Before executing any code change, make sure the working branch is correct and aligned with the feature being built.
-
-Environment note:
-- The project runs on Fedora KDE Plasma with Fish shell.
-- Use Fish syntax. Prefer `set -gx`, never Bash `export`.
-- `dev-mode` exists for active coding / many local changes.
-- `demo-mode` exists for public access, testing with friends, and tunnel/domain demos.
-
-This file is not a real-time status tracker. It is a project reference, architecture note, and build checklist. Always verify the latest source directly before execution.
+The name **Sentinel** must not appear on user-facing pages.
 
 ---
 
@@ -163,66 +162,49 @@ This file is not a real-time status tracker. It is a project reference, architec
 
 | Layer | Technology |
 |---|---|
-| Backend | Laravel 12 |
+| Backend | Laravel 12, PHP 8.2+ |
 | Bridge | Inertia.js v2 |
-| Frontend | React + TypeScript |
-| Styling | Tailwind CSS (`darkMode: 'class'`) |
-| Animation | Anime.js |
-| Charts | Recharts |
-| UI Libraries | SweetAlert2, react-select, flatpickr |
-| Icons | Font Awesome 6 |
+| Frontend | React 18 + TypeScript |
+| Styling | Tailwind CSS 3 (`darkMode: 'class'`) |
+| Build | Vite 7 |
+| Auth scaffolding | Laravel Breeze-derived auth |
+| Tests | Pest 4 + PHPUnit config |
+| Payments | Midtrans PHP SDK + manual proof upload |
+| Excel import/export | OpenSpout |
 | Route helper | Ziggy |
 | HTTP client | Axios |
+| UI/interaction libraries | Anime.js, SweetAlert2, react-select, flatpickr |
+| Calendar | FullCalendar (`daygrid`, `timegrid`, `list`, `interaction`) |
+| Charts | Recharts |
+| PDF/image preview helpers | react-pdf, yet-another-react-lightbox |
+| Icons | Font Awesome 6 classes |
 
 ---
 
-## Color System
-
-```js
-// Brand
-navy: '#0f172a' | gold: '#d4a017' | goldhover: '#b5850b' | light: '#f1f5f9'
-
-// Shell tokens (Sidebar, Topbar)
---shell-bg:      #080d18 (dark) | #f0ebe0 (light)
---shell-surface: #0a0f1e (dark) | #faf7f0 (light)
---shell-border:  rgba(255,255,255,0.05) (dark) | rgba(0,0,0,0.06) (light)
-
-// Content tokens (DataDiri, DataKesehatan, etc.)
---content-bg:      #0d1424 (dark) | #fdf9f3 (light)
---content-surface: #111827 (dark) | #ffffff (light)
---content-card:    rgba(255,255,255,0.04) (dark) | rgba(0,0,0,0.025) (light)
---content-border:  rgba(255,255,255,0.08) (dark) | rgba(0,0,0,0.08) (light)
---content-muted:   rgba(255,255,255,0.04) (dark) | rgba(0,0,0,0.03) (light)
-```
-
-### Dashboard Accent Colors
-
-| Area | Accent |
-|---|---|
-| Candidate Data Diri | `blue-500` |
-| Candidate Data Kesehatan | `cyan-500` |
-| Candidate Data Wali | `violet-500` |
-| Candidate Dokumen | `amber-500` |
-| Candidate Pembayaran | `orange-500` |
-| Staff Dashboard | `emerald-500` |
-| Admin Dashboard | `rose-500` |
-
----
-
-## Environment & Aliases
+## Environment Reference
 
 | Item | Value |
 |---|---|
-| Shell | Fish |
-| OS | Fedora KDE Plasma |
-| Package manager | `dnf` |
+| Local OS | Fedora KDE Plasma |
+| Local shell preference | Fish aliases for Silvia's environment |
+| Current Codex shell | Bash in this workspace |
 | Project path | `/home/silinux/Documents/MyPlaygraund/Laravel-Project/sentinel-admission` |
 | Setup | Docker + Cloudflare Tunnel |
 | Domain | `spmb.playground-ku.my.id` |
-| DB | MariaDB at `172.17.0.1:3306` · DB: `sentinel_admission_db` · User: `sentinel_core` |
+| DB | MariaDB at `172.17.0.1:3306`, DB `sentinel_admission_db`, user `sentinel_core` |
 | Email | Mailtrap sandbox |
 
-### Fish Aliases
+### NPM Scripts
+
+```json
+{
+  "build": "tsc && vite build",
+  "dev": "vite",
+  "lint": "eslint resources/js --ext .js,.jsx,.ts,.tsx --ignore-path .gitignore --fix"
+}
+```
+
+### Known Fish Aliases
 
 | Alias | Action |
 |---|---|
@@ -238,29 +220,21 @@ navy: '#0f172a' | gold: '#d4a017' | goldhover: '#b5850b' | light: '#f1f5f9'
 | `tunnel-on/off` | start/stop Cloudflare tunnel |
 | `dev-mode` / `demo-mode` | swap `.env` mode + tunnel/cache handling |
 
-### ENV Files
-
-```
-.env        → active file read by Laravel
-.env.local  → dev mode config
-.env.tunnel → demo mode config (HTTPS, secure cookies)
-.env.bak    → original backup, not read by system
-```
-
 ---
 
 ## Git Branch Strategy
 
 | Branch | Purpose |
 |---|---|
-| `main` | Production-ready only. No unverified code. |
-| `develop` | Integration hub. All `feat/*` merge here first, audit before `main`. |
-| `lab-hack` | Security experiments. Intentional vulnerabilities. Never merge or push. |
-| `feat/*` | Daily work. Flow: `feat/*` → `develop` → audit → `main`. |
+| `main` | Production-ready only |
+| `develop` | Integration hub before audit/main |
+| `lab-hack` | Security experiments; never merge/push |
+| `feat/*` | Daily feature branches |
+| `critical/*` | Critical audit/fix branches |
 
-Branch may change by session. Always confirm with `git branch --show-current` before execution.
+Current branch when refreshed: `critical/candidate-lifecycle-gates`.
 
-⚠️ `config/sentinel.php` must never exist in `main` or `develop`.
+`config/sentinel.php` must not exist in `main` or `develop`.
 
 ---
 
@@ -274,77 +248,116 @@ staff
 admin
 ```
 
-Important decision:
-- Do not add global roles like `bendahara`, `operator`, `verifikator`, or `administrasi`.
-- Those are domain/menu groupings, not auth roles.
-- Staff may represent different real-world parts of the committee, but auth remains `staff`.
-- Admin has all staff domains plus admin-only system control.
+Do not add global roles like `bendahara`, `operator`, `verifikator`, or `administrasi`; those are work domains/menu groupings. Staff can represent operational committee members; admin has staff domains plus admin-only system controls.
 
-SPMB payment scope:
-- The system validates registration/initial admission payments only.
-- It is not a full treasury, accounting, cashbook, debt, installment, or finance-management system.
-- Payment data can be exported/recapped for external/internal finance workflows.
+Payment scope remains SPMB registration/initial admission payment validation, not full accounting, cashbook, debt, installment, or finance-management.
 
 ---
 
-## Database Schema
+## Database Schema - Current Core
 
-> Schema is treated as final. Any schema change requires explicit confirmation from Silvia first.
-
-### Core Tables
-
-```
-users                         → auth, role, avatar, whatsapp_number, is_active,
-                                 pending_email, pending_email_token, pending_email_requested_at
-registration_drafts           → wizard data, double key (reg_code + secret_token),
-                                 candidate_id FK, soft delete, expires_at
-candidates                    → linked user+draft+wave, full candidate data, candidate_code,
-                                 data_change_request JSON
-latest candidate data tables  → guardians, health_records, candidate_documents, payments
-admission_waves               → available_programs JSON, available_majors JSON, majors_enabled
-candidate_document_security   → magic bytes result, polyglot scan, file hash, upload IP
-```
-
-### Candidate Status Flow
+### Admission & Candidate Tables
 
 ```txt
-draft → submitted → verified → accepted / rejected
+users                         auth, role, avatar, whatsapp_number, is_active,
+                              pending_email workflow fields
+registration_drafts           wizard data, registration_code + secret_token,
+                              candidate_id FK, soft delete, expires_at
+admission_waves               wave schedule, available_programs JSON,
+                              available_majors JSON, majors_enabled
+admission_programs            program/jalur reference
+extracurriculars              extracurricular reference
+candidates                    linked user/draft/wave, identity, address,
+                              program_choice, major_choice, status,
+                              data_change_request JSON
+guardians                     parent/guardian/family data
+health_records                medical/health fields and health documents
+candidate_documents           candidate uploaded admission documents
+candidate_document_security   magic bytes, polyglot scan, file hash, upload IP
+payments                      payment records, Midtrans/manual proof status
+payment_configs               payment configuration/amounts
 ```
+
+### Calendar Tables
+
+```txt
+candidate_calendar_events     candidate/user agenda and SPMB calendar events
+candidate_calendar_settings   per-user setting, including Javanese calendar visibility
+```
+
+### Online Selection Exam Tables
+
+```txt
+exam_subjects
+exam_packages
+exam_import_batches
+exam_questions
+exam_sessions
+exam_session_candidates
+exam_attempts
+exam_attempt_answers
+exam_audit_logs
+```
+
+---
+
+## Candidate Lifecycle
+
+```txt
+draft -> submitted -> verified -> accepted / rejected
+```
+
+Lifecycle/completion logic is service-owned under:
+
+```txt
+app/Services/CandidateStatus/
+```
+
+Important classes:
+
+```txt
+CandidateCompletionEvaluator
+CandidateVerificationEvaluator
+CandidateStatusService
+CandidateGateService
+CandidateVerificationChecklist
+```
+
+Observers trigger synchronization after candidate, guardian, and health updates. Do not duplicate lifecycle rules inside page controllers.
 
 ### Candidate Code System
 
 ```txt
 registration_code: REG-{random4}-{yy}-G{wave}
 candidate_code:    CDT-{random4}-{yy}-G{wave}
-
-candidate_code is generated by replacing only the prefix:
-REG- → CDT-
 ```
 
-### Auto-Submitted Criteria via Observers
+`candidate_code` is generated by replacing only the prefix `REG-` -> `CDT-`; suffix stays identical.
 
-```txt
-candidates:     religion, program_choice
-guardians:      mother_name, income_type, father_status, mother_status, no_kk
-health_records: blood_type, rhesus, height_cm, weight_kg,
-                general_health_condition, eye_right_type, eye_left_type
-```
+---
 
-### Candidate Change Request
+## Change Request Workflows
 
-Stored in `candidates.data_change_request` as JSON.
+### Candidate Data Change
 
-Current pending format:
+Stored in `candidates.data_change_request` as JSON. Pending payload starts with:
 
 ```json
 {
   "field": "full_name",
   "old_value": "old value",
   "new_value": "new value",
-  "reason": "reason with minimum length",
+  "reason": "reason",
   "status": "pending",
   "requested_at": "ISO timestamp"
 }
+```
+
+After review it may include reviewer/process metadata:
+
+```txt
+reviewed_by, reviewed_by_name, reviewed_at, processed_at,
+processed_by, processed_by_role, rejection_reason
 ```
 
 Allowed requested fields:
@@ -353,105 +366,123 @@ Allowed requested fields:
 full_name, nisn, nik, gender, place_of_birth, date_of_birth, address_detail, school_origin
 ```
 
-Known risk:
-- `address_detail` may become string `"Array"` when old value is cast improperly.
-- Fix this during Staff/Admin `Permintaan Perubahan` workflow build.
+Staff and admin approve/reject workflows are implemented through `ChangeRequestController` and `ChangeRequestService`.
 
-### Candidate Email Change Request
+### Candidate Email Change
 
 Stored in `users`:
 
 ```txt
-email
 pending_email
 pending_email_token
+pending_email_status
+pending_email_reviewed_by
+pending_email_reviewed_at
+pending_email_rejection_reason
 pending_email_requested_at
 ```
 
-Current state:
-- Candidate can request and cancel.
-- Token is generated but final verification endpoint is not implemented yet.
-- Staff/admin approval workflow is not implemented yet.
+Current flow:
+
+```txt
+candidate requests -> staff/admin approve or reject -> candidate applies approved email from profile
+```
+
+Approval is manual verification; approved requests clear token and set `pending_email_status = approved`.
 
 ---
 
-## Controller Structure — Current Namespaces
+## Controller Structure
 
 ```txt
 app/Http/Controllers/
-├── Auth/
 ├── Admission/
+├── Auth/
 ├── Public/
+├── Webhook/
+│   └── MidtransController.php
 └── Dashboard/
     ├── Candidate/
-    │   ├── IndexController.php
-    │   ├── ProfileController.php
+    │   ├── CalendarController.php
     │   ├── DataDiriController.php
+    │   ├── DocumentController.php
+    │   ├── Exam/
     │   ├── GuardianController.php
     │   ├── HealthRecordController.php
-    │   ├── DocumentController.php
-    │   └── PaymentController.php
+    │   ├── IndexController.php
+    │   ├── PaymentController.php
+    │   └── ProfileController.php
     ├── Staff/
+    │   ├── Exam/
     │   ├── IndexController.php
     │   └── ProfileController.php
-    └── Admin/
-        ├── IndexController.php
-        ├── CandidateController.php
-        ├── WaveController.php
-        ├── StaffController.php
-        └── ProfileController.php
+    ├── Admin/
+    │   ├── Exam/
+    │   ├── CandidateController.php
+    │   ├── IndexController.php
+    │   ├── ProfileController.php
+    │   ├── StaffController.php
+    │   └── WaveController.php
+    ├── ChangeRequestController.php
+    ├── ComingSoonController.php
+    └── SecureFileController.php
 ```
 
-Older docs may mention `app/Http/Controllers/Staff/*` or `Admin/*` directly. Treat those as outdated unless source confirms otherwise.
+Older docs that mention `app/Http/Controllers/Staff/*` or `Admin/*` directly are outdated unless source confirms otherwise.
 
 ---
 
-## Frontend Structure — Current Reference
+## Frontend Structure
 
 ```txt
 resources/js/
 ├── Components/
 │   ├── Landing/
 │   ├── Dashboard/
+│   │   ├── Admin/Exam/
 │   │   ├── Candidate/
+│   │   │   ├── Calendar/
 │   │   │   ├── DataDiri/
+│   │   │   ├── DataDokumen/
 │   │   │   ├── DataKesehatan/
-│   │   │   └── Shared/
-│   │   ├── Staff/
+│   │   │   ├── DataWali/
+│   │   │   ├── Exam/
 │   │   │   ├── Index/
-│   │   │   ├── Candidates/
-│   │   │   ├── Show/
-│   │   │   ├── Profile/
+│   │   │   ├── Pembayaran/
 │   │   │   └── Shared/
+│   │   ├── ChangeRequests/
+│   │   ├── Staff/
 │   │   └── Shared/
 │   ├── UI/
 │   └── Wizard/
 ├── Layouts/
-│   ├── DashboardLayout.tsx
-│   └── DashboardSplitLayout.tsx
 └── Pages/
-    ├── Dashboard/
-    │   ├── Candidate/
-    │   ├── Staff/
-    │   ├── Admin/
-    │   └── Index.tsx
     ├── Admission/
+    ├── Auth/
+    ├── Dashboard/
+    │   ├── Admin/
+    │   │   └── Exam/
+    │   ├── Candidate/
+    │   │   └── Exam/
+    │   ├── Operations/
+    │   └── Staff/
+    │       └── Exam/
+    ├── Errors/
     └── Landing/
 ```
 
-Architecture decision:
-- Pages should be thin orchestrators.
-- Logic and UI details live inside domain components.
-- No new dashboard layout unless explicitly approved.
+Pages should stay thin orchestrators. Feature UI and logic live in domain components.
 
 ---
 
-## Routes Reference — Current Truth
+## Routes Reference
 
-### Form Wizard / Guest
+### Public & Admission
 
 ```txt
-GET/POST /daftar
+GET      /
+GET      /media/gallery/{filename}
+GET      /daftar
 POST     /daftar/check-draft
 POST     /daftar/check-duplicate
 POST     /daftar/resume
@@ -459,42 +490,59 @@ POST     /daftar/step1
 PUT      /daftar/step2/{draft}
 PUT      /daftar/step3/init/{draft}
 PUT      /daftar/step3/{draft}
-GET/POST /register
+POST     /payment/webhook
 ```
+
+`/register` routes are provided from `routes/auth.php` / auth scaffolding, not inside the admission group in `routes/web.php`.
 
 ### Candidate Dashboard
 
 ```txt
 GET       /dashboard
+GET       /dashboard/calendar
+GET       /dashboard/calendar/events
+POST      /dashboard/calendar/agenda
+PATCH     /dashboard/calendar/settings
+GET       /dashboard/info              ComingSoon
+GET       /dashboard/status            ComingSoon
+
+GET       /dashboard/seleksi
+GET       /dashboard/seleksi/sesi/{session}
+POST      /dashboard/seleksi/sesi/{session}/start
+GET       /dashboard/seleksi/attempts/{attempt}
+GET       /dashboard/seleksi/attempts/{attempt}/sync
+POST      /dashboard/seleksi/attempts/{attempt}/answers
+POST      /dashboard/seleksi/attempts/{attempt}/submit
+
 GET/PUT   /dashboard/profile
-POST      /dashboard/profile/avatar
+GET/POST  /dashboard/profile/avatar
 POST      /dashboard/profile/email
 DELETE    /dashboard/profile/email
+POST      /dashboard/profile/email/apply
 
 GET/PUT   /dashboard/data-diri
 POST      /dashboard/data-diri/change-request
 DELETE    /dashboard/data-diri/change-request
 
-GET/POST  /dashboard/data-wali
+GET/PUT   /dashboard/data-wali
 GET/POST  /dashboard/data-kesehatan
 POST/DEL  /dashboard/data-kesehatan/dokumen/{docType}
+GET       /dashboard/data-kesehatan/dokumen/{docType}/preview
 
 GET       /dashboard/data-dokumen
-POST      /dashboard/data-dokumen/upload
+POST      /dashboard/data-dokumen/{docType}
 GET       /dashboard/data-dokumen/preview/{document}
 GET       /dashboard/data-dokumen/download/{document}
 DELETE    /dashboard/data-dokumen/{document}
 
 GET       /dashboard/pembayaran
 POST      /dashboard/pembayaran
-POST      /dashboard/pembayaran/{payment}/proof
-POST      /dashboard/pembayaran/{payment}/cancel
+DELETE    /dashboard/pembayaran/{payment}
+POST      /dashboard/pembayaran/snap-token
+GET       /dashboard/pembayaran/status
+GET       /dashboard/pembayaran/proof/{payment}
+POST      /dashboard/pembayaran/upload-proof
 ```
-
-Status page note:
-- Candidate status is visible in the main dashboard/profile areas.
-- Dedicated `/dashboard/status` route is not active yet.
-- Sidebar `Status` should point to ComingSoon until built.
 
 ### Staff Dashboard
 
@@ -503,111 +551,171 @@ GET       /dashboard/staff
 GET       /dashboard/staff/candidates
 GET       /dashboard/staff/candidates/{candidate}
 GET       /dashboard/staff/candidates/{candidate}/{section}
+POST      /dashboard/staff/candidates/{candidate}/status
+
+GET       /dashboard/staff/change-requests
+POST      /dashboard/staff/change-requests/data/{candidate}/approve
+POST      /dashboard/staff/change-requests/data/{candidate}/reject
+POST      /dashboard/staff/change-requests/email/{candidate}/approve
+POST      /dashboard/staff/change-requests/email/{candidate}/reject
+
+GET       /dashboard/staff/exams/results
+GET       /dashboard/staff/exams/results/{attempt}
+GET       /dashboard/staff/reports          ComingSoon
+GET       /dashboard/staff/payment-recap    ComingSoon
+POST      /dashboard/staff/documents/{document}/verify
+GET       /dashboard/staff/documents/{document}/preview
+POST      /dashboard/staff/payments/{payment}/verify
+GET       /dashboard/staff/payments/{payment}/proof
 GET/PUT   /dashboard/staff/profile
-POST      /dashboard/staff/profile/avatar
+GET/POST  /dashboard/staff/profile/avatar
 ```
-
-Current staff capabilities:
-- Dashboard real stats/trend/recent submissions.
-- Candidate list with search, status filter, wave filter, pagination.
-- Candidate detail/show with readonly data sections.
-- Staff document preview + verify/reject is active.
-- Staff payment proof preview + verify/reject is active.
-- Staff profile show/update/avatar is active.
-
-Current staff gap:
-- No approve/reject workflow for candidate data change request.
-- No approve/reject/finalize workflow for candidate email change request.
 
 ### Admin Dashboard
 
 ```txt
 GET       /dashboard/admin
 GET       /dashboard/admin/candidates
-GET       /dashboard/admin/waves
-GET       /dashboard/admin/staff-list
-GET/PUT   /dashboard/admin/profile
-```
+GET       /dashboard/admin/candidates/{candidate}
+GET       /dashboard/admin/candidates/{candidate}/{section}
+POST      /dashboard/admin/candidates/{candidate}/status
+DELETE    /dashboard/admin/candidates/{candidate}
 
-Current admin status:
-- Admin dashboard index is functional and uses DB data.
-- Admin candidates/waves/staff/profile routes and controllers exist.
-- React pages for those admin subpages are not yet implemented, so they are not usable yet.
+GET       /dashboard/admin/waves
+POST      /dashboard/admin/waves/{wave}/toggle
+GET       /dashboard/admin/staff-list
+POST      /dashboard/admin/staff/{user}/toggle
+
+GET       /dashboard/admin/change-requests
+POST      /dashboard/admin/change-requests/data/{candidate}/approve
+POST      /dashboard/admin/change-requests/data/{candidate}/reject
+POST      /dashboard/admin/change-requests/email/{candidate}/approve
+POST      /dashboard/admin/change-requests/email/{candidate}/reject
+
+GET       /dashboard/admin/exams
+CRUD      /dashboard/admin/exams/subjects
+CRUD      /dashboard/admin/exams/packages
+POST      /dashboard/admin/exams/packages/{package}/publish
+POST      /dashboard/admin/exams/packages/{package}/close
+GET       /dashboard/admin/exams/packages/{package}/template
+GET/POST  /dashboard/admin/exams/packages/{package}/imports
+GET       /dashboard/admin/exams/imports/{batch}
+CRUD      /dashboard/admin/exams/sessions
+POST      /dashboard/admin/exams/sessions/{session}/candidates
+GET       /dashboard/admin/exams/results
+GET       /dashboard/admin/exams/results/{attempt}
+
+GET       /dashboard/admin/reports          ComingSoon
+GET       /dashboard/admin/payment-recap    ComingSoon
+GET       /dashboard/admin/programs         ComingSoon
+GET       /dashboard/admin/settings         ComingSoon
+GET/PUT   /dashboard/admin/profile
+GET/POST  /dashboard/admin/profile/avatar
+```
 
 ---
 
-## Navigation & Sidebar Policy
+## Navigation Truth
 
-### Candidate Navigation
+Source file: `resources/js/config/navigation.ts`.
+
+### Candidate
 
 ```txt
 MENU
-- Dashboard ✅
-- Kalender SPMB → ComingSoon
-- Informasi → ComingSoon
+- Dashboard
+- Kalender SPMB
+- Informasi (ComingSoon)
 
 PENDAFTARAN
-- Data Diri ✅
-- Data Kesehatan ✅
-- Data Wali ✅
-- Dokumen ✅
-- Pembayaran ✅
-- Status → ComingSoon
+- Data Diri
+- Data Kesehatan
+- Data Wali
+- Dokumen
+- Pembayaran
+- Ujian Seleksi
+- Status (ComingSoon)
 
 AKUN
-- Profil ✅
+- Profil
 ```
 
-### Staff/Admin Domain Grouping
-
-Use menu grouping by work domain, not by new auth roles.
+### Staff
 
 ```txt
 MENU
 - Dashboard
 - Kandidat
 - Permintaan Perubahan
-- Seleksi & Status
-- Laporan Umum
+- Hasil Ujian
+- Laporan Umum (ComingSoon)
 
 ADMINISTRASI
 - Dokumen
 
 PEMBAYARAN
 - Pembayaran
-- Rekap Pembayaran
-
-PENGATURAN ADMIN
-- Gelombang
-- Program / Jalur
-- Staff
-- Pengaturan Sistem
+- Rekap Pembayaran (ComingSoon)
 
 AKUN
 - Profil
 ```
 
-Build policy:
-- Active menu items must route to real pages.
-- Future menu items may stay visible but must route to ComingSoon, not 404.
-- Do not create fake features; label inactive features clearly.
+### Admin
+
+```txt
+MENU
+- Dashboard
+- Kandidat
+- Permintaan Perubahan
+- Ujian Seleksi
+- Laporan Umum (ComingSoon)
+
+ADMINISTRASI
+- Dokumen
+
+PEMBAYARAN
+- Pembayaran
+- Rekap Pembayaran (ComingSoon)
+
+PENGATURAN ADMIN
+- Gelombang
+- Program / Jalur (ComingSoon)
+- Staff
+- Pengaturan Sistem (ComingSoon)
+
+AKUN
+- Profil
+```
+
+Active items must route to real pages. Future items may stay visible but must route to ComingSoon, not 404.
 
 ---
 
-## ComingSoon Policy
+## Current Feature Status
 
-Existing references:
-- `Error Pages` already support NotFound + comingSoon mode.
-- Candidate `TabTimKesehatan.tsx` is a good visual reference for in-tab placeholder.
-
-Decision:
-- For sidebar/future menu routes, prefer one universal role-aware ComingSoon page/mode.
-- ComingSoon should work for candidate, staff, and admin dashboards.
-- It should include feature name, short description, status, and a back-to-dashboard button.
+| Area | Status |
+|---|---|
+| Landing page | Active |
+| Guest registration wizard | Active |
+| Candidate dashboard | Active |
+| Candidate calendar | Active |
+| Candidate profile/avatar/email request/apply | Active |
+| Candidate data diri/wali/kesehatan/dokumen | Active |
+| Candidate payment | Active, supports Midtrans snap token/status and manual proof upload |
+| Candidate online selection exam | Active |
+| Staff dashboard/candidate review | Active |
+| Staff document/payment verification | Active |
+| Staff/admin change request review | Active |
+| Staff exam results | Active |
+| Admin dashboard/candidates/waves/staff | Active |
+| Admin online exam management | Active |
+| Reports/payment recap/program settings/system settings | ComingSoon |
+| Dedicated candidate status page | ComingSoon |
 
 ---
 
-## Document Feature — Required Level Policy
+## Document Feature Policy
 
 | Group | Doc Types | Required Level |
 |---|---|---|
@@ -620,19 +728,19 @@ Decision:
 | boarding | parent_statement | Required UI label only |
 | boarding | recommendation_letter | Optional |
 
-`requiredLevel` is currently a UI label only. It is not a hard backend block.
+`requiredLevel` is currently a UI label/document-state signal, not a universal hard backend block unless source code for the specific flow enforces it.
 
 ---
 
-## Form Wizard — Complete Flow
+## Form Wizard Flow
 
 ```txt
-FormWizard mount → POST check-draft
-Step 1 → POST /step1
-Step 2 → PUT /step2/{draft}
-Step 3 mount → PUT /step3/init/{draft}
-Step 3 submit → PUT /step3/{draft}
-POST /register → create user + candidate + guardian → soft delete draft → auto login → dashboard
+FormWizard mount -> POST check-draft
+Step 1 -> POST /step1
+Step 2 -> PUT /step2/{draft}
+Step 3 mount -> PUT /step3/init/{draft}
+Step 3 submit -> PUT /step3/{draft}
+Register/auth flow -> create user + candidate + guardian -> soft delete draft -> auto login -> dashboard
 ```
 
 ### localStorage Keys
@@ -649,259 +757,30 @@ wizard_last_step
 
 ## Testing Accounts
 
-| Email | Role | Status |
-|---|---|---|
-| `admin@spmb.com` | Admin | dashboard index usable |
-| `staff@spmb.com` | Staff | staff dashboard usable |
-| `silvia@spmb.com` | Candidate | submitted, can access payment |
-| `rizky@spmb.com` | Candidate | draft, restricted/comingSoon behavior |
+Seeder-provided accounts historically include:
 
-Password: `password` for all accounts.
+| Email | Role |
+|---|---|
+| `admin@spmb.com` | Admin |
+| `staff@spmb.com` | Staff |
+| `silvia@spmb.com` | Candidate |
+| `rizky@spmb.com` | Candidate |
 
-
+Password is usually `password` for seeded local accounts. Verify seeders if login behavior matters.
 
 # ============================================================
 # build_rules.md
 # ============================================================
-# Build Rules & Performance Guidelines
-> Stack: Laravel 12 + React + Inertia.js
-> Tujuan: Menjaga performa tinggi di semua halaman, baik landing page maupun dashboard.
 
----
+Canonical file: `docs-ai/compressed/build_rules.md`.
 
-## 🖼️ 1. Gambar (Images)
+Build/performance rules remain valid and should be loaded from the canonical file to avoid duplicated stale copies. Key reminders:
 
-### Above the Fold (Hero / Banner)
-```tsx
-// ✅ Hero image — WAJIB fetchPriority high + eager
-<img
-    src="/assets/hero-background.webp"
-    alt="Deskripsi gambar"
-    fetchPriority="high"
-    loading="eager"
-    decoding="async"
-    className="w-full h-full object-cover"
-/>
-```
-
-```tsx
-// ✅ Kalau ada versi mobile, pakai <picture> + srcSet
-<picture>
-    <source media="(max-width: 768px)" srcSet="/assets/hero-mobile.webp" type="image/webp" />
-    <source media="(min-width: 769px)" srcSet="/assets/hero-desktop.webp" type="image/webp" />
-    <img
-        src="/assets/hero-desktop.webp"
-        alt="Deskripsi gambar"
-        fetchPriority="high"
-        loading="eager"
-        decoding="async"
-        className="w-full h-full object-cover"
-    />
-</picture>
-```
-
-### Below the Fold (Galeri, Fasilitas, dll)
-```tsx
-// ✅ Semua gambar di bawah fold — WAJIB lazy
-<img
-    src="/assets/foto.webp"
-    alt="Deskripsi"
-    loading="lazy"
-    decoding="async"
-/>
-```
-
-### Preload di Head (Inertia)
-```tsx
-// ✅ Di Page component (Welcome.tsx, dll) — preload hero image
-<Head title="Nama Halaman">
-    <link
-        rel="preload"
-        as="image"
-        href="/assets/hero-background.webp"
-        fetchpriority="high"
-    />
-</Head>
-```
-
-### Aturan Format
-| Kondisi | Format |
-|---|---|
-| Foto / gambar kompleks | WebP |
-| Icon sederhana | SVG inline |
-| Jangan pakai | PNG / JPG (kecuali terpaksa) |
-
-### Ukuran Gambar
-- Hero desktop: maks **1920px** lebar
-- Hero mobile: maks **768px** lebar
-- Kompres dulu di [Squoosh.app](https://squoosh.app) sebelum upload
-
----
-
-## 📦 2. Code Splitting & Lazy Loading Component
-
-### Landing Page
-Component landing page tidak perlu lazy load karena sudah di-bundle per page oleh Inertia.
-
-### Dashboard — WAJIB Lazy Load
-Semua component berat di dashboard harus di-lazy load:
-
-```tsx
-// ❌ Jangan begini
-import HeavyChart from '@/Components/Charts/RevenueChart'
-import DataTable from '@/Components/Tables/CandidateTable'
-
-// ✅ Lazy load — hanya di-load saat dibutuhkan
-import { lazy, Suspense } from 'react'
-
-const RevenueChart = lazy(() => import('@/Components/Charts/RevenueChart'))
-const CandidateTable = lazy(() => import('@/Components/Tables/CandidateTable'))
-
-// Pakenya wajib dibungkus Suspense
-<Suspense fallback={<div className="animate-pulse h-64 bg-slate-100 rounded-xl" />}>
-    <RevenueChart />
-</Suspense>
-```
-
-### Yang WAJIB di-lazy load di dashboard
-- Semua chart (grafik, diagram)
-- Semua tabel data besar
-- Modal / popup yang tidak langsung muncul
-- Component yang ada di tab yang tidak aktif
-
----
-
-## 📡 3. Data Fetching (Inertia + Laravel)
-
-### Kirim data seperlunya dari Controller
-```php
-// ❌ Jangan kirim semua data
-return Inertia::render('Dashboard/Index', [
-    'candidates' => Candidate::all(), // bisa ribuan row!
-]);
-
-// ✅ Kirim yang dibutuhkan saja + pagination
-return Inertia::render('Dashboard/Index', [
-    'candidates' => Candidate::paginate(15),
-    'stats'      => CandidateService::getSummaryStats(),
-]);
-```
-
-### Pagination — selalu dari backend
-```tsx
-// ❌ Jangan filter / paginate di frontend
-const displayed = candidates.filter(...).slice(0, 10)
-
-// ✅ Request page baru ke server via Inertia
-import { router } from '@inertiajs/react'
-
-router.get(route('dashboard.candidates'), { page: 2 }, {
-    preserveState: true,
-    preserveScroll: true,
-})
-```
-
----
-
-## ⚡ 4. Animasi
-
-### Prinsip
-- Gunakan **CSS transition/animation** untuk interaksi sederhana (hover, toggle)
-- Gunakan **animejs** hanya untuk animasi kompleks (hero entrance, cinematic effect)
-- Jangan animasi semua element sekaligus di `useEffect` mount
-
-```tsx
-// ❌ Terlalu banyak animasi di mount — block rendering
-useEffect(() => {
-    animate('.card', { opacity: [0, 1], ... }) // puluhan element sekaligus
-}, [])
-
-// ✅ Batasi hanya element above the fold
-useEffect(() => {
-    animate('.hero-animate', {
-        opacity: [0, 1],
-        translateY: [40, 0],
-        duration: 1200,
-        delay: stagger(180, { start: 200 }),
-    })
-}, [])
-
-// ✅ Untuk hover & toggle — pakai CSS Tailwind saja
-className="transition duration-300 hover:-translate-y-1"
-```
-
----
-
-## 🔤 5. Font & External Resources
-
-```html
-{{-- Di resources/views/app.blade.php --}}
-{{-- WAJIB preconnect sebelum load font --}}
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preconnect" href="https://cdnjs.cloudflare.com">
-
-{{-- Load font dengan display=swap agar tidak block render --}}
-<link href="https://fonts.googleapis.com/css2?family=...&display=swap" rel="stylesheet">
-```
-
----
-
-## 🗂️ 6. Struktur Folder
-
-```
-resources/js/
-├── Components/
-│   ├── Landing/        ← component landing page (tidak perlu lazy)
-│   ├── Dashboard/
-│   │   ├── Shared/     ← Sidebar, Topbar (load sekali, ringan)
-│   │   ├── Charts/     ← SEMUA chart → wajib lazy load
-│   │   ├── Tables/     ← SEMUA tabel → wajib lazy load + pagination
-│   │   └── [Feature]/  ← komponen spesifik per fitur
-│   └── UI/             ← komponen kecil reusable (Button, Field, dll)
-├── Pages/
-│   ├── Landing/        ← 1 file per halaman landing
-│   └── Dashboard/      ← 1 file per halaman dashboard
-```
-
----
-
-## ✅ 7. Checklist Sebelum Push
-
-### Setiap halaman baru:
-- [ ] Hero/banner image pakai `fetchPriority="high"` + `loading="eager"`
-- [ ] `<Head>` sudah ada `<link rel="preload">` untuk hero image
-- [ ] Semua gambar di bawah fold pakai `loading="lazy"` + `decoding="async"`
-- [ ] Gambar format WebP, ada versi mobile kalau ukurannya besar
-- [ ] Controller hanya kirim data yang dibutuhkan halaman itu
-- [ ] Pagination dari backend, bukan filter di frontend
-
-### Khusus halaman dashboard:
-- [ ] Chart di-lazy load dengan `Suspense`
-- [ ] Tabel besar di-lazy load dengan `Suspense`
-- [ ] Component di tab tidak aktif di-lazy load
-- [ ] Modal tidak di-render sampai dibuka (conditional render atau lazy)
-
----
-
-## 🎯 8. Target Score PageSpeed
-
-| | Mobile | Desktop |
-|---|---|---|
-| Performance | ≥ 80 | ≥ 90 |
-| Accessibility | ≥ 90 | ≥ 90 |
-| Best Practices | ≥ 90 | ≥ 90 |
-| SEO | ≥ 90 | ≥ 90 |
-
-### Metrik LCP Target
-| Metrik | Target |
-|---|---|
-| LCP (mobile) | < 4.0s |
-| LCP (desktop) | < 2.5s |
-| FCP | < 2.0s |
-| TBT | < 200ms |
-| CLS | < 0.1 |
-
----
-
-> 📌 File ini di-update setiap ada pattern baru yang ditemukan saat development.
+- Above-the-fold hero/banner images use eager loading and high fetch priority.
+- Below-the-fold images use lazy loading and async decoding.
+- Prefer WebP for complex photos and SVG only for simple icons.
+- Dashboard-heavy components such as charts, large tables, inactive tabs, and modals should be lazy-loaded where practical.
+- Controllers should send only required data; pagination belongs on the backend.
+- Use CSS transitions for simple interactions and Anime.js only for complex/cinematic animation.
+- External fonts/resources need preconnect and `display=swap`.
+- Before pushing a page, check image loading, preload needs, backend pagination, and dashboard lazy-loading expectations.
