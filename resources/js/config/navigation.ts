@@ -69,9 +69,10 @@ export const navigationConfig: Record<string, NavGroup[]> = {
         {
             group: "Menu",
             items: [
-                { label: "Dashboard",     href: "/dashboard",          icon: "fa-solid fa-house",          exact: true },
+                { label: "Dashboard", href: "/dashboard", icon: "fa-solid fa-house", exact: true },
                 { label: "Kalender SPMB", href: "/dashboard/calendar", icon: "fa-solid fa-calendar-days" },
-                { label: "Informasi",     href: "/dashboard/info",     icon: "fa-solid fa-circle-info",   comingSoon: true },
+                { label: "Pengumuman", href: "/dashboard/pengumuman", icon: "fa-solid fa-bullhorn", comingSoon: true },
+                { label: "Bantuan", href: "/dashboard/bantuan", icon: "fa-solid fa-headset", comingSoon: true },
             ],
         },
         {
@@ -87,11 +88,12 @@ export const navigationConfig: Record<string, NavGroup[]> = {
                     ],
                 },
                 {
-                    label: "Verifikasi Berkas",
+                    label: "Berkas & Pembayaran",
                     icon: "fa-solid fa-file-shield",
                     children: [
                         { label: "Dokumen", href: "/dashboard/data-dokumen", icon: "fa-solid fa-file-lines" },
                         { label: "Pembayaran", href: "/dashboard/pembayaran", icon: "fa-solid fa-credit-card" },
+                        { label: "Riwayat Pembayaran", href: "/dashboard/pembayaran/riwayat", icon: "fa-solid fa-receipt", comingSoon: true },
                     ],
                 },
                 {
@@ -99,6 +101,8 @@ export const navigationConfig: Record<string, NavGroup[]> = {
                     icon: "fa-solid fa-file-pen",
                     children: [
                         { label: "Ujian Seleksi", href: "/dashboard/seleksi", icon: "fa-solid fa-clipboard-question" },
+                        { label: "Status Seleksi", href: "/dashboard/seleksi/status", icon: "fa-solid fa-clock-rotate-left", comingSoon: true },
+                        { label: "Hasil Seleksi", href: "/dashboard/seleksi/hasil", icon: "fa-solid fa-square-poll-vertical", comingSoon: true },
                     ],
                 },
             ],

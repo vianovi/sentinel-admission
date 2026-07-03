@@ -625,16 +625,22 @@ Source file: `resources/js/config/navigation.ts`.
 MENU
 - Dashboard
 - Kalender SPMB
-- Informasi (ComingSoon)
+- Pengumuman (ComingSoon route)
+- Bantuan (ComingSoon route)
 
 PENDAFTARAN
-- Data Diri
-- Data Kesehatan
-- Data Wali
-- Dokumen
-- Pembayaran
-- Ujian Seleksi
-- Status (ComingSoon)
+- Data Pendaftaran
+  - Data Diri
+  - Data Wali
+  - Data Kesehatan
+- Berkas & Pembayaran
+  - Dokumen
+  - Pembayaran
+  - Riwayat Pembayaran (ComingSoon route)
+- Seleksi
+  - Ujian Seleksi
+  - Status Seleksi (ComingSoon route)
+  - Hasil Seleksi (ComingSoon route)
 
 AKUN
 - Profil

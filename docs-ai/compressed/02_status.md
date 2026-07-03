@@ -205,9 +205,14 @@ Build later:
 
 ### 4. ComingSoon Routing for Future Menus
 
-Active for:
-- Candidate Informasi
-- Candidate Status
+Visible as candidate sidebar items that route to ComingSoon:
+- Candidate Pengumuman
+- Candidate Bantuan
+- Candidate Riwayat Pembayaran
+- Candidate Status Seleksi
+- Candidate Hasil Seleksi
+
+Active for existing non-sidebar/fallback routes:
 - Staff/Admin Seleksi & Status
 - Staff/Admin Laporan Umum
 - Staff/Admin Rekap Pembayaran
@@ -297,7 +302,10 @@ PHASE 3 — Admin Subpages
 PHASE 4 — Candidate Status & Future Pages
 [x] Keep candidate Status page as ComingSoon and show simple status timeline on Candidate Dashboard V2
 [x] Kalender SPMB
-[ ] Informasi page
+[ ] Pengumuman page
+[ ] Bantuan page
+[ ] Candidate payment history page
+[ ] Candidate selection status/result pages
 [ ] Reports/exports when data shape is stable
 
 ## Candidate Dashboard V2 Manual Validation Checklist

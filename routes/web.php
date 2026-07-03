@@ -104,9 +104,24 @@ Route::middleware(['auth', RoleMiddleware::class . ':candidate'])
         Route::get('/info', ComingSoonController::class)
             ->defaults('feature', 'candidate.info')
             ->name('info');
+        Route::get('/pengumuman', ComingSoonController::class)
+            ->defaults('feature', 'candidate.announcements')
+            ->name('announcements');
+        Route::get('/bantuan', ComingSoonController::class)
+            ->defaults('feature', 'candidate.help')
+            ->name('help');
         Route::get('/status', ComingSoonController::class)
             ->defaults('feature', 'candidate.status')
             ->name('status');
+        Route::get('/pembayaran/riwayat', ComingSoonController::class)
+            ->defaults('feature', 'candidate.payment-history')
+            ->name('payment-history');
+        Route::get('/seleksi/status', ComingSoonController::class)
+            ->defaults('feature', 'candidate.selection-status')
+            ->name('selection-status');
+        Route::get('/seleksi/hasil', ComingSoonController::class)
+            ->defaults('feature', 'candidate.selection-result')
+            ->name('selection-result');
 
         // ── Seleksi / Online Exam ───────────────────────────────────────
         Route::prefix('seleksi')

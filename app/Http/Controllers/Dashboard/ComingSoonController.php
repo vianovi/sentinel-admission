@@ -16,11 +16,41 @@ class ComingSoonController extends Controller
             'back_url' => '/dashboard',
             'back_label' => 'Kembali ke Dashboard',
         ],
+        'candidate.announcements' => [
+            'title' => 'Pengumuman',
+            'description' => 'Halaman pengumuman kandidat sedang disiapkan agar informasi SPMB punya ruang khusus yang lebih rapi.',
+            'back_url' => '/dashboard',
+            'back_label' => 'Kembali ke Dashboard',
+        ],
+        'candidate.help' => [
+            'title' => 'Bantuan',
+            'description' => 'Pusat bantuan kandidat akan dibuka setelah alur panduan dan kanal bantuan final.',
+            'back_url' => '/dashboard',
+            'back_label' => 'Kembali ke Dashboard',
+        ],
         'candidate.status' => [
             'title' => 'Status Pendaftaran',
             'description' => 'Status kandidat masih ditampilkan di dashboard utama sampai halaman khususnya siap.',
             'back_url' => '/dashboard',
             'back_label' => 'Kembali ke Dashboard',
+        ],
+        'candidate.payment-history' => [
+            'title' => 'Riwayat Pembayaran',
+            'description' => 'Riwayat pembayaran kandidat sedang dipisahkan ke halaman khusus agar pelacakan transaksi lebih nyaman.',
+            'back_url' => '/dashboard/pembayaran',
+            'back_label' => 'Kembali ke Pembayaran',
+        ],
+        'candidate.selection-status' => [
+            'title' => 'Status Seleksi',
+            'description' => 'Status seleksi tetap dikendalikan backend dan akan tampil di halaman khusus setelah alurnya final.',
+            'back_url' => '/dashboard/seleksi',
+            'back_label' => 'Kembali ke Ujian Seleksi',
+        ],
+        'candidate.selection-result' => [
+            'title' => 'Hasil Seleksi',
+            'description' => 'Halaman hasil seleksi kandidat sedang dipersiapkan agar pengumuman hasil punya tampilan yang lebih jelas.',
+            'back_url' => '/dashboard/seleksi',
+            'back_label' => 'Kembali ke Ujian Seleksi',
         ],
         'staff.selection-status' => [
             'title' => 'Seleksi & Status',
