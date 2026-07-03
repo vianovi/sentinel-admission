@@ -102,6 +102,7 @@ export default function Sidebar({ role }: Props) {
     const isCollapsed = !isVisible;
     const groups: NavGroup[] = navigationConfig[role] ?? [];
     const currentUrl = useMemo(() => parseNavUrl(url), [url]);
+    const hasFocusedMenu = useMemo(() => Object.values(openMenus).some(Boolean), [openMenus]);
 
     const staffCandidateIdFromUrl = useMemo(() => {
         const match = currentUrl.path.match(/^\/dashboard\/staff\/candidates\/(\d+)/);
@@ -156,6 +157,7 @@ export default function Sidebar({ role }: Props) {
 
     useEffect(() => {
         setFlyout(null);
+        setOpenMenus({});
     }, [isVisible, role, url]);
 
     useEffect(() => {
@@ -258,11 +260,14 @@ export default function Sidebar({ role }: Props) {
         return children?.some(isSubItemActive) ?? false;
     }, [isSubItemActive]);
 
-    const toggleSubmenu = useCallback((key: string, active: boolean) => {
-        setOpenMenus((prev) => ({
-            ...prev,
-            [key]: active ? true : !prev[key],
-        }));
+    const toggleSubmenu = useCallback((key: string) => {
+        setOpenMenus((prev) => {
+            if (prev[key]) {
+                return {};
+            }
+
+            return { [key]: true };
+        });
     }, []);
 
     const clearFlyoutTimer = useCallback(() => {
@@ -300,7 +305,7 @@ export default function Sidebar({ role }: Props) {
         if (!visible) return null;
 
         return (
-            <span className="ml-auto rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-500">
+            <span className="ml-auto rounded-full border border-gold/25 bg-gold/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-goldhover dark:border-gold/20 dark:bg-gold/10 dark:text-gold">
                 Soon
             </span>
         );
@@ -313,10 +318,10 @@ export default function Sidebar({ role }: Props) {
         const waitingForCandidate = Boolean(candidateSection && !activeCandidateId);
         const disabled = Boolean(subItem.disabled || !href);
         const className = [
-            "flex min-h-9 items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gold/45",
+            "flex min-h-9 items-center gap-2 rounded-2xl px-3 py-2 text-xs font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/20 dark:focus-visible:ring-gold/15",
             subActive
-                ? "border-gold/35 bg-gold/10 text-gold"
-                : "border-transparent text-slate-500 hover:border-slate-200 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-slate-200",
+                ? "bg-gold/10 text-goldhover shadow-sm dark:bg-gold/10 dark:text-gold"
+                : "text-slate-500 hover:bg-slate-100 hover:text-goldhover dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-gold",
             disabled ? "cursor-not-allowed opacity-55" : "",
             childOpen ? "translate-x-0 opacity-100" : "-translate-x-2 opacity-0",
         ].join(" ");
@@ -397,7 +402,7 @@ export default function Sidebar({ role }: Props) {
             {isVisible && (
                 <div className="px-4 pb-2 pt-4">
                     <span className={`
-                        inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1
+                        inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1
                         text-[11px] font-semibold
                         ${roleBadgeClass[role]}
                     `}>
@@ -428,20 +433,20 @@ export default function Sidebar({ role }: Props) {
                                 const waitingForCandidate = Boolean(candidateSection && !activeCandidateId);
                                 const childActive = isChildrenActive(item.children);
                                 const active = !item.disabled && (isItemActive(item) || childActive);
-                                const childOpen = hasChildren && isVisible && (active || openMenus[itemKey]);
+                                const childOpen = hasChildren && isVisible && (hasFocusedMenu ? Boolean(openMenus[itemKey]) : active);
                                 const disabled = Boolean(item.disabled || (!hasChildren && !itemHref));
                                 const baseItemClass = [
-                                    "relative flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-gold/45",
+                                    "relative flex min-h-11 w-full items-center gap-3 rounded-[1.35rem] px-3 py-2.5 text-sm font-semibold transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/20 dark:focus-visible:ring-gold/15",
                                     active
-                                        ? "bg-gold text-navy shadow-glow"
+                                        ? "bg-gold/10 text-goldhover shadow-sm ring-1 ring-gold/20 dark:bg-gold/10 dark:text-gold dark:ring-gold/10"
                                         : disabled
                                             ? "cursor-not-allowed text-slate-400/55 dark:text-slate-500/80"
-                                            : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-white",
+                                            : "text-slate-600 hover:bg-slate-100 hover:text-goldhover dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-gold",
                                     !isVisible ? "justify-center" : "",
                                 ].join(" ");
                                 const itemContent = (
                                     <>
-                                        <i className={`${item.icon} shrink-0 text-[15px] ${active ? "text-navy" : ""}`}></i>
+                                        <i className={`${item.icon} shrink-0 text-[15px] ${active ? "text-goldhover dark:text-gold" : ""}`}></i>
                                         {isVisible && (
                                             <>
                                                 <span className="truncate">{item.label}</span>
@@ -470,14 +475,14 @@ export default function Sidebar({ role }: Props) {
                                             <button
                                                 type="button"
                                                 className={baseItemClass}
-                                                onClick={() => toggleSubmenu(itemKey, active)}
+                                                onClick={() => toggleSubmenu(itemKey)}
                                                 aria-expanded={childOpen}
                                                 aria-controls={submenuId}
                                                 title={!isVisible ? item.label : undefined}
                                             >
                                                 {itemContent}
                                                 {isVisible && (
-                                                    <i className={`fa-solid fa-chevron-down ml-auto shrink-0 text-[10px] transition-transform duration-200 ${childOpen ? "rotate-180" : ""}`}></i>
+                                                    <i className={`fa-solid fa-chevron-down ml-auto shrink-0 text-[10px] transition-transform duration-200 ${childOpen ? "rotate-180 text-goldhover dark:text-gold" : ""}`}></i>
                                                 )}
                                             </button>
                                         ) : disabled ? (
@@ -529,7 +534,7 @@ export default function Sidebar({ role }: Props) {
                 <button
                     type="button"
                     onClick={toggleSidebar}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-500 transition hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-gold/45 dark:bg-white/5 dark:text-slate-400 dark:hover:bg-white/10"
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-gold/10 hover:text-goldhover focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/20 dark:bg-white/5 dark:text-slate-400 dark:hover:bg-gold/10 dark:hover:text-gold dark:focus-visible:ring-gold/15"
                     title={isVisible ? "Minimize sidebar" : "Expand sidebar"}
                     aria-label={isVisible ? "Minimize sidebar" : "Expand sidebar"}
                 >
@@ -539,7 +544,7 @@ export default function Sidebar({ role }: Props) {
 
             {flyout && isCollapsed && (
                 <div
-                    className="fixed left-[76px] z-[60] w-64 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl dark:border-white/10 dark:bg-slate-900"
+                    className="fixed left-[76px] z-[60] w-64 overflow-hidden rounded-[1.35rem] border border-slate-200 bg-white shadow-xl dark:border-white/10 dark:bg-slate-900"
                     style={{ top: flyout.top }}
                     onMouseEnter={clearFlyoutTimer}
                     onMouseLeave={closeFlyoutSoon}
@@ -547,7 +552,7 @@ export default function Sidebar({ role }: Props) {
                     <div className={[
                         "flex items-center gap-3 border-b px-3 py-3 dark:border-white/10",
                         flyout.active
-                            ? "border-gold/20 bg-gold/10 text-gold"
+                            ? "border-gold/20 bg-gold/10 text-goldhover dark:border-gold/10 dark:bg-gold/10 dark:text-gold"
                             : "border-slate-100 text-slate-700 dark:text-slate-100",
                     ].join(" ")}>
                         <i className={`${flyout.item.icon} shrink-0 text-sm`}></i>
