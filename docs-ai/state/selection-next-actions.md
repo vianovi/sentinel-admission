@@ -4,7 +4,7 @@
 
 Mission complete. UX polish checkpoint, Task 3 Admin Exam V2 stabilization, and Task 4 Stitch-based admin exam UI recovery are completed. No required continuation action remains for this directive.
 
-Task 5 candidate lifecycle/gate restructure is completed. Task 6 dashboard shell/navigation V2 is completed. The next useful task is a manual browser QA pass with real candidate, staff, and admin accounts because Playwright MCP could not launch headless Firefox in this environment.
+Task 5 candidate lifecycle/gate restructure is completed. Task 6 dashboard shell/navigation V2 is completed. Status Pendaftaran Center is completed. Candidate Panel Gold is completed for the candidate sidebar pages that were previously missing. The next useful task is a manual browser QA pass with real candidate, staff, and admin accounts.
 
 ## Instructions for Next Agent Run
 
@@ -18,6 +18,8 @@ Task 5 candidate lifecycle/gate restructure is completed. Task 6 dashboard shell
 8. For future candidate lifecycle work, start from `docs-ai/features/candidate-status-flow.md` and `docs-ai/audit/candidate-lifecycle-critical-audit.md`.
 9. Do not reintroduce required-field checks into observers/controllers/frontend props; call `CandidateStatusService`, `CandidateCompletionEvaluator`, `CandidateVerificationEvaluator`, or `CandidateGateService`.
 10. For future dashboard shell work, start from `docs-ai/features/dashboard-navigation-v2.md` and `docs-ai/design/dashboard-shell-navigation-v2.md`.
+11. For future Status Pendaftaran work, start from `docs-ai/features/status-pendaftaran.md` and `docs-ai/audit/status-pendaftaran-audit.md`.
+12. For future candidate panel/menu work, start from `docs-ai/features/candidate-panel-gold.md` and verify whether the sidebar entry already has a real page before adding a placeholder.
 
 ## Do Not Touch
 
@@ -36,6 +38,15 @@ Task 5 exception already completed:
 Task 6 exception already completed:
 - Dashboard shell/sidebar/topbar/navigation config were changed only for navigation UX.
 - Business logic, routes, schema, database, auth/session, payment, document verification, and exam engine behavior were not changed.
+
+Status Pendaftaran exception already completed:
+- Candidate/status routes, read-model service, React pages/components, and status entry links were added.
+- Lifecycle semantics, schema, payment/document/exam business rules, and accepted/rejected behavior were not changed.
+
+Candidate Panel Gold exception already completed:
+- Candidate Bantuan, Riwayat Pembayaran, Status Seleksi, and Hasil Seleksi routes/pages were activated from the candidate sidebar.
+- The work added read-only services/controllers/pages and focused tests only.
+- Payment metadata, exam answer keys, lifecycle semantics, schema, and accepted/rejected behavior were not changed.
 
 ## Completed Phase 5 Concrete Steps
 
@@ -76,6 +87,26 @@ Task 6 exception already completed:
 7. Ran `npx tsc --noEmit`, `npm run build`, `php artisan route:list --path=dashboard`, and `git diff --check`.
 8. Attempted Playwright MCP browser inspection; blocked by headless Firefox launch timeout.
 
+## Completed Status Pendaftaran Concrete Steps
+
+1. Added `StatusPendaftaranService` as backend read-model assembler.
+2. Added candidate route/page `/dashboard/status-pendaftaran`.
+3. Redirected legacy `/dashboard/status` to the new page.
+4. Added staff/admin per-candidate status routes and page.
+5. Added candidate sidebar entry and staff/admin candidate table/detail actions.
+6. Added focused feature tests for access, payload privacy, and gate reason behavior.
+7. Ran targeted feature test, lifecycle/gate regression tests, production frontend build, dashboard route list, and diff whitespace check.
+
+## Completed Candidate Panel Gold Concrete Steps
+
+1. Audited the candidate sidebar and confirmed the missing/placeholder menu items.
+2. Added real routes/controllers for Bantuan, Riwayat Pembayaran, Status Seleksi, and Hasil Seleksi.
+3. Added `app/Services/CandidatePanel` read-model services with authenticated-candidate scoping and constrained selected columns/eager loading.
+4. Added reusable candidate panel UI components with dark navy + gold visual language.
+5. Updated candidate navigation so those items are no longer Coming Soon.
+6. Added `tests/Feature/CandidatePanelGoldFeatureTest.php` for route/component coverage and payment metadata privacy.
+7. Updated durable documentation in `docs-ai/features/candidate-panel-gold.md`.
+
 ## Known Limitations to Document
 
 - This is not a proctoring/browser-lockdown system.
@@ -92,3 +123,5 @@ Task 6 exception already completed:
 - Add an E2E/browser pass for the new admin exam workspace once demo data is ready, especially package detail/import and session participant workflows.
 - Install Chrome/Chromium in the local Playwright runtime before the next screenshot-based admin exam audit.
 - Re-run manual dashboard shell QA in a browser for candidate, staff, and admin: expanded sidebar, minimized sidebar flyouts, submenu click behavior, topbar search popover, and profile dropdown.
+- Manually QA Status Pendaftaran in a browser for candidate, staff, and admin accounts, especially mobile checklist readability and internal quick-link flow.
+- Manually QA Candidate Panel Gold pages in a browser with real candidate data, especially empty states, payment ledger pagination, selection-session states, and result visibility.

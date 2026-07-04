@@ -9,9 +9,15 @@ use App\Http\Controllers\Dashboard\Candidate\HealthRecordController as Candidate
 use App\Http\Controllers\Dashboard\Candidate\GuardianController   as CandidateGuardian;
 use App\Http\Controllers\Dashboard\Candidate\DocumentController   as CandidateDocument;
 use App\Http\Controllers\Dashboard\Candidate\PaymentController    as CandidatePayment;
+use App\Http\Controllers\Dashboard\Candidate\HelpController       as CandidateHelp;
+use App\Http\Controllers\Dashboard\Candidate\PaymentHistoryController as CandidatePaymentHistory;
+use App\Http\Controllers\Dashboard\Candidate\SelectionStatusController as CandidateSelectionStatus;
+use App\Http\Controllers\Dashboard\Candidate\SelectionResultController as CandidateSelectionResult;
+use App\Http\Controllers\Dashboard\Candidate\StatusPendaftaranController as CandidateStatusPendaftaran;
 use App\Http\Controllers\Dashboard\ChangeRequestController;
 use App\Http\Controllers\Dashboard\ComingSoonController;
 use App\Http\Controllers\Dashboard\SecureFileController;
+use App\Http\Controllers\Dashboard\StatusPendaftaranController    as InternalStatusPendaftaran;
 use App\Http\Controllers\Dashboard\Staff\IndexController          as StaffDashboard;
 use App\Http\Controllers\Dashboard\Staff\ProfileController        as StaffProfile;
 use App\Http\Controllers\Dashboard\Staff\Exam\ResultController    as StaffExamResult;
@@ -107,20 +113,17 @@ Route::middleware(['auth', RoleMiddleware::class . ':candidate'])
         Route::get('/pengumuman', ComingSoonController::class)
             ->defaults('feature', 'candidate.announcements')
             ->name('announcements');
-        Route::get('/bantuan', ComingSoonController::class)
-            ->defaults('feature', 'candidate.help')
+        Route::get('/bantuan', [CandidateHelp::class, 'show'])
             ->name('help');
-        Route::get('/status', ComingSoonController::class)
-            ->defaults('feature', 'candidate.status')
+        Route::get('/status', fn () => redirect()->route('dashboard.status-pendaftaran'))
             ->name('status');
-        Route::get('/pembayaran/riwayat', ComingSoonController::class)
-            ->defaults('feature', 'candidate.payment-history')
+        Route::get('/status-pendaftaran', [CandidateStatusPendaftaran::class, 'show'])
+            ->name('status-pendaftaran');
+        Route::get('/pembayaran/riwayat', [CandidatePaymentHistory::class, 'index'])
             ->name('payment-history');
-        Route::get('/seleksi/status', ComingSoonController::class)
-            ->defaults('feature', 'candidate.selection-status')
+        Route::get('/seleksi/status', [CandidateSelectionStatus::class, 'show'])
             ->name('selection-status');
-        Route::get('/seleksi/hasil', ComingSoonController::class)
-            ->defaults('feature', 'candidate.selection-result')
+        Route::get('/seleksi/hasil', [CandidateSelectionResult::class, 'show'])
             ->name('selection-result');
 
         // ── Seleksi / Online Exam ───────────────────────────────────────
@@ -261,6 +264,11 @@ Route::middleware(['auth', RoleMiddleware::class . ':staff'])
             ->missing(fn () => redirect()
                 ->route('staff.candidates.index')
                 ->with('error', 'Kandidat yang dipilih tidak ditemukan atau sudah tidak tersedia.'));
+        Route::get('/candidates/{candidate}/status-pendaftaran', [InternalStatusPendaftaran::class, 'show'])
+            ->name('candidates.status-pendaftaran')
+            ->missing(fn () => redirect()
+                ->route('staff.candidates.index')
+                ->with('error', 'Kandidat yang dipilih tidak ditemukan atau sudah tidak tersedia.'));
         Route::get('/candidates/{candidate}/health-documents/{docType}', [SecureFileController::class, 'staffHealthDocumentPreview'])
             ->where('docType', 'chronic-disease|surat-sehat|bpjs-card|vaccine-card')
             ->middleware('throttle:sensitive-file')
@@ -355,6 +363,11 @@ Route::middleware(['auth', RoleMiddleware::class . ':admin'])
             ->name('candidates.index');
         Route::get('/candidates/{candidate}', [StaffDashboard::class, 'show'])
             ->name('candidates.show')
+            ->missing(fn () => redirect()
+                ->route('admin.candidates.index')
+                ->with('error', 'Kandidat yang dipilih tidak ditemukan atau sudah tidak tersedia.'));
+        Route::get('/candidates/{candidate}/status-pendaftaran', [InternalStatusPendaftaran::class, 'show'])
+            ->name('candidates.status-pendaftaran')
             ->missing(fn () => redirect()
                 ->route('admin.candidates.index')
                 ->with('error', 'Kandidat yang dipilih tidak ditemukan atau sudah tidak tersedia.'));

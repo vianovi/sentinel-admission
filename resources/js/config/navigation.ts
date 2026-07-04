@@ -32,8 +32,10 @@ export type NavItem = {
     comingSoon?: boolean;
     activeRules?: NavActiveRule[];
     staffCandidateHome?: boolean;
+    staffCandidateStatus?: boolean;
     staffCandidateSection?: CandidateSection;
     adminCandidateHome?: boolean;
+    adminCandidateStatus?: boolean;
     adminCandidateSection?: CandidateSection;
     children?: NavSubItem[];
 };
@@ -47,7 +49,9 @@ export type NavSubItem = {
     comingSoon?: boolean;
     activePrefixes?: string[];
     activeRules?: NavActiveRule[];
+    staffCandidateStatus?: boolean;
     staffCandidateSection?: CandidateSection;
+    adminCandidateStatus?: boolean;
     adminCandidateSection?: CandidateSection;
 };
 
@@ -70,9 +74,9 @@ export const navigationConfig: Record<string, NavGroup[]> = {
             group: "Menu",
             items: [
                 { label: "Dashboard", href: "/dashboard", icon: "fa-solid fa-house", exact: true },
+                { label: "Status Pendaftaran", href: "/dashboard/status-pendaftaran", icon: "fa-solid fa-list-check" },
                 { label: "Kalender SPMB", href: "/dashboard/calendar", icon: "fa-solid fa-calendar-days" },
-                { label: "Pengumuman", href: "/dashboard/pengumuman", icon: "fa-solid fa-bullhorn", comingSoon: true },
-                { label: "Bantuan", href: "/dashboard/bantuan", icon: "fa-solid fa-headset", comingSoon: true },
+                { label: "Bantuan", href: "/dashboard/bantuan", icon: "fa-solid fa-headset" },
             ],
         },
         {
@@ -93,7 +97,7 @@ export const navigationConfig: Record<string, NavGroup[]> = {
                     children: [
                         { label: "Dokumen", href: "/dashboard/data-dokumen", icon: "fa-solid fa-file-lines" },
                         { label: "Pembayaran", href: "/dashboard/pembayaran", icon: "fa-solid fa-credit-card" },
-                        { label: "Riwayat Pembayaran", href: "/dashboard/pembayaran/riwayat", icon: "fa-solid fa-receipt", comingSoon: true },
+                        { label: "Riwayat Pembayaran", href: "/dashboard/pembayaran/riwayat", icon: "fa-solid fa-receipt" },
                     ],
                 },
                 {
@@ -101,8 +105,8 @@ export const navigationConfig: Record<string, NavGroup[]> = {
                     icon: "fa-solid fa-file-pen",
                     children: [
                         { label: "Ujian Seleksi", href: "/dashboard/seleksi", icon: "fa-solid fa-clipboard-question" },
-                        { label: "Status Seleksi", href: "/dashboard/seleksi/status", icon: "fa-solid fa-clock-rotate-left", comingSoon: true },
-                        { label: "Hasil Seleksi", href: "/dashboard/seleksi/hasil", icon: "fa-solid fa-square-poll-vertical", comingSoon: true },
+                        { label: "Status Seleksi", href: "/dashboard/seleksi/status", icon: "fa-solid fa-clock-rotate-left" },
+                        { label: "Hasil Seleksi", href: "/dashboard/seleksi/hasil", icon: "fa-solid fa-square-poll-vertical" },
                     ],
                 },
             ],
@@ -224,6 +228,12 @@ export const navigationConfig: Record<string, NavGroup[]> = {
                             activeRules: [{ path: "/dashboard/admin/candidates", exact: true, absentQuery: ["status"] }],
                         },
                         {
+                            label: "Status Pendaftaran",
+                            href: "/dashboard/admin/candidates",
+                            icon: "fa-solid fa-list-check",
+                            adminCandidateStatus: true,
+                        },
+                        {
                             label: "Data Diri",
                             href: "/dashboard/admin/candidates",
                             icon: "fa-solid fa-id-card",
@@ -318,7 +328,6 @@ export const navigationConfig: Record<string, NavGroup[]> = {
             items: [
                 { label: "Gelombang", href: "/dashboard/admin/waves", icon: "fa-solid fa-layer-group" },
                 { label: "Program / Jalur", href: "/dashboard/admin/programs", icon: "fa-solid fa-diagram-project", comingSoon: true },
-                { label: "Pengumuman", href: "/dashboard/admin/announcements", icon: "fa-solid fa-bullhorn", comingSoon: true },
             ],
         },
         {

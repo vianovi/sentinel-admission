@@ -54,18 +54,19 @@ Parents with children do not pretend to be links. They render as accessible subm
 
 ## Route Decisions
 
-- Candidate `Status Pendaftaran` is omitted because it is only a future ComingSoon route and the task explicitly disallowed a fake status link.
+- Candidate `Status Pendaftaran` is now active because the real `/dashboard/status-pendaftaran` page exists.
+- Candidate `Bantuan`, `Riwayat Pembayaran`, `Status Seleksi`, and `Hasil Seleksi` are now active because real pages and routes exist.
 - Staff `Sesi Ujian` and `Peserta Seleksi` are omitted because there are no staff top-level routes for those workflows.
 - Staff/admin final status filters are split into `Diterima` and `Ditolak` because the backend candidate list supports a single `status` query at a time.
 - Staff/admin document/payment review links reuse existing selected-candidate section behavior. Without a selected candidate, they fall back to the real candidate list route.
-- Existing ComingSoon routes remain visible only where they already represent intentional future pages: `Informasi`, `Laporan`, `Program / Jalur`, and `Sistem`.
+- Existing ComingSoon routes remain visible only where they already represent intentional future pages for staff/admin navigation, such as `Laporan`, `Program / Jalur`, calendar placeholders, and other intentionally deferred internal tools.
 
 ## Known Limitations
 
 - Search popover is presentational only; no global search API or routing was added.
 - Minimized flyout is a compact preview for child navigation. It does not create persistent submenu state.
 - Staff does not expose exam session or participant management until real staff routes exist.
-- Candidate status page should be added later only when the feature is real, not as a shell-only link.
+- Candidate menu items should only stay visible when backed by real routes/pages or intentionally marked Coming Soon.
 
 ## Manual QA
 

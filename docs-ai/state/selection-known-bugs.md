@@ -13,6 +13,8 @@
 - No known critical or high-risk admin exam UI issue remains after Task 4 static/build/test audit.
 - Task 5 resolved the critical candidate lifecycle risk where status rules were scattered across observers, document/payment review flows, webhook handling, and dashboard helpers. No known critical or high-risk lifecycle/gate issue remains after the focused Task 5 test pass.
 - Task 6 completed the dashboard shell/navigation V2 without changing backend routes or business logic. No known critical/high dashboard shell issue remains after static audit, TypeScript no-emit, production build, dashboard route list, and diff checks.
+- Status Pendaftaran Center is implemented without schema changes or lifecycle semantic changes. No known critical/high issue remains after focused feature tests and production frontend build.
+- Candidate Panel Gold activated the remaining candidate sidebar pages without schema changes, lifecycle semantic changes, payment processing changes, document logic changes, or exam engine changes. No known critical/high issue remains after focused candidate panel route/privacy tests and production frontend build.
 
 ## Build or Test Failures
 
@@ -20,6 +22,8 @@
 - Phase 2 verification passed: PHP syntax, route list, migration pretend, frontend build, Composer audit, and feature tests.
 - Task 4 verification passed for `npm run build`, `php artisan route:list --path=dashboard/admin/exams`, `php artisan test tests/Feature/OnlineSelectionExamImportTest.php`, `php artisan test tests/Feature/OnlineSelectionExamSecurityTest.php`, and `git diff --check`.
 - Task 6 verification passed for `npx tsc --noEmit`, `npm run build`, `php artisan route:list --path=dashboard`, and `git diff --check`.
+- Status Pendaftaran verification passed for `php artisan test tests/Feature/StatusPendaftaranFeatureTest.php`, `php artisan test tests/Feature/CandidateStatusFlowTest.php`, `php artisan test tests/Feature/CandidateFeatureGateTest.php`, `npm run build`, `php artisan route:list --path=dashboard`, and `git diff --check`.
+- Candidate Panel Gold verification passed for `php artisan test tests/Feature/CandidatePanelGoldFeatureTest.php`, `php artisan test tests/Feature/CandidateFeatureGateTest.php`, `php artisan test tests/Feature/CandidateStatusFlowTest.php`, `npm run build`, `php artisan route:list --path=dashboard`, and `git diff --check`.
 - Runtime zip support verification passed inside Docker: `php -m | grep -i zip`, `php -r "var_dump(class_exists(ZipArchive::class));"`, `php artisan test tests/Feature/OnlineSelectionExamImportTest.php`, and `php artisan test tests/Feature/OnlineSelectionExamSecurityTest.php`.
 - Dependency investigation failure intentionally handled:
   - `composer require maatwebsite/excel:^3.1.69 phpoffice/phpspreadsheet:^1.30.5 --with-all-dependencies` failed because patched PhpSpreadsheet 1.30.5 requires PHP `<8.5` while the local runtime is PHP 8.5.7.
@@ -51,3 +55,7 @@
 - Playwright MCP browser audit for Task 6 was attempted after starting a local Laravel server on `127.0.0.1:8096`, but the MCP browser launch timed out twice while starting headless Firefox. Static UI audit, TypeScript no-emit, route list, build, and diff checks passed; manual browser review is still recommended.
 - Candidate lifecycle Task 5 intentionally keeps `accepted` and `rejected` as final manual statuses. Automatic sync will not overwrite them, even if a document/payment is later changed.
 - Health completion now follows the broader backend/model/dashboard requirement set: physical fields plus health-history responses. This is stricter than the old observer-only physical-field check and is documented in `docs-ai/features/candidate-status-flow.md`.
+- Status Pendaftaran timeline is assembled from currently available records only. A true immutable audit timeline would require explicit future approval and likely a new table.
+- `Daftar Ulang` remains unavailable/future in Status Pendaftaran because no real daftar ulang workflow exists.
+- Candidate Panel Gold does not add live support/chat/ticketing. `Bantuan` is a contextual self-service help center that links to existing workflows.
+- Candidate selection result visibility remains controlled by existing session/package `show_result_to_candidate` flags. Hidden results intentionally show waiting states.

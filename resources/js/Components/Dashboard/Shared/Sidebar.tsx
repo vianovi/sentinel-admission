@@ -209,10 +209,16 @@ export default function Sidebar({ role }: Props) {
 
     const getItemHref = useCallback((item: NavItem): string | undefined => {
         const candidateSection = item.staffCandidateSection ?? item.adminCandidateSection;
+        const candidateStatus = item.staffCandidateStatus ?? item.adminCandidateStatus;
 
         if (item.staffCandidateHome || item.adminCandidateHome) {
             if (!activeCandidateId) return item.href ?? candidateBasePath;
             return `${candidateBasePath}/${activeCandidateId}`;
+        }
+
+        if (candidateStatus) {
+            if (!activeCandidateId) return item.href ?? candidateBasePath;
+            return `${candidateBasePath}/${activeCandidateId}/status-pendaftaran`;
         }
 
         if (!candidateSection) return item.href;
@@ -222,6 +228,12 @@ export default function Sidebar({ role }: Props) {
 
     const getSubItemHref = useCallback((subItem: NavSubItem): string | undefined => {
         const candidateSection = subItem.staffCandidateSection ?? subItem.adminCandidateSection;
+        const candidateStatus = subItem.staffCandidateStatus ?? subItem.adminCandidateStatus;
+
+        if (candidateStatus) {
+            if (!activeCandidateId) return subItem.href ?? candidateBasePath;
+            return `${candidateBasePath}/${activeCandidateId}/status-pendaftaran`;
+        }
 
         if (!candidateSection) return subItem.href;
         if (!activeCandidateId) return subItem.href ?? candidateBasePath;
@@ -230,6 +242,7 @@ export default function Sidebar({ role }: Props) {
 
     const isSubItemActive = useCallback((subItem: NavSubItem): boolean => {
         const candidateSection = subItem.staffCandidateSection ?? subItem.adminCandidateSection;
+        const candidateStatus = subItem.staffCandidateStatus ?? subItem.adminCandidateStatus;
 
         if (subItem.disabled) return false;
 
@@ -245,11 +258,16 @@ export default function Sidebar({ role }: Props) {
             return isCandidateSectionActive(candidateSection);
         }
 
+        if (candidateStatus) {
+            return currentUrl.path === `${candidateBasePath}/${activeCandidateId}/status-pendaftaran`;
+        }
+
         return isHrefActive(subItem.href, subItem.exact);
-    }, [currentUrl.path, isCandidateSectionActive, isHrefActive, isRuleActive]);
+    }, [activeCandidateId, candidateBasePath, currentUrl.path, isCandidateSectionActive, isHrefActive, isRuleActive]);
 
     const isItemActive = useCallback((item: NavItem): boolean => {
         const candidateSection = item.staffCandidateSection ?? item.adminCandidateSection;
+        const candidateStatus = item.staffCandidateStatus ?? item.adminCandidateStatus;
 
         if (item.disabled) return false;
 
@@ -261,8 +279,12 @@ export default function Sidebar({ role }: Props) {
             return isCandidateSectionActive(candidateSection);
         }
 
+        if (candidateStatus) {
+            return currentUrl.path === `${candidateBasePath}/${activeCandidateId}/status-pendaftaran`;
+        }
+
         return isHrefActive(item.href, item.exact);
-    }, [isCandidateSectionActive, isHrefActive, isRuleActive]);
+    }, [activeCandidateId, candidateBasePath, currentUrl.path, isCandidateSectionActive, isHrefActive, isRuleActive]);
 
     const isChildrenActive = useCallback((children?: NavSubItem[]): boolean => {
         return children?.some(isSubItemActive) ?? false;
@@ -333,7 +355,8 @@ export default function Sidebar({ role }: Props) {
         const subActive = isSubItemActive(subItem);
         const href = getSubItemHref(subItem);
         const candidateSection = subItem.staffCandidateSection ?? subItem.adminCandidateSection;
-        const waitingForCandidate = Boolean(candidateSection && !activeCandidateId);
+        const candidateStatus = subItem.staffCandidateStatus ?? subItem.adminCandidateStatus;
+        const waitingForCandidate = Boolean((candidateSection || candidateStatus) && !activeCandidateId);
         const disabled = Boolean(subItem.disabled || !href);
         const className = [
             "flex min-h-9 items-center gap-2 rounded-2xl px-3 py-2 text-xs font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/20 dark:focus-visible:ring-gold/15",

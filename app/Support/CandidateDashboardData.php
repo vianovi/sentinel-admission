@@ -44,11 +44,10 @@ class CandidateDashboardData
                 'missing' => $paymentSummary['missing'],
                 'state' => $paymentSummary['state'],
             ]),
-            self::section('status', 'Status Kandidat', 'fa-solid fa-clock-rotate-left', '/dashboard/status', [
+            self::section('status', 'Status Kandidat', 'fa-solid fa-clock-rotate-left', '/dashboard/status-pendaftaran', [
                 'percentage' => $statusSummary['completion_percentage'],
                 'missing' => $statusSummary['missing'],
                 'state' => $statusSummary['state'],
-                'coming_soon' => true,
             ]),
         ];
 
@@ -260,7 +259,7 @@ class CandidateDashboardData
         }
 
         if ($candidate->status === 'rejected') {
-            return self::action('Cek hasil pendaftaran', 'Status pendaftaranmu ditolak. Lihat catatan dari panitia atau hubungi admin sekolah.', '/dashboard/status', 'Lihat Status', 'fa-solid fa-circle-xmark', 'danger', true);
+            return self::action('Cek hasil pendaftaran', 'Status pendaftaranmu ditolak. Lihat catatan dari panitia atau hubungi admin sekolah.', '/dashboard/status-pendaftaran', 'Lihat Status', 'fa-solid fa-circle-xmark', 'danger');
         }
 
         if (! empty($documentSummary['rejected_labels'])) {
@@ -292,10 +291,10 @@ class CandidateDashboardData
         }
 
         if ($documentSummary['pending'] > 0 || ($paymentSummary['status'] ?? null) === Payment::STATUS_PENDING) {
-            return self::action('Menunggu verifikasi panitia', 'Data utama sudah masuk. Pantau dashboard ini untuk hasil verifikasi dokumen dan pembayaran.', '/dashboard/status', 'Lihat Ringkasan Status', 'fa-solid fa-hourglass-half', 'neutral', true);
+            return self::action('Menunggu verifikasi panitia', 'Data utama sudah masuk. Pantau dashboard ini untuk hasil verifikasi dokumen dan pembayaran.', '/dashboard/status-pendaftaran', 'Lihat Ringkasan Status', 'fa-solid fa-hourglass-half', 'neutral');
         }
 
-        return self::action('Pantau status seleksi', 'Pendaftaranmu sudah rapi. Tunggu informasi hasil seleksi dari panitia sekolah.', '/dashboard/status', 'Lihat Status', 'fa-solid fa-list-check', 'neutral', true);
+        return self::action('Pantau status seleksi', 'Pendaftaranmu sudah rapi. Tunggu informasi hasil seleksi dari panitia sekolah.', '/dashboard/status-pendaftaran', 'Lihat Status', 'fa-solid fa-list-check', 'neutral');
     }
 
     private static function section(string $key, string $label, string $icon, string $href, array $data): array

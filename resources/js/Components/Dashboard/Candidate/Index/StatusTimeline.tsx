@@ -29,7 +29,7 @@ function StatusTimeline({ status }: Props) {
                     </p>
                 </div>
                 <Link
-                    href="/dashboard/status"
+                    href="/dashboard/status-pendaftaran"
                     className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:border-gold/50 hover:text-gold dark:border-white/[0.08] dark:text-slate-200"
                 >
                     <span>Status</span>

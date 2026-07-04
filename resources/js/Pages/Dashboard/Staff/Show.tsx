@@ -384,10 +384,17 @@ export default function StaffCandidateShow({
                             {candidate.account_email ? ` - ${candidate.account_email}` : ""}
                         </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center justify-end gap-2">
                         <span className={`inline-flex items-center rounded-xl px-3 py-1.5 text-xs font-semibold ${CANDIDATE_STATUS_CLASS[candidate.status]}`}>
                             {CANDIDATE_STATUS_LABEL[candidate.status]}
                         </span>
+                        <Link
+                            href={`${basePath}/candidates/${candidate.id}/status-pendaftaran`}
+                            className="inline-flex h-11 items-center gap-2 rounded-xl border border-gold/30 px-4 text-sm font-semibold text-amber-700 transition-colors hover:border-gold hover:bg-gold/10 dark:text-gold"
+                        >
+                            <i className="fa-solid fa-list-check text-xs" />
+                            Status Pendaftaran
+                        </Link>
                         <Link
                             href={`${basePath}/candidates`}
                             className="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-600 transition-colors hover:border-emerald-500 hover:text-emerald-500 dark:border-white/10 dark:text-slate-300"

@@ -40,7 +40,7 @@ const STATUS_CONFIG: Record<CandidateRow["status"], { label: string; bg: string;
     rejected:  { label: "Ditolak",            bg: "bg-red-50 dark:bg-red-500/10",         text: "text-red-500 dark:text-red-400"       },
 };
 
-const TABLE_HEADERS = ["Kandidat", "Gelombang", "Status", "Dokumen", "Tanggal", ""];
+const TABLE_HEADERS = ["Kandidat", "Gelombang", "Status", "Dokumen", "Tanggal", "Aksi"];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // COMPONENT
@@ -90,7 +90,7 @@ export default function CandidateTable({
 
             {/* Desktop table header */}
             <div className="hidden lg:grid
-                            grid-cols-[1fr_140px_160px_110px_90px_48px]
+                            grid-cols-[1fr_140px_160px_110px_90px_150px]
                             px-5 py-3.5
                             border-b border-slate-100 dark:border-white/5
                             bg-slate-50 dark:bg-white/[0.02]">
@@ -110,23 +110,25 @@ export default function CandidateTable({
 
                     return (
                         <li key={c.id} className="candidate-row opacity-0">
-                            <Link
-                                href={`${basePath}/${c.id}`}
-                                onClick={() => {
-                                    if (typeof window !== "undefined") {
-                                        window.localStorage.setItem(selectedCandidateStorageKey, String(c.id));
-                                    }
-                                }}
+                            <div
                                 className="flex flex-col lg:grid
-                                           lg:grid-cols-[1fr_140px_160px_110px_90px_48px]
+                                           lg:grid-cols-[1fr_140px_160px_110px_90px_150px]
                                            items-start lg:items-center
-                                           gap-2 lg:gap-0
+                                           gap-3 lg:gap-0
                                            px-5 py-4
                                            hover:bg-slate-50 dark:hover:bg-white/[0.03]
                                            transition-colors duration-150 group"
                             >
                                 {/* Kandidat info */}
-                                <div className="flex items-center gap-3 min-w-0">
+                                <Link
+                                    href={`${basePath}/${c.id}`}
+                                    onClick={() => {
+                                        if (typeof window !== "undefined") {
+                                            window.localStorage.setItem(selectedCandidateStorageKey, String(c.id));
+                                        }
+                                    }}
+                                    className="flex min-w-0 items-center gap-3"
+                                >
                                     <div className="w-9 h-9 rounded-xl shrink-0
                                                     bg-gradient-to-br from-emerald-500 to-teal-500
                                                     flex items-center justify-center
@@ -149,7 +151,7 @@ export default function CandidateTable({
                                             {c.school_origin ? ` · ${c.school_origin}` : ""}
                                         </p>
                                     </div>
-                                </div>
+                                </Link>
 
                                 {/* Gelombang */}
                                 <p className="text-xs text-slate-500 dark:text-slate-400 truncate hidden lg:block">
@@ -185,15 +187,34 @@ export default function CandidateTable({
                                     {c.created_at}
                                 </p>
 
-                                {/* Arrow */}
-                                <div className="hidden lg:flex justify-end">
-                                    <i className="fa-solid fa-chevron-right text-[10px]
-                                                  text-slate-300 dark:text-slate-600
-                                                  group-hover:text-emerald-500
-                                                  group-hover:translate-x-0.5
-                                                  transition-all" />
+                                {/* Actions */}
+                                <div className="flex items-center gap-2 lg:justify-end">
+                                    <Link
+                                        href={`${basePath}/${c.id}/status-pendaftaran`}
+                                        onClick={() => {
+                                            if (typeof window !== "undefined") {
+                                                window.localStorage.setItem(selectedCandidateStorageKey, String(c.id));
+                                            }
+                                        }}
+                                        className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-gold/30 px-3 text-xs font-bold text-amber-700 transition hover:border-gold hover:bg-gold/10 dark:text-gold"
+                                    >
+                                        <i className="fa-solid fa-list-check text-[11px]" />
+                                        Status
+                                    </Link>
+                                    <Link
+                                        href={`${basePath}/${c.id}`}
+                                        onClick={() => {
+                                            if (typeof window !== "undefined") {
+                                                window.localStorage.setItem(selectedCandidateStorageKey, String(c.id));
+                                            }
+                                        }}
+                                        aria-label={`Buka detail ${c.full_name}`}
+                                        className="hidden h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-400 transition hover:border-emerald-500 hover:text-emerald-500 dark:border-white/10 dark:text-slate-500 lg:inline-flex"
+                                    >
+                                        <i className="fa-solid fa-chevron-right text-[10px]" />
+                                    </Link>
                                 </div>
-                            </Link>
+                            </div>
                         </li>
                     );
                 })}

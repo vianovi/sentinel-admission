@@ -16,6 +16,10 @@ Task 5 completed on 2026-07-01: candidate lifecycle/status/gate logic was centra
 
 Task 6 completed on 2026-07-02: dashboard shell navigation V2 was implemented for candidate, staff, and admin on branch `ui/dashboard-shell-navigation-v2`. The shared sidebar now uses role-based workflow groups, click-expanded submenus, minimized icon flyouts, and query-aware active states. The shared topbar now uses a cleaner greeting/date/search-icon layout. No business logic, routes, schema, or database behavior was changed.
 
+Status Pendaftaran Center completed on 2026-07-04 on branch `feature/status-pendaftaran-center`. It adds a real candidate `/dashboard/status-pendaftaran` page, staff/admin per-candidate status views, a backend read-model assembler, candidate navigation entry, internal row/detail actions, focused feature tests, and durable docs. No schema change or lifecycle semantic change was made.
+
+Candidate Panel Gold completed on 2026-07-04 on branch `feature/status-pendaftaran-center`. It activates the remaining candidate sidebar pages that were previously missing or placeholder-like: Bantuan, Riwayat Pembayaran, Status Seleksi, and Hasil Seleksi. The implementation adds thin controllers, `app/Services/CandidatePanel` read-model services, reusable gold candidate panel UI components, focused route/privacy tests, and durable docs. No schema change, lifecycle semantic change, payment processing change, document logic change, or exam engine behavior change was made.
+
 ## Completed Phases
 
 - Phase 0 — Project audit and implementation plan
@@ -74,6 +78,47 @@ Task 6 completed on 2026-07-02: dashboard shell navigation V2 was implemented fo
   - `php artisan route:list --path=dashboard`
   - `git diff --check`
 - Playwright MCP was available but browser launch timed out while starting headless Firefox, so browser screenshot/click inspection is documented as blocked by environment.
+
+## Status Pendaftaran Center
+
+- Added `app/Services/StatusPendaftaranService.php` to compose lifecycle, completion checklist, verification checklist, gate states, next actions, review blockers, safe timeline, and quick links from existing records.
+- Added candidate controller and page:
+  - `app/Http/Controllers/Dashboard/Candidate/StatusPendaftaranController.php`
+  - `resources/js/Pages/Dashboard/Candidate/StatusPendaftaran/Index.tsx`
+- Added staff/admin per-candidate status controller and shared internal page:
+  - `app/Http/Controllers/Dashboard/StatusPendaftaranController.php`
+  - `resources/js/Pages/Dashboard/StatusPendaftaran/Internal.tsx`
+- Added reusable UI components under `resources/js/Components/Dashboard/StatusPendaftaran`.
+- Added candidate sidebar `Status Pendaftaran` and removed the old candidate-facing `Pengumuman` placeholder from the candidate sidebar.
+- Added admin `Kandidat > Status Pendaftaran` sidebar entry and removed the old admin `Pengumuman` placeholder from `Konfigurasi SPMB`.
+- Added staff/admin row/detail actions without expanding internal sidebars.
+- Added focused tests in `tests/Feature/StatusPendaftaranFeatureTest.php`.
+- Added docs:
+  - `docs-ai/features/status-pendaftaran.md`
+  - `docs-ai/audit/status-pendaftaran-audit.md`
+
+## Candidate Panel Gold
+
+- Completed real candidate pages for:
+  - `/dashboard/bantuan`
+  - `/dashboard/pembayaran/riwayat`
+  - `/dashboard/seleksi/status`
+  - `/dashboard/seleksi/hasil`
+- Added candidate read-model services:
+  - `CandidateHelpCenterService`
+  - `CandidatePaymentHistoryService`
+  - `CandidateSelectionCenterService`
+- Added reusable candidate panel UI components:
+  - `GoldPageHeader`
+  - `GoldStatCard`
+  - `StatusPill`
+  - `EmptyState`
+- Candidate sidebar no longer marks Bantuan, Riwayat Pembayaran, Status Seleksi, or Hasil Seleksi as Coming Soon.
+- Payment history response is scoped to the authenticated candidate and intentionally omits gateway metadata, snap token, and internal transaction IDs.
+- Selection result response respects existing exam result visibility flags and does not expose answer keys or explanations.
+- Added focused tests in `tests/Feature/CandidatePanelGoldFeatureTest.php`.
+- Added docs:
+  - `docs-ai/features/candidate-panel-gold.md`
 
 ## Task 6 Files Created
 
