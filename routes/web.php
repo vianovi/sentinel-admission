@@ -249,6 +249,9 @@ Route::middleware(['auth', RoleMiddleware::class . ':staff'])
         // ── Dashboard index ───────────────────────────────────────────────
         Route::get('/', [StaffDashboard::class, 'index'])
             ->name('dashboard');
+        Route::get('/calendar', ComingSoonController::class)
+            ->defaults('feature', 'staff.calendar')
+            ->name('calendar');
 
         // ── Candidates ───────────────────────────────────────────────────
         Route::get('/candidates', [StaffDashboard::class, 'candidates'])
@@ -290,6 +293,9 @@ Route::middleware(['auth', RoleMiddleware::class . ':staff'])
         Route::prefix('exams')
             ->name('exams.')
             ->group(function () {
+                Route::get('/sessions', ComingSoonController::class)
+                    ->defaults('feature', 'staff.exam-sessions')
+                    ->name('sessions');
                 Route::get('/results', [StaffExamResult::class, 'index'])
                     ->name('results.index');
                 Route::get('/results/{attempt}', [StaffExamResult::class, 'show'])
@@ -340,6 +346,9 @@ Route::middleware(['auth', RoleMiddleware::class . ':admin'])
         // ── Dashboard index ───────────────────────────────────────────────
         Route::get('/', [AdminDashboard::class, 'index'])
             ->name('dashboard');
+        Route::get('/calendar', ComingSoonController::class)
+            ->defaults('feature', 'admin.calendar')
+            ->name('calendar');
 
         // ── Candidates ───────────────────────────────────────────────────
         Route::get('/candidates', [AdminCandidate::class, 'index'])
@@ -443,6 +452,9 @@ Route::middleware(['auth', RoleMiddleware::class . ':admin'])
         Route::get('/reports', ComingSoonController::class)
             ->defaults('feature', 'admin.reports')
             ->name('reports');
+        Route::get('/announcements', ComingSoonController::class)
+            ->defaults('feature', 'admin.announcements')
+            ->name('announcements');
         Route::get('/payment-recap', ComingSoonController::class)
             ->defaults('feature', 'admin.payment-recap')
             ->name('payment-recap');
@@ -452,6 +464,9 @@ Route::middleware(['auth', RoleMiddleware::class . ':admin'])
         Route::get('/settings', ComingSoonController::class)
             ->defaults('feature', 'admin.settings')
             ->name('settings');
+        Route::get('/users', ComingSoonController::class)
+            ->defaults('feature', 'admin.users')
+            ->name('users');
 
         // ── Profile ───────────────────────────────────────────────────────
         Route::get('/profile', [AdminProfile::class, 'show'])

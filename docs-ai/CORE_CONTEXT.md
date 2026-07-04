@@ -548,6 +548,7 @@ POST      /dashboard/pembayaran/upload-proof
 
 ```txt
 GET       /dashboard/staff
+GET       /dashboard/staff/calendar        ComingSoon
 GET       /dashboard/staff/candidates
 GET       /dashboard/staff/candidates/{candidate}
 GET       /dashboard/staff/candidates/{candidate}/{section}
@@ -560,6 +561,7 @@ POST      /dashboard/staff/change-requests/email/{candidate}/approve
 POST      /dashboard/staff/change-requests/email/{candidate}/reject
 
 GET       /dashboard/staff/exams/results
+GET       /dashboard/staff/exams/sessions  ComingSoon
 GET       /dashboard/staff/exams/results/{attempt}
 GET       /dashboard/staff/reports          ComingSoon
 GET       /dashboard/staff/payment-recap    ComingSoon
@@ -575,6 +577,7 @@ GET/POST  /dashboard/staff/profile/avatar
 
 ```txt
 GET       /dashboard/admin
+GET       /dashboard/admin/calendar        ComingSoon
 GET       /dashboard/admin/candidates
 GET       /dashboard/admin/candidates/{candidate}
 GET       /dashboard/admin/candidates/{candidate}/{section}
@@ -606,6 +609,8 @@ GET       /dashboard/admin/exams/results
 GET       /dashboard/admin/exams/results/{attempt}
 
 GET       /dashboard/admin/reports          ComingSoon
+GET       /dashboard/admin/users            ComingSoon
+GET       /dashboard/admin/announcements    ComingSoon
 GET       /dashboard/admin/payment-recap    ComingSoon
 GET       /dashboard/admin/programs         ComingSoon
 GET       /dashboard/admin/settings         ComingSoon
@@ -651,17 +656,20 @@ AKUN
 ```txt
 MENU
 - Dashboard
+- Staff Kalender (ComingSoon route)
 - Kandidat
-- Permintaan Perubahan
-- Hasil Ujian
-- Laporan Umum (ComingSoon)
-
-ADMINISTRASI
-- Dokumen
-
-PEMBAYARAN
-- Pembayaran
-- Rekap Pembayaran (ComingSoon)
+  - Semua Kandidat
+  - Data Diri
+  - Data Wali
+  - Data Kesehatan
+  - Perlu Tindakan
+- Verifikasi
+  - Review Dokumen
+  - Review Pembayaran
+- Seleksi
+  - Hasil Ujian
+  - Sesi Ujian (ComingSoon route)
+- Rekap / Laporan (ComingSoon route)
 
 AKUN
 - Profil
@@ -672,23 +680,31 @@ AKUN
 ```txt
 MENU
 - Dashboard
+- Kalender SPMB (ComingSoon route)
 - Kandidat
-- Permintaan Perubahan
-- Ujian Seleksi
-- Laporan Umum (ComingSoon)
+  - Semua Kandidat
+  - Data Diri
+  - Data Wali
+  - Data Kesehatan
+  - Permintaan Perubahan
+  - Perlu Tindakan
+- Verifikasi
+  - Review Dokumen
+  - Review Pembayaran
+- Seleksi
+  - Paket Soal
+  - Sesi Ujian
+  - Hasil Ujian
+- Rekap / Laporan (ComingSoon route)
 
-ADMINISTRASI
-- Dokumen
-
-PEMBAYARAN
-- Pembayaran
-- Rekap Pembayaran (ComingSoon)
-
-PENGATURAN ADMIN
-- Gelombang
-- Program / Jalur (ComingSoon)
+MANAJEMEN
 - Staff
-- Pengaturan Sistem (ComingSoon)
+- Pengguna (ComingSoon route)
+
+KONFIGURASI SPMB
+- Gelombang
+- Program / Jalur (ComingSoon route)
+- Pengumuman (ComingSoon route)
 
 AKUN
 - Profil

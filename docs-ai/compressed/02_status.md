@@ -109,6 +109,9 @@ Important correction:
 | Staff document area | ✅ Active | Preview + verify/reject active |
 | Staff payment area | ✅ Active | Proof preview + verify/reject active |
 | Permintaan Perubahan | ✅ Active | Staff/admin inbox + approve/reject data/email requests active |
+| Staff Kalender | 🔜 ComingSoon | `/dashboard/staff/calendar` opens role-aware ComingSoon |
+| Staff Sesi Ujian | 🔜 ComingSoon | `/dashboard/staff/exams/sessions` opens role-aware ComingSoon |
+| Staff Rekap / Laporan | 🔜 ComingSoon | `/dashboard/staff/reports` opens role-aware ComingSoon |
 
 ### Admin Dashboard
 
@@ -123,7 +126,11 @@ Important correction:
 | Admin waves/gelombang | ✅ Active | List + active toggle page implemented |
 | Admin staff management | ✅ Active | Staff list + activate/suspend implemented |
 | Admin profile | ✅ Active | Show/update/avatar active |
-| Admin future settings | 🔜 ComingSoon | Program/Jalur and Pengaturan Sistem route to ComingSoon |
+| Admin Kalender SPMB | 🔜 ComingSoon | `/dashboard/admin/calendar` opens role-aware ComingSoon |
+| Admin Perlu Tindakan | ✅ Active | Reuses `/dashboard/admin/change-requests` as the admin-safe action inbox |
+| Admin Pengguna | 🔜 ComingSoon | `/dashboard/admin/users` opens role-aware ComingSoon |
+| Admin Pengumuman | 🔜 ComingSoon | `/dashboard/admin/announcements` opens role-aware ComingSoon |
+| Admin Rekap / Laporan | 🔜 ComingSoon | `/dashboard/admin/reports` opens role-aware ComingSoon |
 
 ---
 
@@ -216,6 +223,11 @@ Active for existing non-sidebar/fallback routes:
 - Staff/Admin Seleksi & Status
 - Staff/Admin Laporan Umum
 - Staff/Admin Rekap Pembayaran
+- Staff Kalender
+- Staff Sesi Ujian
+- Admin Kalender SPMB
+- Admin Pengguna
+- Admin Pengumuman
 - Admin Program / Jalur
 - Admin Pengaturan Sistem
 
@@ -236,39 +248,71 @@ Polish should happen after domain/menu routing and priority workflows are stable
 
 ## Staff/Admin Sidebar Plan
 
-### Shared Staff/Admin Domain Menu
+### Staff Domain Menu
 
 ```txt
 MENU
-- Dashboard                 ✅ active
-- Kandidat                  ✅ active for staff/admin
-- Permintaan Perubahan      ✅ active for staff/admin
-- Seleksi & Status          🔜 ComingSoon
-- Laporan Umum              🔜 ComingSoon
-
-ADMINISTRASI
-- Dokumen                   ✅ active in staff/admin candidate detail; may become standalone later
-
-PEMBAYARAN
-- Pembayaran                ✅ active in staff/admin candidate detail; may become standalone later
-- Rekap Pembayaran          🔜 ComingSoon
+- Dashboard                 active
+- Staff Kalender            ComingSoon
+- Kandidat
+  - Semua Kandidat          active
+  - Data Diri               active candidate detail section
+  - Data Wali               active candidate detail section
+  - Data Kesehatan          active candidate detail section
+  - Perlu Tindakan          active change requests
+- Verifikasi
+  - Review Dokumen          active candidate detail section
+  - Review Pembayaran       active candidate detail section
+- Seleksi
+  - Hasil Ujian             active
+  - Sesi Ujian              ComingSoon
+- Rekap / Laporan           ComingSoon
 
 AKUN
-- Profil                    ✅ active for staff/admin
+- Profil                    active
 ```
 
-### Admin-Only Menu
+Staff candidate status filtering stays inside the Semua Kandidat page, not as sidebar submenu items.
+
+### Admin Domain Menu
 
 ```txt
-PENGATURAN ADMIN
-- Gelombang                 ✅ active
-- Program / Jalur           🔜 ComingSoon
-- Staff                     ✅ active
-- Pengaturan Sistem         🔜 ComingSoon
+MENU
+- Dashboard                 active
+- Kalender SPMB             ComingSoon
+- Kandidat
+  - Semua Kandidat          active
+  - Data Diri               active candidate detail section
+  - Data Wali               active candidate detail section
+  - Data Kesehatan          active candidate detail section
+  - Permintaan Perubahan    active change requests
+  - Perlu Tindakan          active change requests
+- Verifikasi
+  - Review Dokumen          active candidate detail section
+  - Review Pembayaran       active candidate detail section
+- Seleksi
+  - Paket Soal              active
+  - Sesi Ujian              active
+  - Hasil Ujian             active
+- Rekap / Laporan           ComingSoon
+
+MANAJEMEN
+- Staff                     active
+- Pengguna                  ComingSoon
+
+KONFIGURASI SPMB
+- Gelombang                 active
+- Program / Jalur           ComingSoon
+- Pengumuman                ComingSoon
+
+AKUN
+- Profil                    active
 ```
 
 Important direction:
-- Payment and document sections currently exist inside staff candidate detail.
+- Candidate status filtering stays inside the Semua Kandidat page, not as sidebar submenu items.
+- Program/Jalur, Pengumuman, Pengguna, Kalender SPMB, and Rekap/Laporan use ComingSoon until real pages exist.
+- Payment and document sections currently exist inside staff/admin candidate detail.
 - Future standalone `Pembayaran` and `Dokumen` menus are allowed if they serve as queue/list pages, not duplicated detail pages.
 
 ---

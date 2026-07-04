@@ -58,6 +58,18 @@ class ComingSoonController extends Controller
             'back_url' => '/dashboard/staff',
             'back_label' => 'Kembali ke Dashboard Staff',
         ],
+        'staff.calendar' => [
+            'title' => 'Staff Kalender',
+            'description' => 'Kalender operasional staff sedang disiapkan agar agenda verifikasi dan seleksi punya ruang khusus.',
+            'back_url' => '/dashboard/staff',
+            'back_label' => 'Kembali ke Dashboard Staff',
+        ],
+        'staff.exam-sessions' => [
+            'title' => 'Sesi Ujian',
+            'description' => 'Halaman sesi ujian untuk staff akan dibuka setelah kebutuhan monitoring sesi final.',
+            'back_url' => '/dashboard/staff/exams/results',
+            'back_label' => 'Kembali ke Hasil Ujian',
+        ],
         'staff.reports' => [
             'title' => 'Laporan Umum',
             'description' => 'Rekap operasional umum akan disiapkan setelah kebutuhan laporan final.',
@@ -76,11 +88,29 @@ class ComingSoonController extends Controller
             'back_url' => '/dashboard/admin',
             'back_label' => 'Kembali ke Dashboard Admin',
         ],
+        'admin.calendar' => [
+            'title' => 'Kalender SPMB',
+            'description' => 'Kalender admin sedang disiapkan agar agenda SPMB lintas operasional bisa dipantau dari satu tempat.',
+            'back_url' => '/dashboard/admin',
+            'back_label' => 'Kembali ke Dashboard Admin',
+        ],
         'admin.reports' => [
             'title' => 'Laporan Umum',
             'description' => 'Laporan admin belum diaktifkan agar tidak menampilkan data rekap yang belum final.',
             'back_url' => '/dashboard/admin',
             'back_label' => 'Kembali ke Dashboard Admin',
+        ],
+        'admin.announcements' => [
+            'title' => 'Pengumuman',
+            'description' => 'Pengelolaan pengumuman SPMB untuk admin sedang disiapkan setelah kebutuhan publikasi final.',
+            'back_url' => '/dashboard/admin',
+            'back_label' => 'Kembali ke Dashboard Admin',
+        ],
+        'admin.users' => [
+            'title' => 'Pengguna',
+            'description' => 'Daftar semua akun sistem akan disiapkan terpisah dari manajemen staff internal.',
+            'back_url' => '/dashboard/admin/staff-list',
+            'back_label' => 'Kembali ke Manajemen Staff',
         ],
         'admin.payment-recap' => [
             'title' => 'Rekap Pembayaran',

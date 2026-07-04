@@ -279,7 +279,7 @@ export default function Sidebar({ role }: Props) {
     }, []);
 
     const handleParentMenuClick = useCallback((key: string) => {
-        if (role === "candidate" && isCollapsed) {
+        if ((role === "candidate" || role === "staff" || role === "admin") && isCollapsed) {
             pendingOpenMenuRef.current = key;
             toggleSidebar();
             return;
@@ -303,7 +303,7 @@ export default function Sidebar({ role }: Props) {
     }, [clearFlyoutTimer]);
 
     const openCollapsedFlyout = useCallback((target: HTMLElement, item: NavItem, key: string, active: boolean) => {
-        if (role === "candidate" || !isCollapsed || !item.children?.length || item.disabled) return;
+        if (role === "candidate" || role === "staff" || role === "admin" || !isCollapsed || !item.children?.length || item.disabled) return;
 
         clearFlyoutTimer();
 
