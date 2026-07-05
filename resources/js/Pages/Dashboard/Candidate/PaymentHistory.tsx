@@ -12,6 +12,7 @@ type PaymentTone = "success" | "warning" | "danger" | "neutral";
 type PaymentRow = {
     id: number;
     order_id: string;
+    payment_channel: "gateway" | "transfer" | "cash";
     payment_channel_label: string;
     payment_method: string | null;
     base_amount: number | null;
@@ -151,8 +152,18 @@ export default function CandidatePaymentHistory({ summary, payments }: Props) {
                                     </div>
 
                                     <div className="mt-4 grid gap-3 md:grid-cols-3">
-                                        <Info label="Bukti" value={payment.proof_original_filename ?? "Belum ada"} />
-                                        <Info label="Upload Bukti" value={payment.proof_uploaded_at ?? "-"} />
+                                        <Info
+                                            label="Bukti"
+                                            value={payment.payment_channel === "gateway"
+                                                ? "Tidak diperlukan"
+                                                : payment.proof_original_filename ?? "Belum ada"}
+                                        />
+                                        <Info
+                                            label="Upload Bukti"
+                                            value={payment.payment_channel === "gateway"
+                                                ? "Otomatis via gateway"
+                                                : payment.proof_uploaded_at ?? "-"}
+                                        />
                                         <Info label="Verifikasi" value={payment.verified_at ?? payment.paid_at ?? "-"} />
                                     </div>
 

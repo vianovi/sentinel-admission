@@ -73,7 +73,8 @@ const STATUS_MAP: Record<string, {
 const PAYMENT_TIPS = [
     "Pilih gateway untuk konfirmasi instan tanpa menunggu staff",
     "Sertakan kode kandidat di berita transfer bank",
-    "Simpan bukti pembayaran hingga status berubah lunas",
+    "Gateway tidak perlu upload bukti pembayaran manual",
+    "Untuk transfer/cash, simpan bukti hingga status berubah lunas",
     "Hubungi tim PSB jika ada kendala verifikasi",
 ];
 

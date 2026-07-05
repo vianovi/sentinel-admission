@@ -311,6 +311,11 @@ export const navigationConfig: Record<string, NavGroup[]> = {
                             href: "/dashboard/admin/exams/results",
                             icon: "fa-solid fa-list-check",
                         },
+                        {
+                            label: "Monitoring Ujian",
+                            href: "/dashboard/admin/exams/monitoring",
+                            icon: "fa-solid fa-satellite-dish",
+                        },
                     ],
                 },
                 { label: "Rekap / Laporan", href: "/dashboard/admin/reports", icon: "fa-solid fa-chart-line", comingSoon: true },
@@ -327,7 +332,8 @@ export const navigationConfig: Record<string, NavGroup[]> = {
             group: "KONFIGURASI SPMB",
             items: [
                 { label: "Gelombang", href: "/dashboard/admin/waves", icon: "fa-solid fa-layer-group" },
-                { label: "Program / Jalur", href: "/dashboard/admin/programs", icon: "fa-solid fa-diagram-project", comingSoon: true },
+                { label: "Program / Jalur", href: "/dashboard/admin/programs", icon: "fa-solid fa-diagram-project" },
+                { label: "Pengaturan Sistem", href: "/dashboard/admin/settings", icon: "fa-solid fa-sliders" },
             ],
         },
         {

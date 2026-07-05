@@ -2,11 +2,13 @@
 
 ## Audit Status
 
-Final Phase 5 audit completed. UX polish checkpoint completed afterward. Task 2 admin workflow/template/import refinement completed without schema changes. Task 3 XLSX runtime stabilization and Admin Exam V2 redesign completed without schema changes. Task 4 Stitch-based admin exam UI recovery completed without schema changes. Admin import workflow/template handling checkpoint completed without schema changes. Runtime XLSX zip support checkpoint completed without schema changes. Task 5 candidate lifecycle gate checkpoint completed without schema changes. Task 6 dashboard shell/navigation V2 completed without schema changes or business-logic changes. No known critical or high-risk issue remains for the Online Selection Exam Engine at this checkpoint.
+Final Phase 5 audit completed. UX polish checkpoint completed afterward. Task 2 admin workflow/template/import refinement completed without schema changes. Task 3 XLSX runtime stabilization and Admin Exam V2 redesign completed without schema changes. Task 4 Stitch-based admin exam UI recovery completed without schema changes. Admin import workflow/template handling checkpoint completed without schema changes. Runtime XLSX zip support checkpoint completed without schema changes. Task 5 candidate lifecycle gate checkpoint completed without schema changes. Task 6 dashboard shell/navigation V2 completed without schema changes or business-logic changes. Dashboard Polish, Settings, and Exam Monitoring checkpoint completed on 2026-07-05 with read-only admin exam monitoring and math notation rendering improvements. No known critical or high-risk issue remains for the Online Selection Exam Engine at this checkpoint.
 
 Task 5 lifecycle gate checkpoint completed on 2026-07-01. Candidate exam access is now guarded by `CandidateGateService::exam()` before session detail, start, attempt show, sync, autosave, and submit actions. The exam engine still does not change final admission accepted/rejected status automatically.
 
 Task 6 dashboard shell/navigation checkpoint completed on 2026-07-02. Candidate, staff, and admin now share a role-aware one-sidebar shell with click-expanded submenus, minimized flyouts, query-aware active states, and a cleaner topbar. Backend routes and business logic were not changed.
+
+Dashboard Polish, Settings, and Exam Monitoring checkpoint completed on 2026-07-05. Admin Monitoring Ujian was added as a polling read-model view/feed/display backed by existing exam sessions and attempts. Candidate attempt and admin result pages now use `RichExamText` for common superscript and degree notation. Exam scoring, answer-key protection, candidate access gates, and final admission status semantics were not changed.
 
 ## Phase Audit Notes
 
@@ -341,6 +343,14 @@ Task 6 dashboard shell/navigation checkpoint completed on 2026-07-02. Candidate,
   - Sidebar candidate locked/gate behavior remains server-owned; no frontend gate rules were added.
   - Navigation links only use existing real routes or documented existing ComingSoon routes.
   - Fake candidate status, staff session, and staff participant links were not rendered.
+- Dashboard Polish, Settings, and Exam Monitoring checkpoint confirmed:
+  - Admin monitoring routes were added under protected admin exam routes only.
+  - `ExamMonitoringService` is read-model/assembler style and uses existing exam sessions/attempts.
+  - Monitoring is polling-based and does not add proctoring, browser lockdown, websocket infrastructure, or a new monitoring table.
+  - `RichExamText` formats common superscript/degree notation without raw HTML.
+  - Candidate exam pages were not given answer keys, explanations, correctness flags, or scoring internals.
+  - Verification passed through TypeScript no-emit, PHP lint, dashboard route list, production build, full feature tests, diff whitespace check, and cache clear.
+  - Browser verification was intentionally skipped because the user forbade browser-based verification tools for that checkpoint.
 
 ## Out-of-Scope File Touches
 
@@ -357,6 +367,7 @@ Task 6 dashboard shell/navigation checkpoint completed on 2026-07-02. Candidate,
 - `composer.json`: Task 3 added explicit `ext-zip` platform requirement; no package architecture rewrite.
 - Task 4 frontend changes stayed inside `resources/js/Components/Dashboard/Admin/Exam` and `resources/js/Pages/Dashboard/Admin/Exam`, plus durable docs. No non-exam dashboard shell rewrite was performed.
 - Task 6 intentionally touched the shared dashboard shell: `resources/js/config/navigation.ts`, `resources/js/Components/Dashboard/Shared/Sidebar.tsx`, `resources/js/Components/Dashboard/Shared/Topbar.tsx`, `resources/js/context/SidebarContext.tsx`, `resources/js/Layouts/DashboardLayout.tsx`, and `resources/js/Layouts/DashboardSplitLayout.tsx`.
+- Dashboard Polish, Settings, and Exam Monitoring touched admin exam monitoring files and shared exam text rendering: `app/Services/Exam/ExamMonitoringService.php`, `app/Http/Controllers/Dashboard/Admin/Exam/MonitoringController.php`, `resources/js/Pages/Dashboard/Admin/Exam/Monitoring.tsx`, `resources/js/Pages/Dashboard/Admin/Exam/MonitoringDisplay.tsx`, `resources/js/Components/Dashboard/Exam/RichExamText.tsx`, candidate attempt page, admin result detail page, admin navigation, and protected dashboard routes.
 
 ## External References Consulted
 
@@ -384,5 +395,5 @@ Task 6 dashboard shell/navigation checkpoint completed on 2026-07-02. Candidate,
 - Security: pass for target medium-risk scope. Candidate ownership, role route groups, server timer, autosave lock, server-side scoring, import validation/private storage, and candidate answer-key non-disclosure are implemented and covered by focused checks. No known critical/high issue remains.
 - Product flow: pass. Admin can manage subjects/packages/sessions/imports/assignments/results; candidates can enter assigned exams, answer, autosave, submit, and expire safely; staff/admin can review results.
 - Scope firewall: pass with documented integration touches only. No auth, payment, document, profile, registration, dashboard layout, global role, or global theme rewrite was performed.
-- Residual limitations: option randomization is configured but not rendered yet; pass/fail does not automatically change admission accepted/rejected status; XLSX only, no XLS; untouched expired attempts finalize on next exam request rather than via scheduler; richer retake policy would need a future schema/product decision.
+- Residual limitations: option randomization is configured but not rendered yet; pass/fail does not automatically change admission accepted/rejected status; XLSX only, no XLS; untouched expired attempts finalize on next exam request rather than via scheduler; richer retake policy would need a future schema/product decision; Monitoring Ujian is polling-based rather than websocket-based; `RichExamText` is not a full TeX renderer.
 - UX polish residual limitations: no browser/E2E screenshot pass was completed for Task 4 because the local Playwright runtime has no Chrome/Chromium and the installer required interactive sudo. Static UI audit, frontend build, route list, and focused tests passed.

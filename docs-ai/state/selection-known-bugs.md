@@ -15,6 +15,7 @@
 - Task 6 completed the dashboard shell/navigation V2 without changing backend routes or business logic. No known critical/high dashboard shell issue remains after static audit, TypeScript no-emit, production build, dashboard route list, and diff checks.
 - Status Pendaftaran Center is implemented without schema changes or lifecycle semantic changes. No known critical/high issue remains after focused feature tests and production frontend build.
 - Candidate Panel Gold activated the remaining candidate sidebar pages without schema changes, lifecycle semantic changes, payment processing changes, document logic changes, or exam engine changes. No known critical/high issue remains after focused candidate panel route/privacy tests and production frontend build.
+- Dashboard Polish, Settings, and Exam Monitoring completed on 2026-07-05. No known critical/high issue remains after TypeScript no-emit, PHP lint, dashboard route list, production frontend build, full feature test suite, diff whitespace check, and cache clear.
 
 ## Build or Test Failures
 
@@ -24,6 +25,7 @@
 - Task 6 verification passed for `npx tsc --noEmit`, `npm run build`, `php artisan route:list --path=dashboard`, and `git diff --check`.
 - Status Pendaftaran verification passed for `php artisan test tests/Feature/StatusPendaftaranFeatureTest.php`, `php artisan test tests/Feature/CandidateStatusFlowTest.php`, `php artisan test tests/Feature/CandidateFeatureGateTest.php`, `npm run build`, `php artisan route:list --path=dashboard`, and `git diff --check`.
 - Candidate Panel Gold verification passed for `php artisan test tests/Feature/CandidatePanelGoldFeatureTest.php`, `php artisan test tests/Feature/CandidateFeatureGateTest.php`, `php artisan test tests/Feature/CandidateStatusFlowTest.php`, `npm run build`, `php artisan route:list --path=dashboard`, and `git diff --check`.
+- Dashboard Polish, Settings, and Exam Monitoring verification passed for `npx tsc --noEmit --pretty false`, PHP lint on touched backend files/routes, `php artisan route:list --path=dashboard`, `npm run build`, `php artisan test` (47 passed, 215 assertions), `git diff --check`, and `php artisan optimize:clear`.
 - Runtime zip support verification passed inside Docker: `php -m | grep -i zip`, `php -r "var_dump(class_exists(ZipArchive::class));"`, `php artisan test tests/Feature/OnlineSelectionExamImportTest.php`, and `php artisan test tests/Feature/OnlineSelectionExamSecurityTest.php`.
 - Dependency investigation failure intentionally handled:
   - `composer require maatwebsite/excel:^3.1.69 phpoffice/phpspreadsheet:^1.30.5 --with-all-dependencies` failed because patched PhpSpreadsheet 1.30.5 requires PHP `<8.5` while the local runtime is PHP 8.5.7.
@@ -59,3 +61,6 @@
 - `Daftar Ulang` remains unavailable/future in Status Pendaftaran because no real daftar ulang workflow exists.
 - Candidate Panel Gold does not add live support/chat/ticketing. `Bantuan` is a contextual self-service help center that links to existing workflows.
 - Candidate selection result visibility remains controlled by existing session/package `show_result_to_candidate` flags. Hidden results intentionally show waiting states.
+- Exam monitoring is polling-based, not websocket-based. Query volume should be reviewed with realistic exam concurrency before high-scale production use.
+- `RichExamText` handles common superscript/degree notation only. Full TeX-style math should use a proper math renderer if required later.
+- Admin settings now exposes programs, extracurriculars, and payment configs, but dedicated per-setting audit-log views are not included yet.

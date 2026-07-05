@@ -48,6 +48,19 @@ The previously missing candidate menu pages are now implemented as real Inertia 
   - does not expose answers, answer keys, explanations, raw scoring internals, or internal audit metadata
   - final admission status remains manual through existing lifecycle semantics
 
+## Latest Candidate Polish
+
+The 2026-07-05 polish checkpoint extends the candidate panel without changing admission lifecycle semantics.
+
+- Payment success copy now tells candidates to monitor `Status Pendaftaran` and `Seleksi` because selection access can activate automatically from backend gates.
+- Gateway payment history and sidebar copy no longer ask candidates for manual proof upload.
+- Data Diri, Data Wali, and Data Kesehatan summary tabs now show a right-aligned `Halaman Selanjutnya` CTA only when required fields are complete.
+- Data Kesehatan final confirmation reminds candidates to check Dokumen and Pembayaran.
+- Data Kesehatan physical eye fields now display Mata Kiri and Mata Kanan in the same order as their saved backend fields.
+- Data Wali now uses the tab order Ibu -> Ayah -> Wali -> Profil Keluarga -> Rangkuman.
+- Data Wali supports the `Tidak Ingin Memberitahu` income option and conditional requirements for parent status, combined/separate income, shared/different address, and guardian need.
+- Minat & Bakat now reads active extracurricular options from the database and displays them in a searchable multi-select.
+
 ## Backend Structure
 
 The new candidate pages use read-model services under `app/Services/CandidatePanel`.
@@ -85,6 +98,8 @@ The pages use the existing dashboard layout, Tailwind classes, dark navy + gold 
 - Locked feature reasoning still comes from backend gates.
 - Payment metadata, gateway tokens, answer keys, explanations, and raw audit metadata are not exposed to candidate pages.
 - Accepted/rejected status is not auto-mutated from these pages.
+- Data Wali completion rules are owned by backend evaluator logic, not frontend-only checks.
+- Extracurricular options come from active database records, not hardcoded frontend arrays.
 
 ## Verification
 
@@ -94,4 +109,3 @@ Required checks for this feature:
 - `php artisan test tests/Feature/CandidatePanelGoldFeatureTest.php`
 - `php artisan route:list --path=dashboard`
 - `git diff --check`
-

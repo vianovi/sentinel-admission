@@ -25,6 +25,7 @@ use App\Http\Controllers\Dashboard\Admin\IndexController          as AdminDashbo
 use App\Http\Controllers\Dashboard\Admin\ProfileController        as AdminProfile;
 use App\Http\Controllers\Dashboard\Admin\CandidateController      as AdminCandidate;
 use App\Http\Controllers\Dashboard\Admin\WaveController           as AdminWave;
+use App\Http\Controllers\Dashboard\Admin\SystemSettingsController as AdminSystemSettings;
 use App\Http\Controllers\Dashboard\Admin\StaffController          as AdminStaffCtrl;
 use App\Http\Controllers\Dashboard\Admin\Exam\IndexController     as AdminExamDashboard;
 use App\Http\Controllers\Dashboard\Admin\Exam\SubjectController   as AdminExamSubject;
@@ -32,6 +33,7 @@ use App\Http\Controllers\Dashboard\Admin\Exam\PackageController   as AdminExamPa
 use App\Http\Controllers\Dashboard\Admin\Exam\QuestionImportController as AdminExamImport;
 use App\Http\Controllers\Dashboard\Admin\Exam\SessionController   as AdminExamSession;
 use App\Http\Controllers\Dashboard\Admin\Exam\ResultController    as AdminExamResult;
+use App\Http\Controllers\Dashboard\Admin\Exam\MonitoringController as AdminExamMonitoring;
 use App\Http\Controllers\Dashboard\Candidate\Exam\ExamController  as CandidateExam;
 use App\Http\Controllers\Dashboard\Candidate\Exam\AttemptController as CandidateExamAttempt;
 use App\Http\Controllers\Webhook\MidtransController;
@@ -401,8 +403,42 @@ Route::middleware(['auth', RoleMiddleware::class . ':admin'])
         // ── Waves ─────────────────────────────────────────────────────────
         Route::get('/waves', [AdminWave::class, 'index'])
             ->name('waves.index');
-        Route::post('/waves/{wave}/toggle', [AdminDashboard::class, 'toggleWave'])
+        Route::post('/waves', [AdminWave::class, 'store'])
+            ->name('waves.store');
+        Route::put('/waves/{wave}', [AdminWave::class, 'update'])
+            ->name('waves.update');
+        Route::delete('/waves/{wave}', [AdminWave::class, 'destroy'])
+            ->name('waves.destroy');
+        Route::post('/waves/{wave}/toggle', [AdminWave::class, 'toggle'])
             ->name('waves.toggle');
+
+        // ── System Settings ───────────────────────────────────────────────
+        Route::get('/settings', [AdminSystemSettings::class, 'index'])
+            ->name('settings');
+        Route::get('/programs', [AdminSystemSettings::class, 'programs'])
+            ->name('programs');
+        Route::post('/settings/programs', [AdminSystemSettings::class, 'storeProgram'])
+            ->name('settings.programs.store');
+        Route::put('/settings/programs/{program}', [AdminSystemSettings::class, 'updateProgram'])
+            ->name('settings.programs.update');
+        Route::delete('/settings/programs/{program}', [AdminSystemSettings::class, 'destroyProgram'])
+            ->name('settings.programs.destroy');
+        Route::post('/settings/programs/{program}/toggle', [AdminSystemSettings::class, 'toggleProgram'])
+            ->name('settings.programs.toggle');
+        Route::post('/settings/extracurriculars', [AdminSystemSettings::class, 'storeExtracurricular'])
+            ->name('settings.extracurriculars.store');
+        Route::put('/settings/extracurriculars/{extracurricular}', [AdminSystemSettings::class, 'updateExtracurricular'])
+            ->name('settings.extracurriculars.update');
+        Route::delete('/settings/extracurriculars/{extracurricular}', [AdminSystemSettings::class, 'destroyExtracurricular'])
+            ->name('settings.extracurriculars.destroy');
+        Route::post('/settings/extracurriculars/{extracurricular}/toggle', [AdminSystemSettings::class, 'toggleExtracurricular'])
+            ->name('settings.extracurriculars.toggle');
+        Route::post('/settings/payment-configs', [AdminSystemSettings::class, 'storePaymentConfig'])
+            ->name('settings.payment-configs.store');
+        Route::put('/settings/payment-configs/{paymentConfig}', [AdminSystemSettings::class, 'updatePaymentConfig'])
+            ->name('settings.payment-configs.update');
+        Route::delete('/settings/payment-configs/{paymentConfig}', [AdminSystemSettings::class, 'destroyPaymentConfig'])
+            ->name('settings.payment-configs.destroy');
 
         // ── Online Selection Exam ───────────────────────────────────────
         Route::prefix('exams')
@@ -410,6 +446,12 @@ Route::middleware(['auth', RoleMiddleware::class . ':admin'])
             ->group(function () {
                 Route::get('/', [AdminExamDashboard::class, 'index'])
                     ->name('index');
+                Route::get('/monitoring', [AdminExamMonitoring::class, 'index'])
+                    ->name('monitoring.index');
+                Route::get('/monitoring/feed', [AdminExamMonitoring::class, 'feed'])
+                    ->name('monitoring.feed');
+                Route::get('/monitoring/display', [AdminExamMonitoring::class, 'display'])
+                    ->name('monitoring.display');
 
                 Route::resource('subjects', AdminExamSubject::class)
                     ->only(['index', 'store', 'update', 'destroy']);
@@ -471,12 +513,6 @@ Route::middleware(['auth', RoleMiddleware::class . ':admin'])
         Route::get('/payment-recap', ComingSoonController::class)
             ->defaults('feature', 'admin.payment-recap')
             ->name('payment-recap');
-        Route::get('/programs', ComingSoonController::class)
-            ->defaults('feature', 'admin.programs')
-            ->name('programs');
-        Route::get('/settings', ComingSoonController::class)
-            ->defaults('feature', 'admin.settings')
-            ->name('settings');
         Route::get('/users', ComingSoonController::class)
             ->defaults('feature', 'admin.users')
             ->name('users');

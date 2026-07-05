@@ -92,7 +92,7 @@ The name **Sentinel** must not appear on user-facing pages.
 | `feat/*` | Daily feature branches |
 | `critical/*` | Critical audit/fix branches |
 
-Current branch when refreshed: `critical/candidate-lifecycle-gates`.
+Current branch when refreshed: `feat/dashboard-polish-settings-monitoring`.
 
 `config/sentinel.php` must not exist in `main` or `develop`.
 

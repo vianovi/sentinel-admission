@@ -153,8 +153,8 @@ export default function TabRangkuman({ data, completion, emptyRequiredFields, on
     }, [])
 
     const tabIndexes = {
-        ayah: 0,
-        ibu: 1,
+        ibu: 0,
+        ayah: 1,
         wali: 2,
         'profil-keluarga': 3,
         rangkuman: 4,
@@ -187,7 +187,7 @@ export default function TabRangkuman({ data, completion, emptyRequiredFields, on
                 title="Data wali belum diisi"
                 description="Mulai dari tab"
                 actionLabel="Ibu"
-                onAction={() => onGoToTab(1)}
+                onAction={() => onGoToTab(0)}
             />
         )
     }
@@ -210,7 +210,7 @@ export default function TabRangkuman({ data, completion, emptyRequiredFields, on
 
                 {/* Data Ibu */}
                 <SummaryCard icon="fa-solid fa-person-dress" title="Data Ibu"
-                    onEdit={() => onGoToTab(1)}>
+                    onEdit={() => onGoToTab(0)}>
                     <Row label="Nama"            value={data.mother_name} />
                     <Row label="Status"          value={STATUS_LABELS[data.mother_status]} />
                     <Row label="NIK"             value={data.mother_nik} />
@@ -220,7 +220,9 @@ export default function TabRangkuman({ data, completion, emptyRequiredFields, on
                     <Row label="Pekerjaan aktual" value={data.mother_job_actual} />
                     <Row label="Penghasilan"     value={
                         data.income_type === 'combined'
-                            ? 'Gabungan dengan Ayah'
+                            ? data.mother_income_range
+                                ? `${INCOME_LABELS[data.mother_income_range as IncomeRange]} (Gabungan Keluarga)`
+                                : 'Gabungan Keluarga'
                             : data.mother_income_range
                                 ? INCOME_LABELS[data.mother_income_range as IncomeRange]
                                 : null
@@ -231,7 +233,7 @@ export default function TabRangkuman({ data, completion, emptyRequiredFields, on
 
                 {/* Data Ayah */}
                 <SummaryCard icon="fa-solid fa-person" title="Data Ayah"
-                    onEdit={() => onGoToTab(0)}
+                    onEdit={() => onGoToTab(1)}
                     badge={fatherAbsent ? STATUS_LABELS[data.father_status] : undefined}>
                     {fatherAbsent ? (
                         <div className="px-4 py-4">
@@ -248,8 +250,10 @@ export default function TabRangkuman({ data, completion, emptyRequiredFields, on
                             <Row label="Pekerjaan (KTP)"  value={data.father_job_ktp} />
                             <Row label="Pekerjaan aktual" value={data.father_job_actual} />
                             <Row label="Penghasilan"      value={
-                                data.father_income_range
-                                    ? `${INCOME_LABELS[data.father_income_range as IncomeRange]}${data.income_type === 'combined' ? ' (Gabungan)' : ''}`
+                                data.income_type === 'combined'
+                                    ? 'Dicatat sebagai gabungan di Ibu'
+                                    : data.father_income_range
+                                    ? INCOME_LABELS[data.father_income_range as IncomeRange]
                                     : null
                             } />
                             <Row label="No. HP"           value={data.father_phone} />

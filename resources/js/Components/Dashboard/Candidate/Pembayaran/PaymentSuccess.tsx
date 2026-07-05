@@ -235,7 +235,7 @@ export default function PaymentSuccess({ payment }: Props) {
                     Terima kasih! 🎉
                 </p>
                 <p className="text-sm dark:text-slate-400 text-slate-600 max-w-sm leading-relaxed">
-                    Pembayaran biaya pendaftaran kamu sudah kami terima. Pantau status seleksi di halaman Status.
+                    Pembayaran biaya pendaftaran sudah tercatat lunas. Cek halaman Status Pendaftaran dan Seleksi untuk melihat akses ujian, jadwal sesi, dan langkah berikutnya.
                 </p>
             </div>
 
@@ -283,7 +283,7 @@ export default function PaymentSuccess({ payment }: Props) {
                     <div>
                         <p className="text-xs font-semibold dark:text-blue-300 text-blue-700">Langkah Selanjutnya</p>
                         <p className="text-xs dark:text-blue-400/70 text-blue-600/70 mt-0.5 leading-relaxed">
-                            Tim PSB akan menghubungi kamu untuk informasi tes seleksi. Pantau halaman Status secara berkala.
+                            Buka Status Pendaftaran dan Seleksi untuk melihat akses ujian, jadwal sesi, serta instruksi terbaru dari gelombang aktif.
                         </p>
                     </div>
                 </div>

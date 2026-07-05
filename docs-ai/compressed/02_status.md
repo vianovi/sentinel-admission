@@ -38,15 +38,15 @@ Environment note:
 
 ## Current Strategic Direction
 
-The project is in **Staff/Admin Dashboard V2**.
+The project is in **Dashboard polish, admin settings, and exam monitoring hardening**.
 
 Main focus:
 
 ```txt
-1. Keep Staff/Admin sidebar/menu grouping by operational domain.
-2. Keep future menu items routed to ComingSoon instead of 404.
-3. Harden Staff/Admin operational pages without expanding into ERP/finance scope.
-4. Continue final polish, status page decisions, and production audit before merge.
+1. Keep role sidebars/menu grouping by operational domain.
+2. Keep future menu items routed to real pages or ComingSoon instead of 404.
+3. Harden candidate registration/payment UX and admin operational settings without expanding into ERP/finance scope.
+4. Continue production audit, manual browser QA, and merge readiness.
 ```
 
 The system remains intentionally simple:
@@ -89,13 +89,19 @@ Work labels like bendahara, administrasi, operator, verifikator, or panitia are 
 | Data Kesehatan | ✅ Active | Show/save + upload/delete health documents active |
 | Data Dokumen | ✅ Active | Upload, preview, download, delete active |
 | Pembayaran | ✅ Active | Gateway/manual/cash flow, proof upload, cancel active |
-| Status Kandidat | 🔜 ComingSoon | Dedicated `/dashboard/status` route exists and opens ComingSoon |
+| Status Pendaftaran | ✅ Active | Dedicated `/dashboard/status-pendaftaran`; `/dashboard/status` redirects |
+| Kalender SPMB | ✅ Active | Candidate calendar page active |
+| Bantuan | ✅ Active | Context-aware help center |
+| Riwayat Pembayaran | ✅ Active | Candidate-safe payment ledger |
+| Status Seleksi | ✅ Active | Selection/exam status center |
+| Hasil Seleksi | ✅ Active | Candidate-visible result view based on existing visibility flags |
 
 Important correction:
 - `/dashboard/data-wali` is active.
 - `/dashboard/data-dokumen` is active.
 - `/dashboard/pembayaran` is active.
-- `/dashboard/status` is routed to ComingSoon until a real timeline/status page is built.
+- `/dashboard/status-pendaftaran` is active.
+- `/dashboard/status` redirects to the real Status Pendaftaran page.
 
 ### Staff Dashboard
 
@@ -123,13 +129,14 @@ Important correction:
 | Admin document area | ✅ Active | Preview + verify/reject active through admin routes |
 | Admin payment area | ✅ Active | Proof preview + verify/reject active through admin routes |
 | Admin change requests | ✅ Active | Same operational inbox as staff, admin-scoped |
-| Admin waves/gelombang | ✅ Active | List + active toggle page implemented |
+| Admin waves/gelombang | ✅ Active | Create/edit/activate/guarded delete page implemented |
+| Admin Pengaturan Sistem | ✅ Active | Programs, extracurriculars, and payment configs |
+| Admin Monitoring Ujian | ✅ Active | Polling-based monitoring page/feed/display |
 | Admin staff management | ✅ Active | Staff list + activate/suspend implemented |
 | Admin profile | ✅ Active | Show/update/avatar active |
 | Admin Kalender SPMB | 🔜 ComingSoon | `/dashboard/admin/calendar` opens role-aware ComingSoon |
 | Admin Perlu Tindakan | ✅ Active | Reuses `/dashboard/admin/change-requests` as the admin-safe action inbox |
 | Admin Pengguna | 🔜 ComingSoon | `/dashboard/admin/users` opens role-aware ComingSoon |
-| Admin Pengumuman | 🔜 ComingSoon | `/dashboard/admin/announcements` opens role-aware ComingSoon |
 | Admin Rekap / Laporan | 🔜 ComingSoon | `/dashboard/admin/reports` opens role-aware ComingSoon |
 
 ---
@@ -153,6 +160,9 @@ Important correction:
 | Candidate Data Dokumen V2 | Upload, preview, download, delete active |
 | Candidate Pembayaran V2 | Gateway/manual/cash, proof upload, cancel active |
 | Candidate Dashboard V2 | Admission Journey Center active with dashboard-oriented backend props, reusable React components, progress/next-action/status summaries |
+| Candidate Status Pendaftaran | Detailed checklist/status/timeline center active |
+| Candidate Panel Gold | Bantuan, Riwayat Pembayaran, Status Seleksi, and Hasil Seleksi active |
+| Candidate Registration Polish | Summary next-page CTAs, Data Wali tab/rules polish, database extracurricular options |
 | Error Pages | 404 NotFound + comingSoon mode exists |
 | Auto-Submitted Observer | CandidateObserver + GuardianObserver + HealthRecordObserver |
 | Backend Document Security | DocumentSecurityService, magic bytes, polyglot scan, security model |
@@ -169,7 +179,9 @@ Important correction:
 | Staff/Admin Change Requests | Operational inbox for candidate data/email requests with approve/reject |
 | Staff/Admin ComingSoon Routes | Future sidebar links route to role-aware ComingSoon, not 404 |
 | Admin Candidates | Candidate list + operational detail/review access |
-| Admin Waves | Gelombang list + activate/deactivate toggle |
+| Admin Waves | Gelombang create/edit/activate/guarded delete |
+| Admin System Settings | Programs, extracurriculars, and payment configs |
+| Admin Exam Monitoring | Monitoring Ujian page/feed/display |
 | Admin Staff Management | Staff account list + activate/suspend toggle |
 | Admin Profile | Show/update/avatar active |
 
@@ -189,15 +201,16 @@ Still needs final product decision:
 - Whether to keep manual approval + candidate apply flow.
 - Whether to add/restore email-token verification as a required final step.
 
-### 2. Candidate Status Page
+### 2. Manual Browser QA
 
 Current state:
-- Candidate status is visible in dashboard/profile.
-- Candidate Dashboard V2 now includes a simple status timeline/summary on `/dashboard`.
-- Dedicated sidebar route `/dashboard/status` exists and opens ComingSoon.
+- Candidate Status Pendaftaran is active as a detailed status/checklist center.
+- Candidate Panel Gold pages are active.
+- Admin Gelombang, Pengaturan Sistem, and Monitoring Ujian are active.
+- Browser automation was intentionally skipped for the latest polish checkpoint because the task forbade browser tools.
 
-Decision:
-- Route Status to ComingSoon until a real status/timeline page is built.
+Build/check later:
+- Manual browser QA with realistic candidate, staff, and admin accounts.
 
 ### 3. Reports / Exports / Standalone Queues
 
@@ -212,12 +225,11 @@ Build later:
 
 ### 4. ComingSoon Routing for Future Menus
 
-Visible as candidate sidebar items that route to ComingSoon:
-- Candidate Pengumuman
-- Candidate Bantuan
-- Candidate Riwayat Pembayaran
-- Candidate Status Seleksi
-- Candidate Hasil Seleksi
+Candidate sidebar items that were previously ComingSoon have been activated where real pages exist:
+- Bantuan
+- Riwayat Pembayaran
+- Status Seleksi
+- Hasil Seleksi
 
 Active for existing non-sidebar/fallback routes:
 - Staff/Admin Seleksi & Status
@@ -227,9 +239,6 @@ Active for existing non-sidebar/fallback routes:
 - Staff Sesi Ujian
 - Admin Kalender SPMB
 - Admin Pengguna
-- Admin Pengumuman
-- Admin Program / Jalur
-- Admin Pengaturan Sistem
 
 Rule:
 - Sidebar future items may be visible.
@@ -294,6 +303,7 @@ MENU
   - Paket Soal              active
   - Sesi Ujian              active
   - Hasil Ujian             active
+  - Monitoring Ujian        active
 - Rekap / Laporan           ComingSoon
 
 MANAJEMEN
@@ -302,7 +312,8 @@ MANAJEMEN
 
 KONFIGURASI SPMB
 - Gelombang                 active
-- Program / Jalur           ComingSoon
+- Program / Jalur           active
+- Pengaturan Sistem         active
 - Pengumuman                ComingSoon
 
 AKUN
@@ -311,7 +322,7 @@ AKUN
 
 Important direction:
 - Candidate status filtering stays inside the Semua Kandidat page, not as sidebar submenu items.
-- Program/Jalur, Pengumuman, Pengguna, Kalender SPMB, and Rekap/Laporan use ComingSoon until real pages exist.
+- Pengumuman, Pengguna, Kalender SPMB, and Rekap/Laporan use ComingSoon until real pages exist.
 - Payment and document sections currently exist inside staff/admin candidate detail.
 - Future standalone `Pembayaran` and `Dokumen` menus are allowed if they serve as queue/list pages, not duplicated detail pages.
 
@@ -344,13 +355,22 @@ PHASE 3 — Admin Subpages
 [x] Make admin pages functional, not static placeholders
 
 PHASE 4 — Candidate Status & Future Pages
-[x] Keep candidate Status page as ComingSoon and show simple status timeline on Candidate Dashboard V2
+[x] Build candidate Status Pendaftaran as detailed checklist/status center
 [x] Kalender SPMB
 [ ] Pengumuman page
-[ ] Bantuan page
-[ ] Candidate payment history page
-[ ] Candidate selection status/result pages
+[x] Bantuan page
+[x] Candidate payment history page
+[x] Candidate selection status/result pages
 [ ] Reports/exports when data shape is stable
+
+PHASE 5 — Dashboard Polish / Settings / Monitoring
+[x] Candidate payment success copy and gateway proof UX polish
+[x] Data Wali tab order and conditional validation/completion alignment
+[x] Database-driven extracurricular options for Minat & Bakat
+[x] Admin Gelombang create/edit/activate/delete management
+[x] Admin Pengaturan Sistem for programs, extracurriculars, and payment configs
+[x] Admin Monitoring Ujian page/feed/display
+[x] Common math superscript/degree rendering in exam pages
 
 ## Candidate Dashboard V2 Manual Validation Checklist
 

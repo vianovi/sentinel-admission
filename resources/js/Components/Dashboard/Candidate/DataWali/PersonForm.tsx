@@ -82,8 +82,13 @@ export default function PersonForm({
     const isAbsent    = statusValue === 'meninggal' || statusValue === 'tidak_diketahui'
     const wizardPhone = candidateAddr.phone_number ?? ''
 
+    const required = forceRequired && (prefix === 'guardian' || statusValue === 'hidup')
+    const incomeLabel = prefix === 'mother' && data.income_type === 'combined'
+        ? 'Penghasilan Gabungan Keluarga'
+        : `Penghasilan ${label}`
+
     // Collapsed state kalau absent
-    if (isAbsent && prefix !== 'mother') {
+    if (isAbsent) {
         return (
             <div ref={formRef} className="space-y-5">
                 <StatusRow prefix={prefix} label={label} get={get} set={set} err={err} />
@@ -116,7 +121,7 @@ export default function PersonForm({
             <SectionTitle>Identitas</SectionTitle>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <Field label={`Nama Lengkap ${label}`} required={prefix === 'mother' || forceRequired} error={err('name')}>
+                <Field label={`Nama Lengkap ${label}`} required={required} error={err('name')}>
                     <input
                         type="text"
                         className={inputCls(!!err('name'))}
@@ -127,7 +132,7 @@ export default function PersonForm({
                 </Field>
 
                 {showRelation && (
-                    <Field label="Hubungan dengan Anak" required={forceRequired} error={err('relation')}>
+                    <Field label="Hubungan dengan Anak" required={required} error={err('relation')}>
                         <input
                             type="text"
                             className={inputCls(!!err('relation'))}
@@ -138,7 +143,7 @@ export default function PersonForm({
                     </Field>
                 )}
 
-                <Field label="NIK" error={err('nik')}>
+                <Field label="NIK" required={required} error={err('nik')}>
                     <input
                         type="text"
                         className={inputCls(!!err('nik'))}
@@ -149,7 +154,7 @@ export default function PersonForm({
                     />
                 </Field>
 
-                <Field label="Tempat Lahir" error={err('place_of_birth')}>
+                <Field label="Tempat Lahir" required={required} error={err('place_of_birth')}>
                     <input
                         type="text"
                         className={inputCls(!!err('place_of_birth'))}
@@ -159,7 +164,7 @@ export default function PersonForm({
                     />
                 </Field>
 
-                <Field label="Tanggal Lahir" required={forceRequired} error={err('date_of_birth')}>
+                <Field label="Tanggal Lahir" required={required} error={err('date_of_birth')}>
                     <input
                         type="date"
                         className={inputCls(!!err('date_of_birth'))}
@@ -168,7 +173,7 @@ export default function PersonForm({
                     />
                 </Field>
 
-                <Field label="Pendidikan Terakhir" required={forceRequired} error={err('education')}>
+                <Field label="Pendidikan Terakhir" required={required} error={err('education')}>
                     <Select
                         options={EDUCATION_OPTIONS}
                         placeholder="Pilih pendidikan..."
@@ -184,8 +189,8 @@ export default function PersonForm({
             <SectionTitle>Kontak</SectionTitle>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <Field label="Nomor WhatsApp / HP" required={forceRequired} error={err('phone')}>
-                    <div className="flex gap-2">
+                <Field label="Nomor WhatsApp / HP" required={required} error={err('phone')}>
+                    <div className="flex flex-col gap-2 sm:flex-row">
                         <input
                             type="tel"
                             className={inputCls(!!err('phone'))}
@@ -197,14 +202,15 @@ export default function PersonForm({
                             <button
                                 type="button"
                                 onClick={() => set('phone', wizardPhone)}
-                                className="inline-flex h-[44px] shrink-0 items-center justify-center rounded-lg border px-3 text-xs font-semibold transition
+                                className="inline-flex min-h-[44px] w-full shrink-0 items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold leading-snug transition sm:w-[190px]
                                            dark:border-content-border border-black/[0.10]
                                            dark:bg-content-card bg-slate-50
                                            dark:text-slate-300 text-slate-600
                                            dark:hover:border-gold/50 hover:border-amber-300"
                                 title="Salin nomor WhatsApp dari pendaftaran awal"
                             >
-                                <i className="fa-solid fa-copy" />
+                                <i className="fa-solid fa-copy shrink-0" />
+                                <span>No. pre-registration sama? Klik untuk copy</span>
                             </button>
                         )}
                     </div>
@@ -215,7 +221,7 @@ export default function PersonForm({
             <SectionTitle>Pekerjaan &amp; Ekonomi</SectionTitle>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <Field label="Pekerjaan (sesuai KTP)" error={err('job_ktp')}>
+                <Field label="Pekerjaan (sesuai KTP)" required={required} error={err('job_ktp')}>
                     <input
                         type="text"
                         className={inputCls(!!err('job_ktp'))}
@@ -225,7 +231,7 @@ export default function PersonForm({
                     />
                 </Field>
 
-                <Field label="Pekerjaan Aktual" hint="Isi jika berbeda dengan KTP" error={err('job_actual')}>
+                <Field label="Pekerjaan Aktual" required={required} hint="Isi jika berbeda dengan KTP" error={err('job_actual')}>
                     <input
                         type="text"
                         className={inputCls(!!err('job_actual'))}
@@ -237,7 +243,8 @@ export default function PersonForm({
 
                 {showIncome && (
                     <Field
-                        label={`Penghasilan ${prefix === 'father' && data.income_type === 'combined' ? '(Gabungan Keluarga)' : label}`}
+                        label={incomeLabel}
+                        required={required}
                         error={err('income_range')}
                     >
                         <Select
@@ -251,13 +258,13 @@ export default function PersonForm({
                     </Field>
                 )}
 
-                {!showIncome && prefix === 'mother' && data.income_type === 'combined' && (
+                {!showIncome && prefix === 'father' && data.income_type === 'combined' && (
                     <div className="sm:col-span-2 rounded-lg border
                                     dark:border-content-border border-black/[0.07]
                                     dark:bg-content-muted bg-slate-50 px-4 py-3">
                         <p className="text-sm dark:text-slate-400 text-slate-500">
                             <i className="fa-solid fa-circle-info mr-2 text-gold" />
-                            Penghasilan digabung dengan Ayah. Lihat pengaturan di Tab Ayah.
+                            Penghasilan keluarga dicatat sebagai gabungan di Tab Ibu.
                         </p>
                     </div>
                 )}
@@ -273,17 +280,17 @@ export default function PersonForm({
                         errors={errors}
                         onChange={onChange}
                         candidateAddr={candidateAddr}
-                        required={forceRequired}
+                        required={required}
                     />
                 </>
             )}
 
-            {!showAddress && prefix === 'mother' && data.alamat_shared && (
+            {!showAddress && prefix === 'father' && data.alamat_shared && (
                 <div className="rounded-lg border dark:border-content-border border-black/[0.07]
                                 dark:bg-content-muted bg-slate-50 px-4 py-3">
                     <p className="text-sm dark:text-slate-400 text-slate-500">
                         <i className="fa-solid fa-house mr-2 text-gold" />
-                        Alamat sama dengan Ayah. Ubah di Tab Ayah atau aktifkan "Alamat Berbeda".
+                        Alamat Ayah sama dengan Ibu. Ubah di Tab Ibu atau aktifkan "Alamat Ayah &amp; Ibu Berbeda".
                     </p>
                 </div>
             )}

@@ -24,7 +24,7 @@
 
 import { useEffect, useRef, useState }  from "react";
 import { animate, stagger }             from "animejs";
-import { Head, router }                 from "@inertiajs/react";
+import { Head, Link, router }           from "@inertiajs/react";
 import Swal                             from "sweetalert2";
 import DashboardSplitLayout             from "@/Layouts/DashboardSplitLayout";
 import CandidateSidebar                 from "@/Components/Dashboard/Candidate/Shared/CandidateSidebar";
@@ -104,6 +104,7 @@ type DataChangeRequestResult = {
 type Props = {
     user: UserData;
     candidate: CandidateData | null;
+    extracurricular_options: { value: string; label: string }[];
     data_change_request_result: DataChangeRequestResult;
     flash?: { success?: string; error?: string };
 };
@@ -173,7 +174,7 @@ const formatHP = (val: string): string => {
 
 const reviewedByLabel = (name: string | null | undefined) => name ?? "petugas";
 
-export default function DataDiriPage({ user, candidate, data_change_request_result, flash }: Props) {
+export default function DataDiriPage({ user, candidate, extracurricular_options, data_change_request_result, flash }: Props) {
     const [activeTab,    setActiveTab]    = useState<TabId>("identitas");
     const [submitting,   setSubmitting]   = useState(false);
     const [errors,       setErrors]       = useState<Record<string, string>>({});
@@ -703,6 +704,7 @@ export default function DataDiriPage({ user, candidate, data_change_request_resu
                         <TabMinat
                             hobbies={hobbies}   ambitions={ambitions}
                             habits={habits}     extracts={extracts}
+                            extracurricularOptions={extracurricular_options}
                             setHobbies={setHobbies}   setAmbitions={setAmbitions}
                             setHabits={setHabits}     setExtracts={setExtracts}
                         />
@@ -791,9 +793,18 @@ export default function DataDiriPage({ user, candidate, data_change_request_resu
                                             : <><i className="fa-solid fa-floppy-disk"></i> Simpan Data</>
                                     }
                                 </button>
-                            ) : (
-                                // Rangkuman — tombol Kirim & Selesaikan ada di dalam TabRangkuman
-                                <div />
+                            ) : hasEmptyRequired ? <div /> : (
+                                <Link
+                                    href="/dashboard/data-wali"
+                                    className="ml-auto flex items-center gap-2 px-4 sm:px-6 py-2.5 rounded-xl
+                                               bg-blue-500 hover:bg-blue-400
+                                               text-white text-sm font-semibold whitespace-nowrap
+                                               transition-all duration-200 active:scale-95
+                                               min-h-[44px]"
+                                >
+                                    <span>Halaman Selanjutnya</span>
+                                    <i className="fa-solid fa-arrow-right text-xs"></i>
+                                </Link>
                             )}
                         </div>
                     );

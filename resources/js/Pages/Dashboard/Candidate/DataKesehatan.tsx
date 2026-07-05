@@ -12,7 +12,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { animate, stagger }                                   from "animejs";
-import { Head, router }                                       from "@inertiajs/react";
+import { Head, Link, router }                                 from "@inertiajs/react";
 import Swal                                                   from "sweetalert2";
 import DashboardSplitLayout                                   from "@/Layouts/DashboardSplitLayout";
 import CandidateSidebar                                       from "@/Components/Dashboard/Candidate/Shared/CandidateSidebar";
@@ -413,7 +413,10 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
 
         const confirm1 = await swalDark.fire({
             icon: "question", title: "Data sudah sesuai?",
-            text: "Pastikan semua informasi yang kamu isi sudah benar sebelum dikirim.",
+            html: `
+                <p class="text-sm text-slate-300">Pastikan semua informasi yang kamu isi sudah benar sebelum dikirim.</p>
+                <p class="mt-2 text-xs text-slate-400">Jangan lupa cek halaman Dokumen dan Pembayaran yaa.</p>
+            `,
             showCancelButton: true,
             confirmButtonText: "<i class='fa-solid fa-paper-plane mr-2'></i> Tetap Kirim",
             cancelButtonText:  "<i class='fa-solid fa-arrow-left mr-2'></i> Cek Lagi",
@@ -676,6 +679,19 @@ export default function DataKesehatan({ healthRecord, flash, user, candidate }: 
                                             : <><i className="fa-solid fa-floppy-disk"></i> Simpan Data</>
                                     }
                                 </button>
+                            ) : isRangkuman ? (
+                                hasEmptyRequired ? <div /> : (
+                                    <Link
+                                        href="/dashboard/data-dokumen"
+                                        className="ml-auto flex items-center gap-2 px-4 sm:px-6 py-2.5 rounded-xl
+                                                   bg-cyan-500 hover:bg-cyan-400
+                                                   text-white text-sm font-semibold whitespace-nowrap
+                                                   transition-all duration-200 active:scale-95 min-h-[44px]"
+                                    >
+                                        <span>Halaman Selanjutnya</span>
+                                        <i className="fa-solid fa-arrow-right text-xs"></i>
+                                    </Link>
+                                )
                             ) : (
                                 nextTab ? (
                                     <button

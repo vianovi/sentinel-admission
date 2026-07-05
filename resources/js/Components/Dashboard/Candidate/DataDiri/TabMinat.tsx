@@ -5,20 +5,17 @@ import Field, { inputCls, textareaCls } from "@/Components/UI/Field";
 import { makeSelectStyles }             from "@/Components/UI/selectStyles";
 import { useTheme }                     from "@/context/ThemeContext";
 
-const EXTRACURRICULAR_OPTIONS = [
-    "OSIS","Pramuka","PMR (Palang Merah Remaja)","Rohis","Paskibra",
-    "Futsal","Basket","Voli","Badminton","Renang","Pencak Silat","Taekwondo",
-    "Seni Musik","Seni Tari","Paduan Suara","Teater","Kaligrafi",
-    "Karya Ilmiah Remaja (KIR)","Olimpiade Matematika","Olimpiade Sains",
-    "Debat Bahasa Indonesia","Debat Bahasa Inggris",
-    "Tahfidz Al-Qur'an","Majelis Ta'lim","Robotika","Coding Club",
-].map(e => ({ value: e, label: e }));
+type SelectOption = {
+    value: string;
+    label: string;
+};
 
 type Props = {
     hobbies:      string;
     ambitions:    string;
     habits:       string;
     extracts:     string[];
+    extracurricularOptions: SelectOption[];
     setHobbies:   (v: string)   => void;
     setAmbitions: (v: string)   => void;
     setHabits:    (v: string)   => void;
@@ -27,6 +24,7 @@ type Props = {
 
 export default function TabMinat({
     hobbies, ambitions, habits, extracts,
+    extracurricularOptions,
     setHobbies, setAmbitions, setHabits, setExtracts,
 }: Props) {
     // isDark harus dari dalam komponen — tidak bisa module level
@@ -99,17 +97,38 @@ export default function TabMinat({
                     Pilih ekstrakulikuler yang diminati (bisa lebih dari satu)
                 </p>
 
-                <Select
-                    isMulti
-                    options={EXTRACURRICULAR_OPTIONS}
-                    value={EXTRACURRICULAR_OPTIONS.filter(o => extracts.includes(o.value))}
-                    onChange={opts => setExtracts(opts ? opts.map(o => o.value) : [])}
-                    placeholder="Pilih atau ketik untuk mencari..."
-                    noOptionsMessage={() => "Tidak ditemukan — kamu bisa input manual di Hobi"}
-                    {...portalProps()}
-                />
+                <div className="rounded-2xl border border-blue-500/15 bg-blue-500/[0.03] p-3">
+                    <Select
+                        isMulti
+                        options={extracurricularOptions}
+                        value={extracurricularOptions.filter(o => extracts.includes(o.value))}
+                        onChange={opts => setExtracts(opts ? opts.map(o => o.value) : [])}
+                        placeholder="Cari dan pilih ekstrakurikuler..."
+                        noOptionsMessage={() => "Tidak ada pilihan aktif"}
+                        closeMenuOnSelect={false}
+                        hideSelectedOptions={false}
+                        maxMenuHeight={260}
+                        {...portalProps()}
+                    />
+
+                    {extracts.length > 0 && (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                            {extracts.map(item => (
+                                <button
+                                    key={item}
+                                    type="button"
+                                    onClick={() => setExtracts(extracts.filter(selected => selected !== item))}
+                                    className="inline-flex min-h-9 items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/10 px-3 text-xs font-semibold text-blue-600 transition hover:border-blue-400 hover:bg-blue-500/15 dark:text-blue-300"
+                                >
+                                    {item}
+                                    <i className="fa-solid fa-xmark text-[10px]" />
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
                 <p className="text-[11px] dark:text-slate-500 text-slate-400 mt-2">
-                    Tidak ada di daftar? Tulis di kolom Hobi / Minat Bakat di atas.
+                    Pilihan mengikuti daftar aktif dari admin. Tidak ada di daftar? Tulis di kolom Hobi / Minat Bakat di atas.
                 </p>
             </section>
         </div>

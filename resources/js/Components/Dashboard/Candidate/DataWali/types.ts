@@ -9,6 +9,7 @@ export type EducationLevel =
 export type IncomeRange =
     | 'tidak_berpenghasilan' | 'di_bawah_1jt' | '1jt_2_5jt'
     | '2_5jt_3_5jt' | '3_5jt_5jt' | '5jt_10jt' | 'di_atas_10jt'
+    | 'tidak_ingin_memberitahu'
 
 export type PersonStatus     = 'hidup' | 'meninggal' | 'tidak_diketahui'
 export type MaritalStatus    = 'nikah_tercatat' | 'cerai_hidup' | 'cerai_mati'
@@ -128,6 +129,7 @@ export const EDUCATION_LABELS: Record<EducationLevel, string> = {
 
 export const INCOME_LABELS: Record<IncomeRange, string> = {
     tidak_berpenghasilan: 'Tidak Berpenghasilan',
+    tidak_ingin_memberitahu: 'Tidak Ingin Memberitahu',
     di_bawah_1jt:         '< Rp 1.000.000',
     '1jt_2_5jt':          'Rp 1.000.000 – 2.500.000',
     '2_5jt_3_5jt':        'Rp 2.500.000 – 3.500.000',

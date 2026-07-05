@@ -83,10 +83,19 @@ class GuardianController extends Controller
 
     private function rules(Request $request): array
     {
-        $fatherAbsent = in_array($request->father_status, ['meninggal', 'tidak_diketahui']);
-        $combined     = $request->income_type === 'combined';
-        $shared       = $request->boolean('alamat_shared');
+        $fatherAlive = $request->father_status === 'hidup';
+        $motherAlive = $request->mother_status === 'hidup';
+        $combined    = $request->income_type === 'combined';
+        $shared      = $request->boolean('alamat_shared');
         $guardianRequired = $request->marital_status && $request->marital_status !== 'nikah_tercatat';
+        $educationRule = 'in:tidak_sekolah,sd_sederajat,smp_sederajat,sma_smk_sederajat,d1,d2,d3,d4_s1,s2,s3';
+        $incomeRule = 'in:tidak_berpenghasilan,tidak_ingin_memberitahu,di_bawah_1jt,1jt_2_5jt,2_5jt_3_5jt,3_5jt_5jt,5jt_10jt,di_atas_10jt';
+        $phoneRule = 'regex:/^08[0-9]{8,12}$/';
+        $fatherRequired = Rule::requiredIf($fatherAlive);
+        $fatherIncomeRequired = Rule::requiredIf($fatherAlive && ! $combined);
+        $fatherAddressRequired = Rule::requiredIf($fatherAlive && ! $shared);
+        $motherRequired = Rule::requiredIf($motherAlive);
+        $guardianRule = Rule::requiredIf($guardianRequired);
 
         return [
             'no_kk'         => ['required', 'digits:16'],
@@ -95,58 +104,58 @@ class GuardianController extends Controller
 
             // ── Ayah ──────────────────────────────────────────────────────
             'father_status'         => ['required', 'in:hidup,meninggal,tidak_diketahui'],
-            'father_name'           => ['nullable', 'string', 'max:100'],
-            'father_nik'            => ['nullable', 'digits:16'],
-            'father_place_of_birth' => ['nullable', 'string', 'max:100'],
-            'father_date_of_birth'  => ['nullable', 'date', 'before:today'],
-            'father_education'      => ['nullable', 'in:tidak_sekolah,sd_sederajat,smp_sederajat,sma_smk_sederajat,d1,d2,d3,d4_s1,s2,s3'],
-            'father_job_ktp'        => ['nullable', 'string', 'max:100'],
-            'father_job_actual'     => ['nullable', 'string', 'max:100'],
-            'father_income_range'   => ['nullable', 'in:tidak_berpenghasilan,di_bawah_1jt,1jt_2_5jt,2_5jt_3_5jt,3_5jt_5jt,5jt_10jt,di_atas_10jt'],
-            'father_phone'          => ['nullable', 'regex:/^08[0-9]{8,12}$/'],
-            'father_province'       => ['nullable', 'string', 'max:100'],
-            'father_city'           => ['nullable', 'string', 'max:100'],
-            'father_district'       => ['nullable', 'string', 'max:100'],
-            'father_village'        => ['nullable', 'string', 'max:100'],
-            'father_address'        => ['nullable', 'string', 'max:500'],
-            'father_postal_code'    => ['nullable', 'digits:5'],
+            'father_name'           => [$fatherRequired, 'nullable', 'string', 'max:100'],
+            'father_nik'            => [$fatherRequired, 'nullable', 'digits:16'],
+            'father_place_of_birth' => [$fatherRequired, 'nullable', 'string', 'max:100'],
+            'father_date_of_birth'  => [$fatherRequired, 'nullable', 'date', 'before:today'],
+            'father_education'      => [$fatherRequired, 'nullable', $educationRule],
+            'father_job_ktp'        => [$fatherRequired, 'nullable', 'string', 'max:100'],
+            'father_job_actual'     => [$fatherRequired, 'nullable', 'string', 'max:100'],
+            'father_income_range'   => [$fatherIncomeRequired, 'nullable', $incomeRule],
+            'father_phone'          => [$fatherRequired, 'nullable', $phoneRule],
+            'father_province'       => [$fatherAddressRequired, 'nullable', 'string', 'max:100'],
+            'father_city'           => [$fatherAddressRequired, 'nullable', 'string', 'max:100'],
+            'father_district'       => [$fatherAddressRequired, 'nullable', 'string', 'max:100'],
+            'father_village'        => [$fatherAddressRequired, 'nullable', 'string', 'max:100'],
+            'father_address'        => [$fatherAddressRequired, 'nullable', 'string', 'max:500'],
+            'father_postal_code'    => [$fatherAddressRequired, 'nullable', 'digits:5'],
 
             // ── Ibu ───────────────────────────────────────────────────────
             'mother_status'         => ['required', 'in:hidup,meninggal,tidak_diketahui'],
-            'mother_name'           => ['required', 'string', 'max:100'],
-            'mother_nik'            => ['nullable', 'digits:16'],
-            'mother_place_of_birth' => ['nullable', 'string', 'max:100'],
-            'mother_date_of_birth'  => ['nullable', 'date', 'before:today'],
-            'mother_education'      => ['nullable', 'in:tidak_sekolah,sd_sederajat,smp_sederajat,sma_smk_sederajat,d1,d2,d3,d4_s1,s2,s3'],
-            'mother_job_ktp'        => ['nullable', 'string', 'max:100'],
-            'mother_job_actual'     => ['nullable', 'string', 'max:100'],
-            'mother_income_range'   => ['nullable', 'in:tidak_berpenghasilan,di_bawah_1jt,1jt_2_5jt,2_5jt_3_5jt,3_5jt_5jt,5jt_10jt,di_atas_10jt'],
-            'mother_phone'          => ['nullable', 'regex:/^08[0-9]{8,12}$/'],
-            'mother_province'       => ['nullable', 'string', 'max:100'],
-            'mother_city'           => ['nullable', 'string', 'max:100'],
-            'mother_district'       => ['nullable', 'string', 'max:100'],
-            'mother_village'        => ['nullable', 'string', 'max:100'],
-            'mother_address'        => ['nullable', 'string', 'max:500'],
-            'mother_postal_code'    => ['nullable', 'digits:5'],
+            'mother_name'           => [$motherRequired, 'nullable', 'string', 'max:100'],
+            'mother_nik'            => [$motherRequired, 'nullable', 'digits:16'],
+            'mother_place_of_birth' => [$motherRequired, 'nullable', 'string', 'max:100'],
+            'mother_date_of_birth'  => [$motherRequired, 'nullable', 'date', 'before:today'],
+            'mother_education'      => [$motherRequired, 'nullable', $educationRule],
+            'mother_job_ktp'        => [$motherRequired, 'nullable', 'string', 'max:100'],
+            'mother_job_actual'     => [$motherRequired, 'nullable', 'string', 'max:100'],
+            'mother_income_range'   => [$motherRequired, 'nullable', $incomeRule],
+            'mother_phone'          => [$motherRequired, 'nullable', $phoneRule],
+            'mother_province'       => [$motherRequired, 'nullable', 'string', 'max:100'],
+            'mother_city'           => [$motherRequired, 'nullable', 'string', 'max:100'],
+            'mother_district'       => [$motherRequired, 'nullable', 'string', 'max:100'],
+            'mother_village'        => [$motherRequired, 'nullable', 'string', 'max:100'],
+            'mother_address'        => [$motherRequired, 'nullable', 'string', 'max:500'],
+            'mother_postal_code'    => [$motherRequired, 'nullable', 'digits:5'],
 
             // ── Wali (semua nullable) ──────────────────────────────────────
-            'guardian_status'         => ['nullable', 'in:hidup,meninggal,tidak_diketahui'],
-            'guardian_name'           => [Rule::requiredIf($guardianRequired), 'nullable', 'string', 'max:100'],
-            'guardian_relation'       => [Rule::requiredIf($guardianRequired), 'nullable', 'string', 'max:100'],
-            'guardian_nik'            => ['nullable', 'digits:16'],
-            'guardian_place_of_birth' => ['nullable', 'string', 'max:100'],
-            'guardian_date_of_birth'  => [Rule::requiredIf($guardianRequired), 'nullable', 'date', 'before:today'],
-            'guardian_education'      => [Rule::requiredIf($guardianRequired), 'nullable', 'in:tidak_sekolah,sd_sederajat,smp_sederajat,sma_smk_sederajat,d1,d2,d3,d4_s1,s2,s3'],
-            'guardian_job_ktp'        => ['nullable', 'string', 'max:100'],
-            'guardian_job_actual'     => ['nullable', 'string', 'max:100'],
-            'guardian_income_range'   => ['nullable', 'in:tidak_berpenghasilan,di_bawah_1jt,1jt_2_5jt,2_5jt_3_5jt,3_5jt_5jt,5jt_10jt,di_atas_10jt'],
-            'guardian_phone'          => [Rule::requiredIf($guardianRequired), 'nullable', 'regex:/^08[0-9]{8,12}$/'],
-            'guardian_province'       => [Rule::requiredIf($guardianRequired), 'nullable', 'string', 'max:100'],
-            'guardian_city'           => [Rule::requiredIf($guardianRequired), 'nullable', 'string', 'max:100'],
-            'guardian_district'       => [Rule::requiredIf($guardianRequired), 'nullable', 'string', 'max:100'],
-            'guardian_village'        => [Rule::requiredIf($guardianRequired), 'nullable', 'string', 'max:100'],
-            'guardian_address'        => [Rule::requiredIf($guardianRequired), 'nullable', 'string', 'max:500'],
-            'guardian_postal_code'    => [Rule::requiredIf($guardianRequired), 'nullable', 'digits:5'],
+            'guardian_status'         => [$guardianRule, 'nullable', 'in:hidup,meninggal,tidak_diketahui'],
+            'guardian_name'           => [$guardianRule, 'nullable', 'string', 'max:100'],
+            'guardian_relation'       => [$guardianRule, 'nullable', 'string', 'max:100'],
+            'guardian_nik'            => [$guardianRule, 'nullable', 'digits:16'],
+            'guardian_place_of_birth' => [$guardianRule, 'nullable', 'string', 'max:100'],
+            'guardian_date_of_birth'  => [$guardianRule, 'nullable', 'date', 'before:today'],
+            'guardian_education'      => [$guardianRule, 'nullable', $educationRule],
+            'guardian_job_ktp'        => [$guardianRule, 'nullable', 'string', 'max:100'],
+            'guardian_job_actual'     => [$guardianRule, 'nullable', 'string', 'max:100'],
+            'guardian_income_range'   => [$guardianRule, 'nullable', $incomeRule],
+            'guardian_phone'          => [$guardianRule, 'nullable', $phoneRule],
+            'guardian_province'       => [$guardianRule, 'nullable', 'string', 'max:100'],
+            'guardian_city'           => [$guardianRule, 'nullable', 'string', 'max:100'],
+            'guardian_district'       => [$guardianRule, 'nullable', 'string', 'max:100'],
+            'guardian_village'        => [$guardianRule, 'nullable', 'string', 'max:100'],
+            'guardian_address'        => [$guardianRule, 'nullable', 'string', 'max:500'],
+            'guardian_postal_code'    => [$guardianRule, 'nullable', 'digits:5'],
 
             // ── Profil Keluarga ────────────────────────────────────────────
             'family_email'      => ['nullable', 'email', 'regex:/@gmail\.com$/'],

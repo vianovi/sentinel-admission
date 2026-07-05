@@ -71,6 +71,7 @@ class Guardian extends Model
 
     public static array $incomeLabels = [
         'tidak_berpenghasilan' => 'Tidak Berpenghasilan',
+        'tidak_ingin_memberitahu' => 'Tidak Ingin Memberitahu',
         'di_bawah_1jt'        => '< Rp 1.000.000',
         '1jt_2_5jt'           => 'Rp 1.000.000 – 2.500.000',
         '2_5jt_3_5jt'         => 'Rp 2.500.000 – 3.500.000',
@@ -123,13 +124,9 @@ class Guardian extends Model
 
     public function requiredCompletionFields(): array
     {
-        $fields = array_keys(CandidateCompletionEvaluator::GUARDIAN_FIELDS);
-
-        if ($this->marital_status && $this->marital_status !== 'nikah_tercatat') {
-            $fields = array_merge($fields, array_keys(CandidateCompletionEvaluator::CONDITIONAL_GUARDIAN_FIELDS));
-        }
-
-        return $fields;
+        return collect(app(CandidateCompletionEvaluator::class)->guardianRequirements($this))
+            ->pluck('key')
+            ->all();
     }
 
     private function filledForCompletion(string $field): bool

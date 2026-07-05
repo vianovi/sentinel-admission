@@ -4,7 +4,7 @@
 
 Mission complete. UX polish checkpoint, Task 3 Admin Exam V2 stabilization, and Task 4 Stitch-based admin exam UI recovery are completed. No required continuation action remains for this directive.
 
-Task 5 candidate lifecycle/gate restructure is completed. Task 6 dashboard shell/navigation V2 is completed. Status Pendaftaran Center is completed. Candidate Panel Gold is completed for the candidate sidebar pages that were previously missing. The next useful task is a manual browser QA pass with real candidate, staff, and admin accounts.
+Task 5 candidate lifecycle/gate restructure is completed. Task 6 dashboard shell/navigation V2 is completed. Status Pendaftaran Center is completed. Candidate Panel Gold is completed for the candidate sidebar pages that were previously missing. Dashboard Polish, Settings, and Exam Monitoring is completed. The next useful task is a manual browser QA pass with real candidate, staff, and admin accounts.
 
 ## Instructions for Next Agent Run
 
@@ -20,6 +20,7 @@ Task 5 candidate lifecycle/gate restructure is completed. Task 6 dashboard shell
 10. For future dashboard shell work, start from `docs-ai/features/dashboard-navigation-v2.md` and `docs-ai/design/dashboard-shell-navigation-v2.md`.
 11. For future Status Pendaftaran work, start from `docs-ai/features/status-pendaftaran.md` and `docs-ai/audit/status-pendaftaran-audit.md`.
 12. For future candidate panel/menu work, start from `docs-ai/features/candidate-panel-gold.md` and verify whether the sidebar entry already has a real page before adding a placeholder.
+13. For future admin settings, wave management, candidate registration polish, or exam monitoring work, start from `docs-ai/features/dashboard-polish-settings-monitoring.md` and `docs-ai/audit/dashboard-polish-settings-monitoring-audit.md`.
 
 ## Do Not Touch
 
@@ -47,6 +48,12 @@ Candidate Panel Gold exception already completed:
 - Candidate Bantuan, Riwayat Pembayaran, Status Seleksi, and Hasil Seleksi routes/pages were activated from the candidate sidebar.
 - The work added read-only services/controllers/pages and focused tests only.
 - Payment metadata, exam answer keys, lifecycle semantics, schema, and accepted/rejected behavior were not changed.
+
+Dashboard Polish, Settings, and Exam Monitoring exception already completed:
+- Candidate payment/registration UI was polished and Data Wali validation/completion rules were aligned.
+- Admin Gelombang and Pengaturan Sistem were added using existing domain tables.
+- Admin Monitoring Ujian was added as a read-only polling dashboard/display.
+- Candidate lifecycle semantics, accepted/rejected behavior, payment processing, authorization roles, and exam scoring rules were not changed.
 
 ## Completed Phase 5 Concrete Steps
 
@@ -107,6 +114,20 @@ Candidate Panel Gold exception already completed:
 6. Added `tests/Feature/CandidatePanelGoldFeatureTest.php` for route/component coverage and payment metadata privacy.
 7. Updated durable documentation in `docs-ai/features/candidate-panel-gold.md`.
 
+## Completed Dashboard Polish, Settings, and Exam Monitoring Concrete Steps
+
+1. Updated candidate payment success copy and gateway payment proof language.
+2. Fixed Data Kesehatan eye field UI order while preserving `eye_left_*` and `eye_right_*` mapping.
+3. Added summary-tab `Halaman Selanjutnya` CTAs for Data Diri, Data Wali, and Data Kesehatan.
+4. Reordered Data Wali tabs and aligned conditional frontend/backend requirements.
+5. Added `Tidak Ingin Memberitahu` as a guardian income option across UI, validation, model labels, evaluator rules, and migrations.
+6. Replaced hardcoded Minat & Bakat extracurricular options with active database options and a searchable multi-select.
+7. Rebuilt Admin Gelombang into create/edit/activate/delete management.
+8. Added Admin Pengaturan Sistem for programs, extracurriculars, and payment configs.
+9. Added `RichExamText` for common math notation in candidate attempt and admin result views.
+10. Added Admin Monitoring Ujian route/page/feed/display backed by `ExamMonitoringService`.
+11. Ran TypeScript no-emit, PHP lint, dashboard route list, frontend build, full feature tests, diff whitespace check, and Laravel cache clear.
+
 ## Known Limitations to Document
 
 - This is not a proctoring/browser-lockdown system.
@@ -125,3 +146,4 @@ Candidate Panel Gold exception already completed:
 - Re-run manual dashboard shell QA in a browser for candidate, staff, and admin: expanded sidebar, minimized sidebar flyouts, submenu click behavior, topbar search popover, and profile dropdown.
 - Manually QA Status Pendaftaran in a browser for candidate, staff, and admin accounts, especially mobile checklist readability and internal quick-link flow.
 - Manually QA Candidate Panel Gold pages in a browser with real candidate data, especially empty states, payment ledger pagination, selection-session states, and result visibility.
+- Manually QA the new candidate registration polish, admin Gelombang/settings pages, and Monitoring Ujian display in a browser with realistic data because browser verification was intentionally not run for that checkpoint.

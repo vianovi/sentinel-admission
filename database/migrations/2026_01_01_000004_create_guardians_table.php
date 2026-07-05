@@ -33,7 +33,7 @@ return new class extends Migration
             $table->string('father_job_ktp')->nullable();
             $table->string('father_job_actual')->nullable();
             $table->enum('father_income_range', [
-                'tidak_berpenghasilan', 'di_bawah_1jt', '1jt_2_5jt',
+                'tidak_berpenghasilan', 'tidak_ingin_memberitahu', 'di_bawah_1jt', '1jt_2_5jt',
                 '2_5jt_3_5jt', '3_5jt_5jt', '5jt_10jt', 'di_atas_10jt'
             ])->nullable();
             $table->string('father_phone')->nullable();
@@ -57,7 +57,7 @@ return new class extends Migration
             $table->string('mother_job_ktp')->nullable();
             $table->string('mother_job_actual')->nullable();
             $table->enum('mother_income_range', [
-                'tidak_berpenghasilan', 'di_bawah_1jt', '1jt_2_5jt',
+                'tidak_berpenghasilan', 'tidak_ingin_memberitahu', 'di_bawah_1jt', '1jt_2_5jt',
                 '2_5jt_3_5jt', '3_5jt_5jt', '5jt_10jt', 'di_atas_10jt'
             ])->nullable();
             $table->string('mother_phone')->nullable();
@@ -82,7 +82,7 @@ return new class extends Migration
             $table->string('guardian_job_ktp')->nullable();
             $table->string('guardian_job_actual')->nullable();
             $table->enum('guardian_income_range', [
-                'tidak_berpenghasilan', 'di_bawah_1jt', '1jt_2_5jt',
+                'tidak_berpenghasilan', 'tidak_ingin_memberitahu', 'di_bawah_1jt', '1jt_2_5jt',
                 '2_5jt_3_5jt', '3_5jt_5jt', '5jt_10jt', 'di_atas_10jt'
             ])->nullable();
             $table->string('guardian_phone')->nullable();

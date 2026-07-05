@@ -18,6 +18,8 @@ Implemented areas:
 - Submit and auto-submit on expiration
 - Server-side scoring
 - Admin and staff result review
+- Admin monitoring dashboard/feed/display for in-progress exam activity
+- Common superscript and degree notation rendering in exam text
 - Basic exam audit log
 
 The engine does not change final admission acceptance/rejection status automatically. Exam results are review data for selection decisions.
@@ -44,8 +46,17 @@ The engine does not change final admission acceptance/rejection status automatic
 6. Create a session from `Sesi`.
 7. Assign eligible candidates from the session detail page.
 8. Review attempts and scores from `Hasil Ujian`.
+9. Monitor active exam activity from `Monitoring Ujian`.
 
 Admin result detail may show answer keys because it is inside the protected admin dashboard route group.
+
+Admin monitoring routes:
+
+- `/dashboard/admin/exams/monitoring`
+- `/dashboard/admin/exams/monitoring/feed`
+- `/dashboard/admin/exams/monitoring/display`
+
+Monitoring is read-only and polling-based. It composes active session/attempt state from existing exam tables and does not add proctoring, webcam, browser lockdown, or screen recording.
 
 ## Staff Flow
 
@@ -74,6 +85,17 @@ Staff result detail may show answer keys because it is inside the protected staf
 9. Candidate may see score only if result visibility is enabled on the session/package.
 
 Candidate pages must not receive `correct_answer`, explanations, correctness flags, or awarded points during the exam.
+
+## Exam Text Rendering
+
+Candidate attempt and admin result review pages use `RichExamText` for common math notation:
+
+- caret powers such as `x^2`
+- grouped powers such as `x^{2n}` or `x^(2n)`
+- degree notation from `°` or `derajat`
+- line breaks
+
+This renderer is a safe React formatter, not raw HTML injection and not a full LaTeX/TeX engine.
 
 ## XLSX Import Format
 
@@ -227,6 +249,8 @@ Implemented audit events include:
 - Exam pass/fail does not automatically update final admission accepted/rejected status.
 - There is no background scheduler yet for expiring attempts that are never touched again; expiration is finalized on read/save/submit/sync.
 - No fake proctoring or browser-lockdown behavior is included.
+- Monitoring Ujian uses polling, not websocket streaming.
+- Math rendering supports common superscript/degree notation only; advanced math typesetting needs a future renderer decision.
 
 ## Manual Test Guide
 

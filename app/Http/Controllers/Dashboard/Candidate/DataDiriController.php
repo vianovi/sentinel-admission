@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Dashboard\Candidate;
 
 use App\Http\Controllers\Controller;
 use App\Models\Candidate;
+use App\Models\Extracurricular;
 use App\Services\CandidateStatus\CandidateStatusService;
 use App\Support\CandidateRequestPresenter;
 use Illuminate\Http\Request;
@@ -94,6 +95,15 @@ class DataDiriController extends Controller
                     ] : null,
             ] : null,
             'data_change_request_result' => $dataChangeResult,
+            'extracurricular_options' => Extracurricular::query()
+                ->active()
+                ->orderBy('name')
+                ->get(['name'])
+                ->map(fn (Extracurricular $extracurricular) => [
+                    'value' => $extracurricular->name,
+                    'label' => $extracurricular->name,
+                ])
+                ->all(),
             'flash' => [
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),

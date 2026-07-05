@@ -20,6 +20,8 @@ Status Pendaftaran Center completed on 2026-07-04 on branch `feature/status-pend
 
 Candidate Panel Gold completed on 2026-07-04 on branch `feature/status-pendaftaran-center`. It activates the remaining candidate sidebar pages that were previously missing or placeholder-like: Bantuan, Riwayat Pembayaran, Status Seleksi, and Hasil Seleksi. The implementation adds thin controllers, `app/Services/CandidatePanel` read-model services, reusable gold candidate panel UI components, focused route/privacy tests, and durable docs. No schema change, lifecycle semantic change, payment processing change, document logic change, or exam engine behavior change was made.
 
+Dashboard Polish, Settings, and Exam Monitoring checkpoint completed on 2026-07-05 on branch `feat/dashboard-polish-settings-monitoring`. It polishes candidate payment/registration UX, aligns Data Wali validation/completion rules, adds the `Tidak Ingin Memberitahu` income option, rebuilds Admin Gelombang management, adds Admin Pengaturan Sistem for programs/extracurriculars/payment configs, improves math notation rendering in exam pages, and adds Admin Monitoring Ujian pages/feed/display. Candidate lifecycle semantics, final accepted/rejected behavior, payment processing, authorization roles, and exam scoring rules were not changed.
+
 ## Completed Phases
 
 - Phase 0 — Project audit and implementation plan
@@ -119,6 +121,28 @@ Candidate Panel Gold completed on 2026-07-04 on branch `feature/status-pendaftar
 - Added focused tests in `tests/Feature/CandidatePanelGoldFeatureTest.php`.
 - Added docs:
   - `docs-ai/features/candidate-panel-gold.md`
+
+## Dashboard Polish, Settings, and Exam Monitoring
+
+- Candidate payment success copy now points candidates to `Status Pendaftaran` and `Seleksi`, not manual committee contact.
+- Data Kesehatan physical eye fields now display left/right in the same order as saved backend fields.
+- Data Diri, Data Wali, and Data Kesehatan summary tabs now include a right-aligned `Halaman Selanjutnya` CTA when required fields are complete.
+- Data Wali tab order is now Ibu -> Ayah -> Wali -> Profil Keluarga -> Rangkuman.
+- Data Wali backend validation and completion requirements now handle:
+  - living father/mother required-field rules
+  - separate vs combined income
+  - same vs different parent addresses
+  - conditional guardian requirement
+  - `Tidak Ingin Memberitahu` income option
+- Candidate Minat & Bakat reads active extracurricular options from the database and uses a searchable multi-select.
+- Gateway payment UI no longer asks for manual proof upload/review in candidate/staff/admin views.
+- Admin Gelombang now supports create, edit, activate, guarded delete, and richer wave fields.
+- Admin Pengaturan Sistem now manages programs, extracurriculars, and payment configs using existing tables.
+- Admin Seleksi now includes Monitoring Ujian with polling feed and compact display mode.
+- Exam question/result text now uses `RichExamText` for common superscript and degree notation without raw HTML.
+- Added docs:
+  - `docs-ai/features/dashboard-polish-settings-monitoring.md`
+  - `docs-ai/audit/dashboard-polish-settings-monitoring-audit.md`
 
 ## Task 6 Files Created
 

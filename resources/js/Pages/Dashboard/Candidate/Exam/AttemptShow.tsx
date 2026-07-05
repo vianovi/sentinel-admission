@@ -3,6 +3,7 @@ import axios from "axios";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import { BackLink, FlashMessage, PageHeader, StatusPill } from "@/Components/Dashboard/Candidate/Exam/ExamCandidateUi";
+import RichExamText from "@/Components/Dashboard/Exam/RichExamText";
 import type { PageProps } from "@/types";
 
 type Candidate = {
@@ -316,7 +317,9 @@ export default function CandidateAttemptShow({ candidate, exam, attempt, questio
                                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                                     <div>
                                         <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Soal {activeIndex + 1} dari {questions.length}</p>
-                                        <h2 className="mt-2 text-base font-bold leading-7 text-slate-900 dark:text-white">{activeQuestion.question_text}</h2>
+                                        <h2 className="mt-2 text-base font-bold leading-7 text-slate-900 dark:text-white">
+                                            <RichExamText text={activeQuestion.question_text} />
+                                        </h2>
                                     </div>
                                     <div className="flex flex-wrap gap-2">
                                         <StatusPill value={`${activeQuestion.point} poin`} />
@@ -339,7 +342,7 @@ export default function CandidateAttemptShow({ candidate, exam, attempt, questio
                                             }`}
                                         >
                                             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-xs font-black text-slate-700 dark:bg-white/10 dark:text-slate-200">{key}</span>
-                                            <span className="leading-6">{value}</span>
+                                            <RichExamText text={value} className="leading-6" />
                                         </button>
                                     ) : null)}
                                 </div>

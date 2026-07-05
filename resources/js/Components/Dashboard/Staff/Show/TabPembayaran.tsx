@@ -87,9 +87,11 @@ export default function TabPembayaran({ payment, basePath = "/dashboard/staff" }
         );
     }
 
+    const isGateway = payment.payment_channel === "gateway";
+
     const submitVerification = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (processing || !payment.can_verify) return;
+        if (processing || isGateway || !payment.can_verify) return;
 
         if (status === "rejected" && !reason.trim()) {
             await swalDark.fire({
@@ -159,8 +161,11 @@ export default function TabPembayaran({ payment, basePath = "/dashboard/staff" }
 
                 <SectionTitle
                     icon="fa-solid fa-receipt"
-                    title="Bukti Pembayaran"
-                    subtitle="Bukti manual dari kandidat untuk diverifikasi staff."
+                    title={isGateway ? "Konfirmasi Gateway" : "Bukti Pembayaran"}
+                    subtitle={isGateway
+                        ? "Payment gateway dikonfirmasi otomatis dari transaksi provider."
+                        : "Bukti manual dari kandidat untuk diverifikasi staff."
+                    }
                     tone="orange"
                 />
 
@@ -168,20 +173,25 @@ export default function TabPembayaran({ payment, basePath = "/dashboard/staff" }
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                         <div className="min-w-0">
                             <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-                                {payment.proof_original_filename ?? "Belum ada bukti pembayaran"}
+                                {isGateway
+                                    ? "Bukti manual tidak diperlukan"
+                                    : payment.proof_original_filename ?? "Belum ada bukti pembayaran"
+                                }
                             </p>
                             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                                {payment.proof_uploaded_at
+                                {isGateway
+                                    ? "Jika transaksi berhasil, status pembayaran berubah dari callback payment gateway. Staff tidak perlu memvalidasi bukti manual."
+                                    : payment.proof_uploaded_at
                                     ? `Diunggah pada ${payment.proof_uploaded_at} - percobaan ${payment.proof_attempt}`
                                     : "Kandidat belum mengunggah bukti pembayaran manual."}
                             </p>
-                            {payment.rejection_reason && (
+                            {!isGateway && payment.rejection_reason && (
                                 <p className="mt-2 text-xs leading-relaxed text-red-500">
                                     Alasan penolakan terakhir: {payment.rejection_reason}
                                 </p>
                             )}
                         </div>
-                        {payment.proof_url && (
+                        {!isGateway && payment.proof_url && (
                             <a
                                 href={payment.proof_url}
                                 target="_blank"
@@ -197,59 +207,70 @@ export default function TabPembayaran({ payment, basePath = "/dashboard/staff" }
             </div>
 
             <div className="space-y-4">
-                <form
-                    onSubmit={submitVerification}
-                    className="rounded-2xl border border-slate-200 p-5 dark:border-white/5"
-                >
-                    <p className="text-sm font-semibold text-slate-800 dark:text-white">
-                        Validasi Pembayaran
-                    </p>
-                    <p className="mt-0.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                        Tersedia setelah kandidat upload bukti manual.
-                    </p>
+                {isGateway ? (
+                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+                        <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
+                            Validasi manual tidak tersedia
+                        </p>
+                        <p className="mt-1 text-xs leading-relaxed text-emerald-700 dark:text-emerald-400">
+                            Transaksi gateway diproses otomatis. Jika belum lunas, cek status transaksi provider atau tunggu callback pembayaran.
+                        </p>
+                    </div>
+                ) : (
+                    <form
+                        onSubmit={submitVerification}
+                        className="rounded-2xl border border-slate-200 p-5 dark:border-white/5"
+                    >
+                        <p className="text-sm font-semibold text-slate-800 dark:text-white">
+                            Validasi Pembayaran
+                        </p>
+                        <p className="mt-0.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                            Tersedia setelah kandidat upload bukti manual.
+                        </p>
 
-                    {!payment.can_verify && (
-                        <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 dark:border-amber-500/20 dark:bg-amber-500/10">
-                            <p className="text-xs text-amber-700 dark:text-amber-400">
-                                Status saat ini belum mengizinkan validasi.
-                            </p>
-                        </div>
-                    )}
-
-                    <div className="mt-4 flex flex-col gap-3">
-                        <select
-                            value={status}
-                            onChange={(e) => setStatus(e.target.value as "verified" | "rejected")}
-                            disabled={!payment.can_verify}
-                            className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 transition-colors focus:border-orange-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-slate-900 dark:text-slate-200"
-                        >
-                            <option value="verified">Validasi / Lunas</option>
-                            <option value="rejected">Tolak Bukti</option>
-                        </select>
-
-                        {status === "rejected" && (
-                            <textarea
-                                value={reason}
-                                onChange={(e) => setReason(e.target.value)}
-                                placeholder="Tulis alasan penolakan..."
-                                rows={4}
-                                className="w-full resize-none rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-700 transition-colors placeholder:text-slate-400 focus:border-orange-500 focus:outline-none dark:border-white/10 dark:bg-slate-900 dark:text-slate-200 dark:placeholder:text-slate-500"
-                            />
+                        {!payment.can_verify && (
+                            <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 dark:border-amber-500/20 dark:bg-amber-500/10">
+                                <p className="text-xs text-amber-700 dark:text-amber-400">
+                                    Status saat ini belum mengizinkan validasi.
+                                </p>
+                            </div>
                         )}
 
-                        <button
-                            type="submit"
-                            disabled={!payment.can_verify || processing || (status === "rejected" && !reason.trim())}
-                            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-orange-500 text-sm font-semibold text-white shadow-sm shadow-orange-500/20 transition-all hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                            {processing ? (
-                                <><i className="fa-solid fa-spinner fa-spin"></i> Menyimpan...</>
-                            ) : (
-                                <><i className="fa-solid fa-check"></i> Simpan Validasi</>
+                        <div className="mt-4 flex flex-col gap-3">
+                            <select
+                                value={status}
+                                onChange={(e) => setStatus(e.target.value as "verified" | "rejected")}
+                                disabled={!payment.can_verify}
+                                className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 transition-colors focus:border-orange-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-slate-900 dark:text-slate-200"
+                            >
+                                <option value="verified">Validasi / Lunas</option>
+                                <option value="rejected">Tolak Bukti</option>
+                            </select>
+
+                            {status === "rejected" && (
+                                <textarea
+                                    value={reason}
+                                    onChange={(e) => setReason(e.target.value)}
+                                    placeholder="Tulis alasan penolakan..."
+                                    rows={4}
+                                    className="w-full resize-none rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-700 transition-colors placeholder:text-slate-400 focus:border-orange-500 focus:outline-none dark:border-white/10 dark:bg-slate-900 dark:text-slate-200 dark:placeholder:text-slate-500"
+                                />
                             )}
-                        </button>
-                    </div>
-                </form>
+
+                            <button
+                                type="submit"
+                                disabled={!payment.can_verify || processing || (status === "rejected" && !reason.trim())}
+                                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-orange-500 text-sm font-semibold text-white shadow-sm shadow-orange-500/20 transition-all hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                {processing ? (
+                                    <><i className="fa-solid fa-spinner fa-spin"></i> Menyimpan...</>
+                                ) : (
+                                    <><i className="fa-solid fa-check"></i> Simpan Validasi</>
+                                )}
+                            </button>
+                        </div>
+                    </form>
+                )}
             </div>
         </div>
     );

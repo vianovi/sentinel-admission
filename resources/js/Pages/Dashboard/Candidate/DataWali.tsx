@@ -1,7 +1,7 @@
 // resources/js/Pages/Dashboard/Candidate/DataWali.tsx
 
 import { useRef, useState, useEffect, useCallback, useMemo } from 'react'
-import { Head, router, usePage }                     from '@inertiajs/react'
+import { Head, Link, router, usePage }               from '@inertiajs/react'
 import { animate, stagger }                          from 'animejs'
 import Swal                                          from 'sweetalert2'
 import DashboardSplitLayout                          from '@/Layouts/DashboardSplitLayout'
@@ -30,29 +30,75 @@ const swalDark = Swal.mixin({
 // ─── Tab Definitions ──────────────────────────────────────────────────────────
 
 const TABS = [
-    { key: 'ayah',            label: 'Ayah',            icon: 'fa-solid fa-person' },
     { key: 'ibu',             label: 'Ibu',             icon: 'fa-solid fa-person-dress' },
+    { key: 'ayah',            label: 'Ayah',            icon: 'fa-solid fa-person' },
     { key: 'wali',            label: 'Wali',            icon: 'fa-solid fa-user-shield' },
     { key: 'profil-keluarga', label: 'Profil Keluarga', icon: 'fa-solid fa-house' },
     { key: 'rangkuman',       label: 'Rangkuman',       icon: 'fa-solid fa-list-check' },
 ] as const
 
 type WaliTabKey = typeof TABS[number]['key']
+type RequiredField = { key: keyof GuardianData; label: string; tab: WaliTabKey }
 
-const REQUIRED_FIELDS: { key: keyof GuardianData; label: string; tab: WaliTabKey }[] = [
-    { key: 'father_status', label: 'Status ayah', tab: 'ayah' },
-    { key: 'mother_status', label: 'Status ibu', tab: 'ibu' },
-    { key: 'mother_name', label: 'Nama ibu', tab: 'ibu' },
+const PROFILE_REQUIRED_FIELDS: RequiredField[] = [
     { key: 'no_kk', label: 'Nomor KK', tab: 'profil-keluarga' },
-    { key: 'income_type', label: 'Tipe penghasilan', tab: 'profil-keluarga' },
+    { key: 'income_type', label: 'Tipe penghasilan', tab: 'ibu' },
     { key: 'marital_status', label: 'Status pernikahan orang tua', tab: 'profil-keluarga' },
 ]
 
-const CONDITIONAL_WALI_FIELDS: { key: keyof GuardianData; label: string; tab: WaliTabKey }[] = [
+const MOTHER_ALIVE_FIELDS: RequiredField[] = [
+    { key: 'mother_status', label: 'Status ibu', tab: 'ibu' },
+    { key: 'mother_name', label: 'Nama ibu', tab: 'ibu' },
+    { key: 'mother_nik', label: 'NIK ibu', tab: 'ibu' },
+    { key: 'mother_place_of_birth', label: 'Tempat lahir ibu', tab: 'ibu' },
+    { key: 'mother_date_of_birth', label: 'Tanggal lahir ibu', tab: 'ibu' },
+    { key: 'mother_education', label: 'Pendidikan ibu', tab: 'ibu' },
+    { key: 'mother_job_ktp', label: 'Pekerjaan KTP ibu', tab: 'ibu' },
+    { key: 'mother_job_actual', label: 'Pekerjaan aktual ibu', tab: 'ibu' },
+    { key: 'mother_income_range', label: 'Penghasilan ibu/gabungan keluarga', tab: 'ibu' },
+    { key: 'mother_phone', label: 'Nomor HP ibu', tab: 'ibu' },
+    { key: 'mother_province', label: 'Provinsi ibu', tab: 'ibu' },
+    { key: 'mother_city', label: 'Kota/Kabupaten ibu', tab: 'ibu' },
+    { key: 'mother_district', label: 'Kecamatan ibu', tab: 'ibu' },
+    { key: 'mother_village', label: 'Kelurahan/Desa ibu', tab: 'ibu' },
+    { key: 'mother_address', label: 'Alamat ibu', tab: 'ibu' },
+    { key: 'mother_postal_code', label: 'Kode pos ibu', tab: 'ibu' },
+]
+
+const FATHER_ALIVE_FIELDS: RequiredField[] = [
+    { key: 'father_status', label: 'Status ayah', tab: 'ayah' },
+    { key: 'father_name', label: 'Nama ayah', tab: 'ayah' },
+    { key: 'father_nik', label: 'NIK ayah', tab: 'ayah' },
+    { key: 'father_place_of_birth', label: 'Tempat lahir ayah', tab: 'ayah' },
+    { key: 'father_date_of_birth', label: 'Tanggal lahir ayah', tab: 'ayah' },
+    { key: 'father_education', label: 'Pendidikan ayah', tab: 'ayah' },
+    { key: 'father_job_ktp', label: 'Pekerjaan KTP ayah', tab: 'ayah' },
+    { key: 'father_job_actual', label: 'Pekerjaan aktual ayah', tab: 'ayah' },
+    { key: 'father_phone', label: 'Nomor HP ayah', tab: 'ayah' },
+]
+
+const FATHER_INCOME_FIELD: RequiredField = { key: 'father_income_range', label: 'Penghasilan ayah', tab: 'ayah' }
+
+const FATHER_ADDRESS_FIELDS: RequiredField[] = [
+    { key: 'father_province', label: 'Provinsi ayah', tab: 'ayah' },
+    { key: 'father_city', label: 'Kota/Kabupaten ayah', tab: 'ayah' },
+    { key: 'father_district', label: 'Kecamatan ayah', tab: 'ayah' },
+    { key: 'father_village', label: 'Kelurahan/Desa ayah', tab: 'ayah' },
+    { key: 'father_address', label: 'Alamat ayah', tab: 'ayah' },
+    { key: 'father_postal_code', label: 'Kode pos ayah', tab: 'ayah' },
+]
+
+const CONDITIONAL_WALI_FIELDS: RequiredField[] = [
+    { key: 'guardian_status', label: 'Status wali', tab: 'wali' },
     { key: 'guardian_name', label: 'Nama wali', tab: 'wali' },
     { key: 'guardian_relation', label: 'Hubungan wali', tab: 'wali' },
+    { key: 'guardian_nik', label: 'NIK wali', tab: 'wali' },
+    { key: 'guardian_place_of_birth', label: 'Tempat lahir wali', tab: 'wali' },
     { key: 'guardian_date_of_birth', label: 'Tanggal lahir wali', tab: 'wali' },
     { key: 'guardian_education', label: 'Pendidikan wali', tab: 'wali' },
+    { key: 'guardian_job_ktp', label: 'Pekerjaan KTP wali', tab: 'wali' },
+    { key: 'guardian_job_actual', label: 'Pekerjaan aktual wali', tab: 'wali' },
+    { key: 'guardian_income_range', label: 'Penghasilan wali', tab: 'wali' },
     { key: 'guardian_phone', label: 'Nomor HP wali', tab: 'wali' },
     { key: 'guardian_province', label: 'Provinsi wali', tab: 'wali' },
     { key: 'guardian_city', label: 'Kota/Kabupaten wali', tab: 'wali' },
@@ -65,6 +111,36 @@ const CONDITIONAL_WALI_FIELDS: { key: keyof GuardianData; label: string; tab: Wa
 const isBlank = (value: unknown): boolean => {
     if (value === null || value === undefined) return true
     return typeof value === 'string' ? value.trim() === '' : false
+}
+
+const buildRequiredFields = (form: GuardianData, guardianRequired: boolean): RequiredField[] => {
+    const fields: RequiredField[] = [
+        { key: 'mother_status', label: 'Status ibu', tab: 'ibu' },
+        { key: 'father_status', label: 'Status ayah', tab: 'ayah' },
+        ...PROFILE_REQUIRED_FIELDS,
+    ]
+
+    if (form.mother_status === 'hidup') {
+        fields.push(...MOTHER_ALIVE_FIELDS.filter(field => field.key !== 'mother_status'))
+    }
+
+    if (form.father_status === 'hidup') {
+        fields.push(...FATHER_ALIVE_FIELDS.filter(field => field.key !== 'father_status'))
+
+        if (form.income_type === 'separate') {
+            fields.push(FATHER_INCOME_FIELD)
+        }
+
+        if (!form.alamat_shared) {
+            fields.push(...FATHER_ADDRESS_FIELDS)
+        }
+    }
+
+    if (guardianRequired) {
+        fields.push(...CONDITIONAL_WALI_FIELDS)
+    }
+
+    return fields
 }
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -107,8 +183,8 @@ export default function DataWali({ guardian, completion: initialCompletion, user
     const isRangkuman    = activeTab === rangkumanIndex
     const guardianRequired = !!form.marital_status && form.marital_status !== 'nikah_tercatat'
     const requiredFields = useMemo(
-        () => guardianRequired ? [...REQUIRED_FIELDS, ...CONDITIONAL_WALI_FIELDS] : REQUIRED_FIELDS,
-        [guardianRequired],
+        () => buildRequiredFields(form, guardianRequired),
+        [form, guardianRequired],
     )
     const emptyRequiredFields = requiredFields.filter(field => isBlank(form[field.key]))
     const hasEmptyRequired = emptyRequiredFields.length > 0
@@ -246,12 +322,12 @@ export default function DataWali({ guardian, completion: initialCompletion, user
                     }}
                     completion={completion}
                     tips={[
-                        'Data ibu wajib diisi minimal nama & nomor HP',
+                        'Mulai dari tab Ibu untuk mengatur alamat dan penghasilan keluarga',
                         'Ayah meninggal? Pilih status "Meninggal" — field lain disembunyikan',
                         guardianRequired
                             ? 'Data wali wajib karena status pernikahan orang tua bukan Nikah Tercatat'
                             : 'Wali bersifat opsional tapi sangat disarankan',
-                        'Data ekonomi digunakan untuk seleksi beasiswa',
+                        'Tidak ingin menyebutkan penghasilan? Pilih opsi "Tidak Ingin Memberitahu"',
                     ]}
                 />
             }
@@ -325,8 +401,8 @@ export default function DataWali({ guardian, completion: initialCompletion, user
                                dark:bg-content-surface bg-white
                                p-5 sm:p-6 min-h-[420px]"
                 >
-                    {activeTab === 0 && <TabAyah          data={form} errors={errors} onChange={handleChange} candidateAddr={candidate} />}
-                    {activeTab === 1 && <TabIbu            data={form} errors={errors} onChange={handleChange} candidateAddr={candidate} />}
+                    {activeTab === 0 && <TabIbu            data={form} errors={errors} onChange={handleChange} candidateAddr={candidate} />}
+                    {activeTab === 1 && <TabAyah          data={form} errors={errors} onChange={handleChange} candidateAddr={candidate} />}
                     {activeTab === 2 && <TabWali           data={form} errors={errors} onChange={handleChange} candidateAddr={candidate} guardianRequired={guardianRequired} />}
                     {activeTab === 3 && <TabProfilKeluarga data={form} errors={errors} onChange={handleChange} candidateFamilyCardNumber={candidate.family_card_number} />}
                     {activeTab === 4 && (
@@ -377,7 +453,18 @@ export default function DataWali({ guardian, completion: initialCompletion, user
                                     : <><i className="fa-solid fa-floppy-disk"></i> Simpan Data</>
                             }
                         </button>
-                    ) : <div />}
+                    ) : hasEmptyRequired ? <div /> : (
+                        <Link
+                            href="/dashboard/data-kesehatan"
+                            className="ml-auto flex items-center gap-2 px-4 sm:px-6 py-2.5 rounded-xl
+                                       bg-violet-500 hover:bg-violet-400
+                                       text-white text-sm font-semibold whitespace-nowrap
+                                       transition-all duration-200 active:scale-95 min-h-[44px]"
+                        >
+                            <span>Halaman Selanjutnya</span>
+                            <i className="fa-solid fa-arrow-right text-xs"></i>
+                        </Link>
+                    )}
                 </div>
 
             </div>

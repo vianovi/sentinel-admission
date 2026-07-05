@@ -43,7 +43,7 @@ For documentation maintenance, audits, and direct "please update this" tasks, ex
 git branch --show-current
 ```
 
-Current branch when this context was refreshed: `critical/candidate-lifecycle-gates`.
+Current branch when this context was refreshed: `feat/dashboard-polish-settings-monitoring`.
 
 ---
 
@@ -232,7 +232,7 @@ The name **Sentinel** must not appear on user-facing pages.
 | `feat/*` | Daily feature branches |
 | `critical/*` | Critical audit/fix branches |
 
-Current branch when refreshed: `critical/candidate-lifecycle-gates`.
+Current branch when refreshed: `feat/dashboard-polish-settings-monitoring`.
 
 `config/sentinel.php` must not exist in `main` or `develop`.
 

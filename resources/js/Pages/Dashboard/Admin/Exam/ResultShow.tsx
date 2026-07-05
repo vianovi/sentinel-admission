@@ -1,6 +1,7 @@
 import { Head, Link } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import { BackLink, ExamWorkspace, PageHeader, StatCard, StatusPill, secondaryButtonClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
+import RichExamText from "@/Components/Dashboard/Exam/RichExamText";
 
 type CandidateSummary = {
     id: number | null;
@@ -126,7 +127,9 @@ export default function ExamResultShow({ attempt }: Props) {
                             {attempt.answers.map((answer, index) => (
                             <article key={answer.id} className="rounded-lg border border-slate-200 p-4 dark:border-white/10">
                                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                                    <p className="text-sm font-bold leading-6 text-slate-900 dark:text-white">{index + 1}. {answer.question_text ?? "Soal tidak tersedia"}</p>
+                                    <p className="text-sm font-bold leading-6 text-slate-900 dark:text-white">
+                                        {index + 1}. <RichExamText text={answer.question_text ?? "Soal tidak tersedia"} />
+                                    </p>
                                     <StatusPill value={answer.is_correct === null ? "kosong" : answer.is_correct ? "benar" : "salah"} />
                                 </div>
 
@@ -142,7 +145,7 @@ export default function ExamResultShow({ attempt }: Props) {
                                                         : "bg-slate-50 text-slate-600 dark:bg-white/[0.03] dark:text-slate-300"
                                             }`}
                                         >
-                                            <span className="font-black">{key}.</span> {value}
+                                            <span className="font-black">{key}.</span> <RichExamText text={value} />
                                             {answer.correct_answer === key ? <span className="ml-2 text-xs font-bold">(kunci)</span> : null}
                                             {answer.selected_option === key ? <span className="ml-2 text-xs font-bold">(dipilih)</span> : null}
                                         </div>
@@ -157,7 +160,7 @@ export default function ExamResultShow({ attempt }: Props) {
 
                                 {answer.explanation ? (
                                     <p className="mt-3 rounded-lg bg-slate-50 p-3 text-sm leading-6 text-slate-600 dark:bg-white/[0.03] dark:text-slate-300">
-                                        {answer.explanation}
+                                        <RichExamText text={answer.explanation} />
                                     </p>
                                 ) : null}
                             </article>

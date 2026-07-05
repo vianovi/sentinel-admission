@@ -29,7 +29,8 @@ This audit focuses on what remains strategically important for Staff/Admin Dashb
 | Data Kesehatan | ✅ Active | Save + health document upload/delete active |
 | Data Dokumen | ✅ Active | Upload, preview, download, delete active |
 | Pembayaran | ✅ Active | Create payment, snap token, upload proof, cancel active |
-| Status Kandidat | ⚠️ Partial | Status visible, no dedicated route/page |
+| Status Pendaftaran | ✅ Active | Dedicated status/checklist center at `/dashboard/status-pendaftaran` |
+| Bantuan / Riwayat / Seleksi | ✅ Active | Candidate Panel Gold pages active |
 
 ### Staff
 
@@ -41,7 +42,7 @@ This audit focuses on what remains strategically important for Staff/Admin Dashb
 | Staff profile | ✅ Active | Show/update/avatar active |
 | Document workflow | ✅ Active | Preview + verify/reject active |
 | Payment workflow | ✅ Active | Proof preview + verify/reject active |
-| Data/email change approval | ❌ Missing | Main Staff/Admin V2 priority |
+| Data/email change approval | ✅ Active | Staff/admin change-request inbox active |
 
 ### Admin
 
@@ -245,9 +246,9 @@ AKUN
 ```txt
 MENU
 - Dashboard                 active
-- Kandidat                  page missing
-- Permintaan Perubahan      next build after/with staff
-- Seleksi & Status          ComingSoon
+- Kandidat                  active
+- Permintaan Perubahan      active
+- Seleksi & Status          active through exam/status pages
 - Laporan Umum              ComingSoon
 
 ADMINISTRASI
@@ -258,13 +259,13 @@ PEMBAYARAN
 - Rekap Pembayaran          ComingSoon
 
 PENGATURAN ADMIN
-- Gelombang                 route/controller exists, page missing
-- Program / Jalur           ComingSoon
-- Staff                     route/controller exists, page missing
-- Pengaturan Sistem         ComingSoon
+- Gelombang                 active create/edit/activate/delete
+- Program / Jalur           active through Pengaturan Sistem
+- Staff                     active
+- Pengaturan Sistem         active
 
 AKUN
-- Profil                    route/controller exists, page missing
+- Profil                    active
 ```
 
 ---

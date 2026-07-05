@@ -339,36 +339,7 @@ export default memo(function TabFisik({
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    {/* Mata kanan */}
-                    <div className="flex flex-col gap-3">
-                        <Field label="Mata Kanan — Kondisi" error={errors.eye_right_type} required>
-                            <Select
-                                options={EYE_TYPE_OPTIONS}
-                                value={EYE_TYPE_OPTIONS.find(o => o.value === eyeRightType) ?? null}
-                                onChange={opt => {
-                                    setEyeRightType(opt?.value ?? "");
-                                    if (!eyeNeedsValue(opt?.value ?? "")) setEyeRightValue("");
-                                    clearError("eye_right_type");
-                                }}
-                                placeholder="Pilih kondisi..."
-                                isSearchable={false}
-                                {...portalProps(!!errors.eye_right_type)}
-                            />
-                        </Field>
-                        {eyeNeedsValue(eyeRightType) && (
-                            <Field label="Nilai" hint="Contoh: 2.50 (tanpa tanda minus/plus)">
-                                <input
-                                    value={eyeRightValue}
-                                    onChange={e => setEyeRightValue(e.target.value)}
-                                    inputMode="decimal"
-                                    placeholder="Contoh: 2.50"
-                                    className={inputCls()}
-                                />
-                            </Field>
-                        )}
-                    </div>
-
-                    {/* Mata kiri */}
+                    {/* Mata kiri tampil dulu supaya posisi visual kiri/kanan sesuai perspektif pembaca. */}
                     <div className="flex flex-col gap-3">
                         <Field label="Mata Kiri — Kondisi" error={errors.eye_left_type} required>
                             <Select
@@ -391,6 +362,35 @@ export default memo(function TabFisik({
                                     onChange={e => setEyeLeftValue(e.target.value)}
                                     inputMode="decimal"
                                     placeholder="Contoh: 1.75"
+                                    className={inputCls()}
+                                />
+                            </Field>
+                        )}
+                    </div>
+
+                    {/* Mata kanan tetap tersimpan ke field eye_right_* di database. */}
+                    <div className="flex flex-col gap-3">
+                        <Field label="Mata Kanan — Kondisi" error={errors.eye_right_type} required>
+                            <Select
+                                options={EYE_TYPE_OPTIONS}
+                                value={EYE_TYPE_OPTIONS.find(o => o.value === eyeRightType) ?? null}
+                                onChange={opt => {
+                                    setEyeRightType(opt?.value ?? "");
+                                    if (!eyeNeedsValue(opt?.value ?? "")) setEyeRightValue("");
+                                    clearError("eye_right_type");
+                                }}
+                                placeholder="Pilih kondisi..."
+                                isSearchable={false}
+                                {...portalProps(!!errors.eye_right_type)}
+                            />
+                        </Field>
+                        {eyeNeedsValue(eyeRightType) && (
+                            <Field label="Nilai" hint="Contoh: 2.50 (tanpa tanda minus/plus)">
+                                <input
+                                    value={eyeRightValue}
+                                    onChange={e => setEyeRightValue(e.target.value)}
+                                    inputMode="decimal"
+                                    placeholder="Contoh: 2.50"
                                     className={inputCls()}
                                 />
                             </Field>

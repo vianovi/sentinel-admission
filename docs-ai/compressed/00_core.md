@@ -36,7 +36,7 @@ For documentation maintenance, audits, and direct "please update this" tasks, ex
 git branch --show-current
 ```
 
-Current branch when this context was refreshed: `critical/candidate-lifecycle-gates`.
+Current branch when this context was refreshed: `feat/dashboard-polish-settings-monitoring`.
 
 ---
 
