@@ -25,4 +25,23 @@
 
 ## Next Milestone
 
-Implement Staff Payment Operations workspace dan route/menu repoint.
+Implement Staff Candidate List Workbench.
+
+## Milestone: Staff Payment Operations
+
+- Menambahkan `StaffPaymentOperationalService` sebagai presenter/query payment operations berbasis tabel `payments`.
+- Menambahkan route staff `/dashboard/staff/payment-operations`.
+- Mengarahkan menu staff `Review Pembayaran` ke Payment Operations.
+- Menambahkan page `Dashboard/Staff/PaymentOperations` dengan KPI, filter transaksi, transaction table, dan detail panel.
+- Manual transfer/cash proof review tetap memakai route real `staff.payments.verify`.
+- Gateway/Midtrans tampil read-only, tanpa tombol verify manual atau sync override.
+- Menambahkan feature tests untuk manual fallback review dan gateway readonly.
+
+Checks:
+
+- `php artisan test tests/Feature/StaffCandidateV2Test.php`
+- `php artisan route:list --path=dashboard/staff`
+- `php -l app/Services/StaffPayment/StaffPaymentOperationalService.php`
+- `php -l app/Http/Controllers/Dashboard/Staff/IndexController.php`
+- `npm run build`
+- `git diff --check`

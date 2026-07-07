@@ -10,6 +10,7 @@ use App\Models\Payment;
 use App\Services\CandidateStatus\CandidateStatusService;
 use App\Services\PaymentService;
 use App\Services\StaffCandidate\StaffCandidateOperationalService;
+use App\Services\StaffPayment\StaffPaymentOperationalService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -48,7 +49,8 @@ class IndexController extends Controller
     public function __construct(
         private readonly PaymentService $paymentService,
         private readonly CandidateStatusService $statusService,
-        private readonly StaffCandidateOperationalService $staffCandidates
+        private readonly StaffCandidateOperationalService $staffCandidates,
+        private readonly StaffPaymentOperationalService $staffPayments
     ) {}
 
     // =============================================
@@ -165,6 +167,37 @@ class IndexController extends Controller
                 'program' => $program,
                 'action' => $action,
             ],
+        ]);
+    }
+
+    // =============================================
+    // GET /dashboard/staff/payment-operations
+    // =============================================
+
+    public function paymentOperations(Request $request): Response
+    {
+        $filters = [
+            'search' => trim((string) $request->input('search', '')),
+            'status' => trim((string) $request->input('status', '')),
+            'channel' => trim((string) $request->input('channel', '')),
+            'wave' => trim((string) $request->input('wave', '')),
+            'program' => trim((string) $request->input('program', '')),
+            'action' => trim((string) $request->input('action', '')),
+        ];
+
+        $query = $this->staffPayments
+            ->applyFilters($this->staffPayments->baseQuery(), $filters)
+            ->latest();
+
+        return Inertia::render('Dashboard/Staff/PaymentOperations', [
+            'payments' => $this->staffPayments->formatPaginator(
+                $query->paginate(20)->withQueryString()
+            ),
+            'summary' => $this->staffPayments->summary(),
+            'waves' => $this->staffPayments->waveOptions()->values(),
+            'programs' => $this->staffPayments->programOptions()->values(),
+            'action_options' => $this->staffPayments->actionOptions(),
+            'filters' => $filters,
         ]);
     }
 

@@ -2,6 +2,7 @@
 
 use App\Models\AdmissionWave;
 use App\Models\Candidate;
+use App\Models\Payment;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -132,5 +133,128 @@ it('exposes a filterable operational queue on the staff action page', function (
             ->has('operational_queue.items', 1)
             ->where('operational_queue.items.0.bucket', 'exam_unassigned')
             ->where('operational_queue.items.0.candidate.full_name', 'Verified Without Session')
+        );
+});
+
+it('renders staff payment operations as a transaction workspace with manual fallback review', function () {
+    $wave = staffCandidateV2Wave();
+    $staff = User::factory()->staff()->create();
+    $gatewayCandidate = staffCandidateV2Candidate($wave, [
+        'full_name' => 'Gateway Payment Candidate',
+        'candidate_code' => 'CDT-PAY-GATEWAY',
+        'nisn' => '6666666666',
+        'nik' => '6666666666666666',
+        'status' => 'submitted',
+    ]);
+    $manualCandidate = staffCandidateV2Candidate($wave, [
+        'full_name' => 'Manual Payment Candidate',
+        'candidate_code' => 'CDT-PAY-MANUAL',
+        'nisn' => '7777777777',
+        'nik' => '7777777777777777',
+        'status' => 'submitted',
+    ]);
+
+    Payment::create([
+        'candidate_id' => $gatewayCandidate->id,
+        'admission_wave_id' => $wave->id,
+        'candidate_code' => $gatewayCandidate->candidate_code,
+        'order_id' => 'ORDER-GATEWAY-OPS',
+        'payment_channel' => Payment::CHANNEL_GATEWAY,
+        'base_amount' => 150000,
+        'fee_amount' => 4500,
+        'final_amount' => 154500,
+        'payment_method' => 'bank_transfer',
+        'midtrans_transaction_id' => 'MIDTRANS-OPS-001',
+        'metadata' => [
+            'transaction_status' => 'pending',
+            'fraud_status' => 'accept',
+            'gross_amount' => '154500.00',
+        ],
+        'status' => Payment::STATUS_PENDING,
+        'expired_at' => now()->addDay(),
+    ]);
+
+    $manualPayment = Payment::create([
+        'candidate_id' => $manualCandidate->id,
+        'admission_wave_id' => $wave->id,
+        'candidate_code' => $manualCandidate->candidate_code,
+        'order_id' => 'ORDER-MANUAL-OPS',
+        'payment_channel' => Payment::CHANNEL_TRANSFER,
+        'base_amount' => 150000,
+        'fee_amount' => 0,
+        'final_amount' => 150000,
+        'status' => Payment::STATUS_PENDING,
+        'manual_status' => Payment::MANUAL_PROOF_UPLOADED,
+        'proof_path' => "sentinel/candidates/{$manualCandidate->candidate_code}/payments/proofs/proof.pdf",
+        'proof_original_filename' => 'proof.pdf',
+        'proof_uploaded_at' => now(),
+        'proof_attempt' => 1,
+        'expired_at' => now()->addDays(2),
+    ]);
+
+    $this->actingAs($staff)
+        ->get('/dashboard/staff/payment-operations?action=manual_review')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Dashboard/Staff/PaymentOperations')
+            ->where('filters.action', 'manual_review')
+            ->where('summary.total', 2)
+            ->where('summary.manual_review', 1)
+            ->has('payments.data', 1)
+            ->where('payments.data.0.id', $manualPayment->id)
+            ->where('payments.data.0.payment_channel', Payment::CHANNEL_TRANSFER)
+            ->where('payments.data.0.can_verify', true)
+            ->where('payments.data.0.action_state.key', 'manual_review')
+            ->where('payments.data.0.amounts.final_amount', 150000)
+            ->where('payments.data.0.proof.original_filename', 'proof.pdf')
+        );
+});
+
+it('keeps gateway transactions readonly in staff payment operations', function () {
+    $wave = staffCandidateV2Wave();
+    $staff = User::factory()->staff()->create();
+    $candidate = staffCandidateV2Candidate($wave, [
+        'full_name' => 'Readonly Gateway Candidate',
+        'candidate_code' => 'CDT-PAY-READONLY',
+        'nisn' => '8888888888',
+        'nik' => '8888888888888888',
+        'status' => 'submitted',
+    ]);
+
+    $payment = Payment::create([
+        'candidate_id' => $candidate->id,
+        'admission_wave_id' => $wave->id,
+        'candidate_code' => $candidate->candidate_code,
+        'order_id' => 'ORDER-GATEWAY-READONLY',
+        'payment_channel' => Payment::CHANNEL_GATEWAY,
+        'base_amount' => 150000,
+        'fee_amount' => 4500,
+        'final_amount' => 154500,
+        'payment_method' => 'bank_transfer',
+        'midtrans_transaction_id' => 'MIDTRANS-READONLY-001',
+        'metadata' => [
+            'transaction_status' => 'pending',
+            'fraud_status' => 'accept',
+            'gross_amount' => '154500.00',
+            'status_code' => '201',
+        ],
+        'status' => Payment::STATUS_PENDING,
+        'expired_at' => now()->addDay(),
+    ]);
+
+    $this->actingAs($staff)
+        ->get('/dashboard/staff/payment-operations?action=gateway_pending')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Dashboard/Staff/PaymentOperations')
+            ->where('filters.action', 'gateway_pending')
+            ->has('payments.data', 1)
+            ->where('payments.data.0.id', $payment->id)
+            ->where('payments.data.0.payment_channel', Payment::CHANNEL_GATEWAY)
+            ->where('payments.data.0.can_verify', false)
+            ->where('payments.data.0.proof.url', null)
+            ->where('payments.data.0.midtrans_transaction_id', 'MIDTRANS-READONLY-001')
+            ->where('payments.data.0.provider.transaction_status', 'pending')
+            ->where('payments.data.0.provider.gross_amount', 154500)
         );
 });

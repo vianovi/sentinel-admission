@@ -179,9 +179,9 @@ export const navigationConfig: Record<string, NavGroup[]> = {
                         },
                         {
                             label: "Review Pembayaran",
-                            href: "/dashboard/staff/candidates",
+                            href: "/dashboard/staff/payment-operations",
                             icon: "fa-solid fa-money-check-dollar",
-                            staffCandidateSection: "pembayaran",
+                            activeRules: [{ path: "/dashboard/staff/payment-operations" }],
                         },
                     ],
                 },
