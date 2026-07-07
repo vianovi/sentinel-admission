@@ -64,3 +64,31 @@ Limitations:
 
 - Export Excel is placement only and intentionally disabled.
 - Action filtering uses available data only; broader report/export behavior remains out of scope.
+
+## Stage 3 - Staff Candidate Detail Overview
+
+Status: complete.
+
+What changed:
+
+- Added a staff-first operational overview above the existing candidate detail tabs.
+- The overview shows lifecycle status, action-needed badge, completion/verification meters, wave/program metadata, waiting side, readiness strip, primary blocker, operational shortcuts, and recent activity.
+- Existing read-only field tabs remain available as drill-down sections instead of being the first and only staff experience.
+- Added a feature assertion that the staff candidate detail page receives the operational overview prop.
+
+Files changed:
+
+- `resources/js/Components/Dashboard/Staff/Show/OperationalOverview.tsx`
+- `resources/js/Pages/Dashboard/Staff/Show.tsx`
+- `tests/Feature/StaffCandidateV2Test.php`
+
+Checks:
+
+- `php artisan test tests/Feature/StaffCandidateV2Test.php`
+- `npm run build`
+- `git diff --check`
+
+Limitations:
+
+- Timeline is limited to existing status-pendaftaran events.
+- Final decision automation remains out of scope.

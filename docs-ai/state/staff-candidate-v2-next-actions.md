@@ -2,10 +2,9 @@
 
 ## Next Implementation Steps
 
-1. Add a staff-specific candidate detail overview above the existing tabs.
-2. Improve `Perlu Tindakan` into a real operational queue foundation.
-3. Run route checks, broader feature tests, frontend build, and diff hygiene checks.
-4. Commit each remaining stable milestone with clear messages.
+1. Improve `Perlu Tindakan` into a real operational queue foundation.
+2. Run route checks, broader feature tests, frontend build, and diff hygiene checks.
+3. Commit each remaining stable milestone with clear messages.
 
 ## Known Boundaries
 

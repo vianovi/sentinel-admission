@@ -6,6 +6,7 @@ import { animate, stagger } from "animejs";
 import Swal from "sweetalert2";
 import DashboardSplitLayout from "@/Layouts/DashboardSplitLayout";
 import StaffSidebar from "@/Components/Dashboard/Staff/Shared/StaffSidebar";
+import OperationalOverview, { type StaffCandidateOverview } from "@/Components/Dashboard/Staff/Show/OperationalOverview";
 import TabDataDiri, { type StaffCandidateData } from "@/Components/Dashboard/Staff/Show/TabDataDiri";
 import TabKesehatan, { type StaffHealthRecord } from "@/Components/Dashboard/Staff/Show/TabKesehatan";
 import TabWali, { type StaffGuardian } from "@/Components/Dashboard/Staff/Show/TabWali";
@@ -23,6 +24,7 @@ type Props = {
     base_path?: string;
     active_section: SectionId;
     candidate: StaffCandidateData;
+    overview: StaffCandidateOverview;
     documents: DocumentItem[];
     guardian: StaffGuardian;
     health_record: StaffHealthRecord;
@@ -109,6 +111,7 @@ export default function StaffCandidateShow({
     base_path,
     active_section,
     candidate,
+    overview,
     documents,
     guardian,
     health_record,
@@ -404,6 +407,8 @@ export default function StaffCandidateShow({
                         </Link>
                     </div>
                 </div>
+
+                <OperationalOverview overview={overview} basePath={basePath} />
 
                 <div
                     ref={contentRef}

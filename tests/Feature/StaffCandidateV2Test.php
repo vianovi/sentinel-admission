@@ -84,3 +84,28 @@ it('keeps staff candidate search grouped when status filters are active', functi
             ->where('candidates.data.0.operational.action_needed.key', 'core-data')
         );
 });
+
+it('provides an operational overview on the staff candidate detail page', function () {
+    $wave = staffCandidateV2Wave();
+    $staff = User::factory()->staff()->create();
+    $candidate = staffCandidateV2Candidate($wave, [
+        'full_name' => 'Detail Overview Candidate',
+        'candidate_code' => 'CDT-DETAIL-V2',
+        'nisn' => '4444444444',
+        'nik' => '4444444444444444',
+        'program_choice' => 'Boarding',
+        'status' => 'draft',
+    ]);
+
+    $this->actingAs($staff)
+        ->get("/dashboard/staff/candidates/{$candidate->id}")
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Dashboard/Staff/Show')
+            ->where('overview.identity.full_name', 'Detail Overview Candidate')
+            ->where('overview.identity.program_choice', 'Boarding')
+            ->where('overview.primary_blocker.key', 'core-data')
+            ->has('overview.readiness', 6)
+            ->has('overview.quick_links')
+        );
+});
