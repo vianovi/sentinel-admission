@@ -9,6 +9,7 @@ use App\Models\CandidateDocument;
 use App\Models\Payment;
 use App\Services\CandidateStatus\CandidateStatusService;
 use App\Services\PaymentService;
+use App\Services\StaffCandidate\StaffCandidateOperationalService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -46,7 +47,8 @@ class IndexController extends Controller
 
     public function __construct(
         private readonly PaymentService $paymentService,
-        private readonly CandidateStatusService $statusService
+        private readonly CandidateStatusService $statusService,
+        private readonly StaffCandidateOperationalService $staffCandidates
     ) {}
 
     // =============================================
@@ -117,39 +119,51 @@ class IndexController extends Controller
 
     public function candidates(Request $request): Response
     {
-        $search = $request->input('search', '');
-        $status = $request->input('status', '');
-        $wave   = $request->input('wave', '');
+        $search = trim((string) $request->input('search', ''));
+        $status = trim((string) $request->input('status', ''));
+        $wave   = trim((string) $request->input('wave', ''));
+        $program = trim((string) $request->input('program', ''));
+        $action = trim((string) $request->input('action', ''));
 
-        $query = Candidate::with(['admissionWave', 'documents'])
-            ->when($search, fn ($q) => $q
-                ->where('full_name', 'like', "%{$search}%")
-                ->orWhere('nisn', 'like', "%{$search}%")
-                ->orWhere('candidate_code', 'like', "%{$search}%")
-            )
+        $query = $this->staffCandidates->baseOperationalQuery()
+            ->when($search, fn ($q) => $q->where(function ($nested) use ($search) {
+                $nested
+                    ->where('full_name', 'like', "%{$search}%")
+                    ->orWhere('nisn', 'like', "%{$search}%")
+                    ->orWhere('candidate_code', 'like', "%{$search}%");
+            }))
             ->when($status, fn ($q) => $q->where('status', $status))
             ->when($wave,   fn ($q) => $q->where('admission_wave_id', $wave))
+            ->when($program, fn ($q) => $q->where('program_choice', $program))
+            ->when($action, fn ($q) => $this->staffCandidates->applyActionFilter($q, $action))
             ->latest();
 
         return Inertia::render('Dashboard/Staff/Candidates', [
-            'candidates' => $query->paginate(20)->through(fn ($c) => [
+            'candidates' => $query->paginate(20)->withQueryString()->through(fn ($c) => [
                 'id'             => $c->id,
                 'candidate_code' => $c->candidate_code,
                 'full_name'      => $c->full_name,
                 'nisn'           => $c->nisn,
                 'gender_label'   => $c->genderLabel(),
                 'school_origin'  => $c->school_origin,
+                'program_choice' => $c->program_choice,
                 'status'         => $c->status,
                 'admission_wave' => $c->admissionWave?->title,
                 'doc_count'      => $c->documents->count(),
                 'doc_pending'    => $c->documents->where('status', 'pending')->count(),
                 'created_at'     => $c->created_at->format('d M Y'),
+                'operational'    => $this->staffCandidates->listRow($c),
             ]),
+            'summary' => $this->candidateListSummary(),
             'waves'   => AdmissionWave::select('id', 'title')->latest()->get(),
+            'programs' => $this->programOptions(),
+            'action_options' => $this->staffCandidates->actionOptions(),
             'filters' => [
                 'search' => $search,
                 'status' => $status,
                 'wave'   => $wave,
+                'program' => $program,
+                'action' => $action,
             ],
         ]);
     }
@@ -182,6 +196,7 @@ class IndexController extends Controller
             'base_path' => "/dashboard/{$scope}",
             'active_section' => $section,
             'candidate' => $this->formatCandidate($candidate),
+            'overview' => $this->staffCandidates->detailOverview($candidate, $scope),
             'documents' => $candidate->documents->map(fn ($d) => [
                 'id'                => $d->id,
                 'doc_type'          => $d->doc_type,
@@ -441,5 +456,45 @@ class IndexController extends Controller
         return str_starts_with((string) $request->route()?->getName(), 'admin.')
             ? 'admin'
             : 'staff';
+    }
+
+    private function candidateListSummary(): array
+    {
+        return [
+            'total' => Candidate::count(),
+            'submitted' => Candidate::where('status', 'submitted')->count(),
+            'document_review' => Candidate::whereHas('documents', fn ($documents) => $documents->where('status', 'pending'))->count(),
+            'payment_review' => Candidate::whereHas('payments', fn ($payments) => $payments->where('manual_status', 'proof_uploaded'))->count(),
+            'change_requests' => Candidate::where(function ($query) {
+                $query
+                    ->where('data_change_request->status', 'pending')
+                    ->orWhereHas('user', fn ($user) => $user
+                        ->whereNotNull('pending_email')
+                        ->where(function ($pending) {
+                            $pending
+                                ->whereNull('pending_email_status')
+                                ->orWhere('pending_email_status', 'pending');
+                        }));
+            })->count(),
+            'verified_unassigned' => Candidate::where('status', 'verified')
+                ->whereDoesntHave('examSessionCandidates')
+                ->count(),
+        ];
+    }
+
+    private function programOptions(): array
+    {
+        return Candidate::query()
+            ->whereNotNull('program_choice')
+            ->where('program_choice', '!=', '')
+            ->distinct()
+            ->orderBy('program_choice')
+            ->pluck('program_choice')
+            ->map(fn (string $program) => [
+                'value' => $program,
+                'label' => $program,
+            ])
+            ->values()
+            ->all();
     }
 }

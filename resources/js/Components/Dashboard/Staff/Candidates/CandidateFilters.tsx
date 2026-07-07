@@ -12,6 +12,7 @@ export type Filters = {
     status: string;
     wave:   string;
     program?: string;
+    action?: string;
 };
 
 export type Wave = {
@@ -19,9 +20,16 @@ export type Wave = {
     title: string;
 };
 
+export type FilterOption = {
+    value: string;
+    label: string;
+};
+
 type Props = {
     filters: Filters;
     waves:   Wave[];
+    programs?: FilterOption[];
+    actionOptions?: FilterOption[];
     basePath?: string;
 };
 
@@ -30,12 +38,14 @@ export function buildCandidateListQuery(filters: Partial<Filters>, page?: number
     const status = (filters.status ?? "").trim();
     const wave = (filters.wave ?? "").trim();
     const program = (filters.program ?? "").trim();
+    const action = (filters.action ?? "").trim();
     const query: Record<string, string | number> = {};
 
     if (search) query.search = search;
     if (status) query.status = status;
     if (wave) query.wave = wave;
     if (program) query.program = program;
+    if (action) query.action = action;
     if (page && page > 1) query.page = page;
 
     return query;
@@ -67,7 +77,13 @@ const SELECT_CLASS = `
 // COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function CandidateFilters({ filters, waves, basePath = "/dashboard/staff/candidates" }: Props) {
+export default function CandidateFilters({
+    filters,
+    waves,
+    programs = [],
+    actionOptions = [],
+    basePath = "/dashboard/staff/candidates",
+}: Props) {
     const applyFilter = useCallback((patch: Partial<Filters>) => {
         router.get(
             basePath,
@@ -80,13 +96,14 @@ export default function CandidateFilters({ filters, waves, basePath = "/dashboar
         applyFilter({ search: e.target.value });
     }, [applyFilter]);
 
-    const hasActiveFilter = filters.search || filters.status || filters.wave || filters.program;
+    const hasActiveFilter = filters.search || filters.status || filters.wave || filters.program || filters.action;
 
     return (
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-white/10 dark:bg-slate-900">
+            <div className="grid gap-3 lg:grid-cols-[minmax(240px,1.4fr)_repeat(4,minmax(150px,1fr))_auto]">
 
-            {/* Search */}
-            <div className="relative flex-1">
+                {/* Search */}
+                <div className="relative flex-1">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2
                                  text-slate-400 pointer-events-none">
                     <i className="fa-solid fa-magnifying-glass text-xs" />
@@ -104,7 +121,7 @@ export default function CandidateFilters({ filters, waves, basePath = "/dashboar
                                focus:outline-none focus:border-emerald-500
                                transition-colors"
                 />
-            </div>
+                </div>
 
             {/* Status filter */}
             <select
@@ -129,11 +146,35 @@ export default function CandidateFilters({ filters, waves, basePath = "/dashboar
                 ))}
             </select>
 
+            {/* Program filter */}
+            <select
+                value={filters.program ?? ""}
+                onChange={(e) => applyFilter({ program: e.target.value })}
+                className={SELECT_CLASS}
+            >
+                <option value="">Semua Program</option>
+                {programs.map((program) => (
+                    <option key={program.value} value={program.value}>{program.label}</option>
+                ))}
+            </select>
+
+            {/* Action filter */}
+            <select
+                value={filters.action ?? ""}
+                onChange={(e) => applyFilter({ action: e.target.value })}
+                className={SELECT_CLASS}
+            >
+                <option value="">Semua Antrean</option>
+                {actionOptions.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+            </select>
+
             {/* Reset filter */}
             {hasActiveFilter && (
                 <button
                     type="button"
-                    onClick={() => applyFilter({ search: "", status: "", wave: "", program: "" })}
+                    onClick={() => applyFilter({ search: "", status: "", wave: "", program: "", action: "" })}
                     className="h-10 px-4 rounded-xl text-sm font-semibold
                                border border-slate-200 dark:border-white/10
                                text-slate-500 dark:text-slate-400
@@ -145,6 +186,7 @@ export default function CandidateFilters({ filters, waves, basePath = "/dashboar
                     Reset
                 </button>
             )}
+            </div>
         </div>
     );
 }

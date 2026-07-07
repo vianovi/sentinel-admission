@@ -2,13 +2,10 @@
 
 ## Next Implementation Steps
 
-1. Add backend operational summary props for staff candidates using existing services.
-2. Fix the grouped search query behavior and add a focused feature test.
-3. Upgrade `Semua Kandidat` with KPIs, richer filters, readiness indicators, action-needed badges, and disabled export placement.
-4. Add a staff-specific candidate detail overview above the existing tabs.
-5. Improve `Perlu Tindakan` into a real operational queue foundation.
-6. Run relevant backend tests, route checks, frontend build, and diff hygiene checks.
-7. Commit each stable milestone with clear messages.
+1. Add a staff-specific candidate detail overview above the existing tabs.
+2. Improve `Perlu Tindakan` into a real operational queue foundation.
+3. Run route checks, broader feature tests, frontend build, and diff hygiene checks.
+4. Commit each remaining stable milestone with clear messages.
 
 ## Known Boundaries
 

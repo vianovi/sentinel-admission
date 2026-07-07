@@ -2,7 +2,7 @@
 
 ## Stage 1 - Audit and Planning
 
-Status: in progress.
+Status: complete.
 
 Branch:
 
@@ -31,3 +31,36 @@ Checks:
 Limitations:
 
 - The user-provided task file is untracked and intentionally left untouched.
+
+## Stage 2 - Staff Candidate List V2
+
+Status: complete.
+
+What changed:
+
+- Added a backend operational summary service for staff candidate rows and queues.
+- Fixed staff candidate search grouping so search terms do not bypass active status filters.
+- Added staff list summary counts, program options, action options, and operational row props.
+- Upgraded `Semua Kandidat` with KPI cards, program/action filters, readiness strip, lifecycle badge, action-needed badge, completion/verification meters, quick row actions, and disabled Export Excel placement.
+- Added a focused feature test for grouped search behavior.
+
+Files changed:
+
+- `app/Services/StaffCandidate/StaffCandidateOperationalService.php`
+- `app/Http/Controllers/Dashboard/Staff/IndexController.php`
+- `resources/js/Pages/Dashboard/Staff/Candidates.tsx`
+- `resources/js/Components/Dashboard/Staff/Candidates/CandidateFilters.tsx`
+- `resources/js/Components/Dashboard/Staff/Candidates/CandidateTable.tsx`
+- `resources/js/Components/Dashboard/Staff/Candidates/OperationalBadges.tsx`
+- `tests/Feature/StaffCandidateV2Test.php`
+
+Checks:
+
+- `php artisan test tests/Feature/StaffCandidateV2Test.php`
+- `npm run build`
+- `git diff --check`
+
+Limitations:
+
+- Export Excel is placement only and intentionally disabled.
+- Action filtering uses available data only; broader report/export behavior remains out of scope.
