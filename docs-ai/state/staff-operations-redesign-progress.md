@@ -45,3 +45,18 @@ Checks:
 - `php -l app/Http/Controllers/Dashboard/Staff/IndexController.php`
 - `npm run build`
 - `git diff --check`
+
+## Milestone: Staff Candidate List Workbench
+
+- Menghapus tombol Export Excel yang sebelumnya disabled/soon.
+- Menambahkan `updated_at` pada row kandidat untuk konteks last update.
+- Mengubah table row menjadi lebih compact dengan satu aksi utama dan tombol detail preview.
+- Menambahkan panel preview kanan di `Semua Kandidat` untuk identity, lifecycle, primary blocker, readiness, progress, selection snapshot, dan link aksi nyata.
+- Menambahkan shortcut header yang real ke `Perlu Tindakan` dan `Payment Ops`.
+
+Checks:
+
+- `php artisan test tests/Feature/StaffCandidateV2Test.php`
+- `php -l app/Http/Controllers/Dashboard/Staff/IndexController.php`
+- `npm run build`
+- `git diff --check`

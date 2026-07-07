@@ -154,6 +154,7 @@ class IndexController extends Controller
                 'doc_count'      => $c->documents->count(),
                 'doc_pending'    => $c->documents->where('status', 'pending')->count(),
                 'created_at'     => $c->created_at->format('d M Y'),
+                'updated_at'     => $c->updated_at->format('d M Y H:i'),
                 'operational'    => $this->staffCandidates->listRow($c),
             ]),
             'summary' => $this->candidateListSummary(),

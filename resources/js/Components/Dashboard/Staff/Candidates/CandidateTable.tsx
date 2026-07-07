@@ -42,6 +42,7 @@ export type CandidateRow = {
     doc_count: number;
     doc_pending: number;
     created_at: string;
+    updated_at: string;
     operational?: CandidateOperational;
 };
 
@@ -49,14 +50,18 @@ type Props = {
     candidates: CandidateRow[];
     basePath?: string;
     selectedCandidateStorageKey?: string;
+    selectedCandidateId?: number | null;
+    onSelectCandidate?: (candidate: CandidateRow) => void;
 };
 
-const TABLE_HEADERS = ["Kandidat", "Lifecycle", "Readiness", "Progress", "Aksi"];
+const TABLE_HEADERS = ["Kandidat", "Lifecycle", "Readiness", "Progress", "Aksi Utama"];
 
 export default function CandidateTable({
     candidates,
     basePath = "/dashboard/staff/candidates",
     selectedCandidateStorageKey = "staff:selectedCandidateId",
+    selectedCandidateId = null,
+    onSelectCandidate,
 }: Props) {
     useEffect(() => {
         if (candidates.length === 0) return;
@@ -73,6 +78,11 @@ export default function CandidateTable({
         if (typeof window !== "undefined") {
             window.localStorage.setItem(selectedCandidateStorageKey, String(id));
         }
+    };
+
+    const selectCandidate = (candidate: CandidateRow) => {
+        rememberCandidate(candidate.id);
+        onSelectCandidate?.(candidate);
     };
 
     if (candidates.length === 0) {
@@ -95,7 +105,7 @@ export default function CandidateTable({
 
     return (
         <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900">
-            <div className="hidden border-b border-slate-100 bg-slate-50 px-4 py-3 dark:border-white/10 dark:bg-white/[0.03] xl:grid xl:grid-cols-[minmax(260px,1.3fr)_190px_minmax(330px,1.2fr)_190px_180px]">
+            <div className="hidden border-b border-slate-100 bg-slate-50 px-4 py-3 dark:border-white/10 dark:bg-white/[0.03] xl:grid xl:grid-cols-[minmax(240px,1.3fr)_170px_minmax(280px,1.2fr)_160px_160px]">
                 {TABLE_HEADERS.map((header) => (
                     <p key={header} className="text-[11px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">
                         {header}
@@ -107,14 +117,23 @@ export default function CandidateTable({
                 {candidates.map((candidate) => {
                     const initial = candidate.full_name.charAt(0).toUpperCase();
                     const detailHref = `${basePath}/${candidate.id}`;
-                    const statusHref = `${basePath}/${candidate.id}/status-pendaftaran`;
-                    const documentHref = `${basePath}/${candidate.id}/dokumen`;
-                    const paymentHref = `${basePath}/${candidate.id}/pembayaran`;
                     const operational = candidate.operational;
+                    const primaryHref = operational?.action_needed?.href && operational.action_needed.key !== "clear"
+                        ? operational.action_needed.href
+                        : detailHref;
+                    const primaryLabel = operational?.action_needed?.href && operational.action_needed.key !== "clear"
+                        ? "Buka Aksi"
+                        : "Buka Profil";
+                    const selected = selectedCandidateId === candidate.id;
 
                     return (
                         <li key={candidate.id} className="candidate-row opacity-0">
-                            <div className="grid gap-4 px-4 py-4 transition-colors hover:bg-slate-50 dark:hover:bg-white/[0.03] xl:grid-cols-[minmax(260px,1.3fr)_190px_minmax(330px,1.2fr)_190px_180px] xl:items-center">
+                            <div
+                                className={[
+                                    "grid gap-4 px-4 py-4 transition-colors xl:grid-cols-[minmax(240px,1.3fr)_170px_minmax(280px,1.2fr)_160px_160px] xl:items-center",
+                                    selected ? "bg-emerald-50/70 dark:bg-emerald-500/[0.06]" : "hover:bg-slate-50 dark:hover:bg-white/[0.03]",
+                                ].join(" ")}
+                            >
                                 <Link
                                     href={detailHref}
                                     onClick={() => rememberCandidate(candidate.id)}
@@ -146,6 +165,9 @@ export default function CandidateTable({
                                             {candidate.program_choice}
                                         </p>
                                     )}
+                                    <p className="text-[11px] text-slate-400">
+                                        Update {candidate.updated_at}
+                                    </p>
                                 </div>
 
                                 <div className="space-y-2">
@@ -168,36 +190,25 @@ export default function CandidateTable({
                                 </div>
 
                                 <div className="flex flex-wrap gap-2 xl:justify-end">
-                                    <Link
-                                        href={statusHref}
-                                        onClick={() => rememberCandidate(candidate.id)}
-                                        className="inline-flex min-h-9 items-center gap-2 rounded-md border border-amber-300 px-3 text-xs font-bold text-amber-700 transition hover:bg-amber-50 dark:border-amber-500/30 dark:text-amber-300 dark:hover:bg-amber-500/10"
+                                    <button
+                                        type="button"
+                                        onClick={() => selectCandidate(candidate)}
+                                        className={[
+                                            "inline-flex min-h-9 items-center gap-2 rounded-md px-3 text-xs font-bold transition",
+                                            selected
+                                                ? "bg-emerald-600 text-white"
+                                                : "border border-slate-200 text-slate-600 hover:border-emerald-400 hover:text-emerald-600 dark:border-white/10 dark:text-slate-300",
+                                        ].join(" ")}
                                     >
-                                        <i className="fa-solid fa-list-check text-[10px]" />
-                                        Status
-                                    </Link>
+                                        <i className="fa-solid fa-eye text-[10px]" />
+                                        Detail
+                                    </button>
                                     <Link
-                                        href={documentHref}
+                                        href={primaryHref}
                                         onClick={() => rememberCandidate(candidate.id)}
-                                        className="inline-flex min-h-9 items-center justify-center rounded-md border border-slate-200 px-3 text-xs font-bold text-slate-600 transition hover:border-blue-400 hover:text-blue-600 dark:border-white/10 dark:text-slate-300"
-                                        title="Review dokumen"
+                                        className="inline-flex min-h-9 items-center gap-2 rounded-md bg-slate-900 px-3 text-xs font-bold text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
                                     >
-                                        <i className="fa-solid fa-file-circle-check text-[11px]" />
-                                    </Link>
-                                    <Link
-                                        href={paymentHref}
-                                        onClick={() => rememberCandidate(candidate.id)}
-                                        className="inline-flex min-h-9 items-center justify-center rounded-md border border-slate-200 px-3 text-xs font-bold text-slate-600 transition hover:border-orange-400 hover:text-orange-600 dark:border-white/10 dark:text-slate-300"
-                                        title="Review pembayaran"
-                                    >
-                                        <i className="fa-solid fa-money-check-dollar text-[11px]" />
-                                    </Link>
-                                    <Link
-                                        href={detailHref}
-                                        onClick={() => rememberCandidate(candidate.id)}
-                                        aria-label={`Buka detail ${candidate.full_name}`}
-                                        className="inline-flex min-h-9 items-center justify-center rounded-md bg-slate-900 px-3 text-xs font-bold text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
-                                    >
+                                        {primaryLabel}
                                         <i className="fa-solid fa-arrow-right text-[10px]" />
                                     </Link>
                                 </div>
