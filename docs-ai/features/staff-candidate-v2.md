@@ -12,13 +12,13 @@ The design principle is scan-first and action-first. Candidate-style field grids
 - Where should staff click next?
 - What future exports/reports will this page support?
 
-## Primary Surfaces
+## Implemented Primary Surfaces
 
 ### Semua Kandidat
 
-The list should become the candidate data center. It should include compact KPIs, practical filters, readiness columns, action-needed badges, and quick row actions.
+The list is now a staff candidate data center with compact KPIs, practical filters, readiness columns, action-needed badges, and quick row actions.
 
-Planned filters:
+Implemented filters:
 
 - search
 - lifecycle status
@@ -26,7 +26,7 @@ Planned filters:
 - program
 - action queue
 
-Readiness indicators:
+Readiness indicators shown from backend summaries:
 
 - data completion
 - documents
@@ -37,9 +37,9 @@ Export Excel is intentionally only a disabled/coming-soon placement in Task-7.
 
 ### Candidate Detail Overview
 
-The detail page should open with an operational overview before the existing detailed tabs.
+The detail page now opens with an operational overview before the existing detailed tabs.
 
-Planned sections:
+Implemented sections:
 
 - identity and lifecycle header
 - wave/program metadata
@@ -52,12 +52,11 @@ Existing detail tabs remain useful as secondary review surfaces.
 
 ### Perlu Tindakan
 
-The action-needed page should become a queue foundation, not just a change-request inbox.
+The action-needed page is now a queue foundation, not just a change-request inbox. Existing data/email approval tabs remain available below the broader queue.
 
-Supported queue buckets should only use real available data:
+Supported queue buckets only use real available data:
 
-- pending data changes
-- pending email changes
+- pending data/email changes
 - incomplete core data
 - documents waiting review
 - payments waiting review
@@ -65,6 +64,19 @@ Supported queue buckets should only use real available data:
 - verified candidates not assigned to an exam/session
 
 Unsupported future queues must be documented instead of faked.
+
+## Backend Shape
+
+`StaffCandidateOperationalService` is the Task-7 backend presenter for list rows, detail overview data, action filters, and queue items. It reuses `StatusPendaftaranService` so lifecycle, completion, verification, review blocker, timeline, and quick-link logic stay backend-owned.
+
+The staff candidate list search query was grouped so search terms no longer bypass status/wave/program/action filters.
+
+## Current Limits
+
+- Queue items are generated from the latest candidate slice instead of a paginated reporting query.
+- Export Excel is not implemented.
+- No schema changes were added.
+- Final decision automation and broader report center work remain future tasks.
 
 ## Non-Goals
 

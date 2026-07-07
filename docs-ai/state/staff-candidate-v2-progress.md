@@ -122,3 +122,32 @@ Limitations:
 
 - Queue items are derived from the first 120 latest candidates to keep the foundation safe without adding pagination or new reporting backend.
 - No unsupported queue is faked; broader reporting and export should be separate backend work.
+
+## Stage 5 - Final Audit, Cleanup, and Docs
+
+Status: complete.
+
+What changed:
+
+- Updated the feature blueprint from planned language to implemented Task-7 behavior.
+- Captured final implementation limits and next recommended backend/reporting tasks.
+- Kept the user-provided task file untracked and out of commits.
+
+Files changed:
+
+- `docs-ai/features/staff-candidate-v2.md`
+- `docs-ai/state/staff-candidate-v2-progress.md`
+- `docs-ai/state/staff-candidate-v2-next-actions.md`
+
+Checks:
+
+- `php artisan test tests/Feature/StaffCandidateV2Test.php`
+- `php artisan test --testsuite=Feature`
+- `php artisan route:list --path=dashboard/staff`
+- `npm run build`
+- `git diff --check`
+
+Limitations:
+
+- No browser screenshot pass was added because the verified scope was feature tests, route checks, TypeScript, and production build.
+- The operational queue remains a safe foundation rather than a full reporting backend.
