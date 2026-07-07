@@ -3,6 +3,7 @@ import { Head, router } from "@inertiajs/react";
 import { animate, stagger } from "animejs";
 import Swal from "sweetalert2";
 import DashboardLayout from "@/Layouts/DashboardLayout";
+import OperationalQueuePanel, { type OperationalQueue } from "@/Components/Dashboard/ChangeRequests/OperationalQueuePanel";
 import {
     DataRequestCard,
     EmailRequestCard,
@@ -23,6 +24,10 @@ type Props = {
     scope: RequestScope;
     data_requests: DataRequestItem[];
     email_requests: EmailRequestItem[];
+    operational_queue: OperationalQueue;
+    filters?: {
+        bucket?: string | null;
+    };
     flash?: Flash;
 };
 
@@ -30,10 +35,10 @@ type TabId = "data" | "email";
 
 const THEME = {
     staff: {
-        title: "Permintaan Perubahan",
-        subtitle: "Inbox operasional untuk review perubahan data diri dan email kandidat.",
+        title: "Perlu Tindakan",
+        subtitle: "Antrean operasional untuk review, follow-up, dan keputusan staff.",
         iconWrap: "bg-gradient-to-br from-emerald-500 to-teal-500 shadow-emerald-500/25",
-        icon: "fa-solid fa-arrows-rotate",
+        icon: "fa-solid fa-triangle-exclamation",
         badge: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-300",
         button: "bg-gradient-to-r from-emerald-500 to-teal-500",
         buttonGhost: "bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 shadow-lg shadow-emerald-500/25",
@@ -79,7 +84,7 @@ function createSwal(buttonColor: string) {
     });
 }
 
-export default function ChangeRequestsPage({ scope, data_requests, email_requests, flash }: Props) {
+export default function ChangeRequestsPage({ scope, data_requests, email_requests, operational_queue, flash }: Props) {
     const [activeTab, setActiveTab] = useState<TabId>("data");
     const theme = THEME[scope];
     const swalDark = useMemo(() => createSwal(scope === "staff" ? "#10b981" : "#f43f5e"), [scope]);
@@ -255,6 +260,8 @@ export default function ChangeRequestsPage({ scope, data_requests, email_request
                     <StatCard label={theme.stats[1].label} value={email_requests.length} icon={theme.stats[1].icon} accent={theme.stats[1].accent} />
                     <StatCard label={theme.stats[2].label} value={totalPending} icon={theme.stats[2].icon} accent={theme.stats[2].accent} />
                 </div>
+
+                <OperationalQueuePanel queue={operational_queue} basePath={basePath} />
 
                 <div className="change-request-card opacity-0 rounded-2xl border border-slate-200 bg-white p-3 shadow-soft dark:border-white/5 dark:bg-slate-900">
                     <div className="flex flex-col gap-3 sm:flex-row">

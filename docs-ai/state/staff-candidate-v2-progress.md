@@ -92,3 +92,33 @@ Limitations:
 
 - Timeline is limited to existing status-pendaftaran events.
 - Final decision automation remains out of scope.
+
+## Stage 4 - Perlu Tindakan Foundation
+
+Status: complete.
+
+What changed:
+
+- Extended the existing change-request route with an operational queue generated from real candidate summary data.
+- Staff page title now presents the surface as `Perlu Tindakan`.
+- Existing data/email approval tabs remain intact below the broader queue.
+- Added bucket filters for supported queues: incomplete data, document review, payment review, change requests, rejected follow-up, and verified candidates without exam sessions.
+- Added a feature test for the exam-unassigned queue bucket.
+
+Files changed:
+
+- `app/Http/Controllers/Dashboard/ChangeRequestController.php`
+- `resources/js/Components/Dashboard/ChangeRequests/OperationalQueuePanel.tsx`
+- `resources/js/Pages/Dashboard/Operations/ChangeRequests.tsx`
+- `tests/Feature/StaffCandidateV2Test.php`
+
+Checks:
+
+- `php artisan test tests/Feature/StaffCandidateV2Test.php`
+- `npm run build`
+- `git diff --check`
+
+Limitations:
+
+- Queue items are derived from the first 120 latest candidates to keep the foundation safe without adding pagination or new reporting backend.
+- No unsupported queue is faked; broader reporting and export should be separate backend work.

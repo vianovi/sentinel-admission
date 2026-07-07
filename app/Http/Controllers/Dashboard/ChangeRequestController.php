@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Dashboard;
 use App\Http\Controllers\Controller;
 use App\Models\Candidate;
 use App\Services\ChangeRequestService;
+use App\Services\StaffCandidate\StaffCandidateOperationalService;
 use DomainException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,17 +17,23 @@ use Inertia\Response;
 class ChangeRequestController extends Controller
 {
     public function __construct(
-        private readonly ChangeRequestService $changeRequestService
+        private readonly ChangeRequestService $changeRequestService,
+        private readonly StaffCandidateOperationalService $staffCandidates
     ) {}
 
     public function index(Request $request): Response
     {
         $scope = $this->resolveScope($request);
+        $bucket = $this->resolveBucket($request);
 
         return Inertia::render('Dashboard/Operations/ChangeRequests', [
             'scope' => $scope,
             'data_requests' => $this->changeRequestService->getPendingDataRequests(),
             'email_requests' => $this->changeRequestService->getPendingEmailRequests(),
+            'operational_queue' => $this->staffCandidates->actionQueue($scope, $bucket),
+            'filters' => [
+                'bucket' => $bucket,
+            ],
             'flash' => [
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),
@@ -111,5 +118,14 @@ class ChangeRequestController extends Controller
     private function resolveRouteName(Request $request): string
     {
         return $this->resolveScope($request) . '.change-requests.index';
+    }
+
+    private function resolveBucket(Request $request): ?string
+    {
+        $bucket = trim((string) $request->input('bucket', ''));
+
+        return array_key_exists($bucket, StaffCandidateOperationalService::ACTION_FILTERS)
+            ? $bucket
+            : null;
     }
 }

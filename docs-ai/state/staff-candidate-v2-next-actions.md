@@ -2,9 +2,9 @@
 
 ## Next Implementation Steps
 
-1. Improve `Perlu Tindakan` into a real operational queue foundation.
-2. Run route checks, broader feature tests, frontend build, and diff hygiene checks.
-3. Commit each remaining stable milestone with clear messages.
+1. Run final route checks, broader feature tests, frontend build, and diff hygiene checks.
+2. Review documentation for final limitations and recommended next task.
+3. Commit final cleanup/docs if needed.
 
 ## Known Boundaries
 

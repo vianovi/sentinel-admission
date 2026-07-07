@@ -109,3 +109,28 @@ it('provides an operational overview on the staff candidate detail page', functi
             ->has('overview.quick_links')
         );
 });
+
+it('exposes a filterable operational queue on the staff action page', function () {
+    $wave = staffCandidateV2Wave();
+    $staff = User::factory()->staff()->create();
+
+    staffCandidateV2Candidate($wave, [
+        'full_name' => 'Verified Without Session',
+        'candidate_code' => 'CDT-NO-SESSION',
+        'nisn' => '5555555555',
+        'nik' => '5555555555555555',
+        'status' => 'verified',
+    ]);
+
+    $this->actingAs($staff)
+        ->get('/dashboard/staff/change-requests?bucket=exam_unassigned')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Dashboard/Operations/ChangeRequests')
+            ->where('scope', 'staff')
+            ->where('operational_queue.active_bucket', 'exam_unassigned')
+            ->has('operational_queue.items', 1)
+            ->where('operational_queue.items.0.bucket', 'exam_unassigned')
+            ->where('operational_queue.items.0.candidate.full_name', 'Verified Without Session')
+        );
+});
