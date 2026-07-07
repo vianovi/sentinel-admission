@@ -60,3 +60,17 @@ Checks:
 - `php -l app/Http/Controllers/Dashboard/Staff/IndexController.php`
 - `npm run build`
 - `git diff --check`
+
+## Milestone: Staff Candidate Detail Operational Profile
+
+- Mengubah detail kandidat menjadi layout profile workspace dengan kolom utama dan action rail kanan.
+- Menyederhanakan `OperationalOverview` menjadi konteks lifecycle/readiness/timeline, bukan shortcut/action panel tambahan.
+- Memindahkan keputusan akhir kandidat dari tab dokumen ke action rail.
+- Keputusan akhir hanya menampilkan form saat kandidat berstatus `verified`; status selain itu tidak memiliki tombol keputusan.
+- Tab dokumen sekarang fokus pada review dokumen saja.
+
+Checks:
+
+- `php artisan test tests/Feature/StaffCandidateV2Test.php`
+- `npm run build`
+- `git diff --check`

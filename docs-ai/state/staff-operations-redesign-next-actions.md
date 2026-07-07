@@ -2,19 +2,13 @@
 
 ## Phase B Milestones
 
-1. Staff Candidate Detail Operational Profile
-   - Restructure first viewport.
-   - Buat action rail.
-   - Pindahkan final admission decision dari document tab ke action rail.
-   - Jaga data diri/wali/kesehatan/dokumen/payment sebagai secondary detail.
-
-2. Perlu Tindakan Workbench
+1. Perlu Tindakan Workbench
    - Bucket sidebar.
    - Queue list.
    - Detail/action panel.
    - Data/email request tetap real approve/reject.
 
-3. Final Docs And Verification
+2. Final Docs And Verification
    - Update progress/audit/feature docs.
    - Run full required checks.
    - Commit final state.
@@ -23,6 +17,7 @@
 
 - Staff Payment Operations Workspace.
 - Staff Candidate List Workbench.
+- Staff Candidate Detail Operational Profile.
 
 ## Open Limitations
 

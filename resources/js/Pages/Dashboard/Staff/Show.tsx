@@ -314,21 +314,14 @@ export default function StaffCandidateShow({
                 <Suspense fallback={<TabSkeleton />}>
                     <TabDokumen
                         documents={documents}
-                        candidateStatus={candidate.status}
                         docTarget={docTarget}
                         docStatus={docStatus}
                         docReason={docReason}
                         docProcessing={docProcessing}
-                        candidateFinalStatus={candidateFinalStatus}
-                        candidateReason={candidateReason}
-                        candidateProcessing={candidateProcessing}
                         onSelectDoc={handleSelectDoc}
                         onDocStatusChange={setDocStatus}
                         onDocReasonChange={setDocReason}
                         onSubmitDoc={submitVerifyDocument}
-                        onCandidateStatusChange={setCandidateFinalStatus}
-                        onCandidateReasonChange={setCandidateReason}
-                        onSubmitCandidateStatus={submitCandidateStatus}
                     />
                 </Suspense>
             );
@@ -362,61 +355,216 @@ export default function StaffCandidateShow({
             <Head title={`${scope === "admin" ? "Admin" : "Staff"} - ${meta.label}`} />
 
             <div className="space-y-5 px-4 py-6 sm:px-6">
-                <div className="staff-show-item opacity-0 flex items-center gap-3">
-                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${meta.tone} shadow-lg`}>
-                        <i className={`${meta.icon} text-sm text-white`} />
-                    </div>
-                    <div>
-                        <h1 className="text-xl font-display font-bold leading-tight text-slate-800 dark:text-white">
-                            {meta.label}
-                        </h1>
-                        <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                            {meta.description}
-                        </p>
-                    </div>
-                </div>
-
-                <div className="staff-show-item opacity-0 flex flex-wrap items-center justify-between gap-3">
+                <div className="staff-show-item opacity-0 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div className="min-w-0">
-                        <p className="truncate text-lg font-display font-bold text-slate-800 dark:text-slate-100">
+                        <div className="mb-3 flex flex-wrap items-center gap-2">
+                            <span className={`inline-flex items-center rounded-md px-2.5 py-1 text-xs font-bold ${CANDIDATE_STATUS_CLASS[candidate.status]}`}>
+                                {CANDIDATE_STATUS_LABEL[candidate.status]}
+                            </span>
+                            <span className="inline-flex items-center gap-2 rounded-md border border-slate-200 px-2.5 py-1 text-xs font-bold text-slate-500 dark:border-white/10 dark:text-slate-300">
+                                <i className={`${meta.icon} text-[10px]`} />
+                                {meta.label}
+                            </span>
+                        </div>
+                        <h1 className="truncate font-display text-2xl font-black text-slate-900 dark:text-white">
                             {candidate.full_name}
-                        </p>
-                        <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                        </h1>
+                        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                             {candidate.candidate_code}
-                            {candidate.nisn ? ` - ${candidate.nisn}` : ""}
+                            {candidate.nisn ? ` - NISN ${candidate.nisn}` : ""}
                             {candidate.account_email ? ` - ${candidate.account_email}` : ""}
                         </p>
+                        <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600 dark:text-slate-300">
+                            {overview.primary_blocker.description}
+                        </p>
                     </div>
-                    <div className="flex flex-wrap items-center justify-end gap-2">
-                        <span className={`inline-flex items-center rounded-xl px-3 py-1.5 text-xs font-semibold ${CANDIDATE_STATUS_CLASS[candidate.status]}`}>
-                            {CANDIDATE_STATUS_LABEL[candidate.status]}
-                        </span>
-                        <Link
-                            href={`${basePath}/candidates/${candidate.id}/status-pendaftaran`}
-                            className="inline-flex h-11 items-center gap-2 rounded-xl border border-gold/30 px-4 text-sm font-semibold text-amber-700 transition-colors hover:border-gold hover:bg-gold/10 dark:text-gold"
-                        >
-                            <i className="fa-solid fa-list-check text-xs" />
-                            Status Pendaftaran
-                        </Link>
-                        <Link
-                            href={`${basePath}/candidates`}
-                            className="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-600 transition-colors hover:border-emerald-500 hover:text-emerald-500 dark:border-white/10 dark:text-slate-300"
-                        >
-                            <i className="fa-solid fa-arrow-left text-xs" />
-                            Kembali
-                        </Link>
-                    </div>
+                    <Link
+                        href={`${basePath}/candidates`}
+                        className="inline-flex min-h-10 items-center gap-2 self-start rounded-md border border-slate-200 px-3 text-sm font-bold text-slate-600 transition hover:border-emerald-400 hover:text-emerald-600 dark:border-white/10 dark:text-slate-300"
+                    >
+                        <i className="fa-solid fa-arrow-left text-xs" />
+                        Kembali
+                    </Link>
                 </div>
 
-                <OperationalOverview overview={overview} basePath={basePath} />
+                <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+                    <div className="space-y-5">
+                        <OperationalOverview overview={overview} />
 
-                <div
-                    ref={contentRef}
-                    className="staff-show-item opacity-0 rounded-2xl border border-black/[0.07] bg-white p-5 dark:border-content-border dark:bg-content-surface sm:p-6"
-                >
-                    {renderSection()}
+                        <div
+                            ref={contentRef}
+                            className="staff-show-item opacity-0 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-slate-900 sm:p-6"
+                        >
+                            <div className="mb-5 flex flex-col gap-3 border-b border-slate-100 pb-4 dark:border-white/10 sm:flex-row sm:items-start sm:justify-between">
+                                <div className="flex items-start gap-3">
+                                    <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-gradient-to-br ${meta.tone}`}>
+                                        <i className={`${meta.icon} text-sm text-white`} />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-black text-slate-900 dark:text-white">{meta.label}</p>
+                                        <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">{meta.description}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            {renderSection()}
+                        </div>
+                    </div>
+
+                    <CandidateActionRail
+                        scope={scope}
+                        candidate={candidate}
+                        overview={overview}
+                        basePath={basePath}
+                        finalStatus={candidateFinalStatus}
+                        finalReason={candidateReason}
+                        processing={candidateProcessing}
+                        onFinalStatusChange={setCandidateFinalStatus}
+                        onFinalReasonChange={setCandidateReason}
+                        onSubmitFinalStatus={submitCandidateStatus}
+                    />
                 </div>
             </div>
         </DashboardSplitLayout>
+    );
+}
+
+function CandidateActionRail({
+    scope,
+    candidate,
+    overview,
+    basePath,
+    finalStatus,
+    finalReason,
+    processing,
+    onFinalStatusChange,
+    onFinalReasonChange,
+    onSubmitFinalStatus,
+}: {
+    scope: "staff" | "admin";
+    candidate: StaffCandidateData;
+    overview: StaffCandidateOverview;
+    basePath: string;
+    finalStatus: "accepted" | "rejected";
+    finalReason: string;
+    processing: boolean;
+    onFinalStatusChange: (value: "accepted" | "rejected") => void;
+    onFinalReasonChange: (value: string) => void;
+    onSubmitFinalStatus: (event: React.FormEvent) => void;
+}) {
+    const statusHref = `${basePath}/candidates/${candidate.id}/status-pendaftaran`;
+    const primaryHref = overview.primary_blocker.href ?? statusHref;
+    const quickLinks = [
+        { label: "Status Pendaftaran", href: statusHref, icon: "fa-solid fa-list-check" },
+        ...overview.quick_links,
+        ...(scope === "staff"
+            ? [{ label: "Payment Ops", href: `/dashboard/staff/payment-operations?search=${candidate.candidate_code}`, icon: "fa-solid fa-money-check-dollar" }]
+            : []),
+    ]
+        .filter((link, index, links) => links.findIndex((item) => item.href === link.href && item.label === link.label) === index)
+        .slice(0, 7);
+    const finalStatusLabel = CANDIDATE_STATUS_LABEL[candidate.status] ?? candidate.status;
+
+    return (
+        <aside className="staff-show-item opacity-0 rounded-lg border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900 xl:sticky xl:top-20 xl:self-start">
+            <div className="border-b border-slate-100 p-5 dark:border-white/10">
+                <p className="text-sm font-black text-slate-900 dark:text-white">Action Rail</p>
+                <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
+                    Aksi operasional kandidat ini.
+                </p>
+            </div>
+
+            <div className="space-y-5 p-5">
+                <section>
+                    <p className="mb-2 text-[11px] font-bold uppercase text-slate-400">Primary Blocker</p>
+                    <p className="text-sm font-bold text-slate-900 dark:text-white">
+                        {overview.primary_blocker.label}
+                    </p>
+                    <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
+                        {overview.primary_blocker.description}
+                    </p>
+                    <Link
+                        href={primaryHref}
+                        className="mt-3 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-md bg-slate-900 px-3 text-sm font-bold text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+                    >
+                        <i className="fa-solid fa-arrow-up-right-from-square text-xs" />
+                        {overview.primary_blocker.key === "clear" ? "Buka Status" : "Buka Aksi"}
+                    </Link>
+                </section>
+
+                <section>
+                    <p className="mb-2 text-[11px] font-bold uppercase text-slate-400">Workflow Links</p>
+                    <div className="grid grid-cols-1 gap-2">
+                        {quickLinks.map((link) => (
+                            <Link
+                                key={`${link.label}-${link.href}`}
+                                href={link.href}
+                                className="inline-flex min-h-10 items-center gap-2 rounded-md border border-slate-200 px-3 text-xs font-bold text-slate-600 transition hover:border-emerald-400 hover:text-emerald-600 dark:border-white/10 dark:text-slate-300"
+                            >
+                                <i className={`${link.icon} w-4 text-center text-[11px]`} />
+                                <span className="truncate">{link.label}</span>
+                            </Link>
+                        ))}
+                    </div>
+                </section>
+
+                <section className="rounded-md border border-slate-200 bg-slate-50 p-4 dark:border-white/10 dark:bg-white/[0.03]">
+                    <p className="text-[11px] font-bold uppercase text-slate-400">Keputusan Akhir</p>
+
+                    {candidate.status === "accepted" || candidate.status === "rejected" ? (
+                        <div className="mt-3">
+                            <span className={`inline-flex rounded-md px-2.5 py-1 text-xs font-bold ${CANDIDATE_STATUS_CLASS[candidate.status]}`}>
+                                {finalStatusLabel}
+                            </span>
+                            <p className="mt-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
+                                Status akhir kandidat sudah tercatat.
+                            </p>
+                        </div>
+                    ) : candidate.status === "verified" ? (
+                        <form onSubmit={onSubmitFinalStatus} className="mt-3 space-y-3">
+                            <select
+                                value={finalStatus}
+                                onChange={(event) => onFinalStatusChange(event.target.value as "accepted" | "rejected")}
+                                className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition focus:border-emerald-500 focus:outline-none dark:border-white/10 dark:bg-slate-900 dark:text-slate-200"
+                            >
+                                <option value="accepted">Diterima</option>
+                                <option value="rejected">Ditolak</option>
+                            </select>
+
+                            {finalStatus === "rejected" ? (
+                                <textarea
+                                    value={finalReason}
+                                    onChange={(event) => onFinalReasonChange(event.target.value)}
+                                    placeholder="Alasan keputusan ditolak..."
+                                    rows={4}
+                                    className="w-full resize-none rounded-md border border-slate-200 bg-white p-3 text-sm text-slate-700 transition placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-white/10 dark:bg-slate-900 dark:text-slate-200"
+                                />
+                            ) : null}
+
+                            <button
+                                type="submit"
+                                disabled={processing || (finalStatus === "rejected" && !finalReason.trim())}
+                                className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-md bg-emerald-600 px-3 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                {processing ? (
+                                    <>
+                                        <i className="fa-solid fa-spinner fa-spin text-xs" />
+                                        Memproses...
+                                    </>
+                                ) : (
+                                    <>
+                                        <i className="fa-solid fa-flag-checkered text-xs" />
+                                        Simpan Keputusan
+                                    </>
+                                )}
+                            </button>
+                        </form>
+                    ) : (
+                        <p className="mt-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
+                            Keputusan akhir tersedia setelah kandidat berstatus Terverifikasi.
+                        </p>
+                    )}
+                </section>
+            </div>
+        </aside>
     );
 }

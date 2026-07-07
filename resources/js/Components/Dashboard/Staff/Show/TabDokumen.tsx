@@ -20,21 +20,14 @@ export type DocumentItem = {
 
 type Props = {
     documents:          DocumentItem[];
-    candidateStatus:    "draft" | "submitted" | "verified" | "accepted" | "rejected";
     docTarget:          number | null;
     docStatus:          "verified" | "rejected";
     docReason:          string;
     docProcessing:      boolean;
-    candidateFinalStatus:    "accepted" | "rejected";
-    candidateReason:    string;
-    candidateProcessing: boolean;
     onSelectDoc:        (id: number, currentStatus: "pending" | "verified" | "rejected", reason: string | null) => void;
     onDocStatusChange:  (v: "verified" | "rejected") => void;
     onDocReasonChange:  (v: string) => void;
     onSubmitDoc:        (e: React.FormEvent) => void;
-    onCandidateStatusChange: (v: "accepted" | "rejected") => void;
-    onCandidateReasonChange: (v: string) => void;
-    onSubmitCandidateStatus: (e: React.FormEvent) => void;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -69,21 +62,14 @@ const DOC_TABS: { id: DocTabId; label: string; icon: string; group: string }[] =
 
 export default function TabDokumen({
     documents,
-    candidateStatus,
     docTarget,
     docStatus,
     docReason,
     docProcessing,
-    candidateFinalStatus,
-    candidateReason,
-    candidateProcessing,
     onSelectDoc,
     onDocStatusChange,
     onDocReasonChange,
     onSubmitDoc,
-    onCandidateStatusChange,
-    onCandidateReasonChange,
-    onSubmitCandidateStatus,
 }: Props) {
     const [activeDocTab, setActiveDocTab] = useState<DocTabId>("identity");
     const selectedDoc = documents.find((d) => d.id === docTarget) ?? null;
@@ -293,88 +279,6 @@ export default function TabDokumen({
                                 <><i className="fa-solid fa-spinner fa-spin" /> Menyimpan...</>
                             ) : (
                                 <><i className="fa-solid fa-check" /> Simpan Verifikasi</>
-                            )}
-                        </button>
-                    </div>
-                </form>
-
-                {/* Candidate final status form */}
-                <form
-                    onSubmit={onSubmitCandidateStatus}
-                    className="rounded-2xl border border-slate-200 dark:border-white/5 p-5"
-                >
-                    <p className="text-sm font-semibold text-slate-800 dark:text-white">
-                        Status Akhir Kandidat
-                    </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        {candidateStatus !== "verified"
-                            ? "Hanya valid jika kandidat sudah terverifikasi"
-                            : "Kandidat siap untuk keputusan akhir"}
-                    </p>
-
-                    {candidateStatus !== "verified" && (
-                        <div className="mt-3 flex items-center gap-2 px-3 py-2.5 rounded-xl
-                                        bg-amber-50 dark:bg-amber-500/10
-                                        border border-amber-200 dark:border-amber-500/20">
-                            <i className="fa-solid fa-triangle-exclamation text-amber-500 text-xs shrink-0" />
-                            <p className="text-xs text-amber-700 dark:text-amber-400">
-                                Status kandidat: {candidateStatus}
-                            </p>
-                        </div>
-                    )}
-
-                    <div className="mt-4 flex flex-col gap-3">
-                        <select
-                            value={candidateFinalStatus}
-                            onChange={(e) => onCandidateStatusChange(e.target.value as "accepted" | "rejected")}
-                            disabled={candidateStatus !== "verified"}
-                            className="w-full h-11 px-3 rounded-xl text-sm
-                                       bg-white dark:bg-slate-900
-                                       border border-slate-200 dark:border-white/10
-                                       text-slate-700 dark:text-slate-200
-                                       focus:outline-none focus:border-emerald-500
-                                       disabled:opacity-50 disabled:cursor-not-allowed
-                                       transition-colors"
-                        >
-                            <option value="accepted">Diterima</option>
-                            <option value="rejected">Ditolak</option>
-                        </select>
-
-                        {candidateFinalStatus === "rejected" && (
-                            <textarea
-                                value={candidateReason}
-                                onChange={(e) => onCandidateReasonChange(e.target.value)}
-                                placeholder="Alasan keputusan ditolak..."
-                                rows={3}
-                                className="w-full rounded-xl text-sm p-3
-                                           bg-white dark:bg-slate-900
-                                           border border-slate-200 dark:border-white/10
-                                           text-slate-700 dark:text-slate-200
-                                           placeholder:text-slate-400 dark:placeholder:text-slate-500
-                                           focus:outline-none focus:border-emerald-500
-                                           resize-none transition-colors"
-                            />
-                        )}
-
-                        <button
-                            type="submit"
-                            disabled={
-                                candidateProcessing ||
-                                candidateStatus !== "verified" ||
-                                (candidateFinalStatus === "rejected" && !candidateReason.trim())
-                            }
-                            className="h-11 rounded-xl
-                                       bg-slate-800 hover:bg-slate-700
-                                       dark:bg-white dark:hover:bg-slate-100
-                                       disabled:opacity-40 disabled:cursor-not-allowed
-                                       text-white dark:text-slate-900
-                                       text-sm font-semibold
-                                       transition-all inline-flex items-center justify-center gap-2"
-                        >
-                            {candidateProcessing ? (
-                                <><i className="fa-solid fa-spinner fa-spin" /> Memproses...</>
-                            ) : (
-                                <><i className="fa-solid fa-flag-checkered" /> Update Status</>
                             )}
                         </button>
                     </div>
