@@ -74,3 +74,16 @@ Checks:
 - `php artisan test tests/Feature/StaffCandidateV2Test.php`
 - `npm run build`
 - `git diff --check`
+
+## Milestone: Perlu Tindakan Workbench
+
+- Mengubah `OperationalQueuePanel` dari card grid menjadi workbench tiga kolom: bucket sidebar, queue list, dan detail/action panel.
+- Bucket tetap memakai data nyata dari `StaffCandidateOperationalService::ACTION_FILTERS`.
+- Queue detail hanya menampilkan link aksi nyata: buka aksi utama, profil kandidat, dan status pendaftaran.
+- Data/email change request approval flow tidak diubah.
+
+Checks:
+
+- `php artisan test tests/Feature/StaffCandidateV2Test.php --filter="operational queue"`
+- `npm run build`
+- `git diff --check`
