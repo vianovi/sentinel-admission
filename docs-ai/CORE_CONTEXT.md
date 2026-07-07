@@ -564,6 +564,7 @@ GET       /dashboard/staff/exams/results
 GET       /dashboard/staff/exams/sessions  ComingSoon
 GET       /dashboard/staff/exams/results/{attempt}
 GET       /dashboard/staff/reports          ComingSoon
+GET       /dashboard/staff/payment-operations
 GET       /dashboard/staff/payment-recap    ComingSoon
 POST      /dashboard/staff/documents/{document}/verify
 GET       /dashboard/staff/documents/{document}/preview
@@ -665,7 +666,7 @@ MENU
   - Perlu Tindakan
 - Verifikasi
   - Review Dokumen
-  - Review Pembayaran
+  - Review Pembayaran -> /dashboard/staff/payment-operations
 - Seleksi
   - Hasil Ujian
   - Sesi Ujian (ComingSoon route)

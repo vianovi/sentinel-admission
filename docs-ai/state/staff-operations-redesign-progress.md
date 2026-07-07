@@ -87,3 +87,15 @@ Checks:
 - `php artisan test tests/Feature/StaffCandidateV2Test.php --filter="operational queue"`
 - `npm run build`
 - `git diff --check`
+
+## Final Documentation Pass
+
+- Memperbarui `docs-ai/CORE_CONTEXT.md` untuk route staff `/dashboard/staff/payment-operations`.
+- Memperbarui feature/audit/state docs dengan hasil implementasi, aksi nyata, future/disabled actions, dan checks.
+
+## Final Verification
+
+- `php artisan test --testsuite=Feature` -> 51 passed, 331 assertions.
+- `php artisan route:list --path=dashboard/staff` -> 28 staff routes, termasuk `staff.payment-operations.index`.
+- `npm run build` -> success.
+- `git diff --check` -> success.

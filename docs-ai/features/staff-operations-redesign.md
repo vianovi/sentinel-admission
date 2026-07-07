@@ -67,11 +67,37 @@ Tidak ada fee component table. UI hanya boleh menampilkan:
 - Payment tab: menjadi detail transaksi kandidat, bukan pusat operasi pembayaran.
 - Change request page: antrean operasional menjadi workbench, bukan card grid utama.
 
+## Implemented
+
+- Route staff baru: `/dashboard/staff/payment-operations`.
+- Presenter baru: `App\Services\StaffPayment\StaffPaymentOperationalService`.
+- Menu staff `Review Pembayaran` diarahkan ke Payment Operations.
+- `Semua Kandidat` menjadi table workbench dengan preview panel kanan.
+- Detail kandidat menjadi operational profile dengan action rail kanan.
+- `Perlu Tindakan` menjadi bucket/list/detail workbench.
+
+## Real Actions
+
+- Verify/reject dokumen.
+- Verify/reject bukti pembayaran manual untuk transfer/cash saat `manual_status = proof_uploaded`.
+- Approve/reject data change request.
+- Approve/reject email change request.
+- Final accept/reject kandidat hanya di action rail dan hanya saat kandidat `verified`.
+
+## Future/Disabled
+
+- Gateway sync/check/override belum menjadi aksi staff.
+- Excel export belum diimplementasikan.
+- Dynamic fee component table tidak ada; UI tidak menampilkan komponen biaya palsu.
+- Staff exam session assignment belum diaktifkan dari panel staff.
+- Final admission automation dari hasil ujian tidak dibuat.
+
 ## Non-Goals
 
 - Tidak membuat Excel export.
 - Tidak menambah schema.
 - Tidak rewrite Midtrans.
 - Tidak menambah provider behavior.
+- Tidak mengaktifkan gateway sync/override dari staff UI.
 - Tidak redesign candidate/admin dashboard.
 - Tidak membuat otomasi final admission.

@@ -3,7 +3,6 @@
 ## Phase B Milestones
 
 1. Final Docs And Verification
-   - Update progress/audit/feature docs.
    - Run full required checks.
    - Commit final state.
 

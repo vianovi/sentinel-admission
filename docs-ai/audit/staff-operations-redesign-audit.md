@@ -127,3 +127,26 @@ Disabled/future:
 ## Implementation Decision
 
 Proceed with scoped staff operations redesign only. Backend changes are presenter/query additions, no schema changes. Navigation should repoint staff `Review Pembayaran` to a real Payment Operations workspace. Admin dashboard is not redesigned, though shared candidate detail must not break admin route reuse.
+
+## Implementation Result
+
+- Payment Operations ditambahkan di `/dashboard/staff/payment-operations` dengan query/presenter `StaffPaymentOperationalService`.
+- Candidate list diganti menjadi workbench compact dengan preview panel kanan dan tanpa Export Excel mati.
+- Candidate detail diganti menjadi operational profile dengan action rail kanan.
+- Final admission decision dipindahkan dari tab dokumen ke action rail dan hanya tampil sebagai form saat kandidat `verified`.
+- Perlu Tindakan diganti menjadi bucket/list/detail workbench.
+- `Review Pembayaran` staff sekarang membuka Payment Operations, bukan section pembayaran kandidat terakhir.
+
+## Verification Summary
+
+Milestone checks yang sudah dijalankan:
+
+- `php artisan test tests/Feature/StaffCandidateV2Test.php`
+- `php artisan test tests/Feature/StaffCandidateV2Test.php --filter="operational queue"`
+- `php artisan route:list --path=dashboard/staff`
+- `php -l app/Services/StaffPayment/StaffPaymentOperationalService.php`
+- `php -l app/Http/Controllers/Dashboard/Staff/IndexController.php`
+- `npm run build`
+- `git diff --check`
+
+Full final checks dicatat di progress doc setelah final verification selesai.
