@@ -178,3 +178,18 @@ Checks:
 - `php artisan test tests/Feature/StaffCandidateV2Test.php --filter="candidate status"` -> passed.
 - `npm run build` -> success.
 - `git diff --check` -> success.
+
+## Redesign: Status Kandidat Compact Workbench
+
+- Mendesain ulang penuh halaman `Status Kandidat` agar lebih compact dan psikologisnya sejalan dengan `Semua Kandidat` dan `Rekap`.
+- Mengganti pipeline/readiness card besar menjadi status flow strip, compact waiting-side panel, blocker ringkas, dan readiness bar kecil.
+- Mengubah list kandidat menjadi status-first row yang ringan: kandidat, tahap, readiness, next step, dan preview.
+- Inspector kanan dibuat lebih ramping: progress, journey dots, next step, readiness detail, timeline singkat, dan link nyata.
+- Tidak membuat state `Data Kesehatan Ditolak` karena source code hanya mendukung kelengkapan health record dan ketersediaan BPJS/JKN; rejected formal tetap berasal dari dokumen, payment, selection, atau final candidate status.
+- Tidak mengubah backend workflow atau menambah aksi baru.
+
+Checks:
+
+- `php artisan test tests/Feature/StaffCandidateV2Test.php --filter="candidate status"` -> passed.
+- `npm run build` -> success.
+- `git diff --check` -> success.

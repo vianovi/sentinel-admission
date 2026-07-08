@@ -1,7 +1,14 @@
 import { FormEvent, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Head, Link, router } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
-import { ActionNeededBadge, LifecycleBadge, MiniMeter, ReadinessStrip, type ActionNeeded, type ReadinessItem } from "@/Components/Dashboard/Staff/Candidates/OperationalBadges";
+import {
+    ActionNeededBadge,
+    LifecycleBadge,
+    MiniMeter,
+    ReadinessStrip,
+    type ActionNeeded,
+    type ReadinessItem,
+} from "@/Components/Dashboard/Staff/Candidates/OperationalBadges";
 
 type Tone = "success" | "warning" | "danger" | "primary" | "neutral" | "muted";
 
@@ -126,7 +133,7 @@ const toneClass: Record<Tone, string> = {
     muted: "border-slate-200 bg-slate-50 text-slate-400 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-500",
 };
 
-const stepDotClass: Record<string, string> = {
+const dotClass: Record<string, string> = {
     complete: "bg-emerald-500",
     current: "bg-blue-500",
     pending: "bg-slate-300 dark:bg-slate-600",
@@ -180,72 +187,114 @@ function SelectFilter({ label, value, options, onChange }: { label: string; valu
     );
 }
 
-function PipelineSummary({ summary }: { summary: Summary }) {
-    return (
-        <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-slate-900">
-            <div className="mb-4 flex items-center justify-between gap-3">
-                <div>
-                    <h2 className="text-sm font-black uppercase tracking-wide text-slate-900 dark:text-white">Pipeline Kandidat</h2>
-                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Tahap sekarang dari semua kandidat pada snapshot status.</p>
-                </div>
-                <span className="text-2xl font-black text-slate-900 dark:text-white">{number(summary.total)}</span>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-                {summary.pipeline.map((item) => (
-                    <div key={item.key} className="rounded-md border border-slate-200 p-3 dark:border-white/10">
-                        <div className="flex items-center justify-between gap-3">
-                            <LifecycleBadge status={item.key} />
-                            <span className="text-xs font-black text-slate-400">{percent(item.count, summary.total)}%</span>
-                        </div>
-                        <p className="mt-3 text-2xl font-black leading-none text-slate-900 dark:text-white">{number(item.count)}</p>
-                        <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
-                            <div className="h-full rounded-full bg-blue-500" style={{ width: `${percent(item.count, summary.total)}%` }} />
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </section>
-    );
-}
+function StatusOverview({ summary }: { summary: Summary }) {
+    const topWaiting = summary.waiting_sides.slice(0, 3);
+    const topBlockers = summary.blockers.slice(0, 3);
 
-function ReadinessMatrix({ summary }: { summary: Summary }) {
     return (
         <section className="rounded-lg border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900">
-            <div className="border-b border-slate-100 px-5 py-4 dark:border-white/10">
-                <h2 className="text-sm font-black uppercase tracking-wide text-slate-900 dark:text-white">Readiness Matrix</h2>
-                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Kelengkapan perjalanan kandidat per area.</p>
-            </div>
-            <div className="grid gap-3 p-5 lg:grid-cols-2 xl:grid-cols-3">
-                {summary.readiness.map((item) => (
-                    <div key={item.key} className="rounded-md border border-slate-200 p-3 dark:border-white/10">
-                        <div className="mb-3 flex items-center justify-between gap-3">
-                            <p className="text-xs font-black uppercase text-slate-600 dark:text-slate-300">{item.label}</p>
-                            <span className="text-xs font-black text-emerald-600 dark:text-emerald-300">{number(item.complete)} complete</span>
+            <div className="grid gap-4 p-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.46fr)]">
+                <div className="min-w-0">
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                        <div>
+                            <h2 className="text-sm font-black uppercase tracking-wide text-slate-900 dark:text-white">Status Flow</h2>
+                            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Ringkasan tahap kandidat saat ini.</p>
                         </div>
-                        <div className="grid grid-cols-4 overflow-hidden rounded-md text-center text-[10px] font-black">
-                            <div className="bg-emerald-500/15 px-2 py-2 text-emerald-700 dark:text-emerald-300">{number(item.complete)}</div>
-                            <div className="bg-amber-500/15 px-2 py-2 text-amber-700 dark:text-amber-300">{number(item.pending_review)}</div>
-                            <div className="bg-red-500/15 px-2 py-2 text-red-700 dark:text-red-300">{number(item.rejected)}</div>
-                            <div className="bg-slate-500/10 px-2 py-2 text-slate-600 dark:text-slate-300">{number(item.incomplete)}</div>
-                        </div>
-                        <div className="mt-2 grid grid-cols-4 text-center text-[9px] font-bold uppercase text-slate-400">
-                            <span>Done</span>
-                            <span>Review</span>
-                            <span>Reject</span>
-                            <span>Kurang</span>
-                        </div>
+                        <span className="shrink-0 text-2xl font-black text-slate-900 dark:text-white">{number(summary.total)}</span>
                     </div>
-                ))}
+                    <div className="grid gap-2 sm:grid-cols-5">
+                        {summary.pipeline.map((item) => (
+                            <div key={item.key} className="min-w-0 rounded-md border border-slate-200 p-3 dark:border-white/10">
+                                <div className="flex items-center justify-between gap-2">
+                                    <span className="truncate text-[11px] font-black uppercase text-slate-500 dark:text-slate-400">{item.label}</span>
+                                    <span className="text-[10px] font-black text-slate-400">{percent(item.count, summary.total)}%</span>
+                                </div>
+                                <p className="mt-2 text-xl font-black leading-none text-slate-900 dark:text-white">{number(item.count)}</p>
+                                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
+                                    <div className="h-full rounded-full bg-blue-500" style={{ width: `${percent(item.count, summary.total)}%` }} />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                    <CompactPanel title="Menunggu Pihak">
+                        {topWaiting.length > 0 ? topWaiting.map((item) => (
+                            <MetricLine key={item.key} label={item.label} value={item.count} tone="primary" />
+                        )) : (
+                            <EmptyMicro text="Belum ada waiting side." />
+                        )}
+                    </CompactPanel>
+                    <CompactPanel title="Blocker Teratas">
+                        {topBlockers.length > 0 ? topBlockers.map((item) => (
+                            <MetricLine key={item.key} label={item.label} value={item.count} tone={normalizedTone(item.tone)} />
+                        )) : (
+                            <EmptyMicro text="Tidak ada blocker aktif." />
+                        )}
+                    </CompactPanel>
+                </div>
             </div>
         </section>
     );
 }
 
-function WorkbenchGrid({ children }: { children: ReactNode }) {
+function CompactPanel({ title, children }: { title: string; children: ReactNode }) {
     return (
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1.7fr)_minmax(0,0.58fr)] 2xl:grid-cols-[minmax(0,1.75fr)_minmax(0,0.62fr)]">
-            {children}
+        <div className="rounded-md border border-slate-200 p-3 dark:border-white/10">
+            <p className="mb-2 text-[11px] font-black uppercase tracking-wide text-slate-400">{title}</p>
+            <div className="space-y-2">{children}</div>
         </div>
+    );
+}
+
+function EmptyMicro({ text }: { text: string }) {
+    return <p className="text-xs font-semibold text-slate-400">{text}</p>;
+}
+
+function MetricLine({ label, value, tone }: { label: string; value: number; tone: Tone }) {
+    return (
+        <div className="flex min-h-8 items-center justify-between gap-3 rounded-md bg-slate-50 px-2 dark:bg-white/[0.03]">
+            <span className="min-w-0 truncate text-xs font-bold text-slate-600 dark:text-slate-300">{label}</span>
+            <span className={`shrink-0 rounded-md border px-2 py-0.5 text-[11px] font-black ${toneClass[tone]}`}>{number(value)}</span>
+        </div>
+    );
+}
+
+function ReadinessCompact({ summary }: { summary: Summary }) {
+    return (
+        <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-slate-900">
+            <div className="mb-3 flex items-center justify-between gap-3">
+                <div>
+                    <h2 className="text-sm font-black uppercase tracking-wide text-slate-900 dark:text-white">Readiness</h2>
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Kelengkapan utama tanpa membuat halaman terasa berat.</p>
+                </div>
+            </div>
+            <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+                {summary.readiness.map((item) => {
+                    const total = item.complete + item.pending_review + item.rejected + item.incomplete;
+
+                    return (
+                        <div key={item.key} className="rounded-md border border-slate-200 p-3 dark:border-white/10">
+                            <div className="flex items-center justify-between gap-2">
+                                <p className="truncate text-xs font-black text-slate-700 dark:text-slate-200">{item.label}</p>
+                                <span className="shrink-0 text-[11px] font-black text-emerald-600 dark:text-emerald-300">{number(item.complete)}</span>
+                            </div>
+                            <div className="mt-2 flex h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
+                                <span className="bg-emerald-500" style={{ width: `${percent(item.complete, total)}%` }} />
+                                <span className="bg-amber-500" style={{ width: `${percent(item.pending_review, total)}%` }} />
+                                {item.rejected > 0 ? <span className="bg-red-500" style={{ width: `${percent(item.rejected, total)}%` }} /> : null}
+                                <span className="bg-slate-300 dark:bg-slate-600" style={{ width: `${percent(item.incomplete, total)}%` }} />
+                            </div>
+                            <p className="mt-2 truncate text-[10px] font-semibold text-slate-400">
+                                {number(item.pending_review)} review · {number(item.incomplete)} kurang
+                                {item.rejected > 0 ? ` · ${number(item.rejected)} ditolak` : ""}
+                            </p>
+                        </div>
+                    );
+                })}
+            </div>
+        </section>
     );
 }
 
@@ -308,7 +357,7 @@ export default function CandidateStatus({ rows, summary, waves, programs, filter
         <DashboardLayout>
             <Head title="Status Kandidat - Staff" />
 
-            <div className="flex flex-col gap-6 pb-8">
+            <div className="flex flex-col gap-5 pb-8">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-white shadow-sm dark:bg-white dark:text-slate-900">
@@ -319,7 +368,7 @@ export default function CandidateStatus({ rows, summary, waves, programs, filter
                                 Status Kandidat
                             </h1>
                             <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                                Workbench agregat perjalanan kandidat, readiness, dan langkah berikutnya.
+                                Perjalanan kandidat, blocker, dan next step dalam satu workbench compact.
                             </p>
                         </div>
                     </div>
@@ -341,8 +390,8 @@ export default function CandidateStatus({ rows, summary, waves, programs, filter
                     </div>
                 </div>
 
-                <PipelineSummary summary={summary} />
-                <ReadinessMatrix summary={summary} />
+                <StatusOverview summary={summary} />
+                <ReadinessCompact summary={summary} />
 
                 <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-white/10 dark:bg-slate-900">
                     <div className="grid gap-3 lg:grid-cols-2 2xl:grid-cols-[minmax(0,1.6fr)_repeat(4,minmax(0,1fr))_minmax(0,0.55fr)]">
@@ -382,10 +431,10 @@ export default function CandidateStatus({ rows, summary, waves, programs, filter
                     </div>
                 </div>
 
-                <WorkbenchGrid>
+                <div className="grid gap-5 xl:grid-cols-[minmax(0,1.65fr)_minmax(0,0.72fr)]">
                     <CandidateStatusList rows={rows} selectedId={selectedId} onSelect={rememberSelected} />
-                    <CandidateStatusPreview row={selected} />
-                </WorkbenchGrid>
+                    <CandidateInspector row={selected} />
+                </div>
             </div>
         </DashboardLayout>
     );
@@ -403,10 +452,13 @@ function CandidateStatusList({ rows, selectedId, onSelect }: { rows: CandidateSt
 
     return (
         <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900">
-            <div className="hidden border-b border-slate-100 bg-slate-50 px-4 py-3 dark:border-white/10 dark:bg-white/[0.03] 2xl:grid 2xl:grid-cols-[minmax(0,1.35fr)_minmax(0,0.85fr)_minmax(0,1.15fr)_minmax(0,0.9fr)_minmax(0,0.55fr)]">
-                {["Kandidat", "Tahap", "Readiness", "Next Step", "Preview"].map((header) => (
-                    <p key={header} className="text-[11px] font-bold uppercase tracking-wide text-slate-400">{header}</p>
-                ))}
+            <div className="border-b border-slate-100 px-4 py-3 dark:border-white/10">
+                <div className="flex items-center justify-between gap-3">
+                    <div>
+                        <h2 className="text-sm font-black uppercase tracking-wide text-slate-900 dark:text-white">Daftar Status</h2>
+                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{number(rows.length)} kandidat pada filter saat ini</p>
+                    </div>
+                </div>
             </div>
             <ul className="divide-y divide-slate-100 dark:divide-white/10">
                 {rows.map((row) => {
@@ -415,22 +467,26 @@ function CandidateStatusList({ rows, selectedId, onSelect }: { rows: CandidateSt
                     return (
                         <li key={row.id}>
                             <div className={[
-                                "grid gap-4 px-4 py-4 transition 2xl:grid-cols-[minmax(0,1.35fr)_minmax(0,0.85fr)_minmax(0,1.15fr)_minmax(0,0.9fr)_minmax(0,0.55fr)] 2xl:items-center",
+                                "grid gap-3 px-4 py-3 transition 2xl:grid-cols-[minmax(0,1.35fr)_minmax(0,0.78fr)_minmax(0,0.9fr)_minmax(0,0.85fr)_minmax(0,0.45fr)] 2xl:items-center",
                                 selected ? "bg-blue-50/70 dark:bg-blue-500/[0.07]" : "hover:bg-slate-50 dark:hover:bg-white/[0.03]",
                             ].join(" ")}>
                                 <div className="min-w-0">
-                                    <p className="truncate text-sm font-black text-slate-900 dark:text-white">{row.full_name}</p>
-                                    <p className="mt-0.5 truncate text-xs font-semibold text-slate-500 dark:text-slate-400">
-                                        {row.candidate_code ?? "-"} · NISN {row.nisn ?? "-"}
-                                    </p>
-                                    <p className="mt-0.5 truncate text-xs text-slate-400">
+                                    <button type="button" onClick={() => onSelect(row.id)} className="block min-w-0 text-left">
+                                        <p className="truncate text-sm font-black text-slate-900 dark:text-white">{row.full_name}</p>
+                                        <p className="mt-0.5 truncate text-xs font-semibold text-slate-500 dark:text-slate-400">
+                                            {row.candidate_code ?? "-"} · NISN {row.nisn ?? "-"}
+                                        </p>
+                                    </button>
+                                    <p className="mt-0.5 truncate text-[11px] text-slate-400">
                                         {row.admission_wave ?? "Tanpa gelombang"} · {row.program_choice ?? "Program belum dipilih"}
                                     </p>
                                 </div>
-                                <div className="space-y-2">
+
+                                <div className="flex flex-wrap items-center gap-2 2xl:block 2xl:space-y-2">
                                     <LifecycleBadge status={row.status} />
-                                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">{row.waiting_side_label ?? "Belum diketahui"}</p>
+                                    <p className="truncate text-xs font-semibold text-slate-500 dark:text-slate-400">{row.waiting_side_label ?? "Belum diketahui"}</p>
                                 </div>
+
                                 <div className="space-y-2">
                                     <ReadinessStrip items={row.readiness} compact />
                                     <div className="grid grid-cols-2 gap-3">
@@ -438,22 +494,27 @@ function CandidateStatusList({ rows, selectedId, onSelect }: { rows: CandidateSt
                                         <MiniMeter label="Verif" value={row.progress.verification_percentage} />
                                     </div>
                                 </div>
-                                <ActionNeededBadge action={row.primary_blocker} />
-                                <div className="flex flex-wrap gap-2 2xl:justify-end">
-                                    <button
-                                        type="button"
-                                        onClick={() => onSelect(row.id)}
-                                        className={[
-                                            "inline-flex min-h-9 items-center gap-2 rounded-md px-3 text-xs font-bold transition",
-                                            selected
-                                                ? "bg-blue-600 text-white"
-                                                : "border border-slate-200 text-slate-600 hover:border-blue-400 hover:text-blue-700 dark:border-white/10 dark:text-slate-300",
-                                        ].join(" ")}
-                                    >
-                                        <i className="fa-solid fa-eye text-[10px]" />
-                                        Preview
-                                    </button>
+
+                                <div className="min-w-0">
+                                    <ActionNeededBadge action={row.primary_blocker} />
+                                    <p className="mt-1 truncate text-[11px] font-semibold text-slate-400">
+                                        Seleksi: {row.selection.label}
+                                    </p>
                                 </div>
+
+                                <button
+                                    type="button"
+                                    onClick={() => onSelect(row.id)}
+                                    className={[
+                                        "inline-flex min-h-9 items-center justify-center gap-2 rounded-md px-3 text-xs font-bold transition",
+                                        selected
+                                            ? "bg-blue-600 text-white"
+                                            : "border border-slate-200 text-slate-600 hover:border-blue-400 hover:text-blue-700 dark:border-white/10 dark:text-slate-300",
+                                    ].join(" ")}
+                                >
+                                    <i className="fa-solid fa-eye text-[10px]" />
+                                    Preview
+                                </button>
                             </div>
                         </li>
                     );
@@ -463,7 +524,7 @@ function CandidateStatusList({ rows, selectedId, onSelect }: { rows: CandidateSt
     );
 }
 
-function CandidateStatusPreview({ row }: { row: CandidateStatusRow | null }) {
+function CandidateInspector({ row }: { row: CandidateStatusRow | null }) {
     if (!row) {
         return (
             <aside className="rounded-lg border border-dashed border-slate-200 bg-white p-6 text-center shadow-sm dark:border-white/10 dark:bg-slate-900 xl:sticky xl:top-20 xl:self-start">
@@ -472,9 +533,11 @@ function CandidateStatusPreview({ row }: { row: CandidateStatusRow | null }) {
         );
     }
 
+    const blockerTone = normalizedTone(row.primary_blocker.tone);
+
     return (
         <aside className="rounded-lg border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900 xl:sticky xl:top-20 xl:self-start">
-            <div className="border-b border-slate-100 p-5 dark:border-white/10">
+            <div className="border-b border-slate-100 p-4 dark:border-white/10">
                 <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                         <p className="truncate text-sm font-black text-slate-900 dark:text-white">{row.full_name}</p>
@@ -482,50 +545,60 @@ function CandidateStatusPreview({ row }: { row: CandidateStatusRow | null }) {
                     </div>
                     <LifecycleBadge status={row.status} />
                 </div>
-                <p className="mt-3 text-xs leading-5 text-slate-500 dark:text-slate-400">{row.lifecycle.description}</p>
             </div>
 
-            <div className="space-y-5 p-5">
+            <div className="space-y-4 p-4">
                 <div className="grid grid-cols-2 gap-3">
                     <MiniMeter label="Data" value={row.progress.completion_percentage} />
                     <MiniMeter label="Verifikasi" value={row.progress.verification_percentage} />
                 </div>
 
-                <div>
-                    <p className="mb-3 text-xs font-black uppercase tracking-wide text-slate-400">Journey</p>
-                    <div className="space-y-3">
-                        {row.lifecycle_steps.map((step) => (
-                            <div key={step.key} className="flex gap-3">
-                                <span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${stepDotClass[step.status] ?? "bg-slate-300"}`} />
-                                <div className="min-w-0">
-                                    <p className="text-xs font-black text-slate-800 dark:text-slate-100">{step.label}</p>
-                                    <p className="mt-0.5 line-clamp-2 text-[11px] leading-4 text-slate-500 dark:text-slate-400">{step.description}</p>
-                                </div>
-                            </div>
-                        ))}
+                <section>
+                    <p className="mb-2 text-[11px] font-black uppercase tracking-wide text-slate-400">Journey</p>
+                    <div className="rounded-md border border-slate-200 p-3 dark:border-white/10">
+                        <div className="flex items-center gap-2">
+                            {row.lifecycle_steps.map((step) => (
+                                <span key={step.key} title={step.label} className={`h-2.5 flex-1 rounded-full ${dotClass[step.status] ?? "bg-slate-300"}`} />
+                            ))}
+                        </div>
+                        <p className="mt-3 text-xs font-bold text-slate-700 dark:text-slate-200">{row.lifecycle.label}</p>
+                        <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-slate-500 dark:text-slate-400">{row.lifecycle.description}</p>
                     </div>
-                </div>
+                </section>
 
-                <div>
-                    <p className="mb-3 text-xs font-black uppercase tracking-wide text-slate-400">Blocker Utama</p>
-                    <div className={`rounded-md border p-3 ${toneClass[normalizedTone(row.primary_blocker.tone)]}`}>
+                <section>
+                    <p className="mb-2 text-[11px] font-black uppercase tracking-wide text-slate-400">Next Step</p>
+                    <div className={`rounded-md border p-3 ${toneClass[blockerTone]}`}>
                         <p className="text-sm font-black">{row.primary_blocker.label}</p>
-                        <p className="mt-1 text-xs leading-5 opacity-90">{row.primary_blocker.description}</p>
+                        <p className="mt-1 line-clamp-3 text-xs leading-5 opacity-90">{row.primary_blocker.description}</p>
                     </div>
-                </div>
+                </section>
 
-                <div>
-                    <p className="mb-3 text-xs font-black uppercase tracking-wide text-slate-400">Timeline Singkat</p>
-                    <div className="space-y-3">
-                        {row.timeline.slice(0, 4).map((item) => (
-                            <div key={item.key} className="rounded-md border border-slate-200 p-3 dark:border-white/10">
-                                <p className="text-xs font-black text-slate-800 dark:text-slate-100">{item.title}</p>
-                                <p className="mt-1 text-[11px] leading-4 text-slate-500 dark:text-slate-400">{item.description}</p>
-                                {item.at ? <p className="mt-1 text-[10px] font-bold text-slate-400">{item.at}</p> : null}
+                <section>
+                    <p className="mb-2 text-[11px] font-black uppercase tracking-wide text-slate-400">Readiness Detail</p>
+                    <div className="space-y-2">
+                        {row.readiness.map((item) => (
+                            <div key={item.key} className="flex min-h-9 items-center justify-between gap-3 rounded-md border border-slate-200 px-3 dark:border-white/10">
+                                <span className="min-w-0 truncate text-xs font-bold text-slate-600 dark:text-slate-300">{item.label}</span>
+                                <span className={`shrink-0 rounded-md border px-2 py-0.5 text-[10px] font-black ${toneClass[normalizedTone(String(item.tone))]}`}>
+                                    {item.status_label}
+                                </span>
                             </div>
                         ))}
                     </div>
-                </div>
+                </section>
+
+                <section>
+                    <p className="mb-2 text-[11px] font-black uppercase tracking-wide text-slate-400">Timeline</p>
+                    <div className="space-y-2">
+                        {row.timeline.slice(0, 3).map((item) => (
+                            <div key={item.key} className="rounded-md border border-slate-200 px-3 py-2 dark:border-white/10">
+                                <p className="line-clamp-1 text-xs font-black text-slate-800 dark:text-slate-100">{item.title}</p>
+                                <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-slate-500 dark:text-slate-400">{item.description}</p>
+                            </div>
+                        ))}
+                    </div>
+                </section>
 
                 <div className="grid grid-cols-1 gap-2">
                     {row.links.primary_action ? (
@@ -534,14 +607,14 @@ function CandidateStatusPreview({ row }: { row: CandidateStatusRow | null }) {
                             Buka Langkah Berikutnya
                         </Link>
                     ) : null}
-                    <Link href={row.links.status_detail} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-slate-200 px-3 text-xs font-black text-slate-600 transition hover:border-blue-300 hover:text-blue-700 dark:border-white/10 dark:text-slate-300">
-                        <i className="fa-solid fa-route text-[10px]" />
-                        Detail Status
-                    </Link>
-                    <Link href={row.links.profile} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-slate-200 px-3 text-xs font-black text-slate-600 transition hover:border-blue-300 hover:text-blue-700 dark:border-white/10 dark:text-slate-300">
-                        <i className="fa-solid fa-user text-[10px]" />
-                        Profil Kandidat
-                    </Link>
+                    <div className="grid grid-cols-2 gap-2">
+                        <Link href={row.links.status_detail} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-slate-200 px-3 text-xs font-black text-slate-600 transition hover:border-blue-300 hover:text-blue-700 dark:border-white/10 dark:text-slate-300">
+                            Status
+                        </Link>
+                        <Link href={row.links.profile} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-slate-200 px-3 text-xs font-black text-slate-600 transition hover:border-blue-300 hover:text-blue-700 dark:border-white/10 dark:text-slate-300">
+                            Profil
+                        </Link>
+                    </div>
                 </div>
             </div>
         </aside>
