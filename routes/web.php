@@ -311,8 +311,7 @@ Route::middleware(['auth', RoleMiddleware::class . ':staff'])
                 Route::get('/results/{attempt}', [StaffExamResult::class, 'show'])
                     ->name('results.show');
             });
-        Route::get('/reports', ComingSoonController::class)
-            ->defaults('feature', 'staff.reports')
+        Route::get('/reports', [StaffDashboard::class, 'reports'])
             ->name('reports');
         Route::get('/payment-operations', [StaffDashboard::class, 'paymentOperations'])
             ->name('payment-operations.index');

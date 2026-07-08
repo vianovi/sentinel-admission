@@ -258,3 +258,43 @@ it('keeps gateway transactions readonly in staff payment operations', function (
             ->where('payments.data.0.provider.gross_amount', 154500)
         );
 });
+
+it('opens the staff reports workspace with real operational summaries and disabled export shell', function () {
+    $wave = staffCandidateV2Wave();
+    $staff = User::factory()->staff()->create();
+    $candidate = staffCandidateV2Candidate($wave, [
+        'full_name' => 'Report Workspace Candidate',
+        'candidate_code' => 'CDT-REPORT-OPS',
+        'nisn' => '9999999999',
+        'nik' => '9999999999999999',
+        'status' => 'submitted',
+    ]);
+
+    Payment::create([
+        'candidate_id' => $candidate->id,
+        'admission_wave_id' => $wave->id,
+        'candidate_code' => $candidate->candidate_code,
+        'order_id' => 'ORDER-REPORT-OPS',
+        'payment_channel' => Payment::CHANNEL_GATEWAY,
+        'base_amount' => 150000,
+        'fee_amount' => 4500,
+        'final_amount' => 154500,
+        'status' => Payment::STATUS_PAID,
+        'paid_at' => now(),
+    ]);
+
+    $this->actingAs($staff)
+        ->get('/dashboard/staff/reports')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Dashboard/Staff/Reports')
+            ->where('summary.candidates.total', 1)
+            ->where('summary.candidates.submitted', 1)
+            ->where('summary.payments.total', 1)
+            ->where('summary.payments.paid', 1)
+            ->where('summary.payments.paid_amount', 154500)
+            ->has('summary.actions.buckets')
+            ->has('recent_candidates', 1)
+            ->where('recent_candidates.0.full_name', 'Report Workspace Candidate')
+        );
+});

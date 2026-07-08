@@ -203,6 +203,61 @@ class IndexController extends Controller
     }
 
     // =============================================
+    // GET /dashboard/staff/reports
+    // =============================================
+
+    public function reports(): Response
+    {
+        $candidateSummary = $this->candidateListSummary();
+        $paymentSummary = $this->staffPayments->summary();
+        $actionQueue = $this->staffCandidates->actionQueue('staff', null, 80);
+
+        $statusBreakdown = Candidate::query()
+            ->select('status', DB::raw('COUNT(*) as total'))
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $recentCandidates = $this->staffCandidates->baseOperationalQuery()
+            ->latest()
+            ->limit(6)
+            ->get()
+            ->map(fn (Candidate $candidate) => [
+                'id' => $candidate->id,
+                'candidate_code' => $candidate->candidate_code,
+                'full_name' => $candidate->full_name,
+                'status' => $candidate->status,
+                'admission_wave' => $candidate->admissionWave?->title,
+                'program_choice' => $candidate->program_choice,
+                'updated_at' => $candidate->updated_at?->format('d M Y H:i'),
+                'operational' => $this->staffCandidates->listRow($candidate),
+            ]);
+
+        return Inertia::render('Dashboard/Staff/Reports', [
+            'summary' => [
+                'candidates' => $candidateSummary + [
+                    'draft' => (int) ($statusBreakdown['draft'] ?? 0),
+                    'verified' => (int) ($statusBreakdown['verified'] ?? 0),
+                    'accepted' => (int) ($statusBreakdown['accepted'] ?? 0),
+                    'rejected' => (int) ($statusBreakdown['rejected'] ?? 0),
+                ],
+                'payments' => $paymentSummary,
+                'actions' => [
+                    'total' => count($actionQueue['items']),
+                    'buckets' => $actionQueue['stats'],
+                ],
+                'selection' => [
+                    'verified_unassigned' => $candidateSummary['verified_unassigned'],
+                    'verified_ready' => Candidate::where('status', 'verified')
+                        ->whereHas('examSessionCandidates')
+                        ->count(),
+                ],
+            ],
+            'recent_candidates' => $recentCandidates,
+            'generated_at' => now()->format('d M Y H:i'),
+        ]);
+    }
+
+    // =============================================
     // GET /dashboard/staff/candidates/{candidate}
     // =============================================
 

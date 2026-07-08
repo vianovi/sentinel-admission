@@ -193,7 +193,7 @@ export const navigationConfig: Record<string, NavGroup[]> = {
                         { label: "Sesi Ujian", href: "/dashboard/staff/exams/sessions", icon: "fa-solid fa-calendar-check", comingSoon: true },
                     ],
                 },
-                { label: "Rekap / Laporan", href: "/dashboard/staff/reports", icon: "fa-solid fa-chart-line", comingSoon: true },
+                { label: "Rekap / Laporan", href: "/dashboard/staff/reports", icon: "fa-solid fa-chart-line" },
             ],
         },
         {

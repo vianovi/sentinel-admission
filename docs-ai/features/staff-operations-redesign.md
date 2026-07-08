@@ -69,6 +69,7 @@ Tidak ada fee component table. UI hanya boleh menampilkan:
 
 ## Implemented
 
+- Route staff `/dashboard/staff/reports` dibuka sebagai Reports/Rekap workspace shell.
 - Route staff baru: `/dashboard/staff/payment-operations`.
 - Presenter baru: `App\Services\StaffPayment\StaffPaymentOperationalService`.
 - Menu staff `Review Pembayaran` diarahkan ke Payment Operations.
@@ -86,6 +87,7 @@ Tidak ada fee component table. UI hanya boleh menampilkan:
 
 ## Future/Disabled
 
+- Export laporan di `/dashboard/staff/reports` masih placeholder disabled; belum ada endpoint download atau format file final.
 - Gateway sync/check/override belum menjadi aksi staff.
 - Excel export belum diimplementasikan.
 - Dynamic fee component table tidak ada; UI tidak menampilkan komponen biaya palsu.

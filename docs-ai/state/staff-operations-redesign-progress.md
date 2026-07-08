@@ -99,3 +99,19 @@ Checks:
 - `php artisan route:list --path=dashboard/staff` -> 28 staff routes, termasuk `staff.payment-operations.index`.
 - `npm run build` -> success.
 - `git diff --check` -> success.
+
+## Milestone: Reports/Rekap Workspace Shell
+
+- Membuka route staff `/dashboard/staff/reports` dari ComingSoon menjadi workspace laporan operasional.
+- Menambahkan page `Dashboard/Staff/Reports` dengan KPI kandidat, pembayaran, seleksi, dan antrean tindakan dari data/service nyata.
+- Menampilkan preview aktivitas kandidat terbaru sebagai konteks laporan, bukan daftar kerja utama.
+- Menyiapkan area export dengan tombol lebar `Unduh data` dalam kondisi disabled dan keterangan placeholder.
+- Belum menambahkan halaman setting export, endpoint download, atau generator Excel.
+
+Checks:
+
+- `php artisan test tests/Feature/StaffCandidateV2Test.php --filter="staff reports"`
+- `php artisan route:list --path=dashboard/staff`
+- `php -l app/Http/Controllers/Dashboard/Staff/IndexController.php`
+- `npm run build`
+- `git diff --check`

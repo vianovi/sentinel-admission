@@ -563,7 +563,7 @@ POST      /dashboard/staff/change-requests/email/{candidate}/reject
 GET       /dashboard/staff/exams/results
 GET       /dashboard/staff/exams/sessions  ComingSoon
 GET       /dashboard/staff/exams/results/{attempt}
-GET       /dashboard/staff/reports          ComingSoon
+GET       /dashboard/staff/reports
 GET       /dashboard/staff/payment-operations
 GET       /dashboard/staff/payment-recap    ComingSoon
 POST      /dashboard/staff/documents/{document}/verify
@@ -670,7 +670,7 @@ MENU
 - Seleksi
   - Hasil Ujian
   - Sesi Ujian (ComingSoon route)
-- Rekap / Laporan (ComingSoon route)
+- Rekap / Laporan -> /dashboard/staff/reports
 
 AKUN
 - Profil
