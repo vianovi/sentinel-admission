@@ -142,6 +142,15 @@ const toneBarClass: Record<Tone, string> = {
     muted: "bg-slate-300 dark:bg-slate-600",
 };
 
+const toneTextClass: Record<Tone, string> = {
+    success: "text-emerald-600 dark:text-emerald-300",
+    warning: "text-amber-600 dark:text-amber-300",
+    danger: "text-red-600 dark:text-red-300",
+    primary: "text-blue-600 dark:text-blue-300",
+    neutral: "text-slate-500 dark:text-slate-300",
+    muted: "text-slate-400 dark:text-slate-500",
+};
+
 const dotClass: Record<string, string> = {
     complete: "bg-emerald-500",
     current: "bg-blue-500",
@@ -215,8 +224,9 @@ function SelectFilter({ label, value, options, onChange }: { label: string; valu
 }
 
 function StatusOverview({ summary }: { summary: Summary }) {
-    const topWaiting = summary.waiting_sides.slice(0, 3);
-    const topBlockers = summary.blockers.slice(0, 3);
+    const topWaiting = summary.waiting_sides.slice(0, 2);
+    const topBlockers = summary.blockers.slice(0, 2);
+    const readinessPreview = summary.readiness.slice(0, 6);
     const cards = [
         { key: "total", label: "Total", value: summary.total, icon: "fa-solid fa-users", tone: "primary" as Tone },
         ...summary.pipeline.map((item) => ({
@@ -229,18 +239,19 @@ function StatusOverview({ summary }: { summary: Summary }) {
     ];
 
     return (
-        <section className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-white/10 dark:bg-slate-900">
-            <div className="grid grid-cols-2 gap-2 md:grid-cols-3 2xl:grid-cols-6">
+        <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900">
+            <div className="grid grid-cols-2 gap-px bg-slate-100 dark:bg-white/10 md:grid-cols-3 2xl:grid-cols-6">
                 {cards.map((card) => (
-                    <div key={card.key} className="min-w-0 rounded-md border border-slate-200 px-3 py-2.5 dark:border-white/10">
-                        <div className="flex items-center gap-2">
-                            <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md border ${toneClass[card.tone]}`}>
-                                <i className={`${card.icon} text-[10px]`} />
-                            </span>
-                            <div className="min-w-0">
-                                <p className="text-lg font-black leading-none text-slate-900 dark:text-white">{number(card.value)}</p>
-                                <p className="mt-0.5 truncate text-[11px] font-bold text-slate-500 dark:text-slate-400">{card.label}</p>
-                            </div>
+                    <div key={card.key} className="min-w-0 bg-white px-3 py-2.5 dark:bg-slate-900">
+                        <div className="flex items-center justify-between gap-2">
+                            <p className="truncate text-[11px] font-black uppercase text-slate-400">{card.label}</p>
+                            <i className={`${card.icon} text-[10px] ${toneTextClass[card.tone]}`} />
+                        </div>
+                        <div className="mt-1 flex items-end justify-between gap-2">
+                            <p className="text-xl font-black leading-none text-slate-900 dark:text-white">{number(card.value)}</p>
+                            {card.key !== "total" ? (
+                                <span className="shrink-0 text-[10px] font-black text-slate-400">{percent(card.value, summary.total)}%</span>
+                            ) : null}
                         </div>
                         {card.key !== "total" ? (
                             <div className="mt-2 h-1 overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
@@ -251,16 +262,25 @@ function StatusOverview({ summary }: { summary: Summary }) {
                 ))}
             </div>
 
-            {topWaiting.length > 0 || topBlockers.length > 0 ? (
-                <div className="mt-3 flex flex-wrap gap-2">
-                    {topWaiting.map((item) => (
+            <div className="grid gap-3 border-t border-slate-100 px-3 py-2.5 dark:border-white/10 xl:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] xl:items-center">
+                <div className="flex min-w-0 flex-wrap gap-2">
+                    {topWaiting.length > 0 ? topWaiting.map((item) => (
                         <StatusChip key={`waiting-${item.key}`} label={item.label} value={item.count} tone="primary" prefix="Wait" />
-                    ))}
-                    {topBlockers.map((item) => (
+                    )) : null}
+                    {topBlockers.length > 0 ? topBlockers.map((item) => (
                         <StatusChip key={`blocker-${item.key}`} label={item.label} value={item.count} tone={normalizedTone(item.tone)} prefix="Blocker" />
+                    )) : null}
+                    {topWaiting.length === 0 && topBlockers.length === 0 ? (
+                        <span className="text-xs font-semibold text-slate-400">Tidak ada blocker prioritas.</span>
+                    ) : null}
+                </div>
+
+                <div className="grid min-w-0 gap-2 sm:grid-cols-2 2xl:grid-cols-6">
+                    {readinessPreview.map((item) => (
+                        <ReadinessMini key={item.key} item={item} />
                     ))}
                 </div>
-            ) : null}
+            </div>
         </section>
     );
 }
@@ -275,38 +295,22 @@ function StatusChip({ label, value, tone, prefix }: { label: string; value: numb
     );
 }
 
-function ReadinessCompact({ summary }: { summary: Summary }) {
-    return (
-        <section className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-white/10 dark:bg-slate-900">
-            <div className="mb-2 flex items-center gap-2">
-                <h2 className="text-xs font-black uppercase tracking-wide text-slate-700 dark:text-slate-200">Readiness</h2>
-                <span className="text-[11px] font-semibold text-slate-400">Done / Review / Kurang</span>
-            </div>
-            <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
-                {summary.readiness.map((item) => {
-                    const total = item.complete + item.pending_review + item.rejected + item.incomplete;
+function ReadinessMini({ item }: { item: Summary["readiness"][number] }) {
+    const total = item.complete + item.pending_review + item.rejected + item.incomplete;
 
-                    return (
-                        <div key={item.key} className="rounded-md border border-slate-200 px-2.5 py-2 dark:border-white/10">
-                            <div className="flex items-center justify-between gap-2">
-                                <p className="truncate text-xs font-black text-slate-700 dark:text-slate-200">{item.label}</p>
-                                <span className="shrink-0 text-[11px] font-black text-emerald-600 dark:text-emerald-300">{number(item.complete)}</span>
-                            </div>
-                            <div className="mt-2 flex h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
-                                <span className="bg-emerald-500" style={{ width: `${percent(item.complete, total)}%` }} />
-                                <span className="bg-amber-500" style={{ width: `${percent(item.pending_review, total)}%` }} />
-                                {item.rejected > 0 ? <span className="bg-red-500" style={{ width: `${percent(item.rejected, total)}%` }} /> : null}
-                                <span className="bg-slate-300 dark:bg-slate-600" style={{ width: `${percent(item.incomplete, total)}%` }} />
-                            </div>
-                            <p className="mt-1.5 truncate text-[10px] font-semibold text-slate-400">
-                                {number(item.pending_review)} review · {number(item.incomplete)} kurang
-                                {item.rejected > 0 ? ` · ${number(item.rejected)} ditolak` : ""}
-                            </p>
-                        </div>
-                    );
-                })}
+    return (
+        <div className="min-w-0">
+            <div className="flex items-center justify-between gap-2">
+                <span className="truncate text-[10px] font-black uppercase text-slate-400">{item.label}</span>
+                <span className="shrink-0 text-[10px] font-black text-emerald-600 dark:text-emerald-300">{number(item.complete)}</span>
             </div>
-        </section>
+            <div className="mt-1 flex h-1 overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
+                <span className="bg-emerald-500" style={{ width: `${percent(item.complete, total)}%` }} />
+                <span className="bg-amber-500" style={{ width: `${percent(item.pending_review, total)}%` }} />
+                {item.rejected > 0 ? <span className="bg-red-500" style={{ width: `${percent(item.rejected, total)}%` }} /> : null}
+                <span className="bg-slate-300 dark:bg-slate-600" style={{ width: `${percent(item.incomplete, total)}%` }} />
+            </div>
+        </div>
     );
 }
 
@@ -428,7 +432,6 @@ export default function CandidateStatus({ rows, summary, waves, programs, filter
                 </div>
 
                 <StatusOverview summary={summary} />
-                <ReadinessCompact summary={summary} />
 
                 <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-white/10 dark:bg-slate-900">
                     <div className="grid gap-2 lg:grid-cols-2 2xl:grid-cols-[minmax(0,1.65fr)_repeat(4,minmax(0,1fr))_auto]">

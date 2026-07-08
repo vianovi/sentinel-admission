@@ -206,3 +206,14 @@ Checks:
 
 - `php artisan test tests/Feature/StaffCandidateV2Test.php --filter="candidate status"` -> passed.
 - `npm run build` -> success.
+
+## Polish Revision: Status Kandidat Clean Strip
+
+- Mengubah area atas `Status Kandidat` dari dua section bertumpuk menjadi satu metric strip ringan agar lebih dekat dengan look `Semua Kandidat` dan `Rekap`.
+- Readiness agregat tidak lagi memakai card besar; sekarang tampil sebagai mini progress strip dalam bar konteks yang sama dengan waiting/blocker.
+- Status cards memakai satu container dengan separator tipis, bukan kartu-kartu nested, supaya visual lebih clean dan tidak terasa gemuk.
+
+Checks:
+
+- `php artisan test tests/Feature/StaffCandidateV2Test.php --filter="candidate status"` -> passed.
+- `npm run build` -> success.

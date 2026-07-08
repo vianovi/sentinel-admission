@@ -81,6 +81,7 @@ Tidak ada fee component table. UI hanya boleh menampilkan:
 - `Semua Kandidat` menjadi table workbench dengan preview panel kanan.
 - `Status Kandidat` menjadi workbench status-first untuk pipeline, readiness, blocker, timeline, dan next step semua kandidat.
 - `Status Kandidat` dipadatkan untuk desktop: summary/readiness menjadi strip kecil, list memakai grid proporsional, dan inspector kanan menjadi operational preview ringkas.
+- Area atas `Status Kandidat` memakai satu clean metric strip, bukan dua panel summary/readiness bertumpuk.
 - Detail kandidat menjadi operational profile dengan action rail kanan.
 - `Perlu Tindakan` menjadi bucket/list/detail workbench.
 
