@@ -246,8 +246,8 @@ function StatusOverview({ summary }: { summary: Summary }) {
     ];
 
     return (
-        <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900">
-            <div className="grid grid-cols-2 gap-px bg-slate-100 dark:bg-white/10 md:grid-cols-3 xl:grid-cols-6">
+        <div>
+            <div className="grid grid-cols-2 gap-px overflow-hidden rounded-md bg-slate-100 dark:bg-white/10 md:grid-cols-3 xl:grid-cols-6">
                 {cards.map((card) => (
                     <div key={card.key} className="min-w-0 bg-white px-3 py-2 dark:bg-slate-900">
                         <div className="flex items-center justify-between gap-2">
@@ -269,7 +269,7 @@ function StatusOverview({ summary }: { summary: Summary }) {
                 ))}
             </div>
 
-            <div className="flex flex-wrap gap-2 border-t border-slate-100 px-3 py-2 dark:border-white/10">
+            <div className="mt-2 flex flex-wrap gap-2">
                 {topWaiting.length > 0 ? topWaiting.map((item) => (
                     <StatusChip key={`waiting-${item.key}`} label={item.label} value={item.count} tone="primary" prefix="Wait" />
                 )) : null}
@@ -280,7 +280,7 @@ function StatusOverview({ summary }: { summary: Summary }) {
                     <span className="text-xs font-semibold text-slate-400">Tidak ada blocker prioritas.</span>
                 ) : null}
             </div>
-        </section>
+        </div>
     );
 }
 
@@ -409,10 +409,10 @@ export default function CandidateStatus({ rows, summary, waves, programs, filter
                     </div>
                 </div>
 
-                <StatusOverview summary={summary} />
-
                 <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-white/10 dark:bg-slate-900">
-                    <div className="grid gap-2 lg:grid-cols-2 xl:grid-cols-[minmax(0,1.65fr)_repeat(4,minmax(0,1fr))_auto]">
+                    <StatusOverview summary={summary} />
+
+                    <div className="mt-3 grid gap-2 border-t border-slate-100 pt-3 dark:border-white/10 lg:grid-cols-2 xl:grid-cols-[minmax(0,1.65fr)_repeat(4,minmax(0,1fr))_auto]">
                         <form onSubmit={submitSearch} className="flex min-w-0 gap-2 lg:col-span-2 xl:col-span-1">
                             <div className="relative min-w-0 flex-1">
                                 <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">

@@ -240,3 +240,14 @@ Checks:
 
 - `php artisan test tests/Feature/StaffCandidateV2Test.php --filter="candidate status"` -> passed.
 - `npm run build` -> success.
+
+## Polish Revision: Status Kandidat Single Toolbar
+
+- Menggabungkan metric strip dan filter menjadi satu toolbar card agar halaman tidak punya dua surface besar bertumpuk sebelum list.
+- `StatusOverview` sekarang menjadi isi compact tanpa border/shadow sendiri; border hanya ada di toolbar utama.
+- Chips waiting/blocker tetap tampil sebagai konteks singkat, tetapi tidak lagi membuat section terpisah.
+
+Checks:
+
+- `php artisan test tests/Feature/StaffCandidateV2Test.php --filter="candidate status"` -> passed.
+- `npm run build` -> success.
