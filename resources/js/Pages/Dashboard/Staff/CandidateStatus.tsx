@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState, type ReactNode } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Head, Link, router } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import {
@@ -133,6 +133,15 @@ const toneClass: Record<Tone, string> = {
     muted: "border-slate-200 bg-slate-50 text-slate-400 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-500",
 };
 
+const toneBarClass: Record<Tone, string> = {
+    success: "bg-emerald-500",
+    warning: "bg-amber-500",
+    danger: "bg-red-500",
+    primary: "bg-blue-500",
+    neutral: "bg-slate-400",
+    muted: "bg-slate-300 dark:bg-slate-600",
+};
+
 const dotClass: Record<string, string> = {
     complete: "bg-emerald-500",
     current: "bg-blue-500",
@@ -155,6 +164,24 @@ function percent(value: number, total: number) {
     if (total <= 0) return 0;
 
     return Math.round((value / total) * 100);
+}
+
+function pipelineTone(key: string): Tone {
+    if (key === "accepted") return "success";
+    if (key === "rejected") return "danger";
+    if (key === "submitted") return "warning";
+    if (key === "verified") return "primary";
+
+    return "neutral";
+}
+
+function pipelineIcon(key: string) {
+    if (key === "accepted") return "fa-solid fa-circle-check";
+    if (key === "rejected") return "fa-solid fa-circle-xmark";
+    if (key === "submitted") return "fa-solid fa-clock";
+    if (key === "verified") return "fa-solid fa-shield-check";
+
+    return "fa-solid fa-circle-dot";
 }
 
 function buildQuery(filters: Partial<Filters>) {
@@ -190,92 +217,77 @@ function SelectFilter({ label, value, options, onChange }: { label: string; valu
 function StatusOverview({ summary }: { summary: Summary }) {
     const topWaiting = summary.waiting_sides.slice(0, 3);
     const topBlockers = summary.blockers.slice(0, 3);
+    const cards = [
+        { key: "total", label: "Total", value: summary.total, icon: "fa-solid fa-users", tone: "primary" as Tone },
+        ...summary.pipeline.map((item) => ({
+            key: item.key,
+            label: item.label,
+            value: item.count,
+            icon: pipelineIcon(item.key),
+            tone: pipelineTone(item.key),
+        })),
+    ];
 
     return (
-        <section className="rounded-lg border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900">
-            <div className="grid gap-4 p-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.46fr)]">
-                <div className="min-w-0">
-                    <div className="mb-3 flex items-center justify-between gap-3">
-                        <div>
-                            <h2 className="text-sm font-black uppercase tracking-wide text-slate-900 dark:text-white">Status Flow</h2>
-                            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Ringkasan tahap kandidat saat ini.</p>
-                        </div>
-                        <span className="shrink-0 text-2xl font-black text-slate-900 dark:text-white">{number(summary.total)}</span>
-                    </div>
-                    <div className="grid gap-2 sm:grid-cols-5">
-                        {summary.pipeline.map((item) => (
-                            <div key={item.key} className="min-w-0 rounded-md border border-slate-200 p-3 dark:border-white/10">
-                                <div className="flex items-center justify-between gap-2">
-                                    <span className="truncate text-[11px] font-black uppercase text-slate-500 dark:text-slate-400">{item.label}</span>
-                                    <span className="text-[10px] font-black text-slate-400">{percent(item.count, summary.total)}%</span>
-                                </div>
-                                <p className="mt-2 text-xl font-black leading-none text-slate-900 dark:text-white">{number(item.count)}</p>
-                                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
-                                    <div className="h-full rounded-full bg-blue-500" style={{ width: `${percent(item.count, summary.total)}%` }} />
-                                </div>
+        <section className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-white/10 dark:bg-slate-900">
+            <div className="grid grid-cols-2 gap-2 md:grid-cols-3 2xl:grid-cols-6">
+                {cards.map((card) => (
+                    <div key={card.key} className="min-w-0 rounded-md border border-slate-200 px-3 py-2.5 dark:border-white/10">
+                        <div className="flex items-center gap-2">
+                            <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md border ${toneClass[card.tone]}`}>
+                                <i className={`${card.icon} text-[10px]`} />
+                            </span>
+                            <div className="min-w-0">
+                                <p className="text-lg font-black leading-none text-slate-900 dark:text-white">{number(card.value)}</p>
+                                <p className="mt-0.5 truncate text-[11px] font-bold text-slate-500 dark:text-slate-400">{card.label}</p>
                             </div>
-                        ))}
+                        </div>
+                        {card.key !== "total" ? (
+                            <div className="mt-2 h-1 overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
+                                <div className={`h-full rounded-full ${toneBarClass[card.tone]}`} style={{ width: `${percent(card.value, summary.total)}%` }} />
+                            </div>
+                        ) : null}
                     </div>
-                </div>
-
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-                    <CompactPanel title="Menunggu Pihak">
-                        {topWaiting.length > 0 ? topWaiting.map((item) => (
-                            <MetricLine key={item.key} label={item.label} value={item.count} tone="primary" />
-                        )) : (
-                            <EmptyMicro text="Belum ada waiting side." />
-                        )}
-                    </CompactPanel>
-                    <CompactPanel title="Blocker Teratas">
-                        {topBlockers.length > 0 ? topBlockers.map((item) => (
-                            <MetricLine key={item.key} label={item.label} value={item.count} tone={normalizedTone(item.tone)} />
-                        )) : (
-                            <EmptyMicro text="Tidak ada blocker aktif." />
-                        )}
-                    </CompactPanel>
-                </div>
+                ))}
             </div>
+
+            {topWaiting.length > 0 || topBlockers.length > 0 ? (
+                <div className="mt-3 flex flex-wrap gap-2">
+                    {topWaiting.map((item) => (
+                        <StatusChip key={`waiting-${item.key}`} label={item.label} value={item.count} tone="primary" prefix="Wait" />
+                    ))}
+                    {topBlockers.map((item) => (
+                        <StatusChip key={`blocker-${item.key}`} label={item.label} value={item.count} tone={normalizedTone(item.tone)} prefix="Blocker" />
+                    ))}
+                </div>
+            ) : null}
         </section>
     );
 }
 
-function CompactPanel({ title, children }: { title: string; children: ReactNode }) {
+function StatusChip({ label, value, tone, prefix }: { label: string; value: number; tone: Tone; prefix: string }) {
     return (
-        <div className="rounded-md border border-slate-200 p-3 dark:border-white/10">
-            <p className="mb-2 text-[11px] font-black uppercase tracking-wide text-slate-400">{title}</p>
-            <div className="space-y-2">{children}</div>
-        </div>
-    );
-}
-
-function EmptyMicro({ text }: { text: string }) {
-    return <p className="text-xs font-semibold text-slate-400">{text}</p>;
-}
-
-function MetricLine({ label, value, tone }: { label: string; value: number; tone: Tone }) {
-    return (
-        <div className="flex min-h-8 items-center justify-between gap-3 rounded-md bg-slate-50 px-2 dark:bg-white/[0.03]">
-            <span className="min-w-0 truncate text-xs font-bold text-slate-600 dark:text-slate-300">{label}</span>
-            <span className={`shrink-0 rounded-md border px-2 py-0.5 text-[11px] font-black ${toneClass[tone]}`}>{number(value)}</span>
-        </div>
+        <span className="inline-flex min-h-7 min-w-0 max-w-full items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-2 text-[11px] font-bold text-slate-600 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300">
+            <span className="shrink-0 text-[10px] font-black uppercase text-slate-400">{prefix}</span>
+            <span className="truncate">{label}</span>
+            <span className={`shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-black ${toneClass[tone]}`}>{number(value)}</span>
+        </span>
     );
 }
 
 function ReadinessCompact({ summary }: { summary: Summary }) {
     return (
-        <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-slate-900">
-            <div className="mb-3 flex items-center justify-between gap-3">
-                <div>
-                    <h2 className="text-sm font-black uppercase tracking-wide text-slate-900 dark:text-white">Readiness</h2>
-                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Kelengkapan utama tanpa membuat halaman terasa berat.</p>
-                </div>
+        <section className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-white/10 dark:bg-slate-900">
+            <div className="mb-2 flex items-center gap-2">
+                <h2 className="text-xs font-black uppercase tracking-wide text-slate-700 dark:text-slate-200">Readiness</h2>
+                <span className="text-[11px] font-semibold text-slate-400">Done / Review / Kurang</span>
             </div>
             <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
                 {summary.readiness.map((item) => {
                     const total = item.complete + item.pending_review + item.rejected + item.incomplete;
 
                     return (
-                        <div key={item.key} className="rounded-md border border-slate-200 p-3 dark:border-white/10">
+                        <div key={item.key} className="rounded-md border border-slate-200 px-2.5 py-2 dark:border-white/10">
                             <div className="flex items-center justify-between gap-2">
                                 <p className="truncate text-xs font-black text-slate-700 dark:text-slate-200">{item.label}</p>
                                 <span className="shrink-0 text-[11px] font-black text-emerald-600 dark:text-emerald-300">{number(item.complete)}</span>
@@ -286,7 +298,7 @@ function ReadinessCompact({ summary }: { summary: Summary }) {
                                 {item.rejected > 0 ? <span className="bg-red-500" style={{ width: `${percent(item.rejected, total)}%` }} /> : null}
                                 <span className="bg-slate-300 dark:bg-slate-600" style={{ width: `${percent(item.incomplete, total)}%` }} />
                             </div>
-                            <p className="mt-2 truncate text-[10px] font-semibold text-slate-400">
+                            <p className="mt-1.5 truncate text-[10px] font-semibold text-slate-400">
                                 {number(item.pending_review)} review · {number(item.incomplete)} kurang
                                 {item.rejected > 0 ? ` · ${number(item.rejected)} ditolak` : ""}
                             </p>
@@ -295,6 +307,31 @@ function ReadinessCompact({ summary }: { summary: Summary }) {
                 })}
             </div>
         </section>
+    );
+}
+
+function TinyMeter({ label, value }: { label: string; value: number }) {
+    const safeValue = Number.isFinite(value) ? Math.min(100, Math.max(0, value)) : 0;
+
+    return (
+        <div className="min-w-0">
+            <div className="mb-1 flex items-center justify-between gap-1">
+                <span className="truncate text-[10px] font-bold uppercase text-slate-400">{label}</span>
+                <span className="shrink-0 text-[10px] font-bold text-slate-600 dark:text-slate-300">{safeValue}%</span>
+            </div>
+            <div className="h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
+                <div className="h-full rounded-full bg-emerald-500" style={{ width: `${safeValue}%` }} />
+            </div>
+        </div>
+    );
+}
+
+function DetailMeta({ label, value }: { label: string; value: string | null }) {
+    return (
+        <div className="min-w-0 rounded-md border border-slate-200 px-2.5 py-2 dark:border-white/10">
+            <p className="text-[10px] font-bold uppercase text-slate-400">{label}</p>
+            <p className="mt-0.5 truncate text-xs font-bold text-slate-700 dark:text-slate-200">{value || "-"}</p>
+        </div>
     );
 }
 
@@ -357,7 +394,7 @@ export default function CandidateStatus({ rows, summary, waves, programs, filter
         <DashboardLayout>
             <Head title="Status Kandidat - Staff" />
 
-            <div className="flex flex-col gap-5 pb-8">
+            <div className="flex flex-col gap-4 pb-8">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-white shadow-sm dark:bg-white dark:text-slate-900">
@@ -394,7 +431,7 @@ export default function CandidateStatus({ rows, summary, waves, programs, filter
                 <ReadinessCompact summary={summary} />
 
                 <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-white/10 dark:bg-slate-900">
-                    <div className="grid gap-3 lg:grid-cols-2 2xl:grid-cols-[minmax(0,1.6fr)_repeat(4,minmax(0,1fr))_minmax(0,0.55fr)]">
+                    <div className="grid gap-2 lg:grid-cols-2 2xl:grid-cols-[minmax(0,1.65fr)_repeat(4,minmax(0,1fr))_auto]">
                         <form onSubmit={submitSearch} className="flex min-w-0 gap-2 lg:col-span-2 2xl:col-span-1">
                             <div className="relative min-w-0 flex-1">
                                 <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
@@ -431,7 +468,7 @@ export default function CandidateStatus({ rows, summary, waves, programs, filter
                     </div>
                 </div>
 
-                <div className="grid gap-5 xl:grid-cols-[minmax(0,1.65fr)_minmax(0,0.72fr)]">
+                <div className="grid gap-4 xl:grid-cols-[minmax(0,2.25fr)_minmax(0,0.78fr)]">
                     <CandidateStatusList rows={rows} selectedId={selectedId} onSelect={rememberSelected} />
                     <CandidateInspector row={selected} />
                 </div>
@@ -452,52 +489,59 @@ function CandidateStatusList({ rows, selectedId, onSelect }: { rows: CandidateSt
 
     return (
         <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900">
-            <div className="border-b border-slate-100 px-4 py-3 dark:border-white/10">
+            <div className="border-b border-slate-100 bg-slate-50 px-3 py-2.5 dark:border-white/10 dark:bg-white/[0.03]">
                 <div className="flex items-center justify-between gap-3">
-                    <div>
-                        <h2 className="text-sm font-black uppercase tracking-wide text-slate-900 dark:text-white">Daftar Status</h2>
-                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{number(rows.length)} kandidat pada filter saat ini</p>
-                    </div>
+                    <h2 className="text-sm font-black uppercase tracking-wide text-slate-900 dark:text-white">Daftar Status</h2>
+                    <p className="shrink-0 text-xs font-semibold text-slate-500 dark:text-slate-400">{number(rows.length)} kandidat</p>
                 </div>
+            </div>
+            <div className="hidden border-b border-slate-100 px-3 py-2 dark:border-white/10 xl:grid xl:grid-cols-[minmax(0,1.18fr)_minmax(0,0.72fr)_minmax(0,1.08fr)_minmax(0,0.88fr)_auto] xl:items-center xl:gap-3">
+                {["Kandidat", "Tahap", "Readiness", "Next Step", "Preview"].map((header) => (
+                    <p key={header} className="text-[10px] font-black uppercase tracking-wide text-slate-400">{header}</p>
+                ))}
             </div>
             <ul className="divide-y divide-slate-100 dark:divide-white/10">
                 {rows.map((row) => {
                     const selected = selectedId === row.id;
+                    const initial = row.full_name.charAt(0).toUpperCase();
 
                     return (
                         <li key={row.id}>
                             <div className={[
-                                "grid gap-3 px-4 py-3 transition 2xl:grid-cols-[minmax(0,1.35fr)_minmax(0,0.78fr)_minmax(0,0.9fr)_minmax(0,0.85fr)_minmax(0,0.45fr)] 2xl:items-center",
+                                "grid gap-3 px-3 py-2.5 transition xl:grid-cols-[minmax(0,1.18fr)_minmax(0,0.72fr)_minmax(0,1.08fr)_minmax(0,0.88fr)_auto] xl:items-center",
                                 selected ? "bg-blue-50/70 dark:bg-blue-500/[0.07]" : "hover:bg-slate-50 dark:hover:bg-white/[0.03]",
                             ].join(" ")}>
-                                <div className="min-w-0">
-                                    <button type="button" onClick={() => onSelect(row.id)} className="block min-w-0 text-left">
-                                        <p className="truncate text-sm font-black text-slate-900 dark:text-white">{row.full_name}</p>
-                                        <p className="mt-0.5 truncate text-xs font-semibold text-slate-500 dark:text-slate-400">
+                                <button type="button" onClick={() => onSelect(row.id)} className="group flex min-w-0 items-center gap-2.5 text-left">
+                                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-slate-900 text-xs font-black text-white shadow-sm dark:bg-white dark:text-slate-900">
+                                        {initial}
+                                    </span>
+                                    <span className="min-w-0">
+                                        <span className="block truncate text-sm font-black text-slate-900 transition group-hover:text-blue-700 dark:text-white dark:group-hover:text-blue-300">{row.full_name}</span>
+                                        <span className="mt-0.5 block truncate text-xs font-semibold text-slate-500 dark:text-slate-400">
                                             {row.candidate_code ?? "-"} · NISN {row.nisn ?? "-"}
-                                        </p>
-                                    </button>
-                                    <p className="mt-0.5 truncate text-[11px] text-slate-400">
-                                        {row.admission_wave ?? "Tanpa gelombang"} · {row.program_choice ?? "Program belum dipilih"}
-                                    </p>
-                                </div>
+                                        </span>
+                                        <span className="mt-0.5 block truncate text-[11px] text-slate-400">
+                                            {row.admission_wave ?? "Tanpa gelombang"} · {row.program_choice ?? "Program belum dipilih"}
+                                        </span>
+                                    </span>
+                                </button>
 
-                                <div className="flex flex-wrap items-center gap-2 2xl:block 2xl:space-y-2">
+                                <div className="flex min-w-0 flex-wrap items-center gap-2 xl:block xl:space-y-1.5">
                                     <LifecycleBadge status={row.status} />
                                     <p className="truncate text-xs font-semibold text-slate-500 dark:text-slate-400">{row.waiting_side_label ?? "Belum diketahui"}</p>
                                 </div>
 
-                                <div className="space-y-2">
+                                <div className="min-w-0 space-y-2">
                                     <ReadinessStrip items={row.readiness} compact />
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <MiniMeter label="Data" value={row.progress.completion_percentage} />
-                                        <MiniMeter label="Verif" value={row.progress.verification_percentage} />
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <TinyMeter label="Data" value={row.progress.completion_percentage} />
+                                        <TinyMeter label="Verif" value={row.progress.verification_percentage} />
                                     </div>
                                 </div>
 
-                                <div className="min-w-0">
+                                <div className="min-w-0 space-y-1">
                                     <ActionNeededBadge action={row.primary_blocker} />
-                                    <p className="mt-1 truncate text-[11px] font-semibold text-slate-400">
+                                    <p className="truncate text-[11px] font-semibold text-slate-400">
                                         Seleksi: {row.selection.label}
                                     </p>
                                 </div>
@@ -506,14 +550,14 @@ function CandidateStatusList({ rows, selectedId, onSelect }: { rows: CandidateSt
                                     type="button"
                                     onClick={() => onSelect(row.id)}
                                     className={[
-                                        "inline-flex min-h-9 items-center justify-center gap-2 rounded-md px-3 text-xs font-bold transition",
+                                        "inline-flex min-h-8 items-center justify-center gap-1.5 rounded-md px-2.5 text-xs font-bold transition xl:justify-self-end",
                                         selected
                                             ? "bg-blue-600 text-white"
                                             : "border border-slate-200 text-slate-600 hover:border-blue-400 hover:text-blue-700 dark:border-white/10 dark:text-slate-300",
                                     ].join(" ")}
                                 >
                                     <i className="fa-solid fa-eye text-[10px]" />
-                                    Preview
+                                    Detail
                                 </button>
                             </div>
                         </li>
@@ -537,7 +581,7 @@ function CandidateInspector({ row }: { row: CandidateStatusRow | null }) {
 
     return (
         <aside className="rounded-lg border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900 xl:sticky xl:top-20 xl:self-start">
-            <div className="border-b border-slate-100 p-4 dark:border-white/10">
+            <div className="border-b border-slate-100 p-3 dark:border-white/10">
                 <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                         <p className="truncate text-sm font-black text-slate-900 dark:text-white">{row.full_name}</p>
@@ -547,30 +591,35 @@ function CandidateInspector({ row }: { row: CandidateStatusRow | null }) {
                 </div>
             </div>
 
-            <div className="space-y-4 p-4">
-                <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-3 p-3">
+                <div className="grid grid-cols-2 gap-2">
+                    <DetailMeta label="Program" value={row.program_choice} />
+                    <DetailMeta label="Sekolah" value={row.school_origin} />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
                     <MiniMeter label="Data" value={row.progress.completion_percentage} />
                     <MiniMeter label="Verifikasi" value={row.progress.verification_percentage} />
                 </div>
 
                 <section>
                     <p className="mb-2 text-[11px] font-black uppercase tracking-wide text-slate-400">Journey</p>
-                    <div className="rounded-md border border-slate-200 p-3 dark:border-white/10">
+                    <div className="rounded-md border border-slate-200 p-2.5 dark:border-white/10">
                         <div className="flex items-center gap-2">
                             {row.lifecycle_steps.map((step) => (
                                 <span key={step.key} title={step.label} className={`h-2.5 flex-1 rounded-full ${dotClass[step.status] ?? "bg-slate-300"}`} />
                             ))}
                         </div>
-                        <p className="mt-3 text-xs font-bold text-slate-700 dark:text-slate-200">{row.lifecycle.label}</p>
+                        <p className="mt-2.5 text-xs font-bold text-slate-700 dark:text-slate-200">{row.lifecycle.label}</p>
                         <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-slate-500 dark:text-slate-400">{row.lifecycle.description}</p>
                     </div>
                 </section>
 
                 <section>
                     <p className="mb-2 text-[11px] font-black uppercase tracking-wide text-slate-400">Next Step</p>
-                    <div className={`rounded-md border p-3 ${toneClass[blockerTone]}`}>
-                        <p className="text-sm font-black">{row.primary_blocker.label}</p>
-                        <p className="mt-1 line-clamp-3 text-xs leading-5 opacity-90">{row.primary_blocker.description}</p>
+                    <div className={`rounded-md border p-2.5 ${toneClass[blockerTone]}`}>
+                        <p className="text-xs font-black">{row.primary_blocker.label}</p>
+                        <p className="mt-1 line-clamp-3 text-[11px] leading-4 opacity-90">{row.primary_blocker.description}</p>
                     </div>
                 </section>
 
@@ -578,7 +627,7 @@ function CandidateInspector({ row }: { row: CandidateStatusRow | null }) {
                     <p className="mb-2 text-[11px] font-black uppercase tracking-wide text-slate-400">Readiness Detail</p>
                     <div className="space-y-2">
                         {row.readiness.map((item) => (
-                            <div key={item.key} className="flex min-h-9 items-center justify-between gap-3 rounded-md border border-slate-200 px-3 dark:border-white/10">
+                            <div key={item.key} className="flex min-h-8 items-center justify-between gap-2 rounded-md border border-slate-200 px-2.5 dark:border-white/10">
                                 <span className="min-w-0 truncate text-xs font-bold text-slate-600 dark:text-slate-300">{item.label}</span>
                                 <span className={`shrink-0 rounded-md border px-2 py-0.5 text-[10px] font-black ${toneClass[normalizedTone(String(item.tone))]}`}>
                                     {item.status_label}
@@ -592,7 +641,7 @@ function CandidateInspector({ row }: { row: CandidateStatusRow | null }) {
                     <p className="mb-2 text-[11px] font-black uppercase tracking-wide text-slate-400">Timeline</p>
                     <div className="space-y-2">
                         {row.timeline.slice(0, 3).map((item) => (
-                            <div key={item.key} className="rounded-md border border-slate-200 px-3 py-2 dark:border-white/10">
+                            <div key={item.key} className="rounded-md border border-slate-200 px-2.5 py-2 dark:border-white/10">
                                 <p className="line-clamp-1 text-xs font-black text-slate-800 dark:text-slate-100">{item.title}</p>
                                 <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-slate-500 dark:text-slate-400">{item.description}</p>
                             </div>
@@ -602,16 +651,16 @@ function CandidateInspector({ row }: { row: CandidateStatusRow | null }) {
 
                 <div className="grid grid-cols-1 gap-2">
                     {row.links.primary_action ? (
-                        <Link href={row.links.primary_action} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-slate-900 px-3 text-xs font-black text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900">
+                        <Link href={row.links.primary_action} className="inline-flex min-h-9 items-center justify-center gap-2 rounded-md bg-slate-900 px-3 text-xs font-black text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900">
                             <i className="fa-solid fa-bolt text-[10px]" />
                             Buka Langkah Berikutnya
                         </Link>
                     ) : null}
                     <div className="grid grid-cols-2 gap-2">
-                        <Link href={row.links.status_detail} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-slate-200 px-3 text-xs font-black text-slate-600 transition hover:border-blue-300 hover:text-blue-700 dark:border-white/10 dark:text-slate-300">
+                        <Link href={row.links.status_detail} className="inline-flex min-h-9 items-center justify-center gap-2 rounded-md border border-slate-200 px-3 text-xs font-black text-slate-600 transition hover:border-blue-300 hover:text-blue-700 dark:border-white/10 dark:text-slate-300">
                             Status
                         </Link>
-                        <Link href={row.links.profile} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-slate-200 px-3 text-xs font-black text-slate-600 transition hover:border-blue-300 hover:text-blue-700 dark:border-white/10 dark:text-slate-300">
+                        <Link href={row.links.profile} className="inline-flex min-h-9 items-center justify-center gap-2 rounded-md border border-slate-200 px-3 text-xs font-black text-slate-600 transition hover:border-blue-300 hover:text-blue-700 dark:border-white/10 dark:text-slate-300">
                             Profil
                         </Link>
                     </div>

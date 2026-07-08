@@ -80,6 +80,7 @@ Tidak ada fee component table. UI hanya boleh menampilkan:
 - Menu staff `Review Pembayaran` diarahkan ke Payment Operations.
 - `Semua Kandidat` menjadi table workbench dengan preview panel kanan.
 - `Status Kandidat` menjadi workbench status-first untuk pipeline, readiness, blocker, timeline, dan next step semua kandidat.
+- `Status Kandidat` dipadatkan untuk desktop: summary/readiness menjadi strip kecil, list memakai grid proporsional, dan inspector kanan menjadi operational preview ringkas.
 - Detail kandidat menjadi operational profile dengan action rail kanan.
 - `Perlu Tindakan` menjadi bucket/list/detail workbench.
 

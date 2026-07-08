@@ -193,3 +193,16 @@ Checks:
 - `php artisan test tests/Feature/StaffCandidateV2Test.php --filter="candidate status"` -> passed.
 - `npm run build` -> success.
 - `git diff --check` -> success.
+
+## Polish Revision: Status Kandidat Density Balance
+
+- Merapikan ulang `Status Kandidat` setelah review desktop: root gap, filter grid, summary card, list row, dan inspector kanan dibuat lebih rendah/compact.
+- List kandidat memakai header tipis dan grid proporsional `fr`, bukan lebar fixed pixel, supaya kolom daftar tidak kejepit saat rail kanan aktif.
+- Meter kecil khusus row ditambahkan agar progress data/verifikasi tidak memaksa minimum width dari komponen meter detail.
+- Inspector kanan dipadatkan dengan meta singkat, journey dots, next step, readiness detail, timeline ringkas, dan hanya link aksi nyata.
+- Tidak menambah state/action baru; semua label readiness, blocker, timeline, dan link tetap berasal dari service yang sudah ada.
+
+Checks:
+
+- `php artisan test tests/Feature/StaffCandidateV2Test.php --filter="candidate status"` -> passed.
+- `npm run build` -> success.
