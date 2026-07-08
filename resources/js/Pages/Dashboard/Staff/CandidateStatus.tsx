@@ -132,24 +132,6 @@ const toneClass: Record<Tone, string> = {
     muted: "border-slate-200 bg-slate-50 text-slate-400 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-500",
 };
 
-const toneBarClass: Record<Tone, string> = {
-    success: "bg-emerald-500",
-    warning: "bg-amber-500",
-    danger: "bg-red-500",
-    primary: "bg-blue-500",
-    neutral: "bg-slate-400",
-    muted: "bg-slate-300 dark:bg-slate-600",
-};
-
-const toneTextClass: Record<Tone, string> = {
-    success: "text-emerald-600 dark:text-emerald-300",
-    warning: "text-amber-600 dark:text-amber-300",
-    danger: "text-red-600 dark:text-red-300",
-    primary: "text-blue-600 dark:text-blue-300",
-    neutral: "text-slate-500 dark:text-slate-300",
-    muted: "text-slate-400 dark:text-slate-500",
-};
-
 const dotClass: Record<string, string> = {
     complete: "bg-emerald-500",
     current: "bg-blue-500",
@@ -177,12 +159,6 @@ function number(value: number) {
     return new Intl.NumberFormat("id-ID").format(value ?? 0);
 }
 
-function percent(value: number, total: number) {
-    if (total <= 0) return 0;
-
-    return Math.round((value / total) * 100);
-}
-
 function pipelineTone(key: string): Tone {
     if (key === "accepted") return "success";
     if (key === "rejected") return "danger";
@@ -190,15 +166,6 @@ function pipelineTone(key: string): Tone {
     if (key === "verified") return "primary";
 
     return "neutral";
-}
-
-function pipelineIcon(key: string) {
-    if (key === "accepted") return "fa-solid fa-circle-check";
-    if (key === "rejected") return "fa-solid fa-circle-xmark";
-    if (key === "submitted") return "fa-solid fa-clock";
-    if (key === "verified") return "fa-solid fa-shield-check";
-
-    return "fa-solid fa-circle-dot";
 }
 
 function buildQuery(filters: Partial<Filters>) {
@@ -235,52 +202,42 @@ function StatusOverview({ summary }: { summary: Summary }) {
     const topWaiting = summary.waiting_sides.slice(0, 2);
     const topBlockers = summary.blockers.slice(0, 2);
     const cards = [
-        { key: "total", label: "Total", value: summary.total, icon: "fa-solid fa-users", tone: "primary" as Tone },
+        { key: "total", label: "Total", value: summary.total, tone: "primary" as Tone },
         ...summary.pipeline.map((item) => ({
             key: item.key,
             label: item.label,
             value: item.count,
-            icon: pipelineIcon(item.key),
             tone: pipelineTone(item.key),
         })),
     ];
 
     return (
-        <div>
-            <div className="grid grid-cols-2 gap-px overflow-hidden rounded-md bg-slate-100 dark:bg-white/10 md:grid-cols-3 xl:grid-cols-6">
+        <div className="flex flex-wrap items-center gap-2">
+            <div className="flex min-w-0 flex-wrap gap-2">
                 {cards.map((card) => (
-                    <div key={card.key} className="min-w-0 bg-white px-3 py-2 dark:bg-slate-900">
-                        <div className="flex items-center justify-between gap-2">
-                            <p className="truncate text-[10px] font-black uppercase text-slate-400">{card.label}</p>
-                            <i className={`${card.icon} text-[10px] ${toneTextClass[card.tone]}`} />
-                        </div>
-                        <div className="mt-1 flex items-baseline justify-between gap-2">
-                            <p className="text-base font-black leading-none text-slate-900 dark:text-white">{number(card.value)}</p>
-                            {card.key !== "total" ? (
-                                <span className="shrink-0 text-[10px] font-black text-slate-400">{percent(card.value, summary.total)}%</span>
-                            ) : null}
-                        </div>
-                        {card.key !== "total" ? (
-                            <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
-                                <div className={`h-full rounded-full ${toneBarClass[card.tone]}`} style={{ width: `${percent(card.value, summary.total)}%` }} />
-                            </div>
-                        ) : null}
-                    </div>
+                    <SummaryPill key={card.key} label={card.label} value={card.value} tone={card.tone} />
                 ))}
             </div>
 
-            <div className="mt-2 flex flex-wrap gap-2">
-                {topWaiting.length > 0 ? topWaiting.map((item) => (
-                    <StatusChip key={`waiting-${item.key}`} label={item.label} value={item.count} tone="primary" prefix="Wait" />
-                )) : null}
-                {topBlockers.length > 0 ? topBlockers.map((item) => (
-                    <StatusChip key={`blocker-${item.key}`} label={item.label} value={item.count} tone={normalizedTone(item.tone)} prefix="Blocker" />
-                )) : null}
-                {topWaiting.length === 0 && topBlockers.length === 0 ? (
-                    <span className="text-xs font-semibold text-slate-400">Tidak ada blocker prioritas.</span>
-                ) : null}
-            </div>
+            {topWaiting.length > 0 ? topWaiting.map((item) => (
+                <StatusChip key={`waiting-${item.key}`} label={item.label} value={item.count} tone="primary" prefix="Wait" />
+            )) : null}
+            {topBlockers.length > 0 ? topBlockers.map((item) => (
+                <StatusChip key={`blocker-${item.key}`} label={item.label} value={item.count} tone={normalizedTone(item.tone)} prefix="Blocker" />
+            )) : null}
+            {topWaiting.length === 0 && topBlockers.length === 0 ? (
+                <span className="text-xs font-semibold text-slate-400">Tidak ada blocker prioritas.</span>
+            ) : null}
         </div>
+    );
+}
+
+function SummaryPill({ label, value, tone }: { label: string; value: number; tone: Tone }) {
+    return (
+        <span className={`inline-flex min-h-7 items-center gap-2 rounded-md border px-2.5 text-[11px] font-bold ${toneClass[tone]}`}>
+            <span className="font-black">{number(value)}</span>
+            <span className="truncate">{label}</span>
+        </span>
     );
 }
 

@@ -251,3 +251,14 @@ Checks:
 
 - `php artisan test tests/Feature/StaffCandidateV2Test.php --filter="candidate status"` -> passed.
 - `npm run build` -> success.
+
+## Polish Revision: Status Kandidat Pill Summary
+
+- Summary pipeline di `Status Kandidat` tidak lagi memakai grid angka + progress bar.
+- Metric atas diganti menjadi pill bar rendah agar toolbar terasa seperti workbench, bukan panel statistik besar.
+- Helper UI untuk progress/icon summary yang tidak dipakai dihapus sehingga page lebih ringan.
+
+Checks:
+
+- `php artisan test tests/Feature/StaffCandidateV2Test.php --filter="candidate status"` -> passed.
+- `npm run build` -> success.
