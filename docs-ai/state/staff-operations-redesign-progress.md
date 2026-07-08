@@ -147,3 +147,21 @@ Checks:
 - `php -l app/Http/Controllers/Dashboard/Staff/IndexController.php`
 - `npm run build`
 - `git diff --check`
+
+## Milestone: Status Kandidat Workbench
+
+- Menambahkan route staff `/dashboard/staff/candidate-status`.
+- Menambahkan submenu `Status Kandidat` di bawah `Kandidat > Semua Kandidat`.
+- Menambahkan page `Dashboard/Staff/CandidateStatus` sebagai workbench agregat perjalanan kandidat.
+- Data memakai `StaffCandidateOperationalService::detailOverview()` dan `StatusPendaftaranService` sehingga lifecycle, readiness, blocker, timeline, dan quick links berasal dari data nyata.
+- UI berisi pipeline kandidat, readiness matrix, filter status/wave/program/waiting side, list status-first, dan preview kandidat terpilih.
+- Halaman ini tidak menggandakan `Semua Kandidat`; fokusnya tahap, blocker, readiness, dan next step.
+- Aksi yang tersedia hanya link nyata ke profil kandidat, detail status, atau langkah berikutnya yang sudah diberikan service.
+
+Checks:
+
+- `php artisan test tests/Feature/StaffCandidateV2Test.php --filter="candidate status"`
+- `php artisan route:list --path=dashboard/staff`
+- `php -l app/Http/Controllers/Dashboard/Staff/IndexController.php`
+- `npm run build`
+- `git diff --check`

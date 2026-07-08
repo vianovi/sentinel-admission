@@ -324,3 +324,35 @@ it('opens staff report export settings as a placeholder without active download'
             ->where('export_state.default_group', 'quick_rekap')
         );
 });
+
+it('opens the staff candidate status aggregate workbench', function () {
+    $wave = staffCandidateV2Wave();
+    $staff = User::factory()->staff()->create();
+    $candidate = staffCandidateV2Candidate($wave, [
+        'full_name' => 'Status Workbench Candidate',
+        'candidate_code' => 'CDT-STATUS-WB',
+        'nisn' => '1010101010',
+        'nik' => '1010101010101010',
+        'status' => 'verified',
+    ]);
+
+    $this->actingAs($staff)
+        ->get('/dashboard/staff/candidate-status?status=verified')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Dashboard/Staff/CandidateStatus')
+            ->where('filters.status', 'verified')
+            ->where('summary.total', 1)
+            ->has('summary.pipeline', 5)
+            ->has('summary.readiness', 6)
+            ->has('summary.waiting_sides')
+            ->has('rows', 1)
+            ->where('rows.0.id', $candidate->id)
+            ->where('rows.0.full_name', 'Status Workbench Candidate')
+            ->where('rows.0.status', 'verified')
+            ->where('rows.0.primary_blocker.key', 'core-data')
+            ->has('rows.0.lifecycle_steps')
+            ->has('rows.0.readiness', 6)
+            ->has('rows.0.links.status_detail')
+        );
+});

@@ -73,10 +73,13 @@ Tidak ada fee component table. UI hanya boleh menampilkan:
 - Reports/Rekap menampilkan mini chart lintas modul, matriks gelombang/program, health indicators, dan rail perhatian staff dari data nyata.
 - Route staff `/dashboard/staff/reports/export-settings` ditambahkan sebagai placeholder pengaturan export.
 - Export settings menyiapkan grup `payment_only`, `quick_rekap`, dan `full_data` tanpa endpoint download aktif.
+- Route staff `/dashboard/staff/candidate-status` ditambahkan sebagai Status Kandidat workbench agregat.
+- Menu staff `Kandidat > Status Kandidat` ditambahkan tepat di bawah `Semua Kandidat`.
 - Route staff baru: `/dashboard/staff/payment-operations`.
 - Presenter baru: `App\Services\StaffPayment\StaffPaymentOperationalService`.
 - Menu staff `Review Pembayaran` diarahkan ke Payment Operations.
 - `Semua Kandidat` menjadi table workbench dengan preview panel kanan.
+- `Status Kandidat` menjadi workbench status-first untuk pipeline, readiness, blocker, timeline, dan next step semua kandidat.
 - Detail kandidat menjadi operational profile dengan action rail kanan.
 - `Perlu Tindakan` menjadi bucket/list/detail workbench.
 

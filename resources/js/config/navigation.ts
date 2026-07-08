@@ -143,6 +143,12 @@ export const navigationConfig: Record<string, NavGroup[]> = {
                             activeRules: [{ path: "/dashboard/staff/candidates", exact: true, absentQuery: ["status"] }],
                         },
                         {
+                            label: "Status Kandidat",
+                            href: "/dashboard/staff/candidate-status",
+                            icon: "fa-solid fa-route",
+                            activeRules: [{ path: "/dashboard/staff/candidate-status" }],
+                        },
+                        {
                             label: "Data Diri",
                             href: "/dashboard/staff/candidates",
                             icon: "fa-solid fa-id-card",

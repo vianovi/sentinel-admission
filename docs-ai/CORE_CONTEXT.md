@@ -550,6 +550,7 @@ POST      /dashboard/pembayaran/upload-proof
 GET       /dashboard/staff
 GET       /dashboard/staff/calendar        ComingSoon
 GET       /dashboard/staff/candidates
+GET       /dashboard/staff/candidate-status
 GET       /dashboard/staff/candidates/{candidate}
 GET       /dashboard/staff/candidates/{candidate}/{section}
 POST      /dashboard/staff/candidates/{candidate}/status
@@ -661,6 +662,7 @@ MENU
 - Staff Kalender (ComingSoon route)
 - Kandidat
   - Semua Kandidat
+  - Status Kandidat -> /dashboard/staff/candidate-status
   - Data Diri
   - Data Wali
   - Data Kesehatan

@@ -261,6 +261,8 @@ Route::middleware(['auth', RoleMiddleware::class . ':staff'])
         // ── Candidates ───────────────────────────────────────────────────
         Route::get('/candidates', [StaffDashboard::class, 'candidates'])
             ->name('candidates.index');
+        Route::get('/candidate-status', [StaffDashboard::class, 'candidateStatus'])
+            ->name('candidate-status.index');
         Route::get('/candidates/{candidate}', [StaffDashboard::class, 'show'])
             ->name('candidates.show')
             ->missing(fn () => redirect()

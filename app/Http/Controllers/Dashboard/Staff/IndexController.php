@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -167,6 +168,61 @@ class IndexController extends Controller
                 'wave'   => $wave,
                 'program' => $program,
                 'action' => $action,
+            ],
+        ]);
+    }
+
+    // =============================================
+    // GET /dashboard/staff/candidate-status
+    // =============================================
+
+    public function candidateStatus(Request $request): Response
+    {
+        $search = trim((string) $request->input('search', ''));
+        $status = trim((string) $request->input('status', ''));
+        $wave = trim((string) $request->input('wave', ''));
+        $program = trim((string) $request->input('program', ''));
+        $waiting = trim((string) $request->input('waiting', ''));
+
+        $baseQuery = $this->staffCandidates->baseOperationalQuery();
+
+        $query = (clone $baseQuery)
+            ->when($search, fn ($q) => $q->where(function ($nested) use ($search) {
+                $nested
+                    ->where('full_name', 'like', "%{$search}%")
+                    ->orWhere('nisn', 'like', "%{$search}%")
+                    ->orWhere('candidate_code', 'like', "%{$search}%");
+            }))
+            ->when($status, fn ($q) => $q->where('status', $status))
+            ->when($wave, fn ($q) => $q->where('admission_wave_id', $wave))
+            ->when($program, fn ($q) => $q->where('program_choice', $program))
+            ->latest();
+
+        $rows = $query
+            ->limit(90)
+            ->get()
+            ->map(fn (Candidate $candidate) => $this->candidateStatusRow($candidate))
+            ->when($waiting, fn ($collection) => $collection
+                ->filter(fn (array $row) => ($row['waiting_side'] ?? '') === $waiting)
+                ->values());
+
+        $allRows = $this->staffCandidates->baseOperationalQuery()
+            ->latest()
+            ->limit(180)
+            ->get()
+            ->map(fn (Candidate $candidate) => $this->candidateStatusRow($candidate));
+
+        return Inertia::render('Dashboard/Staff/CandidateStatus', [
+            'rows' => $rows->values(),
+            'summary' => $this->candidateStatusSummary($allRows),
+            'waves' => AdmissionWave::select('id', 'title')->latest()->get(),
+            'programs' => $this->programOptions(),
+            'filters' => [
+                'search' => $search,
+                'status' => $status,
+                'wave' => $wave,
+                'program' => $program,
+                'waiting' => $waiting,
             ],
         ]);
     }
@@ -667,6 +723,108 @@ class IndexController extends Controller
             ])
             ->values()
             ->all();
+    }
+
+    private function candidateStatusRow(Candidate $candidate): array
+    {
+        $overview = $this->staffCandidates->detailOverview($candidate, 'staff');
+        $lifecycle = $overview['lifecycle'];
+        $primaryBlocker = $overview['primary_blocker'];
+
+        return [
+            'id' => $candidate->id,
+            'candidate_code' => $candidate->candidate_code,
+            'full_name' => $candidate->full_name,
+            'nisn' => $candidate->nisn,
+            'status' => $candidate->status,
+            'program_choice' => $candidate->program_choice,
+            'admission_wave' => $candidate->admissionWave?->title,
+            'school_origin' => $candidate->school_origin,
+            'updated_at' => $candidate->updated_at?->format('d M Y H:i'),
+            'waiting_side' => $lifecycle['waiting_side'] ?? null,
+            'waiting_side_label' => $lifecycle['waiting_side_label'] ?? null,
+            'lifecycle' => $lifecycle,
+            'lifecycle_steps' => $overview['lifecycle_steps'],
+            'progress' => $overview['progress'],
+            'readiness' => $overview['readiness'],
+            'primary_blocker' => $primaryBlocker,
+            'review_blockers' => $overview['review_blockers'],
+            'selection' => $overview['selection'],
+            'timeline' => $overview['timeline'],
+            'links' => [
+                'profile' => route('staff.candidates.show', $candidate),
+                'status_detail' => route('staff.candidates.status-pendaftaran', $candidate),
+                'primary_action' => ($primaryBlocker['key'] ?? 'clear') !== 'clear'
+                    ? $primaryBlocker['href']
+                    : route('staff.candidates.show', $candidate),
+            ],
+        ];
+    }
+
+    private function candidateStatusSummary(Collection $rows): array
+    {
+        $pipelineLabels = [
+            'draft' => 'Draft',
+            'submitted' => 'Submitted',
+            'verified' => 'Verified',
+            'accepted' => 'Diterima',
+            'rejected' => 'Ditolak',
+        ];
+
+        $readinessKeys = [
+            'data-diri' => 'Data Diri',
+            'data-wali' => 'Wali',
+            'data-kesehatan' => 'Kesehatan',
+            'dokumen' => 'Dokumen',
+            'pembayaran' => 'Pembayaran',
+            'ujian-seleksi' => 'Seleksi',
+        ];
+
+        return [
+            'total' => $rows->count(),
+            'pipeline' => collect($pipelineLabels)
+                ->map(fn (string $label, string $status) => [
+                    'key' => $status,
+                    'label' => $label,
+                    'count' => $rows->where('status', $status)->count(),
+                ])
+                ->values(),
+            'waiting_sides' => $rows
+                ->groupBy(fn (array $row) => $row['waiting_side'] ?: 'unknown')
+                ->map(fn ($items, string $key) => [
+                    'key' => $key,
+                    'label' => $items->first()['waiting_side_label'] ?? 'Belum diketahui',
+                    'count' => $items->count(),
+                ])
+                ->sortByDesc('count')
+                ->values(),
+            'readiness' => collect($readinessKeys)
+                ->map(function (string $label, string $key) use ($rows) {
+                    $items = $rows->map(fn (array $row) => collect($row['readiness'])->firstWhere('key', $key));
+
+                    return [
+                        'key' => $key,
+                        'label' => $label,
+                        'complete' => $items->where('status', 'complete')->count(),
+                        'pending_review' => $items->where('status', 'pending_review')->count(),
+                        'rejected' => $items->where('status', 'rejected')->count(),
+                        'incomplete' => $items->whereIn('status', ['incomplete', 'locked', 'unavailable'])->count(),
+                    ];
+                })
+                ->values(),
+            'blockers' => $rows
+                ->pluck('primary_blocker')
+                ->filter(fn (?array $blocker) => $blocker && ($blocker['key'] ?? 'clear') !== 'clear')
+                ->groupBy(fn (array $blocker) => $blocker['key'])
+                ->map(fn ($items) => [
+                    'key' => $items->first()['key'],
+                    'label' => $items->first()['label'],
+                    'tone' => $items->first()['tone'],
+                    'count' => $items->count(),
+                ])
+                ->sortByDesc('count')
+                ->values(),
+        ];
     }
 
     private function reportTrend(): array
