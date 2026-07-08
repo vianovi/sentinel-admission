@@ -313,6 +313,8 @@ Route::middleware(['auth', RoleMiddleware::class . ':staff'])
             });
         Route::get('/reports', [StaffDashboard::class, 'reports'])
             ->name('reports');
+        Route::get('/reports/export-settings', [StaffDashboard::class, 'reportExportSettings'])
+            ->name('reports.export-settings');
         Route::get('/payment-operations', [StaffDashboard::class, 'paymentOperations'])
             ->name('payment-operations.index');
         Route::get('/payment-recap', ComingSoonController::class)

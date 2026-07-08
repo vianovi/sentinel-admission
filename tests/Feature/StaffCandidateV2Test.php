@@ -305,3 +305,22 @@ it('opens the staff reports workspace with real operational summaries and disabl
             ->where('recent_candidates.0.full_name', 'Report Workspace Candidate')
         );
 });
+
+it('opens staff report export settings as a placeholder without active download', function () {
+    $staff = User::factory()->staff()->create();
+
+    $this->actingAs($staff)
+        ->get('/dashboard/staff/reports/export-settings')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Dashboard/Staff/ReportsExportSettings')
+            ->has('export_groups', 3)
+            ->where('export_groups.0.key', 'payment_only')
+            ->where('export_groups.1.key', 'quick_rekap')
+            ->where('export_groups.2.key', 'full_data')
+            ->where('export_state.download_enabled', false)
+            ->where('export_state.generator_status', 'placeholder')
+            ->where('export_state.download_url', null)
+            ->where('export_state.default_group', 'quick_rekap')
+        );
+});

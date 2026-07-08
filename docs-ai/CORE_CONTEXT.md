@@ -564,6 +564,7 @@ GET       /dashboard/staff/exams/results
 GET       /dashboard/staff/exams/sessions  ComingSoon
 GET       /dashboard/staff/exams/results/{attempt}
 GET       /dashboard/staff/reports
+GET       /dashboard/staff/reports/export-settings
 GET       /dashboard/staff/payment-operations
 GET       /dashboard/staff/payment-recap    ComingSoon
 POST      /dashboard/staff/documents/{document}/verify

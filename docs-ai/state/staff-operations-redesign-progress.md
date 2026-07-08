@@ -130,3 +130,20 @@ Checks:
 - `php artisan test tests/Feature/StaffCandidateV2Test.php --filter="staff reports"` -> passed.
 - `php -l app/Http/Controllers/Dashboard/Staff/IndexController.php` -> no syntax errors.
 - `npm run build` -> success.
+
+## Milestone: Export Settings Placeholder
+
+- Menambahkan route staff `/dashboard/staff/reports/export-settings`.
+- Menambahkan page `Dashboard/Staff/ReportsExportSettings` untuk menyiapkan tiga kelompok format: `payment_only`, `quick_rekap`, dan `full_data`.
+- Halaman settings hanya menjadi placeholder konfigurasi: pilihan format dapat dipreview lokal, tetapi tidak ada save preference.
+- Tombol lebar `Unduh data` tetap disabled dengan status bahwa endpoint download, job export, dan generator file belum dibuat.
+- `quick_rekap` ditandai sebagai format non-sensitive; `full_data` disiapkan sebagai format lengkap termasuk data sensitif nanti.
+- Reports/Rekap sekarang memiliki link nyata ke halaman pengaturan export.
+
+Checks:
+
+- `php artisan test tests/Feature/StaffCandidateV2Test.php --filter="staff report"`
+- `php artisan route:list --path=dashboard/staff`
+- `php -l app/Http/Controllers/Dashboard/Staff/IndexController.php`
+- `npm run build`
+- `git diff --check`

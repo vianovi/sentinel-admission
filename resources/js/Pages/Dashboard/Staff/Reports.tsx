@@ -502,6 +502,13 @@ function ExportPanel() {
             <div className="mt-4 rounded-md border border-amber-500/20 bg-amber-500/10 p-3 text-xs font-semibold leading-5 text-amber-700 dark:text-amber-200">
                 Placeholder aktif. Endpoint download dan generator file belum dibuat.
             </div>
+            <Link
+                href="/dashboard/staff/reports/export-settings"
+                className="mt-3 flex min-h-10 w-full items-center justify-center gap-2 rounded-md border border-slate-200 px-3 text-xs font-black text-slate-600 transition hover:border-blue-300 hover:text-blue-700 dark:border-white/10 dark:text-slate-300 dark:hover:border-blue-400/40 dark:hover:text-blue-300"
+            >
+                <i className="fa-solid fa-sliders text-[11px]" />
+                Atur format export
+            </Link>
         </section>
     );
 }

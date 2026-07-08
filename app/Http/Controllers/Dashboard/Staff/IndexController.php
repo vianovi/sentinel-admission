@@ -263,6 +263,83 @@ class IndexController extends Controller
     }
 
     // =============================================
+    // GET /dashboard/staff/reports/export-settings
+    // =============================================
+
+    public function reportExportSettings(): Response
+    {
+        return Inertia::render('Dashboard/Staff/ReportsExportSettings', [
+            'export_groups' => [
+                [
+                    'key' => 'payment_only',
+                    'label' => 'Payment Only',
+                    'scope_label' => 'Transaksi pembayaran',
+                    'description' => 'Disiapkan untuk rekonsiliasi pembayaran, channel, status, dan nominal snapshot.',
+                    'sensitivity' => 'Operasional pembayaran',
+                    'status' => 'placeholder',
+                    'columns_preview' => [
+                        'Order ID',
+                        'Kode kandidat',
+                        'Nama kandidat',
+                        'Gelombang',
+                        'Channel',
+                        'Status payment',
+                        'Base amount',
+                        'Fee amount',
+                        'Final amount',
+                        'Paid at',
+                    ],
+                ],
+                [
+                    'key' => 'quick_rekap',
+                    'label' => 'Quick Rekap',
+                    'scope_label' => 'Ringkasan non-sensitive',
+                    'description' => 'Disiapkan untuk rekap cepat tanpa data sensitif kandidat.',
+                    'sensitivity' => 'Non-sensitive',
+                    'status' => 'placeholder',
+                    'columns_preview' => [
+                        'Gelombang',
+                        'Program',
+                        'Total kandidat',
+                        'Submitted',
+                        'Verified',
+                        'Paid',
+                        'Manual review',
+                        'Blocker aktif',
+                        'Verified tanpa sesi',
+                    ],
+                ],
+                [
+                    'key' => 'full_data',
+                    'label' => 'Full Data',
+                    'scope_label' => 'Data lengkap',
+                    'description' => 'Disiapkan untuk export lengkap termasuk field sensitif setelah format final dikunci.',
+                    'sensitivity' => 'Sensitive',
+                    'status' => 'placeholder',
+                    'columns_preview' => [
+                        'Identitas kandidat',
+                        'Kontak',
+                        'Alamat',
+                        'Data wali',
+                        'Kesehatan',
+                        'Dokumen',
+                        'Payment',
+                        'Seleksi',
+                        'Lifecycle status',
+                    ],
+                ],
+            ],
+            'export_state' => [
+                'download_enabled' => false,
+                'generator_status' => 'placeholder',
+                'download_url' => null,
+                'default_group' => 'quick_rekap',
+            ],
+            'generated_at' => now()->format('d M Y H:i'),
+        ]);
+    }
+
+    // =============================================
     // GET /dashboard/staff/candidates/{candidate}
     // =============================================
 
