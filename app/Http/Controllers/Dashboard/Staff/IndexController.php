@@ -252,6 +252,11 @@ class IndexController extends Controller
                         ->count(),
                 ],
             ],
+            'charts' => [
+                'trend' => $this->reportTrend(),
+                'payment_channels' => $this->paymentChannelBreakdown(),
+            ],
+            'wave_reports' => $this->waveProgramReports(),
             'recent_candidates' => $recentCandidates,
             'generated_at' => now()->format('d M Y H:i'),
         ]);
@@ -585,5 +590,115 @@ class IndexController extends Controller
             ])
             ->values()
             ->all();
+    }
+
+    private function reportTrend(): array
+    {
+        $start = now()->subDays(13)->startOfDay();
+        $end = now()->endOfDay();
+
+        $submissions = Candidate::query()
+            ->where('status', '!=', 'draft')
+            ->whereBetween('created_at', [$start, $end])
+            ->select(DB::raw('DATE(created_at) as date'), DB::raw('COUNT(*) as total'))
+            ->groupBy('date')
+            ->pluck('total', 'date');
+
+        $paidPayments = Payment::query()
+            ->where('status', Payment::STATUS_PAID)
+            ->whereBetween('paid_at', [$start, $end])
+            ->select(DB::raw('DATE(paid_at) as date'), DB::raw('COUNT(*) as total'))
+            ->groupBy('date')
+            ->pluck('total', 'date');
+
+        $trend = [];
+
+        for ($i = 13; $i >= 0; $i--) {
+            $date = now()->subDays($i);
+            $key = $date->toDateString();
+
+            $trend[] = [
+                'date' => $date->format('d M'),
+                'submitted' => (int) ($submissions[$key] ?? 0),
+                'paid' => (int) ($paidPayments[$key] ?? 0),
+            ];
+        }
+
+        return $trend;
+    }
+
+    private function paymentChannelBreakdown(): array
+    {
+        $counts = Payment::query()
+            ->select('payment_channel', DB::raw('COUNT(*) as total'))
+            ->groupBy('payment_channel')
+            ->pluck('total', 'payment_channel');
+
+        return collect([
+            Payment::CHANNEL_GATEWAY => 'Gateway',
+            Payment::CHANNEL_TRANSFER => 'Transfer',
+            Payment::CHANNEL_CASH => 'Cash',
+        ])
+            ->map(fn (string $label, string $channel) => [
+                'channel' => $channel,
+                'label' => $label,
+                'count' => (int) ($counts[$channel] ?? 0),
+            ])
+            ->values()
+            ->all();
+    }
+
+    private function waveProgramReports(): array
+    {
+        return Candidate::query()
+            ->with([
+                'admissionWave:id,title,academic_year',
+                'documents:id,candidate_id,status',
+                'payments:id,candidate_id,status,manual_status,payment_channel,created_at',
+                'examSessionCandidates:id,candidate_id',
+                'user:id,pending_email,pending_email_status',
+            ])
+            ->latest()
+            ->get()
+            ->groupBy(fn (Candidate $candidate) => implode('|', [
+                $candidate->admission_wave_id ?: 'none',
+                $candidate->program_choice ?: 'Belum memilih program',
+            ]))
+            ->map(function ($items) {
+                /** @var \App\Models\Candidate $first */
+                $first = $items->first();
+
+                return [
+                    'id' => sprintf('%s:%s', $first->admission_wave_id ?: 'none', $first->program_choice ?: 'none'),
+                    'wave' => $first->admissionWave?->title ?? 'Tanpa gelombang',
+                    'academic_year' => $first->admissionWave?->academic_year,
+                    'program' => $first->program_choice ?: 'Belum memilih program',
+                    'total' => $items->count(),
+                    'submitted' => $items->where('status', 'submitted')->count(),
+                    'verified' => $items->where('status', 'verified')->count(),
+                    'accepted' => $items->where('status', 'accepted')->count(),
+                    'paid' => $items->filter(fn (Candidate $candidate) => $candidate->payments->contains('status', Payment::STATUS_PAID))->count(),
+                    'manual_review' => $items->filter(fn (Candidate $candidate) => $candidate->payments->contains('manual_status', Payment::MANUAL_PROOF_UPLOADED))->count(),
+                    'blockers' => $items->filter(fn (Candidate $candidate) => $this->hasReportBlocker($candidate))->count(),
+                    'verified_unassigned' => $items
+                        ->filter(fn (Candidate $candidate) => $candidate->status === 'verified' && $candidate->examSessionCandidates->isEmpty())
+                        ->count(),
+                ];
+            })
+            ->sortByDesc('total')
+            ->values()
+            ->all();
+    }
+
+    private function hasReportBlocker(Candidate $candidate): bool
+    {
+        $hasPendingEmail = $candidate->user?->pending_email
+            && in_array($candidate->user?->pending_email_status, [null, 'pending'], true);
+
+        return $candidate->documents->contains('status', 'pending')
+            || $candidate->payments->contains('manual_status', Payment::MANUAL_PROOF_UPLOADED)
+            || (($candidate->data_change_request['status'] ?? null) === 'pending')
+            || $hasPendingEmail
+            || ($candidate->status === 'verified' && $candidate->examSessionCandidates->isEmpty());
     }
 }

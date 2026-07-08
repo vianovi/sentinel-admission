@@ -104,7 +104,9 @@ Checks:
 
 - Membuka route staff `/dashboard/staff/reports` dari ComingSoon menjadi workspace laporan operasional.
 - Menambahkan page `Dashboard/Staff/Reports` dengan KPI kandidat, pembayaran, seleksi, dan antrean tindakan dari data/service nyata.
-- Menampilkan preview aktivitas kandidat terbaru sebagai konteks laporan, bukan daftar kerja utama.
+- Mengubah Reports menjadi pusat rekap lintas modul dengan mini trend chart, payment channel chart, funnel kandidat, blocker chart, dan kesehatan operasional.
+- Menambahkan rekap per gelombang/program dari relasi kandidat, payment, dokumen, perubahan data/email, dan kesiapan sesi seleksi.
+- Menampilkan aktivitas kandidat terbaru hanya sebagai rail konteks, bukan daftar kerja utama.
 - Menyiapkan area export dengan tombol lebar `Unduh data` dalam kondisi disabled dan keterangan placeholder.
 - Belum menambahkan halaman setting export, endpoint download, atau generator Excel.
 
@@ -115,3 +117,16 @@ Checks:
 - `php -l app/Http/Controllers/Dashboard/Staff/IndexController.php`
 - `npm run build`
 - `git diff --check`
+
+## Milestone Revision: Reports/Rekap Workspace Enrichment
+
+- Memperkaya Reports agar terasa sebagai panel rekap staff, bukan hanya snapshot sederhana.
+- Backend reports sekarang mengirim trend 14 hari, breakdown channel pembayaran, dan matriks gelombang/program.
+- UI memakai chart compact dengan ukuran stabil dan table overflow horizontal untuk mencegah tumpang tindih di viewport kecil.
+- Reports tetap tidak menduplikasi Payment Operations, Semua Kandidat, atau Perlu Tindakan; link hanya menuju workspace kerja yang sudah ada.
+
+Checks:
+
+- `php artisan test tests/Feature/StaffCandidateV2Test.php --filter="staff reports"` -> passed.
+- `php -l app/Http/Controllers/Dashboard/Staff/IndexController.php` -> no syntax errors.
+- `npm run build` -> success.

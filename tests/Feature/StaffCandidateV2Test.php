@@ -294,6 +294,13 @@ it('opens the staff reports workspace with real operational summaries and disabl
             ->where('summary.payments.paid', 1)
             ->where('summary.payments.paid_amount', 154500)
             ->has('summary.actions.buckets')
+            ->has('charts.trend', 14)
+            ->has('charts.payment_channels', 3)
+            ->has('wave_reports', 1)
+            ->where('wave_reports.0.wave', 'Gelombang Staff V2')
+            ->where('wave_reports.0.program', 'Reguler')
+            ->where('wave_reports.0.total', 1)
+            ->where('wave_reports.0.paid', 1)
             ->has('recent_candidates', 1)
             ->where('recent_candidates.0.full_name', 'Report Workspace Candidate')
         );

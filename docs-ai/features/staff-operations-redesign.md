@@ -70,6 +70,7 @@ Tidak ada fee component table. UI hanya boleh menampilkan:
 ## Implemented
 
 - Route staff `/dashboard/staff/reports` dibuka sebagai Reports/Rekap workspace shell.
+- Reports/Rekap menampilkan mini chart lintas modul, matriks gelombang/program, health indicators, dan rail perhatian staff dari data nyata.
 - Route staff baru: `/dashboard/staff/payment-operations`.
 - Presenter baru: `App\Services\StaffPayment\StaffPaymentOperationalService`.
 - Menu staff `Review Pembayaran` diarahkan ke Payment Operations.
