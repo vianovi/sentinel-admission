@@ -234,7 +234,6 @@ function SelectFilter({ label, value, options, onChange }: { label: string; valu
 function StatusOverview({ summary }: { summary: Summary }) {
     const topWaiting = summary.waiting_sides.slice(0, 2);
     const topBlockers = summary.blockers.slice(0, 2);
-    const readinessPreview = summary.readiness.slice(0, 6);
     const cards = [
         { key: "total", label: "Total", value: summary.total, icon: "fa-solid fa-users", tone: "primary" as Tone },
         ...summary.pipeline.map((item) => ({
@@ -248,7 +247,7 @@ function StatusOverview({ summary }: { summary: Summary }) {
 
     return (
         <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900">
-            <div className="grid grid-cols-2 gap-px bg-slate-100 dark:bg-white/10 md:grid-cols-3 2xl:grid-cols-6">
+            <div className="grid grid-cols-2 gap-px bg-slate-100 dark:bg-white/10 md:grid-cols-3 xl:grid-cols-6">
                 {cards.map((card) => (
                     <div key={card.key} className="min-w-0 bg-white px-3 py-2 dark:bg-slate-900">
                         <div className="flex items-center justify-between gap-2">
@@ -270,24 +269,16 @@ function StatusOverview({ summary }: { summary: Summary }) {
                 ))}
             </div>
 
-            <div className="grid gap-3 border-t border-slate-100 px-3 py-2 dark:border-white/10 xl:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] xl:items-center">
-                <div className="flex min-w-0 flex-wrap gap-2">
-                    {topWaiting.length > 0 ? topWaiting.map((item) => (
-                        <StatusChip key={`waiting-${item.key}`} label={item.label} value={item.count} tone="primary" prefix="Wait" />
-                    )) : null}
-                    {topBlockers.length > 0 ? topBlockers.map((item) => (
-                        <StatusChip key={`blocker-${item.key}`} label={item.label} value={item.count} tone={normalizedTone(item.tone)} prefix="Blocker" />
-                    )) : null}
-                    {topWaiting.length === 0 && topBlockers.length === 0 ? (
-                        <span className="text-xs font-semibold text-slate-400">Tidak ada blocker prioritas.</span>
-                    ) : null}
-                </div>
-
-                <div className="grid min-w-0 gap-2 sm:grid-cols-2 2xl:grid-cols-6">
-                    {readinessPreview.map((item) => (
-                        <ReadinessMini key={item.key} item={item} />
-                    ))}
-                </div>
+            <div className="flex flex-wrap gap-2 border-t border-slate-100 px-3 py-2 dark:border-white/10">
+                {topWaiting.length > 0 ? topWaiting.map((item) => (
+                    <StatusChip key={`waiting-${item.key}`} label={item.label} value={item.count} tone="primary" prefix="Wait" />
+                )) : null}
+                {topBlockers.length > 0 ? topBlockers.map((item) => (
+                    <StatusChip key={`blocker-${item.key}`} label={item.label} value={item.count} tone={normalizedTone(item.tone)} prefix="Blocker" />
+                )) : null}
+                {topWaiting.length === 0 && topBlockers.length === 0 ? (
+                    <span className="text-xs font-semibold text-slate-400">Tidak ada blocker prioritas.</span>
+                ) : null}
             </div>
         </section>
     );
@@ -300,25 +291,6 @@ function StatusChip({ label, value, tone, prefix }: { label: string; value: numb
             <span className="truncate">{label}</span>
             <span className={`shrink-0 rounded border px-1 py-0.5 text-[10px] font-black ${toneClass[tone]}`}>{number(value)}</span>
         </span>
-    );
-}
-
-function ReadinessMini({ item }: { item: Summary["readiness"][number] }) {
-    const total = item.complete + item.pending_review + item.rejected + item.incomplete;
-
-    return (
-        <div className="min-w-0">
-            <div className="flex items-center justify-between gap-2">
-                <span className="truncate text-[10px] font-black uppercase text-slate-400">{item.label}</span>
-                <span className="shrink-0 text-[10px] font-black text-emerald-600 dark:text-emerald-300">{number(item.complete)}</span>
-            </div>
-            <div className="mt-1 flex h-1 overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
-                <span className="bg-emerald-500" style={{ width: `${percent(item.complete, total)}%` }} />
-                <span className="bg-amber-500" style={{ width: `${percent(item.pending_review, total)}%` }} />
-                {item.rejected > 0 ? <span className="bg-red-500" style={{ width: `${percent(item.rejected, total)}%` }} /> : null}
-                <span className="bg-slate-300 dark:bg-slate-600" style={{ width: `${percent(item.incomplete, total)}%` }} />
-            </div>
-        </div>
     );
 }
 
@@ -440,8 +412,8 @@ export default function CandidateStatus({ rows, summary, waves, programs, filter
                 <StatusOverview summary={summary} />
 
                 <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-white/10 dark:bg-slate-900">
-                    <div className="grid gap-2 lg:grid-cols-2 2xl:grid-cols-[minmax(0,1.65fr)_repeat(4,minmax(0,1fr))_auto]">
-                        <form onSubmit={submitSearch} className="flex min-w-0 gap-2 lg:col-span-2 2xl:col-span-1">
+                    <div className="grid gap-2 lg:grid-cols-2 xl:grid-cols-[minmax(0,1.65fr)_repeat(4,minmax(0,1fr))_auto]">
+                        <form onSubmit={submitSearch} className="flex min-w-0 gap-2 lg:col-span-2 xl:col-span-1">
                             <div className="relative min-w-0 flex-1">
                                 <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
                                     <i className="fa-solid fa-magnifying-glass text-xs" />

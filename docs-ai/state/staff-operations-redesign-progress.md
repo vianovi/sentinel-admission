@@ -229,3 +229,14 @@ Checks:
 
 - `php artisan test tests/Feature/StaffCandidateV2Test.php --filter="candidate status"` -> passed.
 - `npm run build` -> success.
+
+## Polish Revision: Status Kandidat Desktop Flattening
+
+- Summary status sekarang memakai satu baris mulai breakpoint `xl`, mengikuti pola `Semua Kandidat` agar desktop biasa tidak pecah menjadi dua baris besar.
+- Readiness preview agregat di area atas dihapus karena readiness sudah tersedia sebagai dot indicator di row dan detail di inspector.
+- Filter bar juga berpindah ke layout satu baris mulai `xl`, bukan menunggu `2xl`, agar tinggi halaman desktop lebih pendek.
+
+Checks:
+
+- `php artisan test tests/Feature/StaffCandidateV2Test.php --filter="candidate status"` -> passed.
+- `npm run build` -> success.

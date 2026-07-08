@@ -83,6 +83,7 @@ Tidak ada fee component table. UI hanya boleh menampilkan:
 - `Status Kandidat` dipadatkan untuk desktop: summary/readiness menjadi strip kecil, list memakai grid proporsional, dan inspector kanan menjadi operational preview ringkas.
 - Area atas `Status Kandidat` memakai satu clean metric strip, bukan dua panel summary/readiness bertumpuk.
 - Row `Status Kandidat` memakai dot readiness dan progress teks singkat agar terasa seperti table workbench, bukan card stack.
+- Summary/filter `Status Kandidat` aktif satu baris mulai `xl` supaya desktop biasa tidak terlihat tinggi/gemuk.
 - Detail kandidat menjadi operational profile dengan action rail kanan.
 - `Perlu Tindakan` menjadi bucket/list/detail workbench.
 
