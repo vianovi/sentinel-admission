@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Head, Link, router } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import { ActionNeededBadge, LifecycleBadge, MiniMeter, ReadinessStrip, type ActionNeeded, type ReadinessItem } from "@/Components/Dashboard/Staff/Candidates/OperationalBadges";
@@ -241,6 +241,14 @@ function ReadinessMatrix({ summary }: { summary: Summary }) {
     );
 }
 
+function WorkbenchGrid({ children }: { children: ReactNode }) {
+    return (
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1.7fr)_minmax(0,0.58fr)] 2xl:grid-cols-[minmax(0,1.75fr)_minmax(0,0.62fr)]">
+            {children}
+        </div>
+    );
+}
+
 export default function CandidateStatus({ rows, summary, waves, programs, filters }: Props) {
     const [search, setSearch] = useState(filters.search ?? "");
     const [selectedId, setSelectedId] = useState<number | null>(rows[0]?.id ?? null);
@@ -337,8 +345,8 @@ export default function CandidateStatus({ rows, summary, waves, programs, filter
                 <ReadinessMatrix summary={summary} />
 
                 <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-white/10 dark:bg-slate-900">
-                    <div className="grid gap-3 xl:grid-cols-[minmax(260px,1.5fr)_repeat(4,minmax(150px,1fr))_auto]">
-                        <form onSubmit={submitSearch} className="flex min-w-0 gap-2">
+                    <div className="grid gap-3 lg:grid-cols-2 2xl:grid-cols-[minmax(0,1.6fr)_repeat(4,minmax(0,1fr))_minmax(0,0.55fr)]">
+                        <form onSubmit={submitSearch} className="flex min-w-0 gap-2 lg:col-span-2 2xl:col-span-1">
                             <div className="relative min-w-0 flex-1">
                                 <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
                                     <i className="fa-solid fa-magnifying-glass text-xs" />
@@ -374,10 +382,10 @@ export default function CandidateStatus({ rows, summary, waves, programs, filter
                     </div>
                 </div>
 
-                <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_390px]">
+                <WorkbenchGrid>
                     <CandidateStatusList rows={rows} selectedId={selectedId} onSelect={rememberSelected} />
                     <CandidateStatusPreview row={selected} />
-                </div>
+                </WorkbenchGrid>
             </div>
         </DashboardLayout>
     );
@@ -395,8 +403,8 @@ function CandidateStatusList({ rows, selectedId, onSelect }: { rows: CandidateSt
 
     return (
         <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900">
-            <div className="hidden border-b border-slate-100 bg-slate-50 px-4 py-3 dark:border-white/10 dark:bg-white/[0.03] xl:grid xl:grid-cols-[minmax(240px,1.2fr)_170px_minmax(270px,1fr)_170px_130px]">
-                {["Kandidat", "Tahap", "Readiness", "Next Step", "Aksi"].map((header) => (
+            <div className="hidden border-b border-slate-100 bg-slate-50 px-4 py-3 dark:border-white/10 dark:bg-white/[0.03] 2xl:grid 2xl:grid-cols-[minmax(0,1.35fr)_minmax(0,0.85fr)_minmax(0,1.15fr)_minmax(0,0.9fr)_minmax(0,0.55fr)]">
+                {["Kandidat", "Tahap", "Readiness", "Next Step", "Preview"].map((header) => (
                     <p key={header} className="text-[11px] font-bold uppercase tracking-wide text-slate-400">{header}</p>
                 ))}
             </div>
@@ -407,7 +415,7 @@ function CandidateStatusList({ rows, selectedId, onSelect }: { rows: CandidateSt
                     return (
                         <li key={row.id}>
                             <div className={[
-                                "grid gap-4 px-4 py-4 transition xl:grid-cols-[minmax(240px,1.2fr)_170px_minmax(270px,1fr)_170px_130px] xl:items-center",
+                                "grid gap-4 px-4 py-4 transition 2xl:grid-cols-[minmax(0,1.35fr)_minmax(0,0.85fr)_minmax(0,1.15fr)_minmax(0,0.9fr)_minmax(0,0.55fr)] 2xl:items-center",
                                 selected ? "bg-blue-50/70 dark:bg-blue-500/[0.07]" : "hover:bg-slate-50 dark:hover:bg-white/[0.03]",
                             ].join(" ")}>
                                 <div className="min-w-0">
@@ -425,13 +433,13 @@ function CandidateStatusList({ rows, selectedId, onSelect }: { rows: CandidateSt
                                 </div>
                                 <div className="space-y-2">
                                     <ReadinessStrip items={row.readiness} compact />
-                                    <div className="grid max-w-sm grid-cols-2 gap-3">
+                                    <div className="grid grid-cols-2 gap-3">
                                         <MiniMeter label="Data" value={row.progress.completion_percentage} />
                                         <MiniMeter label="Verif" value={row.progress.verification_percentage} />
                                     </div>
                                 </div>
                                 <ActionNeededBadge action={row.primary_blocker} />
-                                <div className="flex flex-wrap gap-2 xl:justify-end">
+                                <div className="flex flex-wrap gap-2 2xl:justify-end">
                                     <button
                                         type="button"
                                         onClick={() => onSelect(row.id)}

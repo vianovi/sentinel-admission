@@ -165,3 +165,16 @@ Checks:
 - `php -l app/Http/Controllers/Dashboard/Staff/IndexController.php`
 - `npm run build`
 - `git diff --check`
+
+## Polish: Status Kandidat Desktop Layout
+
+- Mengubah layout workbench `Status Kandidat` dari rail fixed pixel menjadi grid proporsional berbasis `minmax()` ratio.
+- Filter bar dibuat turun bertahap sebelum viewport ekstra lebar agar input/select tidak saling menekan.
+- Mode tabel 5 kolom pada list kandidat hanya aktif di viewport ekstra lebar; desktop sedang memakai row stack yang lebih lega.
+- Preview panel tetap sticky di desktop, tetapi tidak lagi memakai lebar hardcoded fixed.
+
+Checks:
+
+- `php artisan test tests/Feature/StaffCandidateV2Test.php --filter="candidate status"` -> passed.
+- `npm run build` -> success.
+- `git diff --check` -> success.
