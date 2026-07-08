@@ -5,7 +5,6 @@ import {
     ActionNeededBadge,
     LifecycleBadge,
     MiniMeter,
-    ReadinessStrip,
     type ActionNeeded,
     type ReadinessItem,
 } from "@/Components/Dashboard/Staff/Candidates/OperationalBadges";
@@ -159,6 +158,15 @@ const dotClass: Record<string, string> = {
     skipped: "bg-slate-300 dark:bg-slate-600",
 };
 
+const readinessDotClass: Record<string, string> = {
+    complete: "bg-emerald-500",
+    pending_review: "bg-amber-500",
+    rejected: "bg-red-500",
+    incomplete: "bg-slate-300 dark:bg-slate-600",
+    locked: "bg-slate-300 dark:bg-slate-600",
+    unavailable: "bg-slate-300 dark:bg-slate-600",
+};
+
 function normalizedTone(tone: string | null | undefined): Tone {
     return ["success", "warning", "danger", "primary", "neutral", "muted"].includes(String(tone))
         ? String(tone) as Tone
@@ -242,19 +250,19 @@ function StatusOverview({ summary }: { summary: Summary }) {
         <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900">
             <div className="grid grid-cols-2 gap-px bg-slate-100 dark:bg-white/10 md:grid-cols-3 2xl:grid-cols-6">
                 {cards.map((card) => (
-                    <div key={card.key} className="min-w-0 bg-white px-3 py-2.5 dark:bg-slate-900">
+                    <div key={card.key} className="min-w-0 bg-white px-3 py-2 dark:bg-slate-900">
                         <div className="flex items-center justify-between gap-2">
-                            <p className="truncate text-[11px] font-black uppercase text-slate-400">{card.label}</p>
+                            <p className="truncate text-[10px] font-black uppercase text-slate-400">{card.label}</p>
                             <i className={`${card.icon} text-[10px] ${toneTextClass[card.tone]}`} />
                         </div>
-                        <div className="mt-1 flex items-end justify-between gap-2">
-                            <p className="text-xl font-black leading-none text-slate-900 dark:text-white">{number(card.value)}</p>
+                        <div className="mt-1 flex items-baseline justify-between gap-2">
+                            <p className="text-base font-black leading-none text-slate-900 dark:text-white">{number(card.value)}</p>
                             {card.key !== "total" ? (
                                 <span className="shrink-0 text-[10px] font-black text-slate-400">{percent(card.value, summary.total)}%</span>
                             ) : null}
                         </div>
                         {card.key !== "total" ? (
-                            <div className="mt-2 h-1 overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
+                            <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
                                 <div className={`h-full rounded-full ${toneBarClass[card.tone]}`} style={{ width: `${percent(card.value, summary.total)}%` }} />
                             </div>
                         ) : null}
@@ -262,7 +270,7 @@ function StatusOverview({ summary }: { summary: Summary }) {
                 ))}
             </div>
 
-            <div className="grid gap-3 border-t border-slate-100 px-3 py-2.5 dark:border-white/10 xl:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] xl:items-center">
+            <div className="grid gap-3 border-t border-slate-100 px-3 py-2 dark:border-white/10 xl:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] xl:items-center">
                 <div className="flex min-w-0 flex-wrap gap-2">
                     {topWaiting.length > 0 ? topWaiting.map((item) => (
                         <StatusChip key={`waiting-${item.key}`} label={item.label} value={item.count} tone="primary" prefix="Wait" />
@@ -287,10 +295,10 @@ function StatusOverview({ summary }: { summary: Summary }) {
 
 function StatusChip({ label, value, tone, prefix }: { label: string; value: number; tone: Tone; prefix: string }) {
     return (
-        <span className="inline-flex min-h-7 min-w-0 max-w-full items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-2 text-[11px] font-bold text-slate-600 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300">
+        <span className="inline-flex min-h-6 min-w-0 max-w-full items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2 text-[10px] font-bold text-slate-600 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300">
             <span className="shrink-0 text-[10px] font-black uppercase text-slate-400">{prefix}</span>
             <span className="truncate">{label}</span>
-            <span className={`shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-black ${toneClass[tone]}`}>{number(value)}</span>
+            <span className={`shrink-0 rounded border px-1 py-0.5 text-[10px] font-black ${toneClass[tone]}`}>{number(value)}</span>
         </span>
     );
 }
@@ -314,27 +322,25 @@ function ReadinessMini({ item }: { item: Summary["readiness"][number] }) {
     );
 }
 
-function TinyMeter({ label, value }: { label: string; value: number }) {
-    const safeValue = Number.isFinite(value) ? Math.min(100, Math.max(0, value)) : 0;
-
+function ReadinessDots({ items }: { items: ReadinessItem[] }) {
     return (
-        <div className="min-w-0">
-            <div className="mb-1 flex items-center justify-between gap-1">
-                <span className="truncate text-[10px] font-bold uppercase text-slate-400">{label}</span>
-                <span className="shrink-0 text-[10px] font-bold text-slate-600 dark:text-slate-300">{safeValue}%</span>
-            </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
-                <div className="h-full rounded-full bg-emerald-500" style={{ width: `${safeValue}%` }} />
-            </div>
+        <div className="flex min-w-0 items-center gap-1.5">
+            {items.map((item) => (
+                <span
+                    key={item.key}
+                    title={`${item.label}: ${item.status_label}`}
+                    className={`h-2 w-2 shrink-0 rounded-full ${readinessDotClass[item.status] ?? "bg-slate-300 dark:bg-slate-600"}`}
+                />
+            ))}
         </div>
     );
 }
 
-function DetailMeta({ label, value }: { label: string; value: string | null }) {
+function DetailLine({ label, value }: { label: string; value: string | null }) {
     return (
-        <div className="min-w-0 rounded-md border border-slate-200 px-2.5 py-2 dark:border-white/10">
-            <p className="text-[10px] font-bold uppercase text-slate-400">{label}</p>
-            <p className="mt-0.5 truncate text-xs font-bold text-slate-700 dark:text-slate-200">{value || "-"}</p>
+        <div className="flex min-w-0 items-center justify-between gap-3">
+            <span className="shrink-0 text-[10px] font-bold uppercase text-slate-400">{label}</span>
+            <span className="min-w-0 truncate text-xs font-bold text-slate-700 dark:text-slate-200">{value || "-"}</span>
         </div>
     );
 }
@@ -471,7 +477,7 @@ export default function CandidateStatus({ rows, summary, waves, programs, filter
                     </div>
                 </div>
 
-                <div className="grid gap-4 xl:grid-cols-[minmax(0,2.25fr)_minmax(0,0.78fr)]">
+                <div className="grid gap-4 xl:grid-cols-[minmax(0,2.35fr)_minmax(0,0.72fr)]">
                     <CandidateStatusList rows={rows} selectedId={selectedId} onSelect={rememberSelected} />
                     <CandidateInspector row={selected} />
                 </div>
@@ -492,13 +498,13 @@ function CandidateStatusList({ rows, selectedId, onSelect }: { rows: CandidateSt
 
     return (
         <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900">
-            <div className="border-b border-slate-100 bg-slate-50 px-3 py-2.5 dark:border-white/10 dark:bg-white/[0.03]">
+            <div className="border-b border-slate-100 bg-slate-50 px-3 py-2 dark:border-white/10 dark:bg-white/[0.03]">
                 <div className="flex items-center justify-between gap-3">
                     <h2 className="text-sm font-black uppercase tracking-wide text-slate-900 dark:text-white">Daftar Status</h2>
                     <p className="shrink-0 text-xs font-semibold text-slate-500 dark:text-slate-400">{number(rows.length)} kandidat</p>
                 </div>
             </div>
-            <div className="hidden border-b border-slate-100 px-3 py-2 dark:border-white/10 xl:grid xl:grid-cols-[minmax(0,1.18fr)_minmax(0,0.72fr)_minmax(0,1.08fr)_minmax(0,0.88fr)_auto] xl:items-center xl:gap-3">
+            <div className="hidden border-b border-slate-100 px-3 py-2 dark:border-white/10 xl:grid xl:grid-cols-[minmax(0,1.18fr)_minmax(0,0.72fr)_minmax(0,0.9fr)_minmax(0,0.88fr)_auto] xl:items-center xl:gap-3">
                 {["Kandidat", "Tahap", "Readiness", "Next Step", "Preview"].map((header) => (
                     <p key={header} className="text-[10px] font-black uppercase tracking-wide text-slate-400">{header}</p>
                 ))}
@@ -511,15 +517,15 @@ function CandidateStatusList({ rows, selectedId, onSelect }: { rows: CandidateSt
                     return (
                         <li key={row.id}>
                             <div className={[
-                                "grid gap-3 px-3 py-2.5 transition xl:grid-cols-[minmax(0,1.18fr)_minmax(0,0.72fr)_minmax(0,1.08fr)_minmax(0,0.88fr)_auto] xl:items-center",
+                                "grid gap-2 px-3 py-2 transition xl:grid-cols-[minmax(0,1.18fr)_minmax(0,0.72fr)_minmax(0,0.9fr)_minmax(0,0.88fr)_auto] xl:items-center",
                                 selected ? "bg-blue-50/70 dark:bg-blue-500/[0.07]" : "hover:bg-slate-50 dark:hover:bg-white/[0.03]",
                             ].join(" ")}>
-                                <button type="button" onClick={() => onSelect(row.id)} className="group flex min-w-0 items-center gap-2.5 text-left">
-                                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-slate-900 text-xs font-black text-white shadow-sm dark:bg-white dark:text-slate-900">
+                                <button type="button" onClick={() => onSelect(row.id)} className="group flex min-w-0 items-start gap-2 text-left">
+                                    <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded bg-slate-900 text-[10px] font-black text-white shadow-sm dark:bg-white dark:text-slate-900">
                                         {initial}
                                     </span>
-                                    <span className="min-w-0">
-                                        <span className="block truncate text-sm font-black text-slate-900 transition group-hover:text-blue-700 dark:text-white dark:group-hover:text-blue-300">{row.full_name}</span>
+                                    <span className="min-w-0 flex-1">
+                                        <span className="block truncate text-sm font-bold text-slate-900 transition group-hover:text-blue-700 dark:text-white dark:group-hover:text-blue-300">{row.full_name}</span>
                                         <span className="mt-0.5 block truncate text-xs font-semibold text-slate-500 dark:text-slate-400">
                                             {row.candidate_code ?? "-"} · NISN {row.nisn ?? "-"}
                                         </span>
@@ -534,12 +540,11 @@ function CandidateStatusList({ rows, selectedId, onSelect }: { rows: CandidateSt
                                     <p className="truncate text-xs font-semibold text-slate-500 dark:text-slate-400">{row.waiting_side_label ?? "Belum diketahui"}</p>
                                 </div>
 
-                                <div className="min-w-0 space-y-2">
-                                    <ReadinessStrip items={row.readiness} compact />
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <TinyMeter label="Data" value={row.progress.completion_percentage} />
-                                        <TinyMeter label="Verif" value={row.progress.verification_percentage} />
-                                    </div>
+                                <div className="min-w-0 space-y-1">
+                                    <ReadinessDots items={row.readiness} />
+                                    <p className="truncate text-[11px] font-semibold text-slate-400">
+                                        Data {row.progress.completion_percentage}% · Verif {row.progress.verification_percentage}%
+                                    </p>
                                 </div>
 
                                 <div className="min-w-0 space-y-1">
@@ -553,7 +558,7 @@ function CandidateStatusList({ rows, selectedId, onSelect }: { rows: CandidateSt
                                     type="button"
                                     onClick={() => onSelect(row.id)}
                                     className={[
-                                        "inline-flex min-h-8 items-center justify-center gap-1.5 rounded-md px-2.5 text-xs font-bold transition xl:justify-self-end",
+                                        "inline-flex min-h-7 items-center justify-center gap-1.5 rounded-md px-2.5 text-xs font-bold transition xl:justify-self-end",
                                         selected
                                             ? "bg-blue-600 text-white"
                                             : "border border-slate-200 text-slate-600 hover:border-blue-400 hover:text-blue-700 dark:border-white/10 dark:text-slate-300",
@@ -595,9 +600,9 @@ function CandidateInspector({ row }: { row: CandidateStatusRow | null }) {
             </div>
 
             <div className="space-y-3 p-3">
-                <div className="grid grid-cols-2 gap-2">
-                    <DetailMeta label="Program" value={row.program_choice} />
-                    <DetailMeta label="Sekolah" value={row.school_origin} />
+                <div className="space-y-1.5 rounded-md bg-slate-50 px-2.5 py-2 dark:bg-white/[0.03]">
+                    <DetailLine label="Program" value={row.program_choice} />
+                    <DetailLine label="Sekolah" value={row.school_origin} />
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
@@ -628,9 +633,9 @@ function CandidateInspector({ row }: { row: CandidateStatusRow | null }) {
 
                 <section>
                     <p className="mb-2 text-[11px] font-black uppercase tracking-wide text-slate-400">Readiness Detail</p>
-                    <div className="space-y-2">
+                    <div className="grid grid-cols-2 gap-1.5">
                         {row.readiness.map((item) => (
-                            <div key={item.key} className="flex min-h-8 items-center justify-between gap-2 rounded-md border border-slate-200 px-2.5 dark:border-white/10">
+                            <div key={item.key} className="flex min-h-7 items-center justify-between gap-2 rounded-md border border-slate-200 px-2 dark:border-white/10">
                                 <span className="min-w-0 truncate text-xs font-bold text-slate-600 dark:text-slate-300">{item.label}</span>
                                 <span className={`shrink-0 rounded-md border px-2 py-0.5 text-[10px] font-black ${toneClass[normalizedTone(String(item.tone))]}`}>
                                     {item.status_label}
@@ -643,7 +648,7 @@ function CandidateInspector({ row }: { row: CandidateStatusRow | null }) {
                 <section>
                     <p className="mb-2 text-[11px] font-black uppercase tracking-wide text-slate-400">Timeline</p>
                     <div className="space-y-2">
-                        {row.timeline.slice(0, 3).map((item) => (
+                        {row.timeline.slice(0, 2).map((item) => (
                             <div key={item.key} className="rounded-md border border-slate-200 px-2.5 py-2 dark:border-white/10">
                                 <p className="line-clamp-1 text-xs font-black text-slate-800 dark:text-slate-100">{item.title}</p>
                                 <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-slate-500 dark:text-slate-400">{item.description}</p>

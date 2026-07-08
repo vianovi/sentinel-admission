@@ -217,3 +217,15 @@ Checks:
 
 - `php artisan test tests/Feature/StaffCandidateV2Test.php --filter="candidate status"` -> passed.
 - `npm run build` -> success.
+
+## Polish Revision: Status Kandidat Table Density
+
+- Membuat list `Status Kandidat` lebih table-like: avatar besar diganti initial kecil, row padding diturunkan, dan readiness badge row diganti dot indicator.
+- Progress data/verifikasi pada row tidak lagi memakai dua meter visual; sekarang tampil sebagai teks singkat agar row tidak terlihat tinggi.
+- Inspector kanan dipadatkan lagi: meta program/sekolah menjadi line ringan, readiness detail memakai grid kecil, dan timeline dibatasi dua item.
+- Tujuan polish ini adalah mendekatkan density halaman ke `Semua Kandidat` dan `Rekap`, bukan menambah fitur/status baru.
+
+Checks:
+
+- `php artisan test tests/Feature/StaffCandidateV2Test.php --filter="candidate status"` -> passed.
+- `npm run build` -> success.
