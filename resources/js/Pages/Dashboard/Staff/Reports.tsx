@@ -1,10 +1,8 @@
-import { memo, useMemo, type ReactNode } from "react";
+import { memo, useMemo, useState, type ReactNode } from "react";
 import { Head, Link } from "@inertiajs/react";
 import {
     Area,
     AreaChart,
-    Bar,
-    BarChart,
     CartesianGrid,
     Cell,
     Pie,
@@ -132,6 +130,23 @@ type PipelineStep = {
     tone: Tone;
 };
 
+type ReportTab = "overview" | "candidates" | "payments" | "actions" | "waves";
+
+type ReportTabItem = {
+    key: ReportTab;
+    label: string;
+    icon: string;
+    description: string;
+};
+
+type DonutPoint = {
+    key: string;
+    label: string;
+    value: number;
+    tone: Tone;
+    color: string;
+};
+
 type ChartTooltipProps = {
     active?: boolean;
     payload?: Array<{ value: number; name?: string; color?: string }>;
@@ -171,6 +186,39 @@ const paymentChannelColors: Record<string, string> = {
     cash: "#10b981",
 };
 
+const reportTabs: ReportTabItem[] = [
+    {
+        key: "overview",
+        label: "Ringkasan",
+        icon: "fa-solid fa-chart-line",
+        description: "Snapshot ritme operasional hari ini.",
+    },
+    {
+        key: "candidates",
+        label: "Kandidat",
+        icon: "fa-solid fa-users",
+        description: "Funnel status dan kesiapan kandidat.",
+    },
+    {
+        key: "payments",
+        label: "Pembayaran",
+        icon: "fa-solid fa-wallet",
+        description: "Komposisi channel dan status transaksi.",
+    },
+    {
+        key: "actions",
+        label: "Tindakan",
+        icon: "fa-solid fa-triangle-exclamation",
+        description: "Beban kerja yang perlu diprioritaskan.",
+    },
+    {
+        key: "waves",
+        label: "Gelombang",
+        icon: "fa-solid fa-table-list",
+        description: "Rekap per gelombang dan program.",
+    },
+];
+
 function number(value: number) {
     return new Intl.NumberFormat("id-ID").format(value ?? 0);
 }
@@ -187,6 +235,14 @@ function percent(value: number, total: number) {
     if (total <= 0) return 0;
 
     return Math.round((value / total) * 100);
+}
+
+function dominantPoint(items: DonutPoint[]) {
+    return items.reduce<DonutPoint | null>((selected, item) => {
+        if (!selected || item.value > selected.value) return item;
+
+        return selected;
+    }, null);
 }
 
 function ChartTooltip({ active, payload, label, isDark }: ChartTooltipProps) {
@@ -236,6 +292,36 @@ function SectionShell({ title, subtitle, icon, children, action }: { title: stri
     );
 }
 
+function TabButton({ tab, active, onSelect }: { tab: ReportTabItem; active: boolean; onSelect: (tab: ReportTab) => void }) {
+    return (
+        <button
+            type="button"
+            onClick={() => onSelect(tab.key)}
+            className={`flex min-h-12 min-w-[180px] flex-1 items-center gap-3 rounded-lg border px-3 text-left transition ${
+                active
+                    ? "border-slate-900 bg-slate-900 text-white shadow-sm dark:border-white dark:bg-white dark:text-slate-900"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-blue-300 hover:text-blue-700 dark:border-white/10 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-400/40 dark:hover:text-blue-300"
+            }`}
+        >
+            <span
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${
+                    active
+                        ? "bg-white/15 text-white dark:bg-slate-900/10 dark:text-slate-900"
+                        : "bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-300"
+                }`}
+            >
+                <i className={`${tab.icon} text-xs`} />
+            </span>
+            <span className="min-w-0">
+                <span className="block text-sm font-black leading-tight">{tab.label}</span>
+                <span className={`mt-0.5 block truncate text-[11px] font-semibold ${active ? "text-white/75 dark:text-slate-600" : "text-slate-400 dark:text-slate-500"}`}>
+                    {tab.description}
+                </span>
+            </span>
+        </button>
+    );
+}
+
 const MetricCardView = memo(function MetricCardView({ card }: { card: MetricCard }) {
     return (
         <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-slate-900">
@@ -252,6 +338,89 @@ const MetricCardView = memo(function MetricCardView({ card }: { card: MetricCard
         </div>
     );
 });
+
+function DonutChartPanel({
+    title,
+    subtitle,
+    icon,
+    data,
+    total,
+    emptyLabel,
+}: {
+    title: string;
+    subtitle: string;
+    icon: string;
+    data: DonutPoint[];
+    total: number;
+    emptyLabel: string;
+}) {
+    const { theme } = useTheme();
+    const isDark = theme === "dark";
+    const visibleData = data.filter((item) => item.value > 0);
+    const dominant = dominantPoint(visibleData);
+    const dominantPercent = dominant ? percent(dominant.value, total) : 0;
+
+    return (
+        <SectionShell title={title} subtitle={subtitle} icon={icon}>
+            {visibleData.length > 0 ? (
+                <div className="grid gap-4 p-5 lg:grid-cols-[240px_minmax(0,1fr)] lg:items-center">
+                    <div className="relative mx-auto h-[240px] w-full max-w-[240px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie
+                                    data={visibleData}
+                                    dataKey="value"
+                                    nameKey="label"
+                                    innerRadius={72}
+                                    outerRadius={108}
+                                    paddingAngle={3}
+                                    stroke={isDark ? "#0f172a" : "#ffffff"}
+                                    strokeWidth={3}
+                                >
+                                    {visibleData.map((entry) => (
+                                        <Cell key={entry.key} fill={entry.color} />
+                                    ))}
+                                </Pie>
+                                <Tooltip content={<ChartTooltip isDark={isDark} />} />
+                            </PieChart>
+                        </ResponsiveContainer>
+                        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
+                            <p className="text-3xl font-black leading-none text-slate-900 dark:text-white">{dominantPercent}%</p>
+                            <p className="mt-1 max-w-[110px] truncate text-[11px] font-black uppercase text-slate-500 dark:text-slate-400">
+                                {dominant?.label ?? "Data"}
+                            </p>
+                            <p className="mt-1 text-[11px] font-semibold text-slate-400 dark:text-slate-500">{number(total)} total</p>
+                        </div>
+                    </div>
+
+                    <div className="grid gap-2 sm:grid-cols-2">
+                        {data.map((item) => (
+                            <div key={item.key} className="rounded-md border border-slate-200 px-3 py-2.5 dark:border-white/10">
+                                <div className="flex items-center justify-between gap-3">
+                                    <div className="flex min-w-0 items-center gap-2">
+                                        <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: item.color }} />
+                                        <span className="truncate text-xs font-bold text-slate-600 dark:text-slate-300">{item.label}</span>
+                                    </div>
+                                    <span className="text-xs font-black text-slate-900 dark:text-white">{percent(item.value, total)}%</span>
+                                </div>
+                                <div className="mt-2 flex items-center justify-between gap-3">
+                                    <span className="text-xl font-black leading-none text-slate-900 dark:text-white">{number(item.value)}</span>
+                                    <span className={`rounded-md border px-2 py-1 text-[10px] font-black ${toneClass[item.tone]}`}>
+                                        {number(item.value)}
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            ) : (
+                <div className="flex h-[260px] items-center justify-center p-6 text-center text-sm font-semibold text-slate-500 dark:text-slate-400">
+                    {emptyLabel}
+                </div>
+            )}
+        </SectionShell>
+    );
+}
 
 function ProgressRow({ label, value, total, tone }: { label: string; value: number; total: number; tone: Tone }) {
     const progress = percent(value, total);
@@ -336,91 +505,45 @@ function TrendChart({ data }: { data: TrendPoint[] }) {
 }
 
 function PaymentChannelChart({ data, total }: { data: PaymentChannelPoint[]; total: number }) {
-    const { theme } = useTheme();
-    const isDark = theme === "dark";
-
-    if (total <= 0) {
-        return (
-            <SectionShell title="Channel Pembayaran" subtitle="Belum ada transaksi yang bisa direkap." icon="fa-solid fa-wallet">
-                <div className="flex h-[260px] items-center justify-center p-6 text-center text-sm font-semibold text-slate-500 dark:text-slate-400">
-                    Data payment belum tersedia.
-                </div>
-            </SectionShell>
-        );
-    }
+    const donutData = useMemo<DonutPoint[]>(() => data.map((entry) => ({
+        key: entry.channel,
+        label: entry.label,
+        value: entry.count,
+        tone: entry.channel === "gateway" ? "primary" : entry.channel === "transfer" ? "warning" : "success",
+        color: paymentChannelColors[entry.channel] ?? "#64748b",
+    })), [data]);
 
     return (
-        <SectionShell
+        <DonutChartPanel
             title="Channel Pembayaran"
-            subtitle="Komposisi transaksi gateway, transfer, dan cash."
+            subtitle="Komposisi transaksi gateway, transfer, dan cash dengan persentase dominan di tengah chart."
             icon="fa-solid fa-wallet"
-        >
-            <div className="grid gap-4 p-5 lg:grid-cols-[180px_minmax(0,1fr)] lg:items-center">
-                <div className="relative h-[180px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                            <Pie data={data} dataKey="count" nameKey="label" innerRadius={54} outerRadius={82} paddingAngle={3} stroke="none">
-                                {data.map((entry) => (
-                                    <Cell key={entry.channel} fill={paymentChannelColors[entry.channel] ?? "#64748b"} />
-                                ))}
-                            </Pie>
-                            <Tooltip content={<ChartTooltip isDark={isDark} />} />
-                        </PieChart>
-                    </ResponsiveContainer>
-                    <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                        <p className="text-2xl font-black leading-none text-slate-900 dark:text-white">{number(total)}</p>
-                        <p className="mt-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">transaksi</p>
-                    </div>
-                </div>
-                <div className="space-y-3">
-                    {data.map((entry) => (
-                        <div key={entry.channel} className="flex items-center justify-between gap-3 rounded-md border border-slate-200 px-3 py-2 dark:border-white/10">
-                            <div className="flex min-w-0 items-center gap-2">
-                                <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: paymentChannelColors[entry.channel] ?? "#64748b" }} />
-                                <span className="truncate text-xs font-bold text-slate-600 dark:text-slate-300">{entry.label}</span>
-                            </div>
-                            <span className="shrink-0 text-sm font-black text-slate-900 dark:text-white">{number(entry.count)}</span>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </SectionShell>
+            data={donutData}
+            total={total}
+            emptyLabel="Data payment belum tersedia."
+        />
     );
 }
 
-function BlockerChart({ buckets }: { buckets: BucketStat[] }) {
-    const { theme } = useTheme();
-    const isDark = theme === "dark";
+function ActionLoadPanel({ buckets, total }: { buckets: BucketStat[]; total: number }) {
     const visible = buckets.filter((bucket) => bucket.count > 0).slice(0, 6);
-    const chartData = visible.map((bucket) => ({
-        ...bucket,
-        shortLabel: bucket.label.replace("Pembayaran", "Payment").replace("Permintaan", "Req."),
-    }));
+    const donutData = useMemo<DonutPoint[]>(() => visible.map((bucket, index) => ({
+        key: bucket.bucket,
+        label: bucket.label,
+        value: bucket.count,
+        tone: index === 0 ? "warning" : index === 1 ? "danger" : "primary",
+        color: ["#f59e0b", "#ef4444", "#2563eb", "#8b5cf6", "#10b981", "#64748b"][index] ?? "#64748b",
+    })), [visible]);
 
     return (
-        <SectionShell
+        <DonutChartPanel
             title="Beban Tindakan"
-            subtitle="Distribusi blocker aktif yang perlu dipantau lintas kandidat."
+            subtitle="Distribusi blocker aktif. Dibaca sebagai antrean prioritas, bukan tabel kontras tinggi."
             icon="fa-solid fa-triangle-exclamation"
-        >
-            {chartData.length > 0 ? (
-                <div className="h-[260px] px-2 pb-4 pt-5">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={chartData} layout="vertical" margin={{ top: 4, right: 20, left: 26, bottom: 4 }}>
-                            <CartesianGrid stroke={isDark ? "rgba(255,255,255,0.06)" : "rgba(15,23,42,0.06)"} strokeDasharray="3 3" horizontal={false} />
-                            <XAxis type="number" allowDecimals={false} tick={{ fill: isDark ? "#94a3b8" : "#64748b", fontSize: 11 }} tickLine={false} axisLine={false} />
-                            <YAxis dataKey="shortLabel" type="category" width={90} tick={{ fill: isDark ? "#94a3b8" : "#64748b", fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} />
-                            <Tooltip content={<ChartTooltip isDark={isDark} />} />
-                            <Bar dataKey="count" name="Jumlah" radius={[0, 8, 8, 0]} fill="#f59e0b" />
-                        </BarChart>
-                    </ResponsiveContainer>
-                </div>
-            ) : (
-                <div className="flex h-[260px] items-center justify-center p-6 text-center text-sm font-semibold text-emerald-700 dark:text-emerald-300">
-                    Tidak ada blocker aktif pada snapshot ini.
-                </div>
-            )}
-        </SectionShell>
+            data={donutData}
+            total={total}
+            emptyLabel="Tidak ada blocker aktif pada snapshot ini."
+        />
     );
 }
 
@@ -600,7 +723,115 @@ function RecentActivity({ candidates }: { candidates: RecentCandidate[] }) {
     );
 }
 
+function OverviewPanel({
+    charts,
+    summary,
+    recentCandidates,
+}: {
+    charts: Props["charts"];
+    summary: Props["summary"];
+    recentCandidates: RecentCandidate[];
+}) {
+    return (
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
+            <div className="space-y-5">
+                <TrendChart data={charts.trend} />
+                <SectionShell
+                    title="Kesehatan Operasional"
+                    subtitle="Indikator ringkas untuk menentukan area kerja tanpa membuka halaman detail."
+                    icon="fa-solid fa-heart-pulse"
+                >
+                    <div className="grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-3">
+                        <ProgressRow label="Dokumen pending" value={summary.candidates.document_review} total={summary.candidates.total} tone="warning" />
+                        <ProgressRow label="Pembayaran perlu review" value={summary.candidates.payment_review} total={summary.candidates.total} tone="danger" />
+                        <ProgressRow label="Perubahan data" value={summary.candidates.change_requests} total={summary.candidates.total} tone="primary" />
+                        <ProgressRow label="Verified tanpa sesi" value={summary.candidates.verified_unassigned} total={summary.candidates.total} tone="neutral" />
+                        <ProgressRow label="Gateway pending" value={summary.payments.gateway_pending} total={summary.payments.total} tone="primary" />
+                        <ProgressRow label="Failed / expired" value={summary.payments.failed_or_expired} total={summary.payments.total} tone="danger" />
+                    </div>
+                </SectionShell>
+            </div>
+            <aside className="space-y-5">
+                <ExportPanel />
+                <RecentActivity candidates={recentCandidates} />
+            </aside>
+        </div>
+    );
+}
+
+function CandidateReportPanel({ steps, summary }: { steps: PipelineStep[]; summary: Props["summary"] }) {
+    const statusDonut = useMemo<DonutPoint[]>(() => steps.map((step) => ({
+        key: step.key,
+        label: step.label,
+        value: step.value,
+        tone: step.tone,
+        color: step.tone === "primary" ? "#2563eb" : step.tone === "success" ? "#10b981" : step.tone === "warning" ? "#f59e0b" : step.tone === "danger" ? "#ef4444" : "#94a3b8",
+    })), [steps]);
+
+    return (
+        <div className="space-y-5">
+            <div className="grid gap-5 xl:grid-cols-[minmax(360px,0.85fr)_minmax(0,1.15fr)]">
+                <DonutChartPanel
+                    title="Komposisi Status"
+                    subtitle="Status kandidat aktif dengan persentase dominan di tengah chart."
+                    icon="fa-solid fa-chart-pie"
+                    data={statusDonut}
+                    total={summary.candidates.total}
+                    emptyLabel="Belum ada kandidat untuk direkap."
+                />
+                <PipelinePanel steps={steps} />
+            </div>
+            <SectionShell
+                title="Kesiapan Kandidat"
+                subtitle="Area kandidat yang masih menahan proses operasional."
+                icon="fa-solid fa-list-check"
+            >
+                <div className="grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-4">
+                    <ProgressRow label="Dokumen pending" value={summary.candidates.document_review} total={summary.candidates.total} tone="warning" />
+                    <ProgressRow label="Pembayaran pending" value={summary.candidates.payment_review} total={summary.candidates.total} tone="danger" />
+                    <ProgressRow label="Perubahan data" value={summary.candidates.change_requests} total={summary.candidates.total} tone="primary" />
+                    <ProgressRow label="Verified tanpa sesi" value={summary.candidates.verified_unassigned} total={summary.candidates.total} tone="neutral" />
+                </div>
+            </SectionShell>
+        </div>
+    );
+}
+
+function PaymentReportPanel({ charts, summary }: { charts: Props["charts"]; summary: Props["summary"] }) {
+    const paymentStatus = useMemo<DonutPoint[]>(() => [
+        { key: "paid", label: "Lunas", value: summary.payments.paid, tone: "success", color: "#10b981" },
+        { key: "pending", label: "Pending", value: summary.payments.pending, tone: "warning", color: "#f59e0b" },
+        { key: "manual", label: "Manual Review", value: summary.payments.manual_review, tone: "danger", color: "#ef4444" },
+        { key: "gateway", label: "Gateway Pending", value: summary.payments.gateway_pending, tone: "primary", color: "#2563eb" },
+        { key: "failed", label: "Gagal / Expired", value: summary.payments.failed_or_expired, tone: "muted", color: "#64748b" },
+    ], [summary.payments]);
+
+    return (
+        <div className="grid gap-5 xl:grid-cols-2">
+            <PaymentChannelChart data={charts.payment_channels} total={summary.payments.total} />
+            <DonutChartPanel
+                title="Status Transaksi"
+                subtitle="Kondisi transaksi pembayaran berdasarkan snapshot operasional."
+                icon="fa-solid fa-receipt"
+                data={paymentStatus}
+                total={summary.payments.total}
+                emptyLabel="Belum ada transaksi pembayaran."
+            />
+        </div>
+    );
+}
+
+function ActionReportPanel({ summary }: { summary: Props["summary"] }) {
+    return (
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
+            <ActionLoadPanel buckets={summary.actions.buckets} total={summary.actions.total} />
+            <AttentionPanel summary={summary} />
+        </div>
+    );
+}
+
 export default function StaffReports({ summary, charts, wave_reports, recent_candidates, generated_at }: Props) {
+    const [activeTab, setActiveTab] = useState<ReportTab>("overview");
     const candidateTotal = summary.candidates.total;
     const metricCards = useMemo<MetricCard[]>(() => [
         {
@@ -645,6 +876,8 @@ export default function StaffReports({ summary, charts, wave_reports, recent_can
         { key: "rejected", label: "Ditolak", value: summary.candidates.rejected, total: candidateTotal, tone: "danger" },
     ], [candidateTotal, summary.candidates]);
 
+    const activeTabDescription = reportTabs.find((tab) => tab.key === activeTab)?.description ?? "";
+
     return (
         <DashboardLayout>
             <Head title="Rekap / Laporan — Staff" />
@@ -688,42 +921,38 @@ export default function StaffReports({ summary, charts, wave_reports, recent_can
                     ))}
                 </div>
 
-                <div className="grid gap-5 2xl:grid-cols-[minmax(0,1fr)_360px]">
-                    <div className="space-y-5">
-                        <div className="grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(360px,0.8fr)]">
-                            <TrendChart data={charts.trend} />
-                            <PaymentChannelChart data={charts.payment_channels} total={summary.payments.total} />
-                        </div>
-
-                        <PipelinePanel steps={pipelineSteps} />
-
-                        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(340px,0.85fr)]">
-                            <SectionShell
-                                title="Kesehatan Operasional"
-                                subtitle="Indikator ringkas untuk melihat area kerja yang perlu diprioritaskan."
-                                icon="fa-solid fa-heart-pulse"
-                            >
-                                <div className="grid gap-4 p-5 md:grid-cols-2">
-                                    <ProgressRow label="Dokumen pending" value={summary.candidates.document_review} total={candidateTotal} tone="warning" />
-                                    <ProgressRow label="Pembayaran perlu review" value={summary.candidates.payment_review} total={candidateTotal} tone="danger" />
-                                    <ProgressRow label="Perubahan data" value={summary.candidates.change_requests} total={candidateTotal} tone="primary" />
-                                    <ProgressRow label="Verified tanpa sesi" value={summary.candidates.verified_unassigned} total={candidateTotal} tone="neutral" />
-                                    <ProgressRow label="Gateway pending" value={summary.payments.gateway_pending} total={summary.payments.total} tone="primary" />
-                                    <ProgressRow label="Failed / expired" value={summary.payments.failed_or_expired} total={summary.payments.total} tone="danger" />
-                                </div>
-                            </SectionShell>
-                            <BlockerChart buckets={summary.actions.buckets} />
-                        </div>
-
-                        <WaveReportTable rows={wave_reports} />
+                <div className="rounded-lg border border-slate-200 bg-white p-2 shadow-sm dark:border-white/10 dark:bg-slate-900">
+                    <div className="flex gap-2 overflow-x-auto pb-1">
+                        {reportTabs.map((tab) => (
+                            <TabButton key={tab.key} tab={tab} active={activeTab === tab.key} onSelect={setActiveTab} />
+                        ))}
                     </div>
-
-                    <aside className="space-y-5 2xl:sticky 2xl:top-20 2xl:self-start">
-                        <ExportPanel />
-                        <AttentionPanel summary={summary} />
-                        <RecentActivity candidates={recent_candidates} />
-                    </aside>
                 </div>
+
+                <div className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 text-xs font-semibold text-slate-500 shadow-sm dark:border-white/10 dark:bg-slate-900 dark:text-slate-400">
+                    <span>{activeTabDescription}</span>
+                    <span className="shrink-0">Generated {generated_at}</span>
+                </div>
+
+                {activeTab === "overview" ? (
+                    <OverviewPanel charts={charts} summary={summary} recentCandidates={recent_candidates} />
+                ) : null}
+
+                {activeTab === "candidates" ? (
+                    <CandidateReportPanel steps={pipelineSteps} summary={summary} />
+                ) : null}
+
+                {activeTab === "payments" ? (
+                    <PaymentReportPanel charts={charts} summary={summary} />
+                ) : null}
+
+                {activeTab === "actions" ? (
+                    <ActionReportPanel summary={summary} />
+                ) : null}
+
+                {activeTab === "waves" ? (
+                    <WaveReportTable rows={wave_reports} />
+                ) : null}
             </div>
         </DashboardLayout>
     );

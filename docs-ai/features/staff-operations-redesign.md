@@ -71,6 +71,9 @@ Tidak ada fee component table. UI hanya boleh menampilkan:
 
 - Route staff `/dashboard/staff/reports` dibuka sebagai Reports/Rekap workspace shell.
 - Reports/Rekap menampilkan mini chart lintas modul, matriks gelombang/program, health indicators, dan rail perhatian staff dari data nyata.
+- Reports/Rekap dipoles menjadi workspace bertab: Ringkasan, Kandidat, Pembayaran, Tindakan, dan Gelombang agar satu tampilan fokus pada satu jenis rekap.
+- Chart komposisi di Reports memakai donut dengan persentase dominan di tengah chart dan legend ringkas berbasis data nyata.
+- Beban Tindakan di Reports tidak lagi memakai visual bar/tabel kontras tinggi; diganti menjadi donut antrean prioritas dan list perhatian staff yang lebih natural.
 - Route staff `/dashboard/staff/reports/export-settings` ditambahkan sebagai placeholder pengaturan export.
 - Export settings menyiapkan grup `payment_only`, `quick_rekap`, dan `full_data` tanpa endpoint download aktif.
 - Route staff `/dashboard/staff/candidate-status` ditambahkan sebagai Status Kandidat workbench agregat.

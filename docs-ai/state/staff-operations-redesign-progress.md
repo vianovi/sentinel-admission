@@ -131,6 +131,19 @@ Checks:
 - `php -l app/Http/Controllers/Dashboard/Staff/IndexController.php` -> no syntax errors.
 - `npm run build` -> success.
 
+## Polish Milestone: Reports/Rekap Focused Tabs
+
+- Merapikan ulang halaman `Rekap / Laporan` dari satu halaman panjang menjadi workspace bertab: Ringkasan, Kandidat, Pembayaran, Tindakan, dan Gelombang.
+- Tujuannya agar satu tampilan berisi satu konteks utama sehingga staff tidak membaca semua rekap sekaligus dalam satu layar.
+- Menambahkan reusable donut panel dengan persentase dominan di tengah chart untuk komposisi status kandidat, channel pembayaran, status transaksi, dan beban tindakan.
+- Memindahkan export dan aktivitas terbaru ke tab Ringkasan agar tidak selalu menjadi rail permanen di semua rekap.
+- Mengganti visual `Beban Tindakan` dari bar chart/table-like kontras tinggi menjadi donut antrean prioritas dan panel `Top Perhatian Staff` yang lebih natural.
+- Tidak menambah data palsu atau endpoint export baru; semua visual tetap memakai summary, payment channel, action bucket, dan wave report dari backend reports yang sudah ada.
+
+Checks:
+
+- `npm run build` -> success.
+
 ## Milestone: Export Settings Placeholder
 
 - Menambahkan route staff `/dashboard/staff/reports/export-settings`.
