@@ -135,10 +135,26 @@ Checks:
 
 - Merapikan ulang halaman `Rekap / Laporan` dari satu halaman panjang menjadi workspace bertab: Ringkasan, Kandidat, Pembayaran, Tindakan, dan Gelombang.
 - Tujuannya agar satu tampilan berisi satu konteks utama sehingga staff tidak membaca semua rekap sekaligus dalam satu layar.
-- Menambahkan reusable donut panel dengan persentase dominan di tengah chart untuk komposisi status kandidat, channel pembayaran, status transaksi, dan beban tindakan.
+- Menambahkan reusable donut panel dengan persentase dominan di tengah chart untuk data komposisi yang memang cocok, seperti channel pembayaran.
 - Memindahkan export dan aktivitas terbaru ke tab Ringkasan agar tidak selalu menjadi rail permanen di semua rekap.
-- Mengganti visual `Beban Tindakan` dari bar chart/table-like kontras tinggi menjadi donut antrean prioritas dan panel `Top Perhatian Staff` yang lebih natural.
+- Mengganti visual `Beban Tindakan` dari bar/table-like kontras tinggi menjadi visual antrean prioritas dan panel `Top Perhatian Staff` yang lebih natural.
 - Tidak menambah data palsu atau endpoint export baru; semua visual tetap memakai summary, payment channel, action bucket, dan wave report dari backend reports yang sudah ada.
+
+Checks:
+
+- `npm run build` -> success.
+- Visual smoke desktop 1440px untuk tab Ringkasan, Kandidat, Pembayaran, dan Tindakan -> passed.
+
+## Polish Revision: Reports/Rekap Chart Variety
+
+- Merevisi Reports karena terlalu banyak chart donut dan terasa monoton.
+- Chart language sekarang dipilih berdasarkan jenis data:
+  - `Trend 14 Hari` memakai line chart murni ala Morris/Google untuk data waktu.
+  - `Channel Pembayaran` tetap donut karena channel adalah komposisi transaksi.
+  - `Distribusi Status` dan `Kategori Transaksi` memakai column bar chart untuk membandingkan kategori.
+  - `Beban Tindakan` memakai horizontal bar chart karena label antrean lebih panjang dan perlu dibaca sebagai prioritas kerja.
+- Status payment tidak dipaksa menjadi donut karena beberapa kategori operasional bisa beririsan, misalnya `pending` dengan gateway/manual.
+- Tidak mengubah backend data; perubahan hanya pada pilihan visualisasi dan copy penjelas.
 
 Checks:
 

@@ -1,10 +1,12 @@
 import { memo, useMemo, useState, type ReactNode } from "react";
 import { Head, Link } from "@inertiajs/react";
 import {
-    Area,
-    AreaChart,
+    Bar,
+    BarChart,
     CartesianGrid,
     Cell,
+    Line,
+    LineChart,
     Pie,
     PieChart,
     ResponsiveContainer,
@@ -145,6 +147,10 @@ type DonutPoint = {
     value: number;
     tone: Tone;
     color: string;
+};
+
+type BarPoint = DonutPoint & {
+    chartLabel?: string;
 };
 
 type ChartTooltipProps = {
@@ -376,6 +382,7 @@ function DonutChartPanel({
                                     paddingAngle={3}
                                     stroke={isDark ? "#0f172a" : "#ffffff"}
                                     strokeWidth={3}
+                                    isAnimationActive={false}
                                 >
                                     {visibleData.map((entry) => (
                                         <Cell key={entry.key} fill={entry.color} />
@@ -409,6 +416,108 @@ function DonutChartPanel({
                                         {number(item.value)}
                                     </span>
                                 </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            ) : (
+                <div className="flex h-[260px] items-center justify-center p-6 text-center text-sm font-semibold text-slate-500 dark:text-slate-400">
+                    {emptyLabel}
+                </div>
+            )}
+        </SectionShell>
+    );
+}
+
+function BarChartPanel({
+    title,
+    subtitle,
+    icon,
+    data,
+    total,
+    emptyLabel,
+    orientation = "column",
+}: {
+    title: string;
+    subtitle: string;
+    icon: string;
+    data: BarPoint[];
+    total: number;
+    emptyLabel: string;
+    orientation?: "column" | "row";
+}) {
+    const { theme } = useTheme();
+    const isDark = theme === "dark";
+    const gridColor = isDark ? "rgba(255,255,255,0.08)" : "rgba(15,23,42,0.08)";
+    const axisColor = isDark ? "#94a3b8" : "#64748b";
+    const chartData = total > 0
+        ? data.map((item) => ({ ...item, chartLabel: item.chartLabel ?? item.label }))
+        : [];
+    const chartFrameClass = orientation === "row"
+        ? "grid gap-4 p-5 xl:grid-cols-[minmax(0,1fr)_280px] xl:items-center"
+        : "space-y-4 p-5";
+    const legendClass = orientation === "row"
+        ? "grid gap-2 sm:grid-cols-2 xl:grid-cols-1"
+        : "grid gap-2 sm:grid-cols-2 xl:grid-cols-3";
+
+    return (
+        <SectionShell title={title} subtitle={subtitle} icon={icon}>
+            {chartData.length > 0 ? (
+                <div className={chartFrameClass}>
+                    <div className={orientation === "row" ? "h-[280px]" : "h-[260px]"}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            {orientation === "row" ? (
+                                <BarChart data={chartData} layout="vertical" margin={{ top: 6, right: 18, left: 18, bottom: 6 }}>
+                                    <CartesianGrid stroke={gridColor} strokeDasharray="3 3" horizontal={false} />
+                                    <XAxis type="number" allowDecimals={false} tick={{ fill: axisColor, fontSize: 11 }} tickLine={false} axisLine={false} />
+                                    <YAxis
+                                        dataKey="chartLabel"
+                                        type="category"
+                                        width={132}
+                                        tick={{ fill: axisColor, fontSize: 10, fontWeight: 700 }}
+                                        tickLine={false}
+                                        axisLine={false}
+                                    />
+                                    <Tooltip content={<ChartTooltip isDark={isDark} />} />
+                                    <Bar dataKey="value" name="Jumlah" radius={[0, 8, 8, 0]} maxBarSize={34} fillOpacity={0.52} strokeWidth={1.5} isAnimationActive={false}>
+                                        {chartData.map((entry) => (
+                                            <Cell key={entry.key} fill={entry.color} stroke={entry.color} />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            ) : (
+                                <BarChart data={chartData} margin={{ top: 12, right: 16, left: -18, bottom: 0 }}>
+                                    <CartesianGrid stroke={gridColor} strokeDasharray="3 3" vertical={false} />
+                                    <XAxis
+                                        dataKey="chartLabel"
+                                        tick={{ fill: axisColor, fontSize: 11, fontWeight: 700 }}
+                                        tickLine={false}
+                                        axisLine={false}
+                                        interval={0}
+                                    />
+                                    <YAxis allowDecimals={false} tick={{ fill: axisColor, fontSize: 11 }} tickLine={false} axisLine={false} />
+                                    <Tooltip content={<ChartTooltip isDark={isDark} />} />
+                                    <Bar dataKey="value" name="Jumlah" radius={[8, 8, 0, 0]} maxBarSize={58} fillOpacity={0.48} strokeWidth={1.5} isAnimationActive={false}>
+                                        {chartData.map((entry) => (
+                                            <Cell key={entry.key} fill={entry.color} stroke={entry.color} />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            )}
+                        </ResponsiveContainer>
+                    </div>
+
+                    <div className={legendClass}>
+                        {data.map((item) => (
+                            <div key={item.key} className="rounded-md border border-slate-200 px-3 py-2.5 dark:border-white/10">
+                                <div className="flex items-center justify-between gap-3">
+                                    <div className="flex min-w-0 items-center gap-2">
+                                        <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: item.color }} />
+                                        <span className="truncate text-xs font-bold text-slate-600 dark:text-slate-300">{item.label}</span>
+                                    </div>
+                                    <span className="text-xs font-black text-slate-900 dark:text-white">{percent(item.value, total)}%</span>
+                                </div>
+                                <p className="mt-1 text-xl font-black leading-none text-slate-900 dark:text-white">{number(item.value)}</p>
                             </div>
                         ))}
                     </div>
@@ -475,29 +584,19 @@ function TrendChart({ data }: { data: TrendPoint[] }) {
     return (
         <SectionShell
             title="Trend 14 Hari"
-            subtitle="Submission kandidat dan transaksi lunas sebagai sinyal ritme operasional."
+            subtitle="Line chart ala Morris/Google untuk membaca ritme submission dan transaksi lunas."
             icon="fa-solid fa-chart-line"
         >
             <div className="h-[260px] px-2 pb-4 pt-5">
                 <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={data} margin={{ top: 8, right: 16, left: -18, bottom: 0 }}>
-                        <defs>
-                            <linearGradient id="staffReportSubmitted" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="#2563eb" stopOpacity={0.2} />
-                                <stop offset="100%" stopColor="#2563eb" stopOpacity={0} />
-                            </linearGradient>
-                            <linearGradient id="staffReportPaid" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="#10b981" stopOpacity={0.18} />
-                                <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
-                            </linearGradient>
-                        </defs>
+                    <LineChart data={data} margin={{ top: 8, right: 16, left: -18, bottom: 0 }}>
                         <CartesianGrid stroke={gridColor} strokeDasharray="3 3" vertical={false} />
                         <XAxis dataKey="date" tick={{ fill: axisColor, fontSize: 11, fontWeight: 600 }} tickLine={false} axisLine={false} />
                         <YAxis allowDecimals={false} tick={{ fill: axisColor, fontSize: 11 }} tickLine={false} axisLine={false} />
                         <Tooltip content={<ChartTooltip isDark={isDark} />} />
-                        <Area type="monotone" dataKey="submitted" name="Submitted" stroke="#2563eb" strokeWidth={2.5} fill="url(#staffReportSubmitted)" dot={false} activeDot={{ r: 5 }} />
-                        <Area type="monotone" dataKey="paid" name="Lunas" stroke="#10b981" strokeWidth={2.5} fill="url(#staffReportPaid)" dot={false} activeDot={{ r: 5 }} />
-                    </AreaChart>
+                        <Line type="monotone" dataKey="submitted" name="Submitted" stroke="#2563eb" strokeWidth={2.5} dot={{ r: 3, fill: "#2563eb", strokeWidth: 0 }} activeDot={{ r: 5 }} isAnimationActive={false} />
+                        <Line type="monotone" dataKey="paid" name="Lunas" stroke="#10b981" strokeWidth={2.5} dot={{ r: 3, fill: "#10b981", strokeWidth: 0 }} activeDot={{ r: 5 }} isAnimationActive={false} />
+                    </LineChart>
                 </ResponsiveContainer>
             </div>
         </SectionShell>
@@ -526,23 +625,30 @@ function PaymentChannelChart({ data, total }: { data: PaymentChannelPoint[]; tot
 }
 
 function ActionLoadPanel({ buckets, total }: { buckets: BucketStat[]; total: number }) {
-    const visible = buckets.filter((bucket) => bucket.count > 0).slice(0, 6);
-    const donutData = useMemo<DonutPoint[]>(() => visible.map((bucket, index) => ({
-        key: bucket.bucket,
-        label: bucket.label,
-        value: bucket.count,
-        tone: index === 0 ? "warning" : index === 1 ? "danger" : "primary",
-        color: ["#f59e0b", "#ef4444", "#2563eb", "#8b5cf6", "#10b981", "#64748b"][index] ?? "#64748b",
-    })), [visible]);
+    const barData = useMemo<BarPoint[]>(() => buckets
+        .filter((bucket) => bucket.count > 0)
+        .slice(0, 6)
+        .map((bucket, index) => ({
+            key: bucket.bucket,
+            label: bucket.label,
+            chartLabel: bucket.label
+                .replace("Pembayaran", "Payment")
+                .replace("Permintaan", "Req.")
+                .replace("menunggu", "wait"),
+            value: bucket.count,
+            tone: index === 0 ? "warning" : index === 1 ? "danger" : "primary",
+            color: ["#f59e0b", "#ef4444", "#2563eb", "#8b5cf6", "#10b981", "#64748b"][index] ?? "#64748b",
+        })), [buckets]);
 
     return (
-        <DonutChartPanel
+        <BarChartPanel
             title="Beban Tindakan"
-            subtitle="Distribusi blocker aktif. Dibaca sebagai antrean prioritas, bukan tabel kontras tinggi."
+            subtitle="Horizontal bar chart untuk membandingkan prioritas antrean tanpa kontras tabel yang mendadak."
             icon="fa-solid fa-triangle-exclamation"
-            data={donutData}
+            data={barData}
             total={total}
             emptyLabel="Tidak ada blocker aktif pada snapshot ini."
+            orientation="row"
         />
     );
 }
@@ -760,9 +866,10 @@ function OverviewPanel({
 }
 
 function CandidateReportPanel({ steps, summary }: { steps: PipelineStep[]; summary: Props["summary"] }) {
-    const statusDonut = useMemo<DonutPoint[]>(() => steps.map((step) => ({
+    const statusBars = useMemo<BarPoint[]>(() => steps.map((step) => ({
         key: step.key,
         label: step.label,
+        chartLabel: step.label,
         value: step.value,
         tone: step.tone,
         color: step.tone === "primary" ? "#2563eb" : step.tone === "success" ? "#10b981" : step.tone === "warning" ? "#f59e0b" : step.tone === "danger" ? "#ef4444" : "#94a3b8",
@@ -771,11 +878,11 @@ function CandidateReportPanel({ steps, summary }: { steps: PipelineStep[]; summa
     return (
         <div className="space-y-5">
             <div className="grid gap-5 xl:grid-cols-[minmax(360px,0.85fr)_minmax(0,1.15fr)]">
-                <DonutChartPanel
-                    title="Komposisi Status"
-                    subtitle="Status kandidat aktif dengan persentase dominan di tengah chart."
-                    icon="fa-solid fa-chart-pie"
-                    data={statusDonut}
+                <BarChartPanel
+                    title="Distribusi Status"
+                    subtitle="Bar chart untuk membandingkan jumlah kandidat per status secara langsung."
+                    icon="fa-solid fa-chart-column"
+                    data={statusBars}
                     total={summary.candidates.total}
                     emptyLabel="Belum ada kandidat untuk direkap."
                 />
@@ -798,21 +905,21 @@ function CandidateReportPanel({ steps, summary }: { steps: PipelineStep[]; summa
 }
 
 function PaymentReportPanel({ charts, summary }: { charts: Props["charts"]; summary: Props["summary"] }) {
-    const paymentStatus = useMemo<DonutPoint[]>(() => [
-        { key: "paid", label: "Lunas", value: summary.payments.paid, tone: "success", color: "#10b981" },
-        { key: "pending", label: "Pending", value: summary.payments.pending, tone: "warning", color: "#f59e0b" },
-        { key: "manual", label: "Manual Review", value: summary.payments.manual_review, tone: "danger", color: "#ef4444" },
-        { key: "gateway", label: "Gateway Pending", value: summary.payments.gateway_pending, tone: "primary", color: "#2563eb" },
-        { key: "failed", label: "Gagal / Expired", value: summary.payments.failed_or_expired, tone: "muted", color: "#64748b" },
+    const paymentStatus = useMemo<BarPoint[]>(() => [
+        { key: "paid", label: "Lunas", chartLabel: "Lunas", value: summary.payments.paid, tone: "success", color: "#10b981" },
+        { key: "pending", label: "Pending", chartLabel: "Pending", value: summary.payments.pending, tone: "warning", color: "#f59e0b" },
+        { key: "manual", label: "Manual Review", chartLabel: "Manual", value: summary.payments.manual_review, tone: "danger", color: "#ef4444" },
+        { key: "gateway", label: "Gateway Pending", chartLabel: "Gateway", value: summary.payments.gateway_pending, tone: "primary", color: "#2563eb" },
+        { key: "failed", label: "Gagal / Expired", chartLabel: "Gagal", value: summary.payments.failed_or_expired, tone: "muted", color: "#64748b" },
     ], [summary.payments]);
 
     return (
         <div className="grid gap-5 xl:grid-cols-2">
             <PaymentChannelChart data={charts.payment_channels} total={summary.payments.total} />
-            <DonutChartPanel
-                title="Status Transaksi"
-                subtitle="Kondisi transaksi pembayaran berdasarkan snapshot operasional."
-                icon="fa-solid fa-receipt"
+            <BarChartPanel
+                title="Kategori Transaksi"
+                subtitle="Bar chart status/antrian payment. Beberapa kategori operasional bisa saling beririsan."
+                icon="fa-solid fa-chart-column"
                 data={paymentStatus}
                 total={summary.payments.total}
                 emptyLabel="Belum ada transaksi pembayaran."
