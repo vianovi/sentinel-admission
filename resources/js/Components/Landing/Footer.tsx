@@ -48,7 +48,7 @@ export default function Footer({ auth: _auth, app }: FooterProps) {
                         {/* Brochure Download Action */}
                         <div className="pt-2">
                             <a
-                                href="/assets/landing/brochure/brosur.pdf"
+                                href="/assets/landing/brochure/brosur.jpg"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 download="Brosur_Al_Muntaha.pdf"
