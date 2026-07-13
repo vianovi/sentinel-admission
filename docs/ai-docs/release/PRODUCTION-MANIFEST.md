@@ -7,7 +7,7 @@
 
 | Slice | Source SHA | Audit SHA | Promoted SHA | Code Status | Human Visual Review | Notes |
 |---|---|---|---|---|---|---|
-| Foundation | `1113160` | pending checkpoint | not yet promoted | verifying; baseline gates pass | n/a | Documentation-only Task 00; not a feature-slice pass |
+| Foundation | `1113160` | `24ee4bd` | not yet promoted | PASS | n/a | Documentation-only Task 00; not a feature-slice pass |
 | Public/shared runtime | - | - | - | pending | pending | |
 | Auth/registration | - | - | - | pending | pending | |
 | Candidate lifecycle/profile | - | - | - | pending | pending | |

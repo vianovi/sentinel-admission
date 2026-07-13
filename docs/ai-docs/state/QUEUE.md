@@ -4,7 +4,7 @@ Task 00 may reorder this queue after a real dependency map.
 
 | Order | Slice | Task | Status | Dependencies | Classification |
 |---:|---|---|---|---|---|
-| 0 | Foundation/discovery | task-00 | verifying | none | PASS pending checkpoint |
+| 0 | Foundation/discovery | task-00 | classified | none | PASS |
 | 1 | Shared runtime/public | task-01 | queued | task-00 | pending |
 | 2 | Auth/registration | task-02 | queued | task-01 | pending |
 | 3 | Candidate lifecycle/profile | task-03 | queued | task-02 | pending |

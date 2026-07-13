@@ -3,7 +3,7 @@
 - Date: 2026-07-14
 - Branch: `audit/00-foundation`
 - Baseline: `1113160ebee605ebad439f53f3322f9deb060711`
-- Final audit commit: pending checkpoint commit
+- Final audit content commit: `24ee4bde991c78c7288654622460f984a62f40a6`
 
 | Evidence | File | Result | Notes |
 |---|---|---|---|
