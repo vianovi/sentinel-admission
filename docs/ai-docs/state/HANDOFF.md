@@ -39,7 +39,7 @@ Task 00 baseline passed: 71 tests/580 assertions, 183 routes, frontend build, de
 
 ## Uncommitted changes
 
-Blocked audit content is checkpointed at `c44330c92f5582cd540f80a887cfa9ad362e9dca`; only SHA metadata remains before a clean stop.
+None. Blocked audit content is checkpointed at `c44330c92f5582cd540f80a887cfa9ad362e9dca`; its SHA-binding metadata is committed at `1aa4a56`.
 
 ## Next exact action
 
