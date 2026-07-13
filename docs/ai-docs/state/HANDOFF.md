@@ -2,7 +2,7 @@
 
 ## Current position
 
-Task 00 is `PASS` and promoted to `release/production-candidate` at `0440d02092a78a87e24f3cc6ddc73bcb1575ec57`.
+Task 01 is blocked on `audit/01-public-shared-runtime` by B-001 after a partial public/shared source audit.
 
 ## Completed
 
@@ -15,7 +15,7 @@ Task 00 is `PASS` and promoted to `release/production-candidate` at `0440d02092a
 
 ## In progress
 
-- Promotion ledger/state metadata, then Task 01 startup.
+- None; mandatory stop reached before source edits.
 
 ## Important decisions
 
@@ -23,7 +23,7 @@ See `DECISIONS.md`.
 
 ## Known blockers
 
-See `BLOCKERS.md`.
+B-001 requires either verified owner-supplied public content or authority to remove/disable unverified showcase/contact/map/legal elements.
 
 ## Git state
 
@@ -38,11 +38,11 @@ Task 00 baseline passed: 71 tests/580 assertions, 183 routes, frontend build, de
 
 ## Uncommitted changes
 
-Expected promotion ledger/state metadata only on `release/production-candidate`.
+Documentation-only Task 01 blocked checkpoint; no application source changed.
 
 ## Next exact action
 
-Commit promotion metadata, branch `audit/01-public-shared-runtime` from the release candidate, then execute Task 01.
+After the owner resolves B-001, implement the chosen content boundary, then address PUB-003 through PUB-007 with focused tests and a production build.
 
 ## Resume warning
 

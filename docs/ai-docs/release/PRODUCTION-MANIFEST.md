@@ -8,7 +8,7 @@
 | Slice | Source SHA | Audit SHA | Promoted SHA | Code Status | Human Visual Review | Notes |
 |---|---|---|---|---|---|---|
 | Foundation | `1113160` | `24ee4bd` | `0440d02` | PASS | n/a | Documentation-only Task 00; not a feature-slice pass |
-| Public/shared runtime | - | - | - | pending | pending | |
+| Public/shared runtime | `e4373df` | blocked checkpoint pending | not promoted | BLOCKED — B-001 | required | Placeholder/contradictory public content requires owner decision |
 | Auth/registration | - | - | - | pending | pending | |
 | Candidate lifecycle/profile | - | - | - | pending | pending | |
 | Documents/storage | - | - | - | pending | pending | |

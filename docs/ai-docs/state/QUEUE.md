@@ -4,8 +4,8 @@ Task 00 may reorder this queue after a real dependency map.
 
 | Order | Slice | Task | Status | Dependencies | Classification |
 |---:|---|---|---|---|---|
-| 0 | Foundation/discovery | task-00 | promoted | none | PASS |
-| 1 | Shared runtime/public | task-01 | queued | task-00 | pending |
+| 0 | Foundation/discovery | task-00 | complete | none | PASS |
+| 1 | Shared runtime/public | task-01 | blocked | task-00 | BLOCKED — B-001 |
 | 2 | Auth/registration | task-02 | queued | task-01 | pending |
 | 3 | Candidate lifecycle/profile | task-03 | queued | task-02 | pending |
 | 4 | Documents/storage | task-04 | queued | task-03 | pending |
