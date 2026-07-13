@@ -269,6 +269,46 @@
     display: none;
 }
 
+/* ── Trust ecosystem ribbon ────────────────────────────────────────────────── */
+
+@keyframes trust-ribbon-scroll {
+    from { transform: translate3d(0, 0, 0); }
+    to { transform: translate3d(-50%, 0, 0); }
+}
+
+.trust-ribbon-viewport {
+    overflow: hidden;
+}
+
+.trust-ribbon-track {
+    animation: trust-ribbon-scroll 48s linear infinite;
+    will-change: transform;
+}
+
+.trust-ribbon-viewport:hover .trust-ribbon-track,
+.trust-ribbon-viewport:focus .trust-ribbon-track,
+.trust-ribbon-viewport:focus-within .trust-ribbon-track {
+    animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .trust-ribbon-viewport {
+        overflow-x: auto;
+        scrollbar-width: thin;
+    }
+
+    .trust-ribbon-track {
+        animation: none;
+        transform: none;
+        will-change: auto;
+    }
+
+    .trust-ribbon-duplicate,
+    .trust-ribbon-fill-duplicate {
+        display: none;
+    }
+}
+
 /* ── Background patterns ────────────────────────────────────────────────────── */
 
 .bg-cubes {
