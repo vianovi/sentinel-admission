@@ -3,7 +3,7 @@
 - Date: 2026-07-14
 - Branch: `audit/01-public-shared-runtime`
 - Baseline: `e4373dff71c86cafa516602ce093b9252b4dc443`
-- Final commit: pending blocked-checkpoint commit
+- Blocked audit content commit: `c44330c92f5582cd540f80a887cfa9ad362e9dca`
 
 | Evidence | File | Result | Notes |
 |---|---|---|---|

@@ -13,9 +13,9 @@
 - Release candidate branch: `release/production-candidate` at `e4373dff71c86cafa516602ce093b9252b4dc443`
 - Promotion strategy: `Strategy A — Full integrated release candidate`
 - Baseline source commit: `1113160ebee605ebad439f53f3322f9deb060711`
-- Latest audit commit: `0440d02092a78a87e24f3cc6ddc73bcb1575ec57`
+- Latest audit commit: `c44330c92f5582cd540f80a887cfa9ad362e9dca`
 - Latest promoted commit: `0440d02092a78a87e24f3cc6ddc73bcb1575ec57`
-- Working tree: `DIRTY — expected Task 01 blocker/audit/evidence checkpoint`
+- Working tree: `DIRTY — expected blocked-checkpoint SHA metadata; content checkpoint otherwise clean`
 - Last successful verification: `Task 00 baseline — 71 tests/580 assertions, 183 routes, frontend build, dependency audits, temporary SQLite migrations, and synthetic production optimize all passed on 2026-07-14`
 - Current blocker: `B-001 — verified public-content manifest or removal authority required`
 - Human visual review: `NOT_STARTED`
