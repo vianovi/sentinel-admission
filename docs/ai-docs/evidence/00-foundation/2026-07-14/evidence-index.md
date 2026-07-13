@@ -4,6 +4,7 @@
 - Branch: `audit/00-foundation`
 - Baseline: `1113160ebee605ebad439f53f3322f9deb060711`
 - Final audit content commit: `24ee4bde991c78c7288654622460f984a62f40a6`
+- Release candidate promotion: `0440d02092a78a87e24f3cc6ddc73bcb1575ec57`
 
 | Evidence | File | Result | Notes |
 |---|---|---|---|

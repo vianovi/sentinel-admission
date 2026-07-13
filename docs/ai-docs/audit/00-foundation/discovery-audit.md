@@ -5,7 +5,7 @@
 - Branch/worktree: `audit/00-foundation` / `/home/silinux/Documents/MyPlaygraund/Laravel-Project/sentinel-admission`
 - Baseline commit: `1113160ebee605ebad439f53f3322f9deb060711`
 - Final audit content commit: `24ee4bde991c78c7288654622460f984a62f40a6`
-- Release candidate: `release/production-candidate` initially at the baseline commit
+- Release candidate promotion commit: `0440d02092a78a87e24f3cc6ddc73bcb1575ec57`
 
 ## Scope
 

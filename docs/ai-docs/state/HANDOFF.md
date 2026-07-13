@@ -2,7 +2,7 @@
 
 ## Current position
 
-Task 00 is classified `PASS` on `audit/00-foundation` and awaits release-candidate promotion.
+Task 00 is `PASS` and promoted to `release/production-candidate` at `0440d02092a78a87e24f3cc6ddc73bcb1575ec57`.
 
 ## Completed
 
@@ -15,7 +15,7 @@ Task 00 is classified `PASS` on `audit/00-foundation` and awaits release-candida
 
 ## In progress
 
-- Classification metadata and release-candidate promotion.
+- Promotion ledger/state metadata, then Task 01 startup.
 
 ## Important decisions
 
@@ -38,11 +38,11 @@ Task 00 baseline passed: 71 tests/580 assertions, 183 routes, frontend build, de
 
 ## Uncommitted changes
 
-Classification metadata only after clean audit content commit `24ee4bde991c78c7288654622460f984a62f40a6`.
+Expected promotion ledger/state metadata only on `release/production-candidate`.
 
 ## Next exact action
 
-Commit classification metadata, promote Task 00 to the release-candidate branch with a fast-forward-only merge, then start Task 01.
+Commit promotion metadata, branch `audit/01-public-shared-runtime` from the release candidate, then execute Task 01.
 
 ## Resume warning
 
