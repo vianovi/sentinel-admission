@@ -12,6 +12,7 @@ import VisiMisiSection from '@/Components/Landing/VisiMisiSection'
 import HighlightSection from '@/Components/Landing/HighlightSection'
 import FacilitiesSection from '@/Components/Landing/FacilitiesSection'
 import HowToRegisterSection from '@/Components/Landing/HowToRegisterSection'
+import TrustCooperationSection from '@/Components/Landing/TrustCooperationSection'
 import GallerySection from '@/Components/Landing/GallerySection'
 import Footer from '@/Components/Landing/Footer'
 import VideoModal from '@/Components/Landing/VideoModal'
@@ -157,6 +158,7 @@ export default function Welcome({ activeWave, auth }: WelcomeProps) {
 
                 <FacilitiesSection />
                 <HowToRegisterSection />
+                <TrustCooperationSection app={app} />
                 <Footer auth={auth} app={app} />
                 <VideoModal isOpen={videoModalOpen} onClose={() => setVideoModalOpen(false)} />
             </div>
