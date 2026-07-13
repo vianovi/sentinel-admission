@@ -156,9 +156,30 @@ Checks:
 - Status payment tidak dipaksa menjadi donut karena beberapa kategori operasional bisa beririsan, misalnya `pending` dengan gateway/manual.
 - Tidak mengubah backend data; perubahan hanya pada pilihan visualisasi dan copy penjelas.
 
+Revisi ini kemudian disesuaikan kembali pada polish berikutnya berdasarkan arahan visual user.
+
 Checks:
 
 - `npm run build` -> success.
+
+## Polish Revision: Interactive Donut, Action Area, and Wave Workspace
+
+- Mempertahankan `Trend 14 Hari` di tab Ringkasan sebagai line chart.
+- Mengembalikan Distribusi Status Kandidat dan Kategori Transaksi ke donut karena keduanya dibaca sebagai komposisi.
+- Menambahkan tiga state donut ala PageSpeed Insights: kategori dominan saat idle, seluruh segmen/label saat hover atau keyboard focus, dan fokus satu segmen dengan kategori lain diredupkan.
+- Legenda di samping donut tetap menampilkan jumlah dan persentase serta dapat dipakai untuk memfokuskan segmen.
+- Menambahkan breakdown status pembayaran eksklusif pada payload Reports agar donut tidak memakai bucket summary yang saling beririsan.
+- Mengubah Beban Tindakan menjadi area chart berbasis bucket antrean aktual. Bucket bernilai nol tetap dipertahankan sebagai konteks bentuk chart; tidak dibuat histori tindakan palsu.
+- Merombak tab Gelombang menjadi workspace wave-centric menggunakan field nyata `start_date`, `end_date`, `registration_fee`, `quota_target`, konfigurasi program, status kandidat, pembayaran, blocker, dan kesiapan sesi ujian.
+- Gelombang tanpa kandidat dan program tanpa volume tetap terlihat. Kandidat tanpa pilihan program masuk bucket `Belum memilih program` agar total rekap tidak hilang.
+- Aksi Gelombang hanya deep-link nyata ke Semua Kandidat dan Payment Operations dengan filter `wave`; pengelolaan gelombang tetap milik admin.
+
+Checks:
+
+- `php artisan test tests/Feature/StaffCandidateV2Test.php --filter="staff reports"` -> passed.
+- `php -l app/Http/Controllers/Dashboard/Staff/IndexController.php` -> passed.
+- `npm run build` -> passed.
+- Desktop visual smoke 1440px untuk donut idle/expanded/focused, Tindakan, dan Gelombang -> passed tanpa horizontal overflow.
 
 ## Milestone: Export Settings Placeholder
 

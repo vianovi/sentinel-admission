@@ -311,6 +311,7 @@ class IndexController extends Controller
             'charts' => [
                 'trend' => $this->reportTrend(),
                 'payment_channels' => $this->paymentChannelBreakdown(),
+                'payment_statuses' => $this->paymentStatusBreakdown(),
             ],
             'wave_reports' => $this->waveProgramReports(),
             'recent_candidates' => $recentCandidates,
@@ -883,44 +884,131 @@ class IndexController extends Controller
             ->all();
     }
 
+    private function paymentStatusBreakdown(): array
+    {
+        $counts = Payment::query()
+            ->get(['status', 'payment_channel', 'manual_status'])
+            ->countBy(function (Payment $payment) {
+                if ($payment->status === Payment::STATUS_PAID) {
+                    return 'paid';
+                }
+
+                if ($payment->isManualChannel() && $payment->manual_status === Payment::MANUAL_PROOF_UPLOADED) {
+                    return 'manual_review';
+                }
+
+                if (
+                    $payment->manual_status === Payment::MANUAL_REJECTED
+                    || in_array($payment->status, [
+                        Payment::STATUS_FAILED,
+                        Payment::STATUS_EXPIRED,
+                        Payment::STATUS_CANCELLED,
+                    ], true)
+                ) {
+                    return 'failed_or_expired';
+                }
+
+                if ($payment->isGateway() && $payment->status === Payment::STATUS_PENDING) {
+                    return 'gateway_pending';
+                }
+
+                if ($payment->isManualChannel() && $payment->status === Payment::STATUS_PENDING) {
+                    return 'manual_waiting';
+                }
+
+                return 'other';
+            });
+
+        return collect([
+            'paid' => 'Lunas',
+            'gateway_pending' => 'Gateway pending',
+            'manual_review' => 'Manual review',
+            'manual_waiting' => 'Menunggu bukti',
+            'failed_or_expired' => 'Gagal / expired',
+            'other' => 'Status lain',
+        ])
+            ->map(fn (string $label, string $key) => [
+                'key' => $key,
+                'label' => $label,
+                'count' => (int) ($counts[$key] ?? 0),
+            ])
+            ->values()
+            ->all();
+    }
+
     private function waveProgramReports(): array
     {
-        return Candidate::query()
+        return AdmissionWave::query()
             ->with([
-                'admissionWave:id,title,academic_year',
-                'documents:id,candidate_id,status',
-                'payments:id,candidate_id,status,manual_status,payment_channel,created_at',
-                'examSessionCandidates:id,candidate_id',
-                'user:id,pending_email,pending_email_status',
+                'programs:id,admission_wave_id,name,priority,quota_ideal,quota_max,is_open_quota,is_active',
+                'candidates:id,user_id,admission_wave_id,program_choice,status,data_change_request',
+                'candidates.documents:id,candidate_id,status',
+                'candidates.payments:id,candidate_id,status,manual_status,payment_channel,created_at',
+                'candidates.examSessionCandidates:id,candidate_id',
+                'candidates.user:id,pending_email,pending_email_status',
             ])
-            ->latest()
+            ->orderByDesc('is_active')
+            ->orderByDesc('start_date')
             ->get()
-            ->groupBy(fn (Candidate $candidate) => implode('|', [
-                $candidate->admission_wave_id ?: 'none',
-                $candidate->program_choice ?: 'Belum memilih program',
-            ]))
-            ->map(function ($items) {
-                /** @var \App\Models\Candidate $first */
-                $first = $items->first();
+            ->map(function (AdmissionWave $wave) {
+                $candidates = $wave->candidates;
+                $programNames = $wave->programs
+                    ->pluck('name')
+                    ->merge($candidates->pluck('program_choice')->filter())
+                    ->unique()
+                    ->values();
+
+                if ($candidates->contains(fn (Candidate $candidate) => blank($candidate->program_choice))) {
+                    $programNames->push('Belum memilih program');
+                }
+
+                $programs = $programNames->map(function (string $programName) use ($wave, $candidates) {
+                    $config = $wave->programs->firstWhere('name', $programName);
+                    $items = $programName === 'Belum memilih program'
+                        ? $candidates->filter(fn (Candidate $candidate) => blank($candidate->program_choice))
+                        : $candidates->where('program_choice', $programName);
+
+                    return [
+                        'id' => sprintf('%s:%s', $wave->id, $programName),
+                        'name' => $programName,
+                        'priority' => $config?->priority,
+                        'quota_ideal' => $config?->quota_ideal,
+                        'quota_max' => $config?->quota_max,
+                        'is_open_quota' => $config?->is_open_quota ?? false,
+                        'is_active' => $config?->is_active ?? false,
+                        'total' => $items->count(),
+                        'quota_filled' => $items->where('status', '!=', 'draft')->count(),
+                        'submitted' => $items->where('status', 'submitted')->count(),
+                        'verified' => $items->where('status', 'verified')->count(),
+                        'accepted' => $items->where('status', 'accepted')->count(),
+                        'paid' => $items->filter(fn (Candidate $candidate) => $candidate->payments->contains('status', Payment::STATUS_PAID))->count(),
+                        'blockers' => $items->filter(fn (Candidate $candidate) => $this->hasReportBlocker($candidate))->count(),
+                    ];
+                })->values();
 
                 return [
-                    'id' => sprintf('%s:%s', $first->admission_wave_id ?: 'none', $first->program_choice ?: 'none'),
-                    'wave' => $first->admissionWave?->title ?? 'Tanpa gelombang',
-                    'academic_year' => $first->admissionWave?->academic_year,
-                    'program' => $first->program_choice ?: 'Belum memilih program',
-                    'total' => $items->count(),
-                    'submitted' => $items->where('status', 'submitted')->count(),
-                    'verified' => $items->where('status', 'verified')->count(),
-                    'accepted' => $items->where('status', 'accepted')->count(),
-                    'paid' => $items->filter(fn (Candidate $candidate) => $candidate->payments->contains('status', Payment::STATUS_PAID))->count(),
-                    'manual_review' => $items->filter(fn (Candidate $candidate) => $candidate->payments->contains('manual_status', Payment::MANUAL_PROOF_UPLOADED))->count(),
-                    'blockers' => $items->filter(fn (Candidate $candidate) => $this->hasReportBlocker($candidate))->count(),
-                    'verified_unassigned' => $items
+                    'id' => (string) $wave->id,
+                    'wave' => $wave->title,
+                    'academic_year' => $wave->academic_year,
+                    'start_date' => $wave->start_date?->toDateString(),
+                    'end_date' => $wave->end_date?->toDateString(),
+                    'registration_fee' => (float) $wave->registration_fee,
+                    'quota_target' => (int) $wave->quota_target,
+                    'is_active' => (bool) $wave->is_active,
+                    'total' => $candidates->count(),
+                    'quota_filled' => $candidates->where('status', '!=', 'draft')->count(),
+                    'submitted' => $candidates->where('status', 'submitted')->count(),
+                    'verified' => $candidates->where('status', 'verified')->count(),
+                    'accepted' => $candidates->where('status', 'accepted')->count(),
+                    'paid' => $candidates->filter(fn (Candidate $candidate) => $candidate->payments->contains('status', Payment::STATUS_PAID))->count(),
+                    'manual_review' => $candidates->filter(fn (Candidate $candidate) => $candidate->payments->contains('manual_status', Payment::MANUAL_PROOF_UPLOADED))->count(),
+                    'blockers' => $candidates->filter(fn (Candidate $candidate) => $this->hasReportBlocker($candidate))->count(),
+                    'verified_unassigned' => $candidates
                         ->filter(fn (Candidate $candidate) => $candidate->status === 'verified' && $candidate->examSessionCandidates->isEmpty())
                         ->count(),
+                    'programs' => $programs->all(),
                 ];
             })
-            ->sortByDesc('total')
             ->values()
             ->all();
     }

@@ -261,6 +261,14 @@ it('keeps gateway transactions readonly in staff payment operations', function (
 
 it('opens the staff reports workspace with real operational summaries and disabled export shell', function () {
     $wave = staffCandidateV2Wave();
+    $wave->programs()->create([
+        'name' => 'Reguler',
+        'priority' => 1,
+        'quota_ideal' => 80,
+        'quota_max' => 100,
+        'is_open_quota' => false,
+        'is_active' => true,
+    ]);
     $staff = User::factory()->staff()->create();
     $candidate = staffCandidateV2Candidate($wave, [
         'full_name' => 'Report Workspace Candidate',
@@ -296,11 +304,19 @@ it('opens the staff reports workspace with real operational summaries and disabl
             ->has('summary.actions.buckets')
             ->has('charts.trend', 14)
             ->has('charts.payment_channels', 3)
+            ->has('charts.payment_statuses', 6)
+            ->where('charts.payment_statuses.0.key', 'paid')
+            ->where('charts.payment_statuses.0.count', 1)
             ->has('wave_reports', 1)
             ->where('wave_reports.0.wave', 'Gelombang Staff V2')
-            ->where('wave_reports.0.program', 'Reguler')
             ->where('wave_reports.0.total', 1)
+            ->where('wave_reports.0.quota_target', 100)
+            ->where('wave_reports.0.quota_filled', 1)
             ->where('wave_reports.0.paid', 1)
+            ->has('wave_reports.0.programs', 1)
+            ->where('wave_reports.0.programs.0.name', 'Reguler')
+            ->where('wave_reports.0.programs.0.quota_ideal', 80)
+            ->where('wave_reports.0.programs.0.total', 1)
             ->has('recent_candidates', 1)
             ->where('recent_candidates.0.full_name', 'Report Workspace Candidate')
         );

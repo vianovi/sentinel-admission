@@ -72,8 +72,11 @@ Tidak ada fee component table. UI hanya boleh menampilkan:
 - Route staff `/dashboard/staff/reports` dibuka sebagai Reports/Rekap workspace shell.
 - Reports/Rekap menampilkan mini chart lintas modul, matriks gelombang/program, health indicators, dan rail perhatian staff dari data nyata.
 - Reports/Rekap dipoles menjadi workspace bertab: Ringkasan, Kandidat, Pembayaran, Tindakan, dan Gelombang agar satu tampilan fokus pada satu jenis rekap.
-- Reports memakai variasi chart sesuai jenis data: line untuk tren, donut untuk komposisi channel, dan bar chart untuk perbandingan status/antrian.
-- Beban Tindakan di Reports tidak lagi memakai visual tabel kontras tinggi; diganti menjadi horizontal bar chart antrean prioritas dan list perhatian staff yang lebih natural.
+- Reports memakai line chart untuk tren, donut interaktif untuk komposisi kandidat/pembayaran/program, dan area chart untuk profil beban tindakan.
+- Donut Reports menampilkan kategori dominan saat idle, seluruh segmen saat chart di-hover/focus, lalu meredupkan segmen lain ketika satu kategori difokuskan; legenda rinci tetap tersedia di samping chart.
+- Breakdown status pembayaran untuk donut dibuat eksklusif di backend agar `pending`, `gateway_pending`, dan `manual_review` tidak dihitung ganda.
+- Tab Gelombang menjadi workspace read-only per gelombang: navigator gelombang, status periode, target kuota, fee snapshot, blocker, kesiapan seleksi, komposisi program, kapasitas program, dan deep-link filter ke Kandidat/Payment Operations.
+- Beban Tindakan di Reports tidak lagi memakai visual tabel kontras tinggi; diganti menjadi area chart dan list perhatian staff yang lebih natural.
 - Route staff `/dashboard/staff/reports/export-settings` ditambahkan sebagai placeholder pengaturan export.
 - Export settings menyiapkan grup `payment_only`, `quick_rekap`, dan `full_data` tanpa endpoint download aktif.
 - Route staff `/dashboard/staff/candidate-status` ditambahkan sebagai Status Kandidat workbench agregat.

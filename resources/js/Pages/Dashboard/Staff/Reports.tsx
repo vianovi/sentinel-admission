@@ -1,8 +1,8 @@
-import { memo, useMemo, useState, type ReactNode } from "react";
+import { memo, useCallback, useMemo, useState, type ReactNode } from "react";
 import { Head, Link } from "@inertiajs/react";
 import {
-    Bar,
-    BarChart,
+    Area,
+    AreaChart,
     CartesianGrid,
     Cell,
     Line,
@@ -13,6 +13,8 @@ import {
     Tooltip,
     XAxis,
     YAxis,
+    type PieLabelRenderProps,
+    type PieSectorDataItem,
 } from "recharts";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import { useTheme } from "@/context/ThemeContext";
@@ -37,12 +39,40 @@ type PaymentChannelPoint = {
     count: number;
 };
 
+type PaymentStatusPoint = {
+    key: string;
+    label: string;
+    count: number;
+};
+
+type WaveProgramReport = {
+    id: string;
+    name: string;
+    priority: number | null;
+    quota_ideal: number | null;
+    quota_max: number | null;
+    is_open_quota: boolean;
+    is_active: boolean;
+    total: number;
+    quota_filled: number;
+    submitted: number;
+    verified: number;
+    accepted: number;
+    paid: number;
+    blockers: number;
+};
+
 type WaveReport = {
     id: string;
     wave: string;
     academic_year: string | null;
-    program: string;
+    start_date: string | null;
+    end_date: string | null;
+    registration_fee: number;
+    quota_target: number;
+    is_active: boolean;
     total: number;
+    quota_filled: number;
     submitted: number;
     verified: number;
     accepted: number;
@@ -50,6 +80,7 @@ type WaveReport = {
     manual_review: number;
     blockers: number;
     verified_unassigned: number;
+    programs: WaveProgramReport[];
 };
 
 type RecentCandidate = {
@@ -109,6 +140,7 @@ type Props = {
     charts: {
         trend: TrendPoint[];
         payment_channels: PaymentChannelPoint[];
+        payment_statuses: PaymentStatusPoint[];
     };
     wave_reports: WaveReport[];
     recent_candidates: RecentCandidate[];
@@ -149,10 +181,6 @@ type DonutPoint = {
     color: string;
 };
 
-type BarPoint = DonutPoint & {
-    chartLabel?: string;
-};
-
 type ChartTooltipProps = {
     active?: boolean;
     payload?: Array<{ value: number; name?: string; color?: string }>;
@@ -190,6 +218,24 @@ const paymentChannelColors: Record<string, string> = {
     gateway: "#2563eb",
     transfer: "#f97316",
     cash: "#10b981",
+};
+
+const paymentStatusVisuals: Record<string, { tone: Tone; color: string }> = {
+    paid: { tone: "success", color: "#10b981" },
+    gateway_pending: { tone: "primary", color: "#2563eb" },
+    manual_review: { tone: "warning", color: "#f59e0b" },
+    manual_waiting: { tone: "neutral", color: "#94a3b8" },
+    failed_or_expired: { tone: "danger", color: "#ef4444" },
+    other: { tone: "muted", color: "#64748b" },
+};
+
+const actionChartLabels: Record<string, string> = {
+    data_incomplete: "Data",
+    document_review: "Dokumen",
+    payment_review: "Payment",
+    change_requests: "Perubahan",
+    rejected_followup: "Ditolak",
+    exam_unassigned: "Sesi ujian",
 };
 
 const reportTabs: ReportTabItem[] = [
@@ -362,51 +408,106 @@ function DonutChartPanel({
 }) {
     const { theme } = useTheme();
     const isDark = theme === "dark";
-    const visibleData = data.filter((item) => item.value > 0);
+    const visibleData = useMemo(() => data.filter((item) => item.value > 0), [data]);
     const dominant = dominantPoint(visibleData);
-    const dominantPercent = dominant ? percent(dominant.value, total) : 0;
+    const [isExpanded, setIsExpanded] = useState(false);
+    const [activeKey, setActiveKey] = useState<string | null>(null);
+    const activePoint = visibleData.find((item) => item.key === activeKey) ?? null;
+    const displayPoint = activePoint ?? dominant;
+    const displayPercent = displayPoint ? percent(displayPoint.value, total) : 0;
+    const mutedSegment = isDark ? "#334155" : "#cbd5e1";
+
+    const handleChartEnter = useCallback(() => setIsExpanded(true), []);
+    const handleChartLeave = useCallback(() => {
+        setIsExpanded(false);
+        setActiveKey(null);
+    }, []);
+    const handleSegmentEnter = useCallback((_entry: PieSectorDataItem, index: number) => {
+        setActiveKey(visibleData[index]?.key ?? null);
+    }, [visibleData]);
+    const handleLegendEnter = useCallback((key: string) => {
+        setIsExpanded(true);
+        setActiveKey(key);
+    }, []);
+    const handleSegmentLeave = useCallback(() => setActiveKey(null), []);
 
     return (
         <SectionShell title={title} subtitle={subtitle} icon={icon}>
             {visibleData.length > 0 ? (
-                <div className="grid gap-4 p-5 lg:grid-cols-[240px_minmax(0,1fr)] lg:items-center">
-                    <div className="relative mx-auto h-[240px] w-full max-w-[240px]">
+                <div className="grid gap-4 p-5 lg:grid-cols-[290px_minmax(0,1fr)] lg:items-center">
+                    <div
+                        className="relative mx-auto h-[280px] w-full max-w-[290px] rounded-md outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60"
+                        onMouseEnter={handleChartEnter}
+                        onMouseLeave={handleChartLeave}
+                        onFocus={handleChartEnter}
+                        onBlur={handleChartLeave}
+                        tabIndex={0}
+                        aria-label={`${title}: ${displayPoint?.label ?? emptyLabel} ${displayPercent}%`}
+                    >
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie
                                     data={visibleData}
                                     dataKey="value"
                                     nameKey="label"
-                                    innerRadius={72}
-                                    outerRadius={108}
+                                    innerRadius={66}
+                                    outerRadius={98}
                                     paddingAngle={3}
                                     stroke={isDark ? "#0f172a" : "#ffffff"}
                                     strokeWidth={3}
+                                    cornerRadius={5}
+                                    label={isExpanded ? renderDonutLabel : false}
+                                    labelLine={isExpanded ? { stroke: isDark ? "#64748b" : "#94a3b8", strokeWidth: 1 } : false}
+                                    onMouseEnter={handleSegmentEnter}
+                                    onMouseLeave={handleSegmentLeave}
                                     isAnimationActive={false}
                                 >
-                                    {visibleData.map((entry) => (
-                                        <Cell key={entry.key} fill={entry.color} />
-                                    ))}
+                                    {visibleData.map((entry) => {
+                                        const isDominant = entry.key === dominant?.key;
+                                        const isFocused = entry.key === activeKey;
+                                        const fill = activeKey
+                                            ? (isFocused ? entry.color : mutedSegment)
+                                            : (isExpanded || isDominant ? entry.color : mutedSegment);
+                                        const opacity = !isExpanded && !isDominant ? 0.18 : activeKey && !isFocused ? 0.45 : 1;
+
+                                        return <Cell key={entry.key} fill={fill} fillOpacity={opacity} />;
+                                    })}
                                 </Pie>
                                 <Tooltip content={<ChartTooltip isDark={isDark} />} />
                             </PieChart>
                         </ResponsiveContainer>
                         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
-                            <p className="text-3xl font-black leading-none text-slate-900 dark:text-white">{dominantPercent}%</p>
-                            <p className="mt-1 max-w-[110px] truncate text-[11px] font-black uppercase text-slate-500 dark:text-slate-400">
-                                {dominant?.label ?? "Data"}
+                            <p className="text-3xl font-black leading-none" style={{ color: activePoint?.color ?? (isDark ? "#f8fafc" : "#0f172a") }}>
+                                {displayPercent}%
                             </p>
-                            <p className="mt-1 text-[11px] font-semibold text-slate-400 dark:text-slate-500">{number(total)} total</p>
+                            <p className="mt-1 max-w-[110px] truncate text-[11px] font-black uppercase text-slate-500 dark:text-slate-400">
+                                {displayPoint?.label ?? "Data"}
+                            </p>
+                            <p className="mt-1 text-[11px] font-semibold text-slate-400 dark:text-slate-500">
+                                {activePoint ? `${number(activePoint.value)} data` : `${number(total)} total`}
+                            </p>
                         </div>
                     </div>
 
-                    <div className="grid gap-2 sm:grid-cols-2">
+                    <div className="grid gap-2">
                         {data.map((item) => (
-                            <div key={item.key} className="rounded-md border border-slate-200 px-3 py-2.5 dark:border-white/10">
+                            <button
+                                key={item.key}
+                                type="button"
+                                onMouseEnter={() => handleLegendEnter(item.key)}
+                                onMouseLeave={handleSegmentLeave}
+                                onFocus={() => handleLegendEnter(item.key)}
+                                onBlur={handleSegmentLeave}
+                                className={`rounded-md border px-3 py-2.5 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 ${
+                                    activeKey && activeKey !== item.key
+                                        ? "border-slate-200 opacity-45 dark:border-white/10"
+                                        : "border-slate-200 bg-white hover:border-slate-300 dark:border-white/10 dark:bg-slate-900 dark:hover:border-white/20"
+                                }`}
+                            >
                                 <div className="flex items-center justify-between gap-3">
                                     <div className="flex min-w-0 items-center gap-2">
                                         <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: item.color }} />
-                                        <span className="truncate text-xs font-bold text-slate-600 dark:text-slate-300">{item.label}</span>
+                                        <span className="text-xs font-bold leading-4 text-slate-600 dark:text-slate-300">{item.label}</span>
                                     </div>
                                     <span className="text-xs font-black text-slate-900 dark:text-white">{percent(item.value, total)}%</span>
                                 </div>
@@ -416,7 +517,7 @@ function DonutChartPanel({
                                         {number(item.value)}
                                     </span>
                                 </div>
-                            </div>
+                            </button>
                         ))}
                     </div>
                 </div>
@@ -429,106 +530,8 @@ function DonutChartPanel({
     );
 }
 
-function BarChartPanel({
-    title,
-    subtitle,
-    icon,
-    data,
-    total,
-    emptyLabel,
-    orientation = "column",
-}: {
-    title: string;
-    subtitle: string;
-    icon: string;
-    data: BarPoint[];
-    total: number;
-    emptyLabel: string;
-    orientation?: "column" | "row";
-}) {
-    const { theme } = useTheme();
-    const isDark = theme === "dark";
-    const gridColor = isDark ? "rgba(255,255,255,0.08)" : "rgba(15,23,42,0.08)";
-    const axisColor = isDark ? "#94a3b8" : "#64748b";
-    const chartData = total > 0
-        ? data.map((item) => ({ ...item, chartLabel: item.chartLabel ?? item.label }))
-        : [];
-    const chartFrameClass = orientation === "row"
-        ? "grid gap-4 p-5 xl:grid-cols-[minmax(0,1fr)_280px] xl:items-center"
-        : "space-y-4 p-5";
-    const legendClass = orientation === "row"
-        ? "grid gap-2 sm:grid-cols-2 xl:grid-cols-1"
-        : "grid gap-2 sm:grid-cols-2 xl:grid-cols-3";
-
-    return (
-        <SectionShell title={title} subtitle={subtitle} icon={icon}>
-            {chartData.length > 0 ? (
-                <div className={chartFrameClass}>
-                    <div className={orientation === "row" ? "h-[280px]" : "h-[260px]"}>
-                        <ResponsiveContainer width="100%" height="100%">
-                            {orientation === "row" ? (
-                                <BarChart data={chartData} layout="vertical" margin={{ top: 6, right: 18, left: 18, bottom: 6 }}>
-                                    <CartesianGrid stroke={gridColor} strokeDasharray="3 3" horizontal={false} />
-                                    <XAxis type="number" allowDecimals={false} tick={{ fill: axisColor, fontSize: 11 }} tickLine={false} axisLine={false} />
-                                    <YAxis
-                                        dataKey="chartLabel"
-                                        type="category"
-                                        width={132}
-                                        tick={{ fill: axisColor, fontSize: 10, fontWeight: 700 }}
-                                        tickLine={false}
-                                        axisLine={false}
-                                    />
-                                    <Tooltip content={<ChartTooltip isDark={isDark} />} />
-                                    <Bar dataKey="value" name="Jumlah" radius={[0, 8, 8, 0]} maxBarSize={34} fillOpacity={0.52} strokeWidth={1.5} isAnimationActive={false}>
-                                        {chartData.map((entry) => (
-                                            <Cell key={entry.key} fill={entry.color} stroke={entry.color} />
-                                        ))}
-                                    </Bar>
-                                </BarChart>
-                            ) : (
-                                <BarChart data={chartData} margin={{ top: 12, right: 16, left: -18, bottom: 0 }}>
-                                    <CartesianGrid stroke={gridColor} strokeDasharray="3 3" vertical={false} />
-                                    <XAxis
-                                        dataKey="chartLabel"
-                                        tick={{ fill: axisColor, fontSize: 11, fontWeight: 700 }}
-                                        tickLine={false}
-                                        axisLine={false}
-                                        interval={0}
-                                    />
-                                    <YAxis allowDecimals={false} tick={{ fill: axisColor, fontSize: 11 }} tickLine={false} axisLine={false} />
-                                    <Tooltip content={<ChartTooltip isDark={isDark} />} />
-                                    <Bar dataKey="value" name="Jumlah" radius={[8, 8, 0, 0]} maxBarSize={58} fillOpacity={0.48} strokeWidth={1.5} isAnimationActive={false}>
-                                        {chartData.map((entry) => (
-                                            <Cell key={entry.key} fill={entry.color} stroke={entry.color} />
-                                        ))}
-                                    </Bar>
-                                </BarChart>
-                            )}
-                        </ResponsiveContainer>
-                    </div>
-
-                    <div className={legendClass}>
-                        {data.map((item) => (
-                            <div key={item.key} className="rounded-md border border-slate-200 px-3 py-2.5 dark:border-white/10">
-                                <div className="flex items-center justify-between gap-3">
-                                    <div className="flex min-w-0 items-center gap-2">
-                                        <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: item.color }} />
-                                        <span className="truncate text-xs font-bold text-slate-600 dark:text-slate-300">{item.label}</span>
-                                    </div>
-                                    <span className="text-xs font-black text-slate-900 dark:text-white">{percent(item.value, total)}%</span>
-                                </div>
-                                <p className="mt-1 text-xl font-black leading-none text-slate-900 dark:text-white">{number(item.value)}</p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            ) : (
-                <div className="flex h-[260px] items-center justify-center p-6 text-center text-sm font-semibold text-slate-500 dark:text-slate-400">
-                    {emptyLabel}
-                </div>
-            )}
-        </SectionShell>
-    );
+function renderDonutLabel({ name }: PieLabelRenderProps) {
+    return String(name ?? "");
 }
 
 function ProgressRow({ label, value, total, tone }: { label: string; value: number; total: number; tone: Tone }) {
@@ -625,83 +628,292 @@ function PaymentChannelChart({ data, total }: { data: PaymentChannelPoint[]; tot
 }
 
 function ActionLoadPanel({ buckets, total }: { buckets: BucketStat[]; total: number }) {
-    const barData = useMemo<BarPoint[]>(() => buckets
-        .filter((bucket) => bucket.count > 0)
+    const { theme } = useTheme();
+    const isDark = theme === "dark";
+    const gridColor = isDark ? "rgba(255,255,255,0.08)" : "rgba(15,23,42,0.08)";
+    const axisColor = isDark ? "#94a3b8" : "#64748b";
+    const areaData = useMemo(() => buckets
         .slice(0, 6)
         .map((bucket, index) => ({
             key: bucket.bucket,
             label: bucket.label,
-            chartLabel: bucket.label
-                .replace("Pembayaran", "Payment")
-                .replace("Permintaan", "Req.")
-                .replace("menunggu", "wait"),
+            chartLabel: actionChartLabels[bucket.bucket] ?? bucket.label,
             value: bucket.count,
             tone: index === 0 ? "warning" : index === 1 ? "danger" : "primary",
             color: ["#f59e0b", "#ef4444", "#2563eb", "#8b5cf6", "#10b981", "#64748b"][index] ?? "#64748b",
         })), [buckets]);
 
     return (
-        <BarChartPanel
-            title="Beban Tindakan"
-            subtitle="Horizontal bar chart untuk membandingkan prioritas antrean tanpa kontras tabel yang mendadak."
-            icon="fa-solid fa-triangle-exclamation"
-            data={barData}
-            total={total}
-            emptyLabel="Tidak ada blocker aktif pada snapshot ini."
-            orientation="row"
-        />
-    );
-}
-
-function WaveReportTable({ rows }: { rows: WaveReport[] }) {
-    return (
         <SectionShell
-            title="Rekap Gelombang & Program"
-            subtitle="Matriks agregat untuk membaca beban operasional tanpa membuka setiap halaman detail."
-            icon="fa-solid fa-table-list"
+            title="Beban Tindakan"
+            subtitle="Area chart untuk membaca profil beban antrean aktif berdasarkan kategori tindakan saat ini."
+            icon="fa-solid fa-chart-area"
         >
-            {rows.length > 0 ? (
-                <div className="overflow-x-auto">
-                    <table className="min-w-[980px] w-full text-left text-sm">
-                        <thead className="border-b border-slate-100 bg-slate-50 text-[11px] uppercase text-slate-500 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-400">
-                            <tr>
-                                <th className="px-4 py-3 font-black">Gelombang / Program</th>
-                                <th className="px-3 py-3 text-right font-black">Total</th>
-                                <th className="px-3 py-3 text-right font-black">Submitted</th>
-                                <th className="px-3 py-3 text-right font-black">Verified</th>
-                                <th className="px-3 py-3 text-right font-black">Paid</th>
-                                <th className="px-3 py-3 text-right font-black">Manual Review</th>
-                                <th className="px-3 py-3 text-right font-black">Blocker</th>
-                                <th className="px-4 py-3 text-right font-black">Verified tanpa Sesi</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 dark:divide-white/10">
-                            {rows.map((row) => (
-                                <tr key={row.id} className="transition hover:bg-slate-50 dark:hover:bg-white/[0.03]">
-                                    <td className="px-4 py-4">
-                                        <p className="font-black text-slate-900 dark:text-white">{row.wave}</p>
-                                        <p className="mt-1 text-xs font-semibold text-slate-500 dark:text-slate-400">
-                                            {row.program} {row.academic_year ? `- ${row.academic_year}` : ""}
-                                        </p>
-                                    </td>
-                                    <td className="px-3 py-4 text-right font-black text-slate-900 dark:text-white">{number(row.total)}</td>
-                                    <td className="px-3 py-4 text-right font-semibold text-slate-600 dark:text-slate-300">{number(row.submitted)}</td>
-                                    <td className="px-3 py-4 text-right font-semibold text-blue-700 dark:text-blue-300">{number(row.verified)}</td>
-                                    <td className="px-3 py-4 text-right font-semibold text-emerald-700 dark:text-emerald-300">{number(row.paid)}</td>
-                                    <td className="px-3 py-4 text-right font-semibold text-amber-700 dark:text-amber-300">{number(row.manual_review)}</td>
-                                    <td className="px-3 py-4 text-right font-semibold text-red-700 dark:text-red-300">{number(row.blockers)}</td>
-                                    <td className="px-4 py-4 text-right font-semibold text-slate-600 dark:text-slate-300">{number(row.verified_unassigned)}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+            {areaData.length > 0 && total > 0 ? (
+                <div className="space-y-4 p-5">
+                    <div className="h-[280px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={areaData} margin={{ top: 12, right: 12, left: 0, bottom: 0 }}>
+                                <defs>
+                                    <linearGradient id="staffActionLoadFill" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="#f97316" stopOpacity={0.34} />
+                                        <stop offset="100%" stopColor="#f97316" stopOpacity={0.04} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid stroke={gridColor} strokeDasharray="3 3" vertical={false} />
+                                <XAxis dataKey="chartLabel" tick={{ fill: axisColor, fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} interval={0} />
+                                <YAxis allowDecimals={false} tick={{ fill: axisColor, fontSize: 11 }} tickLine={false} axisLine={false} />
+                                <Tooltip content={<ChartTooltip isDark={isDark} />} />
+                                <Area
+                                    type="monotone"
+                                    dataKey="value"
+                                    name="Antrean"
+                                    stroke="#f97316"
+                                    strokeWidth={2.5}
+                                    fill="url(#staffActionLoadFill)"
+                                    dot={{ r: 4, fill: "#ffffff", stroke: "#f97316", strokeWidth: 2 }}
+                                    activeDot={{ r: 6, fill: "#f97316", stroke: isDark ? "#0f172a" : "#ffffff", strokeWidth: 3 }}
+                                    isAnimationActive={false}
+                                />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+                    <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                        {areaData.map((item) => (
+                            <div key={item.key} className="flex min-h-12 items-start justify-between gap-3 rounded-md border border-slate-200 px-3 py-2.5 dark:border-white/10">
+                                <div className="flex min-w-0 items-start gap-2">
+                                    <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: item.color }} />
+                                    <span className="text-xs font-bold leading-4 text-slate-600 dark:text-slate-300">{item.label}</span>
+                                </div>
+                                <span className="shrink-0 text-xs font-black text-slate-900 dark:text-white">
+                                    {number(item.value)} · {percent(item.value, total)}%
+                                </span>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             ) : (
-                <div className="p-10 text-center text-sm font-semibold text-slate-500 dark:text-slate-400">
-                    Belum ada kandidat untuk direkap.
+                <div className="flex h-[260px] items-center justify-center p-6 text-center text-sm font-semibold text-slate-500 dark:text-slate-400">
+                    Tidak ada blocker aktif pada snapshot ini.
                 </div>
             )}
         </SectionShell>
+    );
+}
+
+const waveProgramColors = ["#2563eb", "#10b981", "#f59e0b", "#8b5cf6", "#ef4444", "#64748b"];
+
+function formatDate(value: string | null) {
+    if (!value) return "Belum diatur";
+
+    return new Intl.DateTimeFormat("id-ID", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(`${value}T00:00:00`));
+}
+
+function resolveWaveStatus(wave: WaveReport): { label: string; tone: Tone; description: string } {
+    const now = new Date();
+    const startsAt = wave.start_date ? new Date(`${wave.start_date}T00:00:00`) : null;
+    const endsAt = wave.end_date ? new Date(`${wave.end_date}T23:59:59`) : null;
+
+    if (!wave.is_active) return { label: "Nonaktif", tone: "neutral", description: "Penerimaan kandidat tidak diaktifkan." };
+    if (startsAt && now < startsAt) return { label: "Terjadwal", tone: "primary", description: `Dibuka ${formatDate(wave.start_date)}.` };
+    if (endsAt && now > endsAt) return { label: "Selesai", tone: "neutral", description: `Ditutup ${formatDate(wave.end_date)}.` };
+
+    return { label: "Aktif", tone: "success", description: `Berjalan sampai ${formatDate(wave.end_date)}.` };
+}
+
+function WaveReportWorkspace({ rows }: { rows: WaveReport[] }) {
+    const [selectedWaveId, setSelectedWaveId] = useState<string | null>(rows[0]?.id ?? null);
+    const selectedWave = rows.find((wave) => wave.id === selectedWaveId) ?? rows[0] ?? null;
+    const waveStatus = selectedWave ? resolveWaveStatus(selectedWave) : null;
+    const programDonut = useMemo<DonutPoint[]>(() => selectedWave?.programs.map((program, index) => ({
+        key: program.id,
+        label: program.name,
+        value: program.total,
+        tone: program.blockers > 0 ? "warning" : program.is_active ? "success" : "neutral",
+        color: waveProgramColors[index % waveProgramColors.length],
+    })) ?? [], [selectedWave]);
+    const programTotal = programDonut.reduce((sum, program) => sum + program.value, 0);
+
+    if (!selectedWave || !waveStatus) {
+        return (
+            <section className="rounded-lg border border-slate-200 bg-white p-10 text-center shadow-sm dark:border-white/10 dark:bg-slate-900">
+                <i className="fa-solid fa-calendar-xmark text-2xl text-slate-300 dark:text-slate-600" />
+                <p className="mt-3 text-sm font-black text-slate-700 dark:text-slate-200">Belum ada gelombang penerimaan.</p>
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Rekap akan tersedia setelah gelombang dibuat oleh admin.</p>
+            </section>
+        );
+    }
+
+    return (
+        <div className="grid gap-5 xl:grid-cols-[260px_minmax(0,1fr)]">
+            <aside className="self-start rounded-lg border border-slate-200 bg-white p-2 shadow-sm dark:border-white/10 dark:bg-slate-900 xl:sticky xl:top-4">
+                <div className="px-3 pb-2 pt-3">
+                    <p className="text-[11px] font-black uppercase text-slate-400">Daftar Gelombang</p>
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Pilih konteks rekap yang ingin ditinjau.</p>
+                </div>
+                <div className="space-y-1">
+                    {rows.map((wave) => {
+                        const status = resolveWaveStatus(wave);
+                        const isSelected = wave.id === selectedWave.id;
+
+                        return (
+                            <button
+                                key={wave.id}
+                                type="button"
+                                onClick={() => setSelectedWaveId(wave.id)}
+                                className={`w-full rounded-md border px-3 py-3 text-left transition ${
+                                    isSelected
+                                        ? "border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900"
+                                        : "border-transparent text-slate-600 hover:border-slate-200 hover:bg-slate-50 dark:text-slate-300 dark:hover:border-white/10 dark:hover:bg-white/5"
+                                }`}
+                            >
+                                <div className="flex items-start justify-between gap-2">
+                                    <span className="line-clamp-2 text-xs font-black leading-5">{wave.wave}</span>
+                                    <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${toneBarClass[status.tone]}`} />
+                                </div>
+                                <div className={`mt-1 flex items-center justify-between gap-2 text-[10px] font-bold ${isSelected ? "text-white/70 dark:text-slate-500" : "text-slate-400"}`}>
+                                    <span>{wave.academic_year ?? "Tahun ajaran -"}</span>
+                                    <span>{number(wave.total)} kandidat</span>
+                                </div>
+                            </button>
+                        );
+                    })}
+                </div>
+            </aside>
+
+            <div className="min-w-0 space-y-5">
+                <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-slate-900">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                        <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <h2 className="text-lg font-black text-slate-900 dark:text-white">{selectedWave.wave}</h2>
+                                <span className={`rounded-md border px-2 py-1 text-[10px] font-black ${toneClass[waveStatus.tone]}`}>{waveStatus.label}</span>
+                            </div>
+                            <p className="mt-1 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                                {selectedWave.academic_year ?? "Tahun ajaran belum diatur"} · {waveStatus.description}
+                            </p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            <Link
+                                href={`/dashboard/staff/candidates?wave=${selectedWave.id}`}
+                                className="inline-flex min-h-10 items-center gap-2 rounded-md border border-slate-200 px-3 text-xs font-black text-slate-600 transition hover:border-blue-300 hover:text-blue-700 dark:border-white/10 dark:text-slate-300"
+                            >
+                                <i className="fa-solid fa-users text-[11px]" />
+                                Lihat Kandidat
+                            </Link>
+                            <Link
+                                href={`/dashboard/staff/payment-operations?wave=${selectedWave.id}`}
+                                className="inline-flex min-h-10 items-center gap-2 rounded-md bg-slate-900 px-3 text-xs font-black text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900"
+                            >
+                                <i className="fa-solid fa-receipt text-[11px]" />
+                                Payment Ops
+                            </Link>
+                        </div>
+                    </div>
+
+                    <div className="mt-5 grid gap-3 sm:grid-cols-2 2xl:grid-cols-4">
+                        {[
+                            { key: "candidate", label: "Total kandidat", value: selectedWave.total, sub: `${selectedWave.submitted} submitted`, tone: "primary" as Tone },
+                            { key: "quota", label: "Kuota terisi", value: selectedWave.quota_filled, sub: `dari ${number(selectedWave.quota_target)} target`, tone: percent(selectedWave.quota_filled, selectedWave.quota_target) >= 90 ? "warning" as Tone : "success" as Tone },
+                            { key: "paid", label: "Kandidat lunas", value: selectedWave.paid, sub: `${percent(selectedWave.paid, selectedWave.total)}% dari kandidat`, tone: "success" as Tone },
+                            { key: "blocker", label: "Dengan blocker", value: selectedWave.blockers, sub: `${selectedWave.verified_unassigned} verified tanpa sesi`, tone: selectedWave.blockers > 0 ? "danger" as Tone : "neutral" as Tone },
+                        ].map((metric) => (
+                            <div key={metric.key} className="rounded-md border border-slate-200 px-3 py-3 dark:border-white/10">
+                                <div className="flex items-center justify-between gap-3">
+                                    <span className="text-[11px] font-black uppercase text-slate-400">{metric.label}</span>
+                                    <span className={`h-2.5 w-2.5 rounded-full ${toneBarClass[metric.tone]}`} />
+                                </div>
+                                <p className="mt-2 text-2xl font-black leading-none text-slate-900 dark:text-white">{number(metric.value)}</p>
+                                <p className="mt-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400">{metric.sub}</p>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+
+                <div className="grid gap-5 2xl:grid-cols-[minmax(420px,1fr)_minmax(320px,0.8fr)]">
+                    <DonutChartPanel
+                        title="Komposisi Program"
+                        subtitle="Arahkan pointer ke chart untuk membuka seluruh komposisi dan fokus per program."
+                        icon="fa-solid fa-chart-pie"
+                        data={programDonut}
+                        total={programTotal}
+                        emptyLabel="Belum ada kandidat pada program gelombang ini."
+                    />
+
+                    <SectionShell title="Parameter Gelombang" subtitle="Snapshot konfigurasi yang memengaruhi operasi staff." icon="fa-solid fa-calendar-days">
+                        <div className="divide-y divide-slate-100 px-5 dark:divide-white/10">
+                            {[
+                                { key: "period", label: "Periode", value: `${formatDate(selectedWave.start_date)} - ${formatDate(selectedWave.end_date)}`, icon: "fa-solid fa-calendar" },
+                                { key: "fee", label: "Biaya pendaftaran", value: rupiah(selectedWave.registration_fee), icon: "fa-solid fa-money-bill" },
+                                { key: "manual", label: "Manual review", value: `${number(selectedWave.manual_review)} transaksi`, icon: "fa-solid fa-file-invoice-dollar" },
+                                { key: "selection", label: "Kesiapan seleksi", value: `${number(selectedWave.verified)} verified · ${number(selectedWave.verified_unassigned)} tanpa sesi`, icon: "fa-solid fa-clipboard-check" },
+                            ].map((item) => (
+                                <div key={item.key} className="flex items-start gap-3 py-4">
+                                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-300">
+                                        <i className={`${item.icon} text-[11px]`} />
+                                    </span>
+                                    <div className="min-w-0">
+                                        <p className="text-[10px] font-black uppercase text-slate-400">{item.label}</p>
+                                        <p className="mt-1 text-xs font-bold leading-5 text-slate-700 dark:text-slate-200">{item.value}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </SectionShell>
+                </div>
+
+                <SectionShell title="Kapasitas Program" subtitle="Kuota dan progres operasional per program pada gelombang terpilih." icon="fa-solid fa-list-check">
+                    {selectedWave.programs.length > 0 ? (
+                        <div className="divide-y divide-slate-100 dark:divide-white/10">
+                            {selectedWave.programs.map((program) => {
+                                const capacity = program.is_open_quota ? selectedWave.quota_target : (program.quota_max ?? 0);
+                                const utilization = percent(program.quota_filled, capacity);
+
+                                return (
+                                    <div key={program.id} className="grid gap-4 px-5 py-4 lg:grid-cols-[minmax(180px,0.8fr)_minmax(260px,1.2fr)_minmax(300px,1fr)] lg:items-center">
+                                        <div className="min-w-0">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <p className="truncate text-sm font-black text-slate-900 dark:text-white">{program.name}</p>
+                                                <span className={`rounded-md border px-2 py-0.5 text-[9px] font-black ${program.is_active ? toneClass.success : toneClass.neutral}`}>
+                                                    {program.is_active ? "Aktif" : "Tidak aktif"}
+                                                </span>
+                                            </div>
+                                            <p className="mt-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                                                {program.is_open_quota ? "Kuota terbuka mengikuti gelombang" : `Ideal ${number(program.quota_ideal ?? 0)} · Maks. ${number(program.quota_max ?? 0)}`}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <div className="mb-1.5 flex items-center justify-between gap-3 text-[11px] font-bold">
+                                                <span className="text-slate-500 dark:text-slate-400">Terisi {number(program.quota_filled)}</span>
+                                                <span className="text-slate-900 dark:text-white">{capacity > 0 ? `${utilization}%` : "Kuota belum diatur"}</span>
+                                            </div>
+                                            <div className="h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
+                                                <div className={`h-full rounded-full ${utilization >= 100 ? "bg-red-500" : utilization >= 80 ? "bg-amber-500" : "bg-emerald-500"}`} style={{ width: `${Math.min(utilization, 100)}%` }} />
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-4 gap-2 text-center">
+                                            {[
+                                                { key: "total", label: "Total", value: program.total },
+                                                { key: "verified", label: "Verified", value: program.verified },
+                                                { key: "paid", label: "Lunas", value: program.paid },
+                                                { key: "blocker", label: "Blocker", value: program.blockers },
+                                            ].map((stat) => (
+                                                <div key={stat.key} className="rounded-md bg-slate-50 px-2 py-2 dark:bg-white/[0.04]">
+                                                    <p className="text-sm font-black text-slate-900 dark:text-white">{number(stat.value)}</p>
+                                                    <p className="mt-0.5 truncate text-[9px] font-black uppercase text-slate-400">{stat.label}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <div className="p-8 text-center text-sm font-semibold text-slate-500 dark:text-slate-400">Belum ada program pada gelombang ini.</div>
+                    )}
+                </SectionShell>
+            </div>
+        </div>
     );
 }
 
@@ -866,10 +1078,9 @@ function OverviewPanel({
 }
 
 function CandidateReportPanel({ steps, summary }: { steps: PipelineStep[]; summary: Props["summary"] }) {
-    const statusBars = useMemo<BarPoint[]>(() => steps.map((step) => ({
+    const statusDonut = useMemo<DonutPoint[]>(() => steps.map((step) => ({
         key: step.key,
         label: step.label,
-        chartLabel: step.label,
         value: step.value,
         tone: step.tone,
         color: step.tone === "primary" ? "#2563eb" : step.tone === "success" ? "#10b981" : step.tone === "warning" ? "#f59e0b" : step.tone === "danger" ? "#ef4444" : "#94a3b8",
@@ -877,49 +1088,49 @@ function CandidateReportPanel({ steps, summary }: { steps: PipelineStep[]; summa
 
     return (
         <div className="space-y-5">
-            <div className="grid gap-5 xl:grid-cols-[minmax(360px,0.85fr)_minmax(0,1.15fr)]">
-                <BarChartPanel
+            <div className="grid gap-5 xl:grid-cols-[minmax(440px,1.15fr)_minmax(320px,0.85fr)]">
+                <DonutChartPanel
                     title="Distribusi Status"
-                    subtitle="Bar chart untuk membandingkan jumlah kandidat per status secara langsung."
-                    icon="fa-solid fa-chart-column"
-                    data={statusBars}
+                    subtitle="Status terbesar tampil saat idle; arahkan pointer untuk membuka dan memeriksa seluruh komposisi."
+                    icon="fa-solid fa-chart-pie"
+                    data={statusDonut}
                     total={summary.candidates.total}
                     emptyLabel="Belum ada kandidat untuk direkap."
                 />
-                <PipelinePanel steps={steps} />
+                <SectionShell
+                    title="Kesiapan Kandidat"
+                    subtitle="Area kandidat yang masih menahan proses operasional."
+                    icon="fa-solid fa-list-check"
+                >
+                    <div className="space-y-5 p-5">
+                        <ProgressRow label="Dokumen pending" value={summary.candidates.document_review} total={summary.candidates.total} tone="warning" />
+                        <ProgressRow label="Pembayaran pending" value={summary.candidates.payment_review} total={summary.candidates.total} tone="danger" />
+                        <ProgressRow label="Perubahan data" value={summary.candidates.change_requests} total={summary.candidates.total} tone="primary" />
+                        <ProgressRow label="Verified tanpa sesi" value={summary.candidates.verified_unassigned} total={summary.candidates.total} tone="neutral" />
+                    </div>
+                </SectionShell>
             </div>
-            <SectionShell
-                title="Kesiapan Kandidat"
-                subtitle="Area kandidat yang masih menahan proses operasional."
-                icon="fa-solid fa-list-check"
-            >
-                <div className="grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-4">
-                    <ProgressRow label="Dokumen pending" value={summary.candidates.document_review} total={summary.candidates.total} tone="warning" />
-                    <ProgressRow label="Pembayaran pending" value={summary.candidates.payment_review} total={summary.candidates.total} tone="danger" />
-                    <ProgressRow label="Perubahan data" value={summary.candidates.change_requests} total={summary.candidates.total} tone="primary" />
-                    <ProgressRow label="Verified tanpa sesi" value={summary.candidates.verified_unassigned} total={summary.candidates.total} tone="neutral" />
-                </div>
-            </SectionShell>
+            <PipelinePanel steps={steps} />
         </div>
     );
 }
 
 function PaymentReportPanel({ charts, summary }: { charts: Props["charts"]; summary: Props["summary"] }) {
-    const paymentStatus = useMemo<BarPoint[]>(() => [
-        { key: "paid", label: "Lunas", chartLabel: "Lunas", value: summary.payments.paid, tone: "success", color: "#10b981" },
-        { key: "pending", label: "Pending", chartLabel: "Pending", value: summary.payments.pending, tone: "warning", color: "#f59e0b" },
-        { key: "manual", label: "Manual Review", chartLabel: "Manual", value: summary.payments.manual_review, tone: "danger", color: "#ef4444" },
-        { key: "gateway", label: "Gateway Pending", chartLabel: "Gateway", value: summary.payments.gateway_pending, tone: "primary", color: "#2563eb" },
-        { key: "failed", label: "Gagal / Expired", chartLabel: "Gagal", value: summary.payments.failed_or_expired, tone: "muted", color: "#64748b" },
-    ], [summary.payments]);
+    const paymentStatus = useMemo<DonutPoint[]>(() => charts.payment_statuses.map((entry) => ({
+        key: entry.key,
+        label: entry.label,
+        value: entry.count,
+        tone: paymentStatusVisuals[entry.key]?.tone ?? "neutral",
+        color: paymentStatusVisuals[entry.key]?.color ?? "#64748b",
+    })), [charts.payment_statuses]);
 
     return (
         <div className="grid gap-5 xl:grid-cols-2">
             <PaymentChannelChart data={charts.payment_channels} total={summary.payments.total} />
-            <BarChartPanel
+            <DonutChartPanel
                 title="Kategori Transaksi"
-                subtitle="Bar chart status/antrian payment. Beberapa kategori operasional bisa saling beririsan."
-                icon="fa-solid fa-chart-column"
+                subtitle="Kategori eksklusif transaksi agar komposisi dan persentase tetap akurat."
+                icon="fa-solid fa-chart-pie"
                 data={paymentStatus}
                 total={summary.payments.total}
                 emptyLabel="Belum ada transaksi pembayaran."
@@ -1058,7 +1269,7 @@ export default function StaffReports({ summary, charts, wave_reports, recent_can
                 ) : null}
 
                 {activeTab === "waves" ? (
-                    <WaveReportTable rows={wave_reports} />
+                    <WaveReportWorkspace rows={wave_reports} />
                 ) : null}
             </div>
         </DashboardLayout>
