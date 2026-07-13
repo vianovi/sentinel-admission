@@ -1,11 +1,9 @@
 *.log
 .DS_Store
 .env
-.env.backup
-.env.production
-.env.local
-.env.tunnel
-.env.bak
+.env.*
+!.env.example
+!.env.*.example
 .phpactor.json
 .phpunit.result.cache
 /.fleet
@@ -25,5 +23,4 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
-.gitgnore
 /source_code

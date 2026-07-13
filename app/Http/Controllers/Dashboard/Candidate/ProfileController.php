@@ -183,7 +183,7 @@ class ProfileController extends Controller
 
         $request->validate([
             'new_email' => [
-                'required', 'email', 'max:255',
+                'required', 'email:rfc', 'max:255',
                 Rule::unique('users', 'email')->ignore($user->id),
                 Rule::unique('users', 'pending_email')->ignore($user->id),
             ],
@@ -242,7 +242,7 @@ class ProfileController extends Controller
         ], [
             'pending_email' => [
                 'required',
-                'email',
+                'email:rfc',
                 'max:255',
                 Rule::unique('users', 'email')->ignore($user->id),
                 Rule::unique('users', 'pending_email')->ignore($user->id),

@@ -4,9 +4,10 @@ import { animate } from 'animejs'
 
 interface VerifyEmailProps {
     status?: string
+    error?: string
 }
 
-export default function VerifyEmail({ status }: VerifyEmailProps) {
+export default function VerifyEmail({ status, error }: VerifyEmailProps) {
     const { post, processing } = useForm({})
 
     useEffect(() => {
@@ -62,7 +63,14 @@ export default function VerifyEmail({ status }: VerifyEmailProps) {
                         {status === 'verification-link-sent' && (
                             <div className="mb-5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-3 text-sm text-emerald-300 flex items-center gap-2.5">
                                 <i className="fa-solid fa-circle-check flex-shrink-0"></i>
-                                <span>Link verifikasi baru sudah dikirim ke email kamu.</span>
+                                <span>Email verifikasi telah dikirim. Silakan periksa kotak masuk dan folder spam.</span>
+                            </div>
+                        )}
+
+                        {error && (
+                            <div className="mb-5 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 text-sm text-red-300 flex items-start gap-2.5">
+                                <i className="fa-solid fa-circle-exclamation mt-0.5 flex-shrink-0"></i>
+                                <span>{error}</span>
                             </div>
                         )}
 

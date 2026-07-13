@@ -5,12 +5,16 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Inertia\Inertia;
 use Inertia\Response;
+use Throwable;
 
 class PasswordResetLinkController extends Controller
 {
+    private const RESET_LINK_SENT_MESSAGE = 'Permintaan reset telah diproses. Jika email terdaftar, silakan periksa kotak masuk dan folder spam.';
+
     // =============================================
     // GET /forgot-password
     // =============================================
@@ -27,23 +31,38 @@ class PasswordResetLinkController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'email' => ['required', 'email'],
+            'email' => ['required', 'email:rfc', 'max:255'],
         ], [
             'email.required' => 'Email wajib diisi.',
-            'email.email'    => 'Format email tidak valid.',
+            'email.email' => 'Format email tidak valid.',
         ]);
 
-        // Laravel akan kirim reset link via Mailtrap
-        // Kalau email tidak terdaftar, tetap return status sukses
-        // (mencegah user enumeration attack)
-        $status = Password::sendResetLink(
-            $request->only('email')
-        );
+        try {
+            $status = Password::sendResetLink(
+                $request->only('email')
+            );
+        } catch (Throwable $exception) {
+            Log::error('Password reset email delivery failed.', [
+                'exception' => $exception,
+            ]);
 
-        if ($status === Password::ResetLinkSent) {
-            return back()->with('status', __($status));
+            return back()->with('status', self::RESET_LINK_SENT_MESSAGE);
         }
 
-        return back()->withErrors(['email' => __($status)]);
+        if (in_array($status, [
+            Password::ResetLinkSent,
+            Password::InvalidUser,
+            Password::ResetThrottled,
+        ], true)) {
+            return back()->with('status', self::RESET_LINK_SENT_MESSAGE);
+        }
+
+        Log::warning('Password reset email was not dispatched.', [
+            'status' => $status,
+        ]);
+
+        return back()->withErrors([
+            'email' => 'Email belum dapat dikirim. Silakan coba lagi beberapa saat.',
+        ]);
     }
 }

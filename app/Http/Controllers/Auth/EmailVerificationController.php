@@ -7,8 +7,10 @@ use Illuminate\Auth\Events\Verified;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
+use Throwable;
 
 class EmailVerificationController extends Controller
 {
@@ -25,6 +27,7 @@ class EmailVerificationController extends Controller
 
         return Inertia::render('Auth/VerifyEmail', [
             'status' => session('status'),
+            'error' => session('error'),
         ]);
     }
 
@@ -57,9 +60,18 @@ class EmailVerificationController extends Controller
             return redirect()->intended($this->redirectTo($request));
         }
 
-        $request->user()->sendEmailVerificationNotification();
+        try {
+            $request->user()->sendEmailVerificationNotification();
+        } catch (Throwable $exception) {
+            Log::error('Email verification delivery failed.', [
+                'user_id' => $request->user()->id,
+                'exception' => $exception,
+            ]);
 
-        return back()->with('status', 'Link verifikasi telah dikirim ulang ke email kamu.');
+            return back()->with('error', 'Email verifikasi belum dapat dikirim. Silakan coba lagi beberapa saat.');
+        }
+
+        return back()->with('status', 'verification-link-sent');
     }
 
     // =============================================

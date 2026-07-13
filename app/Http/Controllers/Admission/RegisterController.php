@@ -12,9 +12,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
+use Throwable;
 
 class RegisterController extends Controller
 {
@@ -28,12 +32,12 @@ class RegisterController extends Controller
 
         return Inertia::render('Admission/Register', [
             'draft' => [
-                'full_name'         => $draft->full_name,
-                'nisn'              => $draft->nisn,
-                'whatsapp_number'   => $draft->whatsapp_number,
-                'email'             => $draft->email,
+                'full_name' => $draft->full_name,
+                'nisn' => $draft->nisn,
+                'whatsapp_number' => $draft->whatsapp_number,
+                'email' => $draft->email,
                 'registration_code' => $draft->registration_code,
-                'school_origin'     => $draft->school_origin,
+                'school_origin' => $draft->school_origin,
             ],
         ]);
     }
@@ -49,19 +53,29 @@ class RegisterController extends Controller
         $request->validate([
             'password' => ['required', 'confirmed', Password::min(8)],
         ], [
-            'password.required'  => 'Password wajib diisi.',
+            'password.required' => 'Password wajib diisi.',
             'password.confirmed' => 'Konfirmasi password tidak cocok.',
-            'password.min'       => 'Password minimal 8 karakter.',
+            'password.min' => 'Password minimal 8 karakter.',
         ]);
+
+        $validatedDraft = Validator::make([
+            'email' => $draft->email,
+        ], [
+            'email' => ['required', 'email:rfc', 'max:255', Rule::unique('users', 'email')],
+        ], [
+            'email.required' => 'Email pendaftaran wajib diisi.',
+            'email.email' => 'Format email pendaftaran tidak valid.',
+            'email.unique' => 'Email sudah terdaftar. Gunakan email lain.',
+        ])->validate();
 
         // 1. Buat user
         $user = User::create([
-            'name'            => $draft->full_name,
-            'email'           => $draft->email,
-            'password'        => Hash::make($request->password),
-            'role'            => 'candidate',
+            'name' => $draft->full_name,
+            'email' => $validatedDraft['email'],
+            'password' => Hash::make($request->password),
+            'role' => 'candidate',
             'whatsapp_number' => $draft->whatsapp_number,
-            'is_active'       => true,
+            'is_active' => true,
         ]);
 
         // 2. Konversi draft → candidate
@@ -77,13 +91,36 @@ class RegisterController extends Controller
         $expiredCookie = Cookie::forget('draft_token');
 
         // 6. Fire Registered event → email verifikasi
-        event(new Registered($user));
+        $emailDispatched = true;
+
+        try {
+            event(new Registered($user));
+        } catch (Throwable $exception) {
+            $emailDispatched = false;
+
+            Log::error('Registration verification email delivery failed.', [
+                'user_id' => $user->id,
+                'exception' => $exception,
+            ]);
+        }
 
         // 7. Login otomatis
         Auth::login($user);
 
         // 8. Redirect ke dashboard
-        return redirect()->route('dashboard.index')
+        $response = redirect()->route('dashboard.index')
             ->withCookie($expiredCookie);
+
+        if (! $emailDispatched) {
+            return $response->with(
+                'error',
+                'Akun berhasil dibuat, tetapi email verifikasi belum dapat dikirim. Gunakan menu Verifikasi Email untuk mencoba lagi.'
+            );
+        }
+
+        return $response->with(
+            'success',
+            'Akun berhasil dibuat. Email verifikasi telah dikirim. Silakan periksa kotak masuk dan folder spam.'
+        );
     }
 }

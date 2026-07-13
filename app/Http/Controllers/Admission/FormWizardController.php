@@ -243,7 +243,7 @@ class FormWizardController extends Controller
         $validated = $request->validate([
             'mother_name'     => ['required', 'string', 'max:255'],
             'whatsapp_number' => ['required', 'string', 'min:10', 'max:14'],
-            'email'           => ['required', 'email', 'unique:users,email'],
+            'email'           => ['required', 'email:rfc', 'max:255', 'unique:users,email'],
             'phone_number'    => ['nullable', 'string', 'max:20'],
             'addr_jalan'      => ['required', 'string', 'max:255'],
             'addr_rt'         => ['required', 'string', 'max:3'],
@@ -364,7 +364,7 @@ class FormWizardController extends Controller
             value: $draft->secret_token,
             minutes: $minutesLeft,
             path: '/',
-            secure: app()->isProduction(),
+            secure: (bool) config('session.secure'),
             httpOnly: true,
             sameSite: 'Lax',
         );

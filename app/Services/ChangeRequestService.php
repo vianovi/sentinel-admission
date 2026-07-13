@@ -191,7 +191,7 @@ class ChangeRequestService
         ], [
             'pending_email' => [
                 'required',
-                'email',
+                'email:rfc',
                 'max:255',
                 Rule::unique('users', 'email')->ignore($user->id),
                 Rule::unique('users', 'pending_email')->ignore($user->id),

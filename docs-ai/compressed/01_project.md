@@ -52,7 +52,7 @@ The name **Sentinel** must not appear on user-facing pages.
 | Setup | Docker + Cloudflare Tunnel |
 | Domain | `spmb.playground-ku.my.id` |
 | DB | MariaDB at `172.17.0.1:3306`, DB `sentinel_admission_db`, user `sentinel_core` |
-| Email | Mailtrap sandbox |
+| Email | Environment-aware SMTP: Mailtrap Sandbox for development; Resend for demo and initial production |
 
 ### NPM Scripts
 
