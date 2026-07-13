@@ -1,5 +1,7 @@
 # Production Readiness Checklist
 
+Task 00 baseline evidence on 2026-07-14: full tests, frontend build, route boot, dependency audits, temporary SQLite migrations, and synthetic production optimization passed. These checks must be repeated on the final release candidate; they are not checked below prematurely.
+
 ## Code/tests
 
 - [ ] All required slices PASS

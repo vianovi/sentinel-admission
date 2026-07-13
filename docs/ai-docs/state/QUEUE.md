@@ -4,7 +4,7 @@ Task 00 may reorder this queue after a real dependency map.
 
 | Order | Slice | Task | Status | Dependencies | Classification |
 |---:|---|---|---|---|---|
-| 0 | Foundation/discovery | task-00 | queued | none | pending |
+| 0 | Foundation/discovery | task-00 | verifying | none | PASS pending checkpoint |
 | 1 | Shared runtime/public | task-01 | queued | task-00 | pending |
 | 2 | Auth/registration | task-02 | queued | task-01 | pending |
 | 3 | Candidate lifecycle/profile | task-03 | queued | task-02 | pending |
@@ -20,3 +20,10 @@ Task 00 may reorder this queue after a real dependency map.
 Statuses:
 
 `queued`, `mapping`, `auditing`, `fixing`, `verifying`, `classified`, `promoted`, `blocked`, `complete`.
+
+## Discovery notes
+
+- Strategy A is required because `develop` is an integrated 569-file delta over ancestor `main`.
+- Task 04 must review dormant `sentinel.*` upload-security bypass hooks; all layers are active in the current configuration.
+- Task 10 owns the confirmed absence of a self-contained CI/deployment/runtime artifact and the all-proxy trust boundary.
+- Task 11 must repeat advisories, full tests/build/routes, and test MariaDB-compatible migration/rollback behavior without production data.
