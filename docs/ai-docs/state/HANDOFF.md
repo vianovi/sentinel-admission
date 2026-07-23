@@ -45,6 +45,15 @@ None. Blocked audit content is checkpointed at `c44330c92f5582cd540f80a887cfa9ad
 
 After the owner resolves B-001, implement the chosen content boundary, then address PUB-003 through PUB-007 with focused tests and a production build.
 
+## Parallel scoped email-design task
+
+- Completed presentation-only Email Design System work on `audit/01-public-shared-runtime`.
+- Verification: full suite 74 tests/603 assertions, focused email tests 3/23 assertions, frontend build passed, Blade cache passed, PHP lint and diff check passed.
+- Audit report: `docs/ai-docs/audit/email-design-system-audit.md`.
+- Evidence: `docs/ai-docs/evidence/email-design-system/2026-07-22/`.
+- Status: code `PASS WITH NOTES`; `HUMAN VISUAL REVIEW REQUIRED` in Gmail and Outlook.
+- Changes are uncommitted; do not conflate them with the blocked Task 01 public-content work.
+
 ## Resume warning
 
 Do not trust this file if its Git state differs from the repository. Reconcile and update first.

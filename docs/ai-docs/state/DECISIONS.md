@@ -37,3 +37,9 @@
 - Decision: Relocate the committed foundation from `docs-ai/docs/ai-docs/` to the mandated `docs/ai-docs/` path on the Task 00 audit branch.
 - Evidence: `AGENTS.md`, `INSTALL.md`, and every internal workspace reference require `docs/ai-docs/`; commit `1113160` left the package nested under the pre-existing `docs-ai/` tree.
 - Reason: Durable state cannot be reliably discovered or resumed at the committed location.
+
+## D-007 — Preserve framework auth notifications and centralize email presentation
+
+- Status: active for the email-design slice
+- Decision: Keep Laravel's `VerifyEmail` and `ResetPassword` notification classes, token generation, and routes. Customize only their `toMailUsing` presentation callbacks and render both HTML/plain-text views from `EmailDesignSystem`.
+- Reason: This preserves existing authentication behavior and test contracts while providing one reusable email design surface for future transactional notifications.
