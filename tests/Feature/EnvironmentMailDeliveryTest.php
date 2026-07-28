@@ -193,6 +193,26 @@ it('sends verification mail to the authenticated users stored email through the 
     URL::forceRootUrl(null);
 });
 
+it('rate limits verification resend per account', function () {
+    Notification::fake();
+
+    $user = User::factory()->unverified()->create([
+        'email' => 'verification-rate-limit@example.net',
+    ]);
+
+    $this->actingAs($user)
+        ->post('/email/verification-notification')
+        ->assertRedirect()
+        ->assertSessionHas('status', 'verification-link-sent');
+
+    $this->actingAs($user)
+        ->post('/email/verification-notification')
+        ->assertRedirect()
+        ->assertSessionHas('error', 'Email verifikasi baru dapat dikirim ulang setelah beberapa menit.');
+
+    Notification::assertSentToTimes($user, VerifyEmail::class, 1);
+});
+
 it('sends password reset mail to the account resolved by its stored email', function () {
     Notification::fake();
 

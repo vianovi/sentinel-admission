@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admission;
 use App\Http\Controllers\Controller;
 use App\Models\AdmissionWave;
 use App\Models\RegistrationDraft;
+use App\Support\EmailDomainVerifier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
 use Inertia\Inertia;
@@ -23,10 +24,10 @@ class FormWizardController extends Controller
 
         return Inertia::render('Admission/FormWizard', [
             'activeWave' => $activeWave ? [
-                'id'            => $activeWave->id,
-                'title'         => $activeWave->title,
+                'id' => $activeWave->id,
+                'title' => $activeWave->title,
                 'academic_year' => $activeWave->academic_year,
-                'quota_target'  => $activeWave->quota_target,
+                'quota_target' => $activeWave->quota_target,
             ] : null,
         ]);
     }
@@ -44,7 +45,7 @@ class FormWizardController extends Controller
 
         $draft = $this->ownedDraft($request, $request->integer('draft_id'));
 
-        if (!$draft) {
+        if (! $draft) {
             return response()->json(['valid' => false]);
         }
 
@@ -57,29 +58,31 @@ class FormWizardController extends Controller
     public function checkDuplicate(Request $request)
     {
         $request->validate([
-            'nisn'             => ['required', 'digits:10'],
-            'nik'              => ['required', 'digits:16'],
+            'nisn' => ['required', 'digits:10'],
+            'nik' => ['required', 'digits:16'],
             'current_draft_id' => ['nullable', 'integer'],
         ]);
 
-        $nisn           = $request->nisn;
-        $nik            = $request->nik;
+        $nisn = $request->nisn;
+        $nik = $request->nik;
         $currentDraftId = $request->integer('current_draft_id', 0);
 
         $maskName = function (string $name): string {
             $parts = explode(' ', trim($name));
+
             return collect($parts)->map(function ($word, $i) {
                 if ($i === 0) {
                     return strlen($word) <= 5
                         ? $word
-                        : substr($word, 0, 5) . str_repeat('*', strlen($word) - 5);
+                        : substr($word, 0, 5).str_repeat('*', strlen($word) - 5);
                 }
-                return strlen($word) > 0 ? $word[0] . '***' : '';
+
+                return strlen($word) > 0 ? $word[0].'***' : '';
             })->implode(' ');
         };
 
-        $maskNisn = fn(string $nisn) => substr($nisn, 0, 6) . '***' . substr($nisn, -1);
-        $maskNik  = fn(string $nik)  => substr($nik, 0, 6) . str_repeat('*', 6) . substr($nik, -4);
+        $maskNisn = fn (string $nisn) => substr($nisn, 0, 6).'***'.substr($nisn, -1);
+        $maskNik = fn (string $nik) => substr($nik, 0, 6).str_repeat('*', 6).substr($nik, -4);
 
         $candidate = \App\Models\Candidate::where('nisn', $nisn)
             ->orWhere('nik', $nik)
@@ -88,19 +91,19 @@ class FormWizardController extends Controller
 
         if ($candidate) {
             return response()->json([
-                'found'  => true,
+                'found' => true,
                 'status' => 'registered',
-                'data'   => [
+                'data' => [
                     'name' => $maskName($candidate->user?->name ?? $candidate->full_name ?? ''),
                     'nisn' => $maskNisn($nisn),
-                    'nik'  => $maskNik($nik),
+                    'nik' => $maskNik($nik),
                 ],
             ]);
         }
 
         $draft = RegistrationDraft::findActive($nisn, $nik);
 
-        if (!$draft) {
+        if (! $draft) {
             return response()->json(['found' => false]);
         }
 
@@ -111,13 +114,13 @@ class FormWizardController extends Controller
         }
 
         return response()->json([
-            'found'      => true,
-            'status'     => 'draft',
+            'found' => true,
+            'status' => 'draft',
             'can_resume' => $ownsDraft,
-            'data'       => [
-                'name'       => $ownsDraft ? $maskName($draft->full_name ?? '') : 'Data dilindungi',
-                'nisn'       => $maskNisn($nisn),
-                'nik'        => $maskNik($nik),
+            'data' => [
+                'name' => $ownsDraft ? $maskName($draft->full_name ?? '') : 'Data dilindungi',
+                'nisn' => $maskNisn($nisn),
+                'nik' => $maskNik($nik),
                 'updated_at' => $ownsDraft ? $draft->updated_at->diffForHumans() : null,
             ],
         ]);
@@ -129,45 +132,45 @@ class FormWizardController extends Controller
     public function storeStep1(Request $request)
     {
         $validated = $request->validate([
-            'draft_id'       => ['nullable', 'integer'],
-            'full_name'      => ['required', 'string', 'max:255'],
-            'nisn'           => ['required', 'digits:10'],
-            'nik'            => ['required', 'digits:16'],
-            'gender'         => ['required', 'in:L,P'],
+            'draft_id' => ['nullable', 'integer'],
+            'full_name' => ['required', 'string', 'max:255'],
+            'nisn' => ['required', 'digits:10'],
+            'nik' => ['required', 'digits:16'],
+            'gender' => ['required', 'in:L,P'],
             'place_of_birth' => ['required', 'string', 'max:100'],
-            'date_of_birth'  => ['required', 'date', 'before:today'],
+            'date_of_birth' => ['required', 'date', 'before:today'],
         ], [
-            'full_name.required'      => 'Nama lengkap wajib diisi.',
-            'nisn.required'           => 'NISN wajib diisi.',
-            'nisn.digits'             => 'NISN harus 10 digit angka.',
-            'nik.required'            => 'NIK wajib diisi.',
-            'nik.digits'              => 'NIK harus 16 digit angka.',
-            'gender.required'         => 'Jenis kelamin wajib dipilih.',
+            'full_name.required' => 'Nama lengkap wajib diisi.',
+            'nisn.required' => 'NISN wajib diisi.',
+            'nisn.digits' => 'NISN harus 10 digit angka.',
+            'nik.required' => 'NIK wajib diisi.',
+            'nik.digits' => 'NIK harus 16 digit angka.',
+            'gender.required' => 'Jenis kelamin wajib dipilih.',
             'place_of_birth.required' => 'Tempat lahir wajib diisi.',
-            'date_of_birth.required'  => 'Tanggal lahir wajib diisi.',
-            'date_of_birth.before'    => 'Tanggal lahir tidak valid.',
+            'date_of_birth.required' => 'Tanggal lahir wajib diisi.',
+            'date_of_birth.before' => 'Tanggal lahir tidak valid.',
         ]);
 
         $activeWave = AdmissionWave::where('is_active', true)->first();
 
-        if (!empty($validated['draft_id'])) {
+        if (! empty($validated['draft_id'])) {
             $existing = $this->ownedDraft($request, (int) $validated['draft_id']);
 
-            if (!$existing) {
+            if (! $existing) {
                 return $this->invalidDraftResponse();
             }
 
             $existing->update([
-                'nisn'           => $validated['nisn'],
-                'nik'            => $validated['nik'],
-                'full_name'      => $validated['full_name'],
-                'gender'         => $validated['gender'],
+                'nisn' => $validated['nisn'],
+                'nik' => $validated['nik'],
+                'full_name' => $validated['full_name'],
+                'gender' => $validated['gender'],
                 'place_of_birth' => $validated['place_of_birth'],
-                'date_of_birth'  => $validated['date_of_birth'],
+                'date_of_birth' => $validated['date_of_birth'],
             ]);
 
             return response()->json([
-                'draft_id'     => $existing->id,
+                'draft_id' => $existing->id,
                 'current_step' => $existing->current_step,
             ]);
         }
@@ -175,7 +178,7 @@ class FormWizardController extends Controller
         $draft = RegistrationDraft::createFromStep1($validated, $activeWave?->id);
 
         return response()->json([
-            'draft_id'     => $draft->id,
+            'draft_id' => $draft->id,
             'current_step' => 1,
         ])->withCookie($this->draftCookie($draft));
     }
@@ -187,7 +190,7 @@ class FormWizardController extends Controller
     {
         $request->validate([
             'nisn' => ['required', 'digits:10'],
-            'nik'  => ['required', 'digits:16'],
+            'nik' => ['required', 'digits:16'],
         ]);
 
         $draft = RegistrationDraft::where('nisn', $request->nisn)
@@ -195,35 +198,35 @@ class FormWizardController extends Controller
             ->latest()
             ->first();
 
-        if (!$draft || !$draft->isValid() || !$draft->isOwnedBy($request->cookie('draft_token'))) {
+        if (! $draft || ! $draft->isValid() || ! $draft->isOwnedBy($request->cookie('draft_token'))) {
             return $this->invalidDraftResponse();
         }
 
         return response()->json([
-            'draft_id'     => $draft->id,
+            'draft_id' => $draft->id,
             'current_step' => $draft->current_step,
             'step1' => [
-                'full_name'      => $draft->full_name,
-                'nisn'           => $draft->nisn,
-                'nik'            => $draft->nik,
-                'gender'         => $draft->gender,
+                'full_name' => $draft->full_name,
+                'nisn' => $draft->nisn,
+                'nik' => $draft->nik,
+                'gender' => $draft->gender,
                 'place_of_birth' => $draft->place_of_birth,
-                'date_of_birth'  => $draft->date_of_birth?->format('Y-m-d'),
+                'date_of_birth' => $draft->date_of_birth?->format('Y-m-d'),
             ],
             'step2' => $draft->current_step >= 2 ? [
-                'mother_name'     => $draft->mother_name,
+                'mother_name' => $draft->mother_name,
                 'whatsapp_number' => $draft->whatsapp_number,
-                'email'           => $draft->email,
-                'addr_jalan'      => $draft->address_detail['jalan']     ?? '',
-                'addr_rt'         => $draft->address_detail['rt']        ?? '',
-                'addr_rw'         => $draft->address_detail['rw']        ?? '',
-                'addr_desa'       => $draft->address_detail['kelurahan'] ?? '',
-                'addr_kec'        => $draft->address_detail['kecamatan'] ?? '',
-                'addr_kab'        => $draft->address_detail['kabupaten'] ?? '',
-                'addr_prov'       => $draft->address_detail['provinsi']  ?? '',
+                'email' => $draft->email,
+                'addr_jalan' => $draft->address_detail['jalan'] ?? '',
+                'addr_rt' => $draft->address_detail['rt'] ?? '',
+                'addr_rw' => $draft->address_detail['rw'] ?? '',
+                'addr_desa' => $draft->address_detail['kelurahan'] ?? '',
+                'addr_kec' => $draft->address_detail['kecamatan'] ?? '',
+                'addr_kab' => $draft->address_detail['kabupaten'] ?? '',
+                'addr_prov' => $draft->address_detail['provinsi'] ?? '',
             ] : null,
             'step3' => $draft->current_step >= 3 ? [
-                'school_origin'     => $draft->school_origin,
+                'school_origin' => $draft->school_origin,
                 'registration_code' => $draft->registration_code,
             ] : null,
         ]);
@@ -236,41 +239,52 @@ class FormWizardController extends Controller
     {
         $draft = $this->ownedDraft($request, $draft);
 
-        if (!$draft) {
+        if (! $draft) {
             return $this->invalidDraftResponse();
         }
 
         $validated = $request->validate([
-            'mother_name'     => ['required', 'string', 'max:255'],
+            'mother_name' => ['required', 'string', 'max:255'],
             'whatsapp_number' => ['required', 'string', 'min:10', 'max:14'],
-            'email'           => ['required', 'email:rfc', 'max:255', 'unique:users,email'],
-            'phone_number'    => ['nullable', 'string', 'max:20'],
-            'addr_jalan'      => ['required', 'string', 'max:255'],
-            'addr_rt'         => ['required', 'string', 'max:3'],
-            'addr_rw'         => ['required', 'string', 'max:3'],
-            'addr_desa'       => ['required', 'string', 'max:100'],
-            'addr_kec'        => ['required', 'string', 'max:100'],
-            'addr_kab'        => ['required', 'string', 'max:100'],
-            'addr_prov'       => ['required', 'string', 'max:100'],
+            'email' => ['required', 'email:rfc', 'max:255', 'unique:users,email'],
+            'phone_number' => ['nullable', 'string', 'max:20'],
+            'addr_jalan' => ['required', 'string', 'max:255'],
+            'addr_rt' => ['required', 'string', 'max:3'],
+            'addr_rw' => ['required', 'string', 'max:3'],
+            'addr_desa' => ['required', 'string', 'max:100'],
+            'addr_kec' => ['required', 'string', 'max:100'],
+            'addr_kab' => ['required', 'string', 'max:100'],
+            'addr_prov' => ['required', 'string', 'max:100'],
         ], [
-            'mother_name.required'     => 'Nama ibu kandung wajib diisi.',
+            'mother_name.required' => 'Nama ibu kandung wajib diisi.',
             'whatsapp_number.required' => 'Nomor WhatsApp wajib diisi.',
-            'email.required'           => 'Email wajib diisi.',
-            'email.email'              => 'Format email tidak valid.',
-            'email.unique'             => 'Email sudah terdaftar. Gunakan email lain.',
-            'addr_jalan.required'      => 'Alamat jalan wajib diisi.',
-            'addr_rt.required'         => 'RT wajib diisi.',
-            'addr_rw.required'         => 'RW wajib diisi.',
-            'addr_desa.required'       => 'Kelurahan/Desa wajib diisi.',
-            'addr_kec.required'        => 'Kecamatan wajib diisi.',
-            'addr_kab.required'        => 'Kabupaten/Kota wajib diisi.',
-            'addr_prov.required'       => 'Provinsi wajib diisi.',
+            'email.required' => 'Email wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'email.unique' => 'Email sudah terdaftar. Gunakan email lain.',
+            'addr_jalan.required' => 'Alamat jalan wajib diisi.',
+            'addr_rt.required' => 'RT wajib diisi.',
+            'addr_rw.required' => 'RW wajib diisi.',
+            'addr_desa.required' => 'Kelurahan/Desa wajib diisi.',
+            'addr_kec.required' => 'Kecamatan wajib diisi.',
+            'addr_kab.required' => 'Kabupaten/Kota wajib diisi.',
+            'addr_prov.required' => 'Provinsi wajib diisi.',
         ]);
+
+        $validated['email'] = strtolower(trim($validated['email']));
+
+        if (! EmailDomainVerifier::canReceive($validated['email'])) {
+            return response()->json([
+                'message' => 'Email tidak dapat digunakan.',
+                'errors' => [
+                    'email' => ['Domain email tidak ditemukan atau tidak memiliki server penerima email. Periksa kembali penulisannya.'],
+                ],
+            ], 422);
+        }
 
         $draft->updateFromStep2($validated);
 
         return response()->json([
-            'draft_id'     => $draft->id,
+            'draft_id' => $draft->id,
             'current_step' => 2,
         ]);
     }
@@ -284,7 +298,7 @@ class FormWizardController extends Controller
     {
         $draft = $this->ownedDraft($request, $draft);
 
-        if (!$draft) {
+        if (! $draft) {
             return $this->invalidDraftResponse();
         }
 
@@ -309,20 +323,20 @@ class FormWizardController extends Controller
     {
         $draft = $this->ownedDraft($request, $draft);
 
-        if (!$draft) {
+        if (! $draft) {
             return $this->invalidDraftResponse();
         }
 
         $validated = $request->validate([
             'school_origin' => ['required', 'string', 'max:255'],
-            'agreement'     => ['accepted'],
+            'agreement' => ['accepted'],
         ], [
             'school_origin.required' => 'Asal sekolah wajib diisi.',
-            'agreement.accepted'     => 'Kamu harus menyetujui pernyataan data benar.',
+            'agreement.accepted' => 'Kamu harus menyetujui pernyataan data benar.',
         ]);
 
         $draft->update([
-            'current_step'  => 3,
+            'current_step' => 3,
             'school_origin' => $validated['school_origin'],
         ]);
 
@@ -333,12 +347,12 @@ class FormWizardController extends Controller
     {
         $draft = RegistrationDraft::find($draftId);
 
-        if (!$draft) {
+        if (! $draft) {
             return null;
         }
 
-        if (!$draft->isValid()) {
-            if (!$draft->trashed()) {
+        if (! $draft->isValid()) {
+            if (! $draft->trashed()) {
                 $draft->delete();
             }
 

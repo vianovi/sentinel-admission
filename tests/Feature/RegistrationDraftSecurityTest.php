@@ -117,6 +117,31 @@ it('allows the owning browser to continue every draft step', function () {
         ->and($draft->fresh()->school_origin)->toBe('Sekolah Asal');
 });
 
+it('rejects a registration email whose domain cannot receive mail', function () {
+    config(['email.validation.check_mx' => true]);
+
+    $draft = registrationDraft();
+
+    $this->withCredentials()
+        ->withCookie('draft_token', $draft->secret_token)
+        ->putJson("/daftar/step2/{$draft->id}", [
+            'mother_name' => 'Ibu',
+            'whatsapp_number' => '081234567890',
+            'email' => 'candidate@domain-tidak-ada.invalid',
+            'addr_jalan' => 'Jalan Aman',
+            'addr_rt' => '001',
+            'addr_rw' => '002',
+            'addr_desa' => 'Desa',
+            'addr_kec' => 'Kecamatan',
+            'addr_kab' => 'Kabupaten',
+            'addr_prov' => 'Provinsi',
+        ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('email');
+
+    expect($draft->fresh()->email)->toBeNull();
+});
+
 it('does not expose or resume draft pii without the original browser token', function () {
     $draft = registrationDraft(['full_name' => 'Nama Sangat Rahasia']);
 

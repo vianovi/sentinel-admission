@@ -9,6 +9,8 @@ Catatan wajib: `HUMAN VISUAL REVIEW REQUIRED`
 
 Email transactional Sentinel Admission kini memakai satu layout reusable berbasis `MailMessage` dan Blade dengan format resmi Al-Muntaha School. Format verifikasi dan reset password mengikuti struktur: logo, nama sekolah, program SPMB, tahun ajaran 2027/2028, salam Islami, CTA gold, masa berlaku, fallback URL, kontak bantuan, dan copyright.
 
+Alur pengiriman juga diperkuat: domain email diperiksa melalui DNS sebelum draft dilanjutkan, kegagalan delivery ditampilkan sebagai flash error di dashboard, dan resend dibatasi per akun serta per IP.
+
 Perubahan tetap presentation-only. Authentication, token, route, dan business logic tidak diubah.
 
 ## 2. Komponen email yang dibuat
@@ -22,6 +24,8 @@ Perubahan tetap presentation-only. Authentication, token, route, dan business lo
 - Fallback link yang selalu tersedia ketika email memiliki CTA.
 - Footer HTML dan plain text dengan WhatsApp, placeholder email, website, dan copyright.
 - Template plain-text alternative.
+- `EmailDomainVerifier` untuk pemeriksaan kemampuan domain menerima email.
+- Named rate limiter `verification` untuk mencegah resend berulang.
 
 ## 3. Email yang sudah memakai design system baru
 
@@ -37,6 +41,7 @@ Perubahan tetap presentation-only. Authentication, token, route, dan business lo
 - Database, migration, schema, dan data.
 - Alamat SMTP dan secret environment.
 - Business flow perubahan email yang saat ini memakai persetujuan manual staff/admin.
+- Verification token dan signed URL tetap tidak diubah; rate limit resend sengaja diperketat.
 - Kode frontend aplikasi dan landing page.
 
 ## 5. Dampak terhadap maintainability
@@ -53,6 +58,7 @@ Email sekarang memakai identitas yang lebih resmi dan konsisten: navy sebagai ak
 - Logo dimuat dari URL HTTPS publik; mail client harus dapat menjangkau `/assets/icons/brand/logo-email.png`.
 - Sebagian mail client tetap dapat memblokir gambar sampai penerima mengizinkannya; alt text sudah tersedia.
 - Placeholder support email masih harus diganti dengan alamat resmi sebelum production release.
+- Pemeriksaan DNS/MX tidak dapat membuktikan mailbox Gmail tertentu benar-benar ada; link verification tetap menjadi validasi final.
 - SPF, DKIM, DMARC, reputasi SMTP, dan sender policy tetap perlu diverifikasi di environment target.
 
 ## 8. Hasil self-audit
@@ -65,12 +71,14 @@ Email sekarang memakai identitas yang lebih resmi dan konsisten: navy sebagai ak
 - HTML menggunakan tabel dan inline style; plain-text alternative tetap tersedia.
 - Dynamic content pada factory diuji terhadap HTML injection.
 - `MAIL_FROM_NAME` diterapkan sebagai nama pengirim; alamat tetap berasal dari `MAIL_FROM_ADDRESS`.
+- Domain tanpa MX/A/AAAA ditolak sebelum draft disimpan sebagai email pendaftaran.
+- Resend verification dibatasi 1 kali per 10 menit per akun dan 10 kali per menit per IP.
 - Tidak ada route, token, schema, security policy, atau business logic yang berubah.
 
 ## 9. Hasil validasi
 
-- `php artisan test`: PASS — 74 test, 606 assertion.
-- Test email dan mail delivery terkait: PASS — 16 test, 96 assertion.
+- `php artisan test`: PASS — 76 test, 615 assertion.
+- Test email, mail delivery, dan domain validation terkait: PASS — 22 test, 119 assertion.
 - `php artisan view:cache`: PASS.
 - `npm run build`: PASS — TypeScript dan Vite production build; 2.558 module ditransformasi.
 - `php -l` pada PHP file yang berubah: PASS.

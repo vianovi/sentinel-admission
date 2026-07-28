@@ -35,6 +35,19 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(60)->by(($request->user()?->id ?? 'guest').'|'.$request->ip());
         });
 
+        RateLimiter::for('verification', function (Request $request) {
+            return [
+                Limit::perMinutes(10, 1)
+                    ->by('verification:user:'.$request->user()->id)
+                    ->response(fn (Request $request, array $headers) => back()
+                        ->with('error', 'Email verifikasi baru dapat dikirim ulang setelah beberapa menit.')),
+                Limit::perMinute(10)
+                    ->by('verification:ip:'.$request->ip())
+                    ->response(fn (Request $request, array $headers) => back()
+                        ->with('error', 'Terlalu banyak permintaan dari jaringan ini. Silakan coba lagi beberapa saat.')),
+            ];
+        });
+
         Vite::prefetch(concurrency: 3);
 
         if (env('FORCE_HTTPS', false)) {

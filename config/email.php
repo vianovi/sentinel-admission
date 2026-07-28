@@ -23,4 +23,8 @@ return [
         'support_email' => env('EMAIL_SUPPORT_ADDRESS', '[Support Email Placeholder]'),
     ],
 
+    'validation' => [
+        'check_mx' => filter_var(env('EMAIL_VALIDATE_MX', true), FILTER_VALIDATE_BOOL),
+    ],
+
 ];

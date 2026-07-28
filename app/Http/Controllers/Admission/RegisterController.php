@@ -7,6 +7,7 @@ use App\Models\Candidate;
 use App\Models\Guardian;
 use App\Models\RegistrationDraft;
 use App\Models\User;
+use App\Support\EmailDomainVerifier;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -67,6 +68,14 @@ class RegisterController extends Controller
             'email.email' => 'Format email pendaftaran tidak valid.',
             'email.unique' => 'Email sudah terdaftar. Gunakan email lain.',
         ])->validate();
+
+        $validatedDraft['email'] = strtolower(trim($validatedDraft['email']));
+
+        if (! EmailDomainVerifier::canReceive($validatedDraft['email'])) {
+            return back()
+                ->withErrors(['email' => 'Domain email tidak ditemukan atau tidak memiliki server penerima email. Periksa kembali penulisannya.'])
+                ->withInput();
+        }
 
         // 1. Buat user
         $user = User::create([
