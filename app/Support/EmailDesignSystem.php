@@ -32,9 +32,17 @@ final class EmailDesignSystem
                 'panel' => null,
                 'warning' => null,
                 'information' => null,
+                'validityText' => null,
                 'secondaryText' => null,
                 'outroLines' => [],
             ], $content));
+
+        $fromAddress = (string) config('mail.from.address', '');
+        $fromName = (string) (config('mail.from.name') ?: config('app.name'));
+
+        if ($fromAddress !== '') {
+            $message->from($fromAddress, $fromName);
+        }
 
         if (! empty($content['actionText']) && ! empty($content['actionUrl'])) {
             $message->action($content['actionText'], $content['actionUrl']);
@@ -45,34 +53,24 @@ final class EmailDesignSystem
 
     public static function verification(object $notifiable, string $verificationUrl): MailMessage
     {
-        $recipientName = self::recipientName($notifiable);
-
         return self::transactional([
-            'subject' => 'Verifikasi Email Akun SPMB',
-            'preheader' => 'Konfirmasi alamat email Anda untuk mengaktifkan akses SPMB.',
-            'title' => 'Verifikasi email Anda',
-            'greeting' => "Halo {$recipientName},",
+            'subject' => 'Verifikasi Alamat Email',
+            'preheader' => 'Verifikasi alamat email Anda untuk Sistem Penerimaan Santri Baru.',
+            'title' => '📧 Verifikasi Alamat Email',
+            'greeting' => "Assalamu'alaikum Warahmatullahi Wabarakatuh,",
             'description' => [
-                'Terima kasih telah mendaftarkan akun di portal SPMB Al-Muntaha School.',
-                'Silakan konfirmasi alamat email ini agar kami dapat menjaga keamanan akun dan mengirimkan informasi pendaftaran kepada Anda.',
+                'Terima kasih telah melakukan pendaftaran di Sistem Penerimaan Santri Baru Al-Muntaha School.',
+                'Untuk menjaga keamanan akun Anda, silakan verifikasi alamat email dengan menekan tombol berikut.',
             ],
             'actionText' => 'Verifikasi Email',
             'actionUrl' => $verificationUrl,
-            'panel' => [
-                'title' => 'Satu langkah lagi',
-                'body' => 'Tombol di atas akan membuka halaman verifikasi secara aman. Setelah selesai, Anda dapat melanjutkan proses pendaftaran melalui dashboard.',
-            ],
-            'warning' => [
-                'title' => 'Tautan memiliki masa berlaku',
-                'body' => 'Demi keamanan, tautan verifikasi ini berlaku selama '.config('auth.verification.expire', 60).' menit.',
-            ],
+            'validityText' => 'Link ini berlaku selama '.config('auth.verification.expire', 60).' menit.',
             'secondaryText' => 'Jika Anda tidak membuat akun ini, abaikan email ini. Tidak ada tindakan lebih lanjut yang diperlukan.',
         ]);
     }
 
     public static function passwordReset(object $notifiable, string $token): MailMessage
     {
-        $recipientName = self::recipientName($notifiable);
         $resetUrl = url(route('password.reset', [
             'token' => $token,
             'email' => $notifiable->getEmailForPasswordReset(),
@@ -80,28 +78,18 @@ final class EmailDesignSystem
         $expiration = config('auth.passwords.'.config('auth.defaults.passwords').'.expire');
 
         return self::transactional([
-            'subject' => 'Permintaan Atur Ulang Password SPMB',
+            'subject' => 'Atur Ulang Password SPMB',
             'preheader' => 'Gunakan tautan aman untuk membuat password baru.',
-            'title' => 'Atur ulang password',
-            'greeting' => "Halo {$recipientName},",
+            'title' => '🔐 Atur Ulang Password',
+            'greeting' => "Assalamu'alaikum Warahmatullahi Wabarakatuh,",
             'description' => [
-                'Kami menerima permintaan untuk mengatur ulang password akun SPMB Anda.',
-                'Pilih tombol di bawah untuk membuat password baru dan mendapatkan kembali akses ke akun Anda.',
+                'Kami menerima permintaan untuk mengatur ulang password akun Sistem Penerimaan Santri Baru Anda.',
+                'Silakan tekan tombol berikut untuk membuat password baru dan mendapatkan kembali akses ke akun Anda.',
             ],
             'actionText' => 'Atur Ulang Password',
             'actionUrl' => $resetUrl,
-            'information' => [
-                'title' => 'Catatan keamanan',
-                'body' => "Tautan ini berlaku selama {$expiration} menit dan hanya dapat digunakan satu kali.",
-            ],
+            'validityText' => "Link ini berlaku selama {$expiration} menit.",
             'secondaryText' => 'Jika Anda tidak meminta pengaturan ulang password, Anda dapat mengabaikan email ini. Password Anda tidak akan berubah.',
         ]);
-    }
-
-    private static function recipientName(object $notifiable): string
-    {
-        $name = trim((string) ($notifiable->name ?? ''));
-
-        return $name !== '' ? $name : 'Peserta SPMB';
     }
 }

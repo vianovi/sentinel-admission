@@ -5,7 +5,7 @@
 
 @php
     $brand = config('email.brand');
-    $logo = (string) ($brand['logo'] ?? '/assets/icons/brand/logo.webp');
+    $logo = (string) ($brand['logo'] ?? '/assets/icons/brand/logo-email.png');
     $logoUrl = str_starts_with($logo, 'http://') || str_starts_with($logo, 'https://')
         ? $logo
         : url(ltrim($logo, '/'));
@@ -46,9 +46,13 @@
                         <td class="email-card" style="overflow:hidden; border:1px solid #e3e8f0; border-radius:18px; background-color:#ffffff; box-shadow:0 10px 28px rgba(20, 39, 76, 0.08);">
                             @include('components.email.header', ['brand' => $brand, 'logoUrl' => $logoUrl])
 
-                            <div class="email-body" style="padding:44px 48px 40px;">
-                                {{ $slot }}
-                            </div>
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%; border-collapse:collapse;">
+                                <tr>
+                                    <td class="email-body" style="padding:40px 48px 36px;">
+                                        {{ $slot }}
+                                    </td>
+                                </tr>
+                            </table>
 
                             @include('components.email.footer', ['brand' => $brand])
                         </td>

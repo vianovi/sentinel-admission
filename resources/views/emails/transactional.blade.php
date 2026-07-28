@@ -1,5 +1,5 @@
 <x-email.layout :title="$title" :preheader="$preheader">
-    <h1 style="margin:0 0 20px; color:#132f68; font-size:26px; font-weight:700; line-height:1.25; letter-spacing:-0.3px;">
+    <h1 style="margin:0 0 22px; color:#132f68; font-size:24px; font-weight:700; line-height:1.3; letter-spacing:-0.2px;">
         {{ $title }}
     </h1>
 
@@ -17,6 +17,25 @@
 
     @if($actionUrl && $actionText)
         <x-email.button :href="$actionUrl" :label="$actionText" />
+
+        @if($validityText)
+            <p style="margin:0 0 26px; color:#7a879b; font-size:12px; line-height:1.7; text-align:center;">
+                {{ $validityText }}
+            </p>
+        @endif
+
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%; border-collapse:collapse;">
+            <tr>
+                <td style="border-top:1px solid #e8edf4; padding-top:22px;">
+                    <p style="margin:0 0 10px; color:#53627a; font-size:12px; line-height:1.7;">
+                        Apabila tombol tidak dapat dibuka, salin tautan berikut ke browser:
+                    </p>
+                    <p style="margin:0; color:#132f68; font-size:12px; line-height:1.7; word-break:break-all; overflow-wrap:anywhere;">
+                        <a href="{{ $actionUrl }}" target="_blank" rel="noopener" style="color:#132f68; text-decoration:underline;">{{ $actionUrl }}</a>
+                    </p>
+                </td>
+            </tr>
+        </table>
     @endif
 
     @if($panel)
