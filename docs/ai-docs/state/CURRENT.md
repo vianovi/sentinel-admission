@@ -15,11 +15,11 @@
 - Baseline source commit: `1113160ebee605ebad439f53f3322f9deb060711`
 - Latest audit commit: `c44330c92f5582cd540f80a887cfa9ad362e9dca`
 - Latest promoted commit: `0440d02092a78a87e24f3cc6ddc73bcb1575ec57`
-- Working tree: `CLEAN at dd1047a`
-- Last successful verification: `Email Design System — 74 tests/606 assertions, focused mail regressions 16/96, frontend build, Blade cache, PHP lint, Pint, and diff check passed on 2026-07-28`
+- Working tree: `CLEAN at e9300bb`
+- Last successful verification: `Email delivery hardening — 76 tests/615 assertions, focused mail/domain regressions 22/119, frontend build, Blade cache, PHP lint, Pint, and diff check passed on 2026-07-28`
 - Current blocker: `B-001 — verified public-content manifest or removal authority required`
 - Human visual review: `NOT_STARTED`
 - Next exact action: Await owner choice for B-001; then implement verified content or authorized removal and resume the recorded technical findings.
-- Parallel scoped user task: Email Design System implementation and format refinement is committed at `dd1047a`; evidence is under `evidence/email-design-system/2026-07-28/`; code status `PASS WITH NOTES`, with Gmail/Outlook human visual review pending.
-- The email commit is limited to email presentation/configuration, a PNG email logo asset, tests, and audit evidence; authentication, tokens, routes, schema, security, and business logic were not changed.
+- Parallel scoped user task: Email Design System implementation and delivery hardening are committed at `e9300bb` (presentation baseline `dd1047a`); evidence is under `evidence/email-design-system/2026-07-28/`; code status `PASS WITH NOTES`, with Gmail/Outlook human visual review pending.
+- The hardening adds DNS email-domain preflight and verification resend throttling; authentication tokens, signed URLs, and unrelated business logic remain unchanged.
 - Last updated: `2026-07-28`

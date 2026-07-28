@@ -39,7 +39,7 @@ Task 00 baseline passed: 71 tests/580 assertions, 183 routes, frontend build, de
 
 ## Uncommitted changes
 
-None. Email Design System refinement is committed at `dd1047a`. Blocked public audit content remains checkpointed in its historical audit commits.
+None. Email Design System refinement and delivery hardening are committed at `e9300bb`. Blocked public audit content remains checkpointed in its historical audit commits.
 
 ## Next exact action
 
@@ -48,11 +48,11 @@ After the owner resolves B-001, implement the chosen content boundary, then addr
 ## Parallel scoped email-design task
 
 - Completed presentation-only Email Design System work on `feature/email-design-system`.
-- Verification: full suite 74 tests/606 assertions, focused email and mail delivery tests 16/96 assertions, frontend build passed, Blade cache passed, PHP lint, Pint, and diff check passed.
+- Verification: full suite 76 tests/615 assertions, focused email, mail delivery, and domain tests 22/119 assertions, frontend build passed, Blade cache passed, PHP lint, Pint, and diff check passed.
 - Audit report: `docs/ai-docs/audit/email-design-system-audit.md`.
 - Evidence: `docs/ai-docs/evidence/email-design-system/2026-07-28/`.
 - Status: code `PASS WITH NOTES`; `HUMAN VISUAL REVIEW REQUIRED` in Gmail and Outlook.
-- Changes are committed at `dd1047a`; do not conflate them with the blocked Task 01 public-content work.
+- Changes are committed at `e9300bb`; do not conflate them with the blocked Task 01 public-content work.
 
 ## Resume warning
 
