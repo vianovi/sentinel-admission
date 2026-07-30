@@ -300,16 +300,6 @@ export default function Sidebar({ role }: Props) {
         });
     }, []);
 
-    const handleParentMenuClick = useCallback((key: string) => {
-        if ((role === "candidate" || role === "staff" || role === "admin") && isCollapsed) {
-            pendingOpenMenuRef.current = key;
-            toggleSidebar();
-            return;
-        }
-
-        toggleSubmenu(key);
-    }, [isCollapsed, role, toggleSidebar, toggleSubmenu]);
-
     const clearFlyoutTimer = useCallback(() => {
         if (flyoutTimerRef.current === null) return;
         window.clearTimeout(flyoutTimerRef.current);
@@ -324,8 +314,31 @@ export default function Sidebar({ role }: Props) {
         }, 120);
     }, [clearFlyoutTimer]);
 
+    const handleParentMenuClick = useCallback((target: HTMLElement, item: NavItem, key: string, active: boolean) => {
+        if (isCollapsed) {
+            clearFlyoutTimer();
+            setFlyout((prev) => {
+                if (prev?.key === key) {
+                    return null;
+                }
+                const rect = target.getBoundingClientRect();
+                const estimatedHeight = Math.min(384, 70 + (item.children?.length ?? 0) * 38);
+                const maxTop = Math.max(16, window.innerHeight - estimatedHeight - 16);
+                return {
+                    key,
+                    item,
+                    active,
+                    top: Math.min(Math.max(rect.top, 16), maxTop),
+                };
+            });
+            return;
+        }
+
+        toggleSubmenu(key);
+    }, [isCollapsed, clearFlyoutTimer, toggleSubmenu]);
+
     const openCollapsedFlyout = useCallback((target: HTMLElement, item: NavItem, key: string, active: boolean) => {
-        if (role === "candidate" || role === "staff" || role === "admin" || !isCollapsed || !item.children?.length || item.disabled) return;
+        if (!isCollapsed || !item.children?.length || item.disabled) return;
 
         clearFlyoutTimer();
 
@@ -339,7 +352,7 @@ export default function Sidebar({ role }: Props) {
             active,
             top: Math.min(Math.max(rect.top, 16), maxTop),
         });
-    }, [clearFlyoutTimer, isCollapsed, role]);
+    }, [clearFlyoutTimer, isCollapsed]);
 
     const renderSoonBadge = (visible: boolean) => {
         if (!visible) return null;
@@ -516,7 +529,7 @@ export default function Sidebar({ role }: Props) {
                                             <button
                                                 type="button"
                                                 className={baseItemClass}
-                                                onClick={() => handleParentMenuClick(itemKey)}
+                                                onClick={(event) => handleParentMenuClick(event.currentTarget, item, itemKey, active)}
                                                 aria-expanded={childOpen}
                                                 aria-controls={submenuId}
                                                 title={!isVisible ? item.label : undefined}

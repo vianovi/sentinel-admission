@@ -16,7 +16,13 @@ export const useSidebar = () => {
 };
 
 export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [isExpanded, setIsExpanded] = useState(true);
+    const [isExpanded, setIsExpanded] = useState(() => {
+        if (typeof window !== "undefined") {
+            const saved = localStorage.getItem("sidebar_expanded");
+            return saved !== null ? saved === "true" : true;
+        }
+        return true;
+    });
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
 
@@ -31,7 +37,15 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({ child
         return () => window.removeEventListener("resize", handleResize);
     }, []);
 
-    const toggleSidebar = () => setIsExpanded((prev) => !prev);
+    const toggleSidebar = () => {
+        setIsExpanded((prev) => {
+            const next = !prev;
+            if (typeof window !== "undefined") {
+                localStorage.setItem("sidebar_expanded", String(next));
+            }
+            return next;
+        });
+    };
     const toggleMobileSidebar = () => setIsMobileOpen((prev) => !prev);
 
     return (

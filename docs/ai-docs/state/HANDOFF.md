@@ -39,7 +39,7 @@ Task 00 baseline passed: 71 tests/580 assertions, 183 routes, frontend build, de
 
 ## Uncommitted changes
 
-None. Email Design System refinement and delivery hardening are committed at `e9300bb`. Blocked public audit content remains checkpointed in its historical audit commits.
+None. Sidebar Collapsed Menu changes and Email Design System refinement are fully committed. Blocked public audit content remains checkpointed in its historical audit commits.
 
 ## Next exact action
 
@@ -54,6 +54,15 @@ After the owner resolves B-001, implement the chosen content boundary, then addr
 - Status: code `PASS WITH NOTES`; `HUMAN VISUAL REVIEW REQUIRED` in Gmail and Outlook.
 - Changes are committed at `e9300bb`; do not conflate them with the blocked Task 01 public-content work.
 
+## Parallel scoped sidebar collapsed menu task
+
+- Completed Sidebar Collapsed Menu behavior fixes and localStorage state persistence on the current branch.
+- Verification: full suite 76 tests/615 assertions passed, frontend production build compiled without errors.
+- Audit report: `docs/ai-docs/audit/sidebar-collapsed-menu-audit.md`.
+- Evidence: `docs/ai-docs/evidence/sidebar-collapsed-menu/2026-07-30/`.
+- Status: code `PASS WITH NOTES`; `HUMAN VISUAL REVIEW REQUIRED` for visual alignment and feel. Committed at `8b23544`.
+
 ## Resume warning
 
 Do not trust this file if its Git state differs from the repository. Reconcile and update first.
+
