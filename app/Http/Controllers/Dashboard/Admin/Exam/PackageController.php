@@ -72,7 +72,7 @@ class PackageController extends Controller
 
     public function show(ExamPackage $package): Response
     {
-        $package->load(['subject:id,name,code', 'questions' => fn ($query) => $query->latest()->take(20), 'sessions' => fn ($query) => $query->latest()->take(10), 'importBatches' => fn ($query) => $query->latest()->take(10)]);
+        $package->load(['subject:id,name,code', 'questions' => fn ($query) => $query->latest(), 'sessions' => fn ($query) => $query->latest()->take(10), 'importBatches' => fn ($query) => $query->latest()->take(10)]);
 
         return Inertia::render('Dashboard/Admin/Exam/PackageShow', [
             'package' => [

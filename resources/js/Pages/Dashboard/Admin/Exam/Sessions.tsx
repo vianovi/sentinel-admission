@@ -271,7 +271,20 @@ export default function ExamSessions({ sessions, packages, waves, editing_sessio
 
                                 <div className="grid gap-3 sm:grid-cols-2">
                                     <div>
-                                        <label className={labelClass} htmlFor="session-opens">Dibuka</label>
+                                        <div className="flex items-center justify-between">
+                                            <label className={labelClass} htmlFor="session-opens">Dibuka</label>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const d = new Date();
+                                                    const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}T${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+                                                    form.setData("opens_at", iso);
+                                                }}
+                                                className="text-[10px] font-bold text-amber-600 hover:underline dark:text-amber-400"
+                                            >
+                                                <i className="fa-solid fa-bolt mr-1" />Sekarang
+                                            </button>
+                                        </div>
                                         <input
                                             id="session-opens"
                                             type="datetime-local"
@@ -282,7 +295,7 @@ export default function ExamSessions({ sessions, packages, waves, editing_sessio
                                         {form.errors.opens_at ? <p className="mt-1 text-xs text-red-500">{form.errors.opens_at}</p> : null}
                                     </div>
                                     <div>
-                                        <label className={labelClass} htmlFor="session-closes">Ditutup</label>
+                                        <label className={labelClass} htmlFor="session-closes">Ditutup (Batas Akses)</label>
                                         <input
                                             id="session-closes"
                                             type="datetime-local"
@@ -291,6 +304,36 @@ export default function ExamSessions({ sessions, packages, waves, editing_sessio
                                             className={inputClass}
                                         />
                                         {form.errors.closes_at ? <p className="mt-1 text-xs text-red-500">{form.errors.closes_at}</p> : null}
+                                    </div>
+                                </div>
+
+                                <div className="rounded-lg bg-slate-50 p-2.5 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10">
+                                    <p className="text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1.5 flex items-center gap-1">
+                                        <i className="fa-solid fa-wand-magic-sparkles text-amber-500" /> Presets Durasi Aktif Sesi:
+                                    </p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {[
+                                            ["+2 Jam", 2, "hours"],
+                                            ["+6 Jam", 6, "hours"],
+                                            ["+24 Jam (1 Hari)", 24, "hours"],
+                                            ["+7 Hari (1 Minggu)", 7, "days"],
+                                            ["+30 Hari (Bebas)", 30, "days"],
+                                        ].map(([label, amount, unit]) => (
+                                            <button
+                                                key={label as string}
+                                                type="button"
+                                                onClick={() => {
+                                                    const base = form.data.opens_at ? new Date(form.data.opens_at) : new Date();
+                                                    const ms = (unit === "hours" ? (amount as number) * 3600 : (amount as number) * 86400) * 1000;
+                                                    const target = new Date(base.getTime() + ms);
+                                                    const iso = `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, "0")}-${String(target.getDate()).padStart(2, "0")}T${String(target.getHours()).padStart(2, "0")}:${String(target.getMinutes()).padStart(2, "0")}`;
+                                                    form.setData("closes_at", iso);
+                                                }}
+                                                className="rounded bg-white px-2 py-1 text-[11px] font-bold text-slate-700 shadow-sm border border-slate-200 hover:border-amber-400 hover:text-amber-600 dark:bg-slate-800 dark:border-white/10 dark:text-slate-200 dark:hover:border-amber-400"
+                                            >
+                                                {label}
+                                            </button>
+                                        ))}
                                     </div>
                                 </div>
 
