@@ -32,6 +32,8 @@ return new class extends Migration
             $table->decimal('passing_score', 5, 2);
             $table->unsignedTinyInteger('max_attempts')->default(1);
             $table->boolean('show_result_to_candidate')->default(false);
+            $table->boolean('is_public')->default(false);
+            $table->enum('public_access_type', ['token_required', 'open'])->default('token_required');
             $table->enum('status', ['draft', 'published', 'closed', 'archived'])->default('draft');
             $table->timestamps();
 

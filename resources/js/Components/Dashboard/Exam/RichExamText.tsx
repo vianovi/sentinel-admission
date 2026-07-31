@@ -30,6 +30,39 @@ function renderRichText(text: string): ReactNode[] {
             continue;
         }
 
+        // HTML <sup> tag parsing
+        if (text.slice(index).toLowerCase().startsWith("<sup>")) {
+            const closeIndex = text.toLowerCase().indexOf("</sup>", index + 5);
+            if (closeIndex > index + 5) {
+                flush();
+                const content = text.slice(index + 5, closeIndex);
+                nodes.push(<sup key={`html-sup-${index}`} className="align-super text-[0.72em] leading-none">{content}</sup>);
+                index = closeIndex + 6;
+                continue;
+            }
+        }
+
+        // HTML <sub> tag parsing
+        if (text.slice(index).toLowerCase().startsWith("<sub>")) {
+            const closeIndex = text.toLowerCase().indexOf("</sub>", index + 5);
+            if (closeIndex > index + 5) {
+                flush();
+                const content = text.slice(index + 5, closeIndex);
+                nodes.push(<sub key={`html-sub-${index}`} className="align-sub text-[0.72em] leading-none">{content}</sub>);
+                index = closeIndex + 6;
+                continue;
+            }
+        }
+
+        // Unicode superscripts ² ³ ¹
+        if (char === "²" || char === "³" || char === "¹") {
+            flush();
+            const val = char === "²" ? "2" : char === "³" ? "3" : "1";
+            nodes.push(<sup key={`uni-sup-${index}`} className="align-super text-[0.72em] leading-none">{val}</sup>);
+            index += 1;
+            continue;
+        }
+
         if (char === "^") {
             const exponent = readExponent(text, index + 1);
             if (exponent.value) {

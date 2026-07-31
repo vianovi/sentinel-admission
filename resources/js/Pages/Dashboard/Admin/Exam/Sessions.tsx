@@ -36,6 +36,8 @@ type SessionRow = {
     passing_score: number;
     max_attempts: number;
     show_result_to_candidate: boolean;
+    is_public: boolean;
+    public_access_type: string;
     candidates_count: number;
     attempts_count: number;
 };
@@ -52,6 +54,8 @@ type SessionForm = {
     passing_score: number;
     max_attempts: number;
     show_result_to_candidate: boolean;
+    is_public: boolean;
+    public_access_type: string;
     status: string;
 };
 
@@ -75,6 +79,8 @@ const defaultForm = (pkg?: PackageOption): SessionForm => ({
     passing_score: pkg?.passing_score ?? 70,
     max_attempts: pkg?.max_attempts ?? 1,
     show_result_to_candidate: pkg?.show_result_to_candidate ?? false,
+    is_public: true,
+    public_access_type: "token_required",
     status: "draft",
 });
 
@@ -106,6 +112,8 @@ export default function ExamSessions({ sessions, packages, waves, editing_sessio
             passing_score: editing_session.passing_score,
             max_attempts: editing_session.max_attempts,
             show_result_to_candidate: editing_session.show_result_to_candidate,
+            is_public: editing_session.is_public ?? true,
+            public_access_type: editing_session.public_access_type ?? "token_required",
             status: editing_session.status,
         });
     }, [editing_session?.id, firstPackage?.id]);
@@ -363,6 +371,16 @@ export default function ExamSessions({ sessions, packages, waves, editing_sessio
                                         maxLength={5000}
                                     />
                                 </div>
+
+                                <label className="flex items-center gap-3 rounded-lg border border-slate-200 px-3 py-3 text-sm font-semibold text-slate-700 dark:border-white/10 dark:text-slate-200">
+                                    <input
+                                        type="checkbox"
+                                        checked={form.data.is_public}
+                                        onChange={(event) => form.setData("is_public", event.target.checked)}
+                                        className="rounded border-slate-300 text-gold focus:ring-gold"
+                                    />
+                                    Aktifkan Ujian Publik / Tamu (Akses dengan Token)
+                                </label>
 
                                 <label className="flex items-center gap-3 rounded-lg border border-slate-200 px-3 py-3 text-sm font-semibold text-slate-700 dark:border-white/10 dark:text-slate-200">
                                     <input

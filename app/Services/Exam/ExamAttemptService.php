@@ -9,8 +9,10 @@ use App\Models\Exam\ExamAttemptAnswer;
 use App\Models\Exam\ExamPackage;
 use App\Models\Exam\ExamQuestion;
 use App\Models\Exam\ExamSessionCandidate;
+use App\Models\Exam\ExamSessionToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class ExamAttemptService
 {
@@ -18,6 +20,97 @@ class ExamAttemptService
         private readonly ExamScoringService $scoring,
         private readonly ExamAuditLogger $audit
     ) {}
+
+    public function startPublicAttempt(
+        ExamSessionToken $token,
+        string $guestName,
+        ?string $guestEmail = null,
+        ?string $guestPhone = null,
+        ?Request $request = null
+    ): ExamAttempt {
+        return DB::transaction(function () use ($token, $guestName, $guestEmail, $guestPhone, $request) {
+            $token = ExamSessionToken::query()
+                ->with(['session.package.activeQuestions'])
+                ->whereKey($token->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if (! $token->isValid()) {
+                throw new ExamAccessException('NOT_ELIGIBLE');
+            }
+
+            $session = $token->session;
+
+            if (! $session || ! $session->is_public) {
+                throw new ExamAccessException('NOT_ELIGIBLE');
+            }
+
+            if (! $session->isOpenForStart()) {
+                throw new ExamAccessException('NOT_OPEN');
+            }
+
+            $package = $session->package;
+
+            if (! $package || ! $package->isPublished()) {
+                throw new ExamAccessException('PACKAGE_NOT_READY');
+            }
+
+            $questions = $package->activeQuestions()->get(['id', 'point']);
+
+            if ($questions->isEmpty()) {
+                throw new ExamAccessException('NO_QUESTIONS');
+            }
+
+            $questionIds = $questions->pluck('id')->values();
+
+            if ($package->randomize_questions) {
+                $questionIds = $questionIds->shuffle()->values();
+            }
+
+            $startedAt = now();
+            $durationExpiry = $startedAt->copy()->addMinutes($session->duration_minutes);
+            $expiresAt = $durationExpiry->lt($session->closes_at) ? $durationExpiry : $session->closes_at;
+            $guestSessionToken = Str::random(40);
+
+            $attempt = ExamAttempt::create([
+                'exam_session_id' => $session->id,
+                'exam_session_candidate_id' => null,
+                'exam_package_id' => $package->id,
+                'candidate_id' => null,
+                'exam_session_token_id' => $token->id,
+                'guest_name' => $guestName,
+                'guest_email' => $guestEmail,
+                'guest_phone' => $guestPhone,
+                'guest_session_token' => $guestSessionToken,
+                'attempt_number' => 1,
+                'status' => ExamAttempt::STATUS_IN_PROGRESS,
+                'started_at' => $startedAt,
+                'expires_at' => $expiresAt,
+                'last_activity_at' => $startedAt,
+                'question_order' => $questionIds->all(),
+                'total_questions' => $questions->count(),
+                'blank_questions' => $questions->count(),
+                'max_score' => (float) $questions->sum(fn (ExamQuestion $question) => (float) $question->point),
+                'passing_score' => (float) $session->passing_score,
+            ]);
+
+            $token->increment('used_count');
+
+            $this->audit->log('public_attempt_started', [
+                'candidate_id' => null,
+                'exam_session_id' => $session->id,
+                'exam_package_id' => $package->id,
+                'exam_attempt_id' => $attempt->id,
+                'metadata' => [
+                    'token' => $token->token,
+                    'guest_name' => $guestName,
+                    'expires_at' => $attempt->expires_at?->toISOString(),
+                ],
+            ], $request);
+
+            return $attempt->fresh(['session', 'package']);
+        });
+    }
 
     public function start(ExamSessionCandidate $assignment, Candidate $candidate, ?Request $request = null): ExamAttempt
     {

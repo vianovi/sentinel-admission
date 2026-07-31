@@ -16,14 +16,24 @@ return new class extends Migration
                 ->constrained('exam_sessions')
                 ->cascadeOnDelete();
             $table->foreignId('exam_session_candidate_id')
+                ->nullable()
                 ->constrained('exam_session_candidates')
-                ->cascadeOnDelete();
+                ->nullOnDelete();
             $table->foreignId('exam_package_id')
                 ->constrained('exam_packages')
                 ->cascadeOnDelete();
             $table->foreignId('candidate_id')
+                ->nullable()
                 ->constrained('candidates')
-                ->cascadeOnDelete();
+                ->nullOnDelete();
+            $table->foreignId('exam_session_token_id')
+                ->nullable()
+                ->constrained('exam_session_tokens')
+                ->nullOnDelete();
+            $table->string('guest_name')->nullable();
+            $table->string('guest_email')->nullable();
+            $table->string('guest_phone')->nullable();
+            $table->string('guest_session_token', 100)->nullable();
             $table->unsignedTinyInteger('attempt_number')->default(1);
             $table->enum('status', [
                 'in_progress',
@@ -49,12 +59,15 @@ return new class extends Migration
             $table->decimal('percentage_score', 5, 2)->nullable();
             $table->decimal('passing_score', 5, 2)->nullable();
             $table->boolean('passed')->nullable();
+            $table->unsignedInteger('violations_count')->default(0);
             $table->json('metadata')->nullable();
             $table->timestamps();
 
             $table->unique(['exam_session_candidate_id', 'attempt_number'], 'exam_attempt_number_unique');
             $table->index(['candidate_id', 'status']);
             $table->index(['exam_session_id', 'status']);
+            $table->index(['guest_session_token']);
+            $table->index(['exam_session_token_id']);
             $table->index(['status', 'expires_at']);
         });
     }

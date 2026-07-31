@@ -16,12 +16,12 @@
 - Latest audit commit: `c44330c92f5582cd540f80a887cfa9ad362e9dca`
 - Latest promoted commit: `0440d02092a78a87e24f3cc6ddc73bcb1575ec57`
 - Working tree: `CLEAN at f352434`
-- Last successful verification: `Email delivery hardening — 76 tests/615 assertions, focused mail/domain regressions 22/119, frontend build, Blade cache, PHP lint, Pint, and diff check passed on 2026-07-28`
+- Last successful verification: `Public Online Exam Engine — 77 tests/653 assertions, frontend build (tsc + vite), public attempt test suite passed on 2026-07-30`
 - Current blocker: `B-001 — verified public-content manifest or removal authority required`
 - Human visual review: `NOT_STARTED`
 - Next exact action: Await owner choice for B-001; then implement verified content or authorized removal and resume the recorded technical findings.
 - Parallel scoped user task: Email Design System implementation and delivery hardening are committed at `e9300bb` (presentation baseline `dd1047a`); evidence is under `evidence/email-design-system/2026-07-28/`; code status `PASS WITH NOTES`, with Gmail/Outlook human visual review pending.
 - Parallel scoped user task: Sidebar Collapsed Menu behavior fixes to toggle submenu flyout on click in collapsed/quickbar mode, correct the hover flyouts check, and persist the open/collapsed state in localStorage. Evidence is under `docs/ai-docs/evidence/sidebar-collapsed-menu/2026-07-30/`; code status `PASS WITH NOTES`, with human visual review pending. Committed at `f352434`.
-- The email hardening adds DNS email-domain preflight and verification resend throttling; authentication tokens, signed URLs, and unrelated business logic remain unchanged.
+- Parallel scoped user task: Public Online Exam Engine completed with guest attempt token validation, anonymous participant state management, token generation in session management UI, and admin result filtering.
 - Last updated: `2026-07-30`
 

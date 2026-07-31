@@ -21,6 +21,11 @@ class ExamAttempt extends Model
         'exam_session_candidate_id',
         'exam_package_id',
         'candidate_id',
+        'exam_session_token_id',
+        'guest_name',
+        'guest_email',
+        'guest_phone',
+        'guest_session_token',
         'attempt_number',
         'status',
         'started_at',
@@ -39,6 +44,7 @@ class ExamAttempt extends Model
         'percentage_score',
         'passing_score',
         'passed',
+        'violations_count',
         'metadata',
     ];
 
@@ -60,6 +66,7 @@ class ExamAttempt extends Model
         'percentage_score' => 'decimal:2',
         'passing_score' => 'decimal:2',
         'passed' => 'boolean',
+        'violations_count' => 'integer',
         'metadata' => 'array',
     ];
 
@@ -71,6 +78,11 @@ class ExamAttempt extends Model
     public function sessionCandidate(): BelongsTo
     {
         return $this->belongsTo(ExamSessionCandidate::class, 'exam_session_candidate_id');
+    }
+
+    public function token(): BelongsTo
+    {
+        return $this->belongsTo(ExamSessionToken::class, 'exam_session_token_id');
     }
 
     public function package(): BelongsTo
@@ -86,6 +98,21 @@ class ExamAttempt extends Model
     public function answers(): HasMany
     {
         return $this->hasMany(ExamAttemptAnswer::class);
+    }
+
+    public function isGuest(): bool
+    {
+        return $this->candidate_id === null;
+    }
+
+    public function participantName(): string
+    {
+        return $this->candidate?->full_name ?? $this->guest_name ?? 'Peserta Tamu';
+    }
+
+    public function participantEmail(): ?string
+    {
+        return $this->candidate?->user?->email ?? $this->guest_email;
     }
 
     public function isInProgress(): bool

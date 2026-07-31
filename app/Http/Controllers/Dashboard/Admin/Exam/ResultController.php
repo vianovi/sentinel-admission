@@ -30,7 +30,9 @@ class ResultController extends Controller
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($nested) use ($search) {
                     $nested
-                        ->whereHas('candidate', function ($candidateQuery) use ($search) {
+                        ->where('guest_name', 'like', "%{$search}%")
+                        ->orWhere('guest_email', 'like', "%{$search}%")
+                        ->orWhereHas('candidate', function ($candidateQuery) use ($search) {
                             $candidateQuery
                                 ->where('full_name', 'like', "%{$search}%")
                                 ->orWhere('candidate_code', 'like', "%{$search}%")
@@ -99,13 +101,16 @@ class ResultController extends Controller
     {
         return [
             'id' => $attempt->id,
+            'is_guest' => $attempt->isGuest(),
+            'participant_name' => $attempt->participantName(),
+            'participant_email' => $attempt->participantEmail(),
             'candidate' => [
                 'id' => $attempt->candidate?->id,
-                'candidate_code' => $attempt->candidate?->candidate_code,
-                'full_name' => $attempt->candidate?->full_name,
+                'candidate_code' => $attempt->candidate?->candidate_code ?? ($attempt->isGuest() ? 'TAMU' : null),
+                'full_name' => $attempt->participantName(),
                 'nisn' => $attempt->candidate?->nisn,
-                'program_choice' => $attempt->candidate?->program_choice,
-                'status' => $attempt->candidate?->status,
+                'program_choice' => $attempt->candidate?->program_choice ?? 'Peserta Umum',
+                'status' => $attempt->candidate?->status ?? 'guest',
             ],
             'session_title' => $attempt->session?->title,
             'package_title' => $attempt->package?->title,
@@ -120,6 +125,8 @@ class ResultController extends Controller
             'percentage_score' => $attempt->percentage_score !== null ? (float) $attempt->percentage_score : null,
             'passing_score' => $attempt->passing_score !== null ? (float) $attempt->passing_score : null,
             'passed' => $attempt->passed,
+            'violations_count' => $attempt->violations_count,
+            'violations_log' => $attempt->metadata['violations_log'] ?? [],
             'submitted_at' => $attempt->submitted_at?->format('d M Y H:i'),
             'created_at' => $attempt->created_at?->format('d M Y H:i'),
         ];

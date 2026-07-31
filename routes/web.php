@@ -36,6 +36,7 @@ use App\Http\Controllers\Dashboard\Admin\Exam\ResultController    as AdminExamRe
 use App\Http\Controllers\Dashboard\Admin\Exam\MonitoringController as AdminExamMonitoring;
 use App\Http\Controllers\Dashboard\Candidate\Exam\ExamController  as CandidateExam;
 use App\Http\Controllers\Dashboard\Candidate\Exam\AttemptController as CandidateExamAttempt;
+use App\Http\Controllers\Exam\PublicExamController;
 use App\Http\Controllers\Webhook\MidtransController;
 use App\Http\Controllers\Admission\FormWizardController;
 use App\Http\Controllers\Admission\RegisterController;
@@ -52,6 +53,17 @@ Route::get('/', [WelcomeController::class, 'index'])->name('home');
 Route::get('/media/gallery/{filename}', [WelcomeController::class, 'serveGallery'])
     ->name('media.gallery')
     ->where('filename', '.+');
+
+// Public Exam Engine Routes
+Route::prefix('exam')->name('exam.public.')->group(function () {
+    Route::get('/p/{token?}', [PublicExamController::class, 'showLanding'])->name('landing');
+    Route::post('/p/{token}/start', [PublicExamController::class, 'start'])->name('start')->middleware('throttle:10,1');
+    Route::get('/attempts/{attempt}', [PublicExamController::class, 'showAttempt'])->name('attempts.show');
+    Route::post('/attempts/{attempt}/sync', [PublicExamController::class, 'sync'])->name('attempts.sync');
+    Route::post('/attempts/{attempt}/save-answer', [PublicExamController::class, 'saveAnswer'])->name('attempts.save-answer')->middleware('throttle:60,1');
+    Route::post('/attempts/{attempt}/violation', [PublicExamController::class, 'logViolation'])->name('attempts.violation');
+    Route::post('/attempts/{attempt}/submit', [PublicExamController::class, 'submit'])->name('attempts.submit');
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ADMISSION — Form Wizard & Register (guest only)
@@ -479,6 +491,10 @@ Route::middleware(['auth', RoleMiddleware::class . ':admin'])
 
                 Route::post('/sessions/{session}/candidates', [AdminExamSession::class, 'assignCandidates'])
                     ->name('sessions.candidates.assign');
+                Route::post('/sessions/{session}/tokens', [AdminExamSession::class, 'generateToken'])
+                    ->name('sessions.tokens.store');
+                Route::delete('/tokens/{token}', [AdminExamSession::class, 'destroyToken'])
+                    ->name('tokens.destroy');
                 Route::resource('sessions', AdminExamSession::class);
 
                 Route::get('/results', [AdminExamResult::class, 'index'])

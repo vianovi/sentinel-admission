@@ -17,6 +17,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // ── Trust Cloudflare Tunnel proxies ───────────────────────────────
         $middleware->trustProxies(at: '*');
 
+        $middleware->encryptCookies(except: [
+            'guest_exam_token',
+        ]);
+
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
