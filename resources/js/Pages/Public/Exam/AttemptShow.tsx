@@ -157,30 +157,35 @@ export default function PublicAttemptShow({ participant, exam, attempt, question
         }
     }, [attempt.id]);
 
+    const calcClientRemaining = useCallback((expiresIso: string | null, fallbackSec: number) => {
+        if (!expiresIso) return fallbackSec;
+        const expiresMs = new Date(expiresIso).getTime();
+        if (isNaN(expiresMs)) return fallbackSec;
+        return Math.max(0, Math.floor((expiresMs - Date.now()) / 1000));
+    }, []);
+
     useEffect(() => {
         setAttemptState(attempt);
-        setRemaining(attempt.remaining_seconds);
-    }, [attempt]);
+        setRemaining(calcClientRemaining(attempt.expires_at_iso, attempt.remaining_seconds));
+    }, [attempt, calcClientRemaining]);
 
     useEffect(() => {
         if (!isRunning) return;
 
         const timer = window.setInterval(() => {
-            setRemaining((current) => {
-                if (current <= 1) {
-                    if (!expiredSyncTriggered.current) {
-                        expiredSyncTriggered.current = true;
-                        void syncAttempt();
-                    }
-                    return 0;
-                }
+            const currentRemaining = calcClientRemaining(attemptState.expires_at_iso, remaining);
+            setRemaining(currentRemaining);
 
-                return current - 1;
-            });
+            if (currentRemaining <= 0) {
+                if (!expiredSyncTriggered.current) {
+                    expiredSyncTriggered.current = true;
+                    void syncAttempt();
+                }
+            }
         }, 1000);
 
         return () => window.clearInterval(timer);
-    }, [isRunning, syncAttempt]);
+    }, [isRunning, syncAttempt, attemptState.expires_at_iso, calcClientRemaining, remaining]);
 
     useEffect(() => {
         if (!isRunning) return;
