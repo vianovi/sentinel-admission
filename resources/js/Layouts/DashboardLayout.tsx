@@ -99,14 +99,18 @@ function LayoutInner({ children, aside, asideWidth = "280px" }: Props) {
 // OUTER LAYOUT — provides all contexts
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { CardSizeProvider } from "@/context/CardSizeContext";
+
 export default function DashboardSplitLayout({ children, aside, asideWidth }: Props) {
     return (
         <ThemeProvider>
-            <SidebarProvider>
-                <LayoutInner aside={aside} asideWidth={asideWidth}>
-                    {children}
-                </LayoutInner>
-            </SidebarProvider>
+            <CardSizeProvider>
+                <SidebarProvider>
+                    <LayoutInner aside={aside} asideWidth={asideWidth}>
+                        {children}
+                    </LayoutInner>
+                </SidebarProvider>
+            </CardSizeProvider>
         </ThemeProvider>
     );
 }

@@ -601,3 +601,36 @@
         padding: 0.08rem 0.25rem;
     }
 }
+
+/* =============================================================================
+   DYNAMIC CARD DENSITY & SIZE SYSTEM (Candidate, Staff, Admin)
+   ============================================================================= */
+
+html[data-card-size="compact"] section,
+html[data-card-size="compact"] .card-density-responsive {
+    padding: 0.75rem !important;
+    gap: 0.75rem !important;
+}
+
+html[data-card-size="compact"] h1 {
+    font-size: 1.15rem !important;
+}
+
+html[data-card-size="compact"] h2,
+html[data-card-size="compact"] h3 {
+    font-size: 0.95rem !important;
+}
+
+html[data-card-size="compact"] table th,
+html[data-card-size="compact"] table td {
+    padding-top: 0.4rem !important;
+    padding-bottom: 0.4rem !important;
+    font-size: 0.75rem !important;
+}
+
+html[data-card-size="expanded"] section,
+html[data-card-size="expanded"] .card-density-responsive {
+    padding: 1.75rem !important;
+    gap: 1.75rem !important;
+}
+

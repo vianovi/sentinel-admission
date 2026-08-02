@@ -5,6 +5,7 @@ import { animate } from "animejs";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSidebar } from "@/context/SidebarContext";
 import { useTheme } from "@/context/ThemeContext";
+import { useCardSize } from "@/context/CardSizeContext";
 import type { PageProps, User } from "@/types";
 
 type Props = {
@@ -90,6 +91,7 @@ const buildCalendarDays = (visibleMonth: Date, selectedDate: Date, today: Date):
 export default function Topbar({ user }: Props) {
     const { toggleSidebar, toggleMobileSidebar } = useSidebar();
     const { theme, toggleTheme } = useTheme();
+    const { cardSize, toggleCardSize } = useCardSize();
     const { props } = usePage<PageProps>();
     const { app } = props;
 
@@ -469,6 +471,15 @@ export default function Topbar({ user }: Props) {
                         </div>
                     )}
                 </div>
+
+                <button
+                    type="button"
+                    onClick={toggleCardSize}
+                    className="hidden h-11 w-11 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100 hover:text-goldhover hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/20 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-gold dark:focus-visible:ring-gold/15 md:flex"
+                    title={`Ukuran Card: ${cardSize.toUpperCase()}. Klik untuk mengubah ukuran card di seluruh dashboard.`}
+                >
+                    <i className={`fa-solid ${cardSize === "compact" ? "fa-compress" : cardSize === "expanded" ? "fa-expand" : "fa-up-right-and-down-left-from-center"} text-sm`} />
+                </button>
 
                 <button
                     type="button"
