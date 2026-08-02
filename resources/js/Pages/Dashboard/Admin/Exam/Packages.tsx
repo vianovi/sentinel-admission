@@ -26,18 +26,26 @@ export default function ExamPackages({ packages, subjects, editing_package, mode
 
             <ExamWorkspace active="packages">
                 <PageHeader
-                    title="Pengaturan Paket"
-                    description="Kelola paket, unduh template, import soal, dan pastikan bank soal siap dipakai sesi."
+                    title="Pengaturan Paket Soal Ujian"
+                    badge="LANGKAH 2: BANK SOAL & PAKET UJIAN"
+                    description="Kelola paket soal, unduh template resmi XLSX, import bank soal, dan persiapkan materi ujian."
                     icon="fa-solid fa-box-archive"
                     actions={
-                        <>
-                            <Link href="/dashboard/admin/exams/subjects" className={secondaryButtonClass}>
-                                <i className="fa-solid fa-layer-group text-xs" /> Kategori
+                        subjects.length === 0 ? (
+                            <Link
+                                href="/dashboard/admin/exams/subjects"
+                                className="inline-flex items-center gap-2 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 px-4 py-2.5 text-xs font-extrabold hover:bg-amber-500/30 transition-all shadow-lg shadow-amber-500/10"
+                            >
+                                <i className="fa-solid fa-layer-group" /> Buat Kategori Ujian Dahulu
                             </Link>
-                            <Link href="/dashboard/admin/exams/packages/create" className={primaryButtonClass}>
-                                <i className="fa-solid fa-plus text-xs" /> Buat Paket Ujian
+                        ) : (
+                            <Link
+                                href="/dashboard/admin/exams/sessions"
+                                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-4 py-2.5 text-xs font-black text-slate-950 hover:from-amber-400 hover:to-amber-500 transition-all shadow-lg shadow-amber-500/20"
+                            >
+                                Lanjut ke Sesi Ujian <i className="fa-solid fa-arrow-right text-xs" />
                             </Link>
-                        </>
+                        )
                     }
                 />
 

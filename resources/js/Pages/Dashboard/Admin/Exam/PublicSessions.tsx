@@ -162,9 +162,9 @@ export default function PublicSessions({
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 border border-indigo-500/20 shadow-xl">
                     <div>
                         <div className="flex items-center gap-2 text-xs font-bold text-amber-400 uppercase tracking-wider">
-                            <i className="fa-solid fa-tower-broadcast" /> Mode Ujian Publik & Proktor Token
+                            <i className="fa-solid fa-tower-broadcast" /> LANGKAH 4: PROKTOR & GUEST PORTAL
                         </div>
-                        <h1 className="text-xl font-black text-white mt-1">Pengaturan Ujian Publik (Guest Portal)</h1>
+                        <h1 className="text-xl font-black text-white mt-1">Pengaturan Ujian Publik & Token Proktor</h1>
                         <p className="text-xs text-slate-300 mt-1">
                             Kelola token proktor dinamis, atur akses hasil peserta publik, dan pantau peserta secara real-time.
                         </p>
@@ -461,7 +461,22 @@ export default function PublicSessions({
                             </button>
                         </div>
 
-                        <form onSubmit={handleCreateSession} className="space-y-4">
+                        {packages.length === 0 ? (
+                            <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-5 text-center space-y-3">
+                                <i className="fa-solid fa-box-open text-3xl text-amber-400" />
+                                <h4 className="text-sm font-bold text-white">Belum Ada Paket Soal Ujian</h4>
+                                <p className="text-xs text-slate-300">
+                                    Anda perlu membuat minimal satu Paket Soal Ujian sebelum dapat membuat Sesi Ujian Publik.
+                                </p>
+                                <Link
+                                    href="/dashboard/admin/exams/packages"
+                                    className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2 text-xs font-black text-slate-950 hover:bg-amber-400 transition-all"
+                                >
+                                    <i className="fa-solid fa-plus text-xs" /> Buat Paket Soal Sekarang
+                                </Link>
+                            </div>
+                        ) : (
+                            <form onSubmit={handleCreateSession} className="space-y-4">
                             <div>
                                 <label className="block text-xs font-bold text-slate-300">Judul Sesi Ujian Publik</label>
                                 <input
@@ -571,6 +586,7 @@ export default function PublicSessions({
                                 </button>
                             </div>
                         </form>
+                        )}
                     </div>
                 </div>
             )}

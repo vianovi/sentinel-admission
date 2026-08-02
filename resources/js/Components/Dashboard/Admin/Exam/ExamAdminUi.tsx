@@ -30,27 +30,27 @@ export const labelClass =
 
 export function PageHeader({
     title,
+    badge = "MODUL SELEKSI & UJIAN",
     description,
     icon,
     actions,
 }: {
     title: string;
+    badge?: string;
     description: string;
     icon: string;
     actions?: ReactNode;
 }) {
     return (
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gold text-navy shadow-sm shadow-gold/25">
-                    <i className={`${icon} text-sm`} />
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 border border-indigo-500/20 shadow-xl">
+            <div>
+                <div className="flex items-center gap-2 text-xs font-bold text-amber-400 uppercase tracking-wider">
+                    <i className={icon} /> {badge}
                 </div>
-                <div className="min-w-0">
-                    <h1 className="truncate text-xl font-bold text-slate-900 dark:text-white">{title}</h1>
-                    <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">{description}</p>
-                </div>
+                <h1 className="text-xl font-black text-white mt-1">{title}</h1>
+                <p className="text-xs text-slate-300 mt-1">{description}</p>
             </div>
-            {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
+            {actions ? <div className="flex items-center gap-3">{actions}</div> : null}
         </div>
     );
 }

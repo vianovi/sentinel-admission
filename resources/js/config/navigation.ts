@@ -295,12 +295,19 @@ export const navigationConfig: Record<string, NavGroup[]> = {
                     activeRules: [{ path: "/dashboard/admin/exams" }],
                     children: [
                         {
+                            label: "Kategori Ujian",
+                            href: "/dashboard/admin/exams/subjects",
+                            icon: "fa-solid fa-layer-group",
+                            activePrefixes: [
+                                "/dashboard/admin/exams/subjects",
+                            ],
+                        },
+                        {
                             label: "Paket Soal",
                             href: "/dashboard/admin/exams/packages",
                             icon: "fa-solid fa-box-archive",
                             activePrefixes: [
                                 "/dashboard/admin/exams/packages",
-                                "/dashboard/admin/exams/subjects",
                                 "/dashboard/admin/exams/imports",
                             ],
                         },

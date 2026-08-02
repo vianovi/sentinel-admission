@@ -27,18 +27,26 @@ export default function ExamSessions({ sessions, packages, waves, editing_sessio
 
             <ExamWorkspace active="sessions">
                 <PageHeader
-                    title="Pengaturan Sesi"
-                    description="Kelola jadwal, penugasan kandidat, monitoring pengerjaan, dan akses hasil ujian."
+                    title="Pengaturan Sesi Ujian Internal"
+                    badge="LANGKAH 3: JADWAL & AKSES KANDIDAT"
+                    description="Jadwalkan sesi ujian internal, hubungkan dengan paket soal, dan alokasikan peserta seleksi."
                     icon="fa-solid fa-calendar-check"
                     actions={
-                        <>
-                            <Link href="/dashboard/admin/exams/results" className={secondaryButtonClass}>
-                                <i className="fa-solid fa-square-poll-vertical text-xs" /> Hasil Ujian
+                        packages.length === 0 ? (
+                            <Link
+                                href="/dashboard/admin/exams/packages"
+                                className="inline-flex items-center gap-2 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 px-4 py-2.5 text-xs font-extrabold hover:bg-amber-500/30 transition-all shadow-lg shadow-amber-500/10"
+                            >
+                                <i className="fa-solid fa-box-open" /> Buat Paket Soal Dahulu
                             </Link>
-                            <Link href="/dashboard/admin/exams/sessions/create" className={primaryButtonClass}>
-                                <i className="fa-solid fa-plus text-xs" /> Buat Sesi Ujian
+                        ) : (
+                            <Link
+                                href="/dashboard/admin/exams/public-sessions"
+                                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-4 py-2.5 text-xs font-black text-slate-950 hover:from-amber-400 hover:to-amber-500 transition-all shadow-lg shadow-amber-500/20"
+                            >
+                                Sesi Ujian Publik & Proktor <i className="fa-solid fa-tower-broadcast text-xs" />
                             </Link>
-                        </>
+                        )
                     }
                 />
 
