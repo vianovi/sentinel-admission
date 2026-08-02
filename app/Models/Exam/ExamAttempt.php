@@ -23,6 +23,7 @@ class ExamAttempt extends Model
         'candidate_id',
         'exam_session_token_id',
         'guest_name',
+        'guest_school',
         'guest_email',
         'guest_phone',
         'guest_session_token',

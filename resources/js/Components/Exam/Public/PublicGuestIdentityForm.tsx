@@ -21,6 +21,7 @@ type Props = {
 export const PublicGuestIdentityForm = memo(function PublicGuestIdentityForm({ token, session }: Props) {
     const { data, setData, post, processing, errors } = useForm({
         guest_name: "",
+        guest_school: "",
         guest_email: "",
         guest_phone: "",
     });
@@ -92,7 +93,7 @@ export const PublicGuestIdentityForm = memo(function PublicGuestIdentityForm({ t
                         <i className="fa-solid fa-user-pen text-amber-400" /> Identitas Peserta
                     </h3>
                     <p className="text-xs text-slate-400 mt-1">
-                        Isi data berikut untuk keperluan pencatatan hasil ujian publik Anda.
+                        Isi data berikut untuk kebutuhan pencatatan hasil ujian publik Anda.
                     </p>
 
                     <form onSubmit={handleStartExam} className="mt-5 space-y-4">
@@ -110,6 +111,22 @@ export const PublicGuestIdentityForm = memo(function PublicGuestIdentityForm({ t
                                 required
                             />
                             {errors.guest_name && <p className="mt-1 text-[11px] text-red-400">{errors.guest_name}</p>}
+                        </div>
+
+                        <div>
+                            <label htmlFor="guest_school" className="block text-xs font-bold text-slate-300">
+                                Asal Sekolah <span className="text-red-400">*</span>
+                            </label>
+                            <input
+                                id="guest_school"
+                                type="text"
+                                value={data.guest_school}
+                                onChange={(e) => setData("guest_school", e.target.value)}
+                                placeholder="Contoh: SMP Negeri 1 / SMA 2"
+                                className="mt-1.5 w-full rounded-xl border border-white/10 bg-slate-950 px-3.5 py-2.5 text-xs font-medium text-white placeholder:text-slate-600 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                                required
+                            />
+                            {errors.guest_school && <p className="mt-1 text-[11px] text-red-400">{errors.guest_school}</p>}
                         </div>
 
                         <div>

@@ -129,6 +129,7 @@ export default function PublicAttemptShow({ participant, exam, attempt, question
                     <h1 className="mt-5 text-xl font-black text-white">Sesi Ujian Selesai</h1>
                     <p className="mt-2 text-xs text-slate-400">
                         Peserta: <span className="font-bold text-slate-200">{participant.name}</span>
+                        {participant.school && <span className="text-amber-400 font-semibold ml-1">({participant.school})</span>}
                     </p>
                     <p className="mt-1 text-xs text-slate-500">Status saat ini: {attemptState.status.replaceAll("_", " ")}.</p>
 

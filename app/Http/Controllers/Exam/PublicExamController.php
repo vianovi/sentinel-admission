@@ -76,7 +76,8 @@ class PublicExamController extends Controller
 
         $validated = $request->validate([
             'guest_name' => ['required', 'string', 'max:255'],
-            'guest_email' => ['nullable', 'email', 'max:255'],
+            'guest_school' => ['required', 'string', 'max:255'],
+            'guest_email' => ['nullable', 'string', 'max:255'],
             'guest_phone' => ['nullable', 'string', 'max:30'],
         ]);
 
@@ -84,6 +85,7 @@ class PublicExamController extends Controller
             $attempt = $this->attemptService->startPublicAttempt(
                 $sessionToken,
                 $validated['guest_name'],
+                $validated['guest_school'],
                 $validated['guest_email'] ?? null,
                 $validated['guest_phone'] ?? null,
                 $request
@@ -135,7 +137,8 @@ class PublicExamController extends Controller
 
         return Inertia::render('Public/Exam/AttemptShow', [
             'participant' => [
-                'name' => $attempt->participantName(),
+                'name' => $attempt->guest_name ?? $attempt->participantName(),
+                'school' => $attempt->guest_school,
                 'email' => $attempt->participantEmail(),
                 'is_guest' => true,
             ],

@@ -13,6 +13,7 @@ use App\Http\Controllers\Dashboard\Admin\Exam\QuestionImportController as AdminE
 use App\Http\Controllers\Dashboard\Admin\Exam\SessionController   as AdminExamSession;
 use App\Http\Controllers\Dashboard\Admin\Exam\ResultController    as AdminExamResult;
 use App\Http\Controllers\Dashboard\Admin\Exam\MonitoringController as AdminExamMonitoring;
+use App\Http\Controllers\Dashboard\Admin\Exam\PublicSessionController as AdminPublicExamSession;
 use App\Http\Controllers\Dashboard\Candidate\Exam\ExamController  as CandidateExam;
 use App\Http\Controllers\Dashboard\Candidate\Exam\AttemptController as CandidateExamAttempt;
 use App\Http\Controllers\Dashboard\Staff\Exam\ResultController    as StaffExamResult;
@@ -87,6 +88,12 @@ Route::middleware(['auth', RoleMiddleware::class . ':admin'])
         Route::get('/packages/{package}/imports', [AdminExamImport::class, 'index'])->name('packages.imports.index');
         Route::post('/packages/{package}/imports', [AdminExamImport::class, 'store'])->middleware('throttle:upload')->name('packages.imports.store');
         Route::get('/imports/{batch}', [AdminExamImport::class, 'show'])->name('imports.show');
+
+        Route::get('/public-sessions', [AdminPublicExamSession::class, 'index'])->name('public-sessions.index');
+        Route::post('/public-sessions', [AdminPublicExamSession::class, 'store'])->name('public-sessions.store');
+        Route::post('/public-sessions/{session}/toggle-results', [AdminPublicExamSession::class, 'toggleResultVisibility'])->name('public-sessions.toggle-results');
+        Route::post('/public-sessions/{session}/tokens', [AdminPublicExamSession::class, 'generateToken'])->name('public-sessions.tokens.store');
+        Route::post('/tokens/{token}/rotate', [AdminPublicExamSession::class, 'rotateToken'])->name('public-sessions.tokens.rotate');
 
         Route::post('/sessions/{session}/candidates', [AdminExamSession::class, 'assignCandidates'])->name('sessions.candidates.assign');
         Route::post('/sessions/{session}/tokens', [AdminExamSession::class, 'generateToken'])->name('sessions.tokens.store');

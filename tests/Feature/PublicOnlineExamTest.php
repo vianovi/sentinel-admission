@@ -72,6 +72,7 @@ test('public exam token validation and guest attempt execution flow', function (
     // 4. Start Guest Attempt
     $response = $this->post(route('exam.public.start', ['token' => 'TESTOK']), [
         'guest_name' => 'John Guest',
+        'guest_school' => 'SMA N 1 Jakarta',
         'guest_email' => 'guest@example.com',
         'guest_phone' => '08123456789',
     ]);

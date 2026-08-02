@@ -24,11 +24,12 @@ class ExamAttemptService
     public function startPublicAttempt(
         ExamSessionToken $token,
         string $guestName,
+        string $guestSchool,
         ?string $guestEmail = null,
         ?string $guestPhone = null,
         ?Request $request = null
     ): ExamAttempt {
-        return DB::transaction(function () use ($token, $guestName, $guestEmail, $guestPhone, $request) {
+        return DB::transaction(function () use ($token, $guestName, $guestSchool, $guestEmail, $guestPhone, $request) {
             $token = ExamSessionToken::query()
                 ->with(['session.package.activeQuestions'])
                 ->whereKey($token->id)
@@ -79,6 +80,7 @@ class ExamAttemptService
                 'candidate_id' => null,
                 'exam_session_token_id' => $token->id,
                 'guest_name' => $guestName,
+                'guest_school' => $guestSchool,
                 'guest_email' => $guestEmail,
                 'guest_phone' => $guestPhone,
                 'guest_session_token' => $guestSessionToken,

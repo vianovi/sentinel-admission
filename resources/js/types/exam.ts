@@ -8,6 +8,7 @@
 
 export type ExamParticipant = {
     name: string;
+    school?: string | null;
     email: string | null;
     is_guest: boolean;
 };

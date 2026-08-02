@@ -31,6 +31,7 @@ return new class extends Migration
                 ->constrained('exam_session_tokens')
                 ->nullOnDelete();
             $table->string('guest_name')->nullable();
+            $table->string('guest_school')->nullable();
             $table->string('guest_email')->nullable();
             $table->string('guest_phone')->nullable();
             $table->string('guest_session_token', 100)->nullable();
