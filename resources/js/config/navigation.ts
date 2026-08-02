@@ -305,11 +305,19 @@ export const navigationConfig: Record<string, NavGroup[]> = {
                             ],
                         },
                         {
-                            label: "Sesi Ujian",
+                            label: "Sesi Ujian Internal",
                             href: "/dashboard/admin/exams/sessions",
                             icon: "fa-solid fa-calendar-check",
                             activePrefixes: [
                                 "/dashboard/admin/exams/sessions",
+                            ],
+                        },
+                        {
+                            label: "Sesi Ujian Publik",
+                            href: "/dashboard/admin/exams/public-sessions",
+                            icon: "fa-solid fa-tower-broadcast",
+                            activePrefixes: [
+                                "/dashboard/admin/exams/public-sessions",
                             ],
                         },
                         {
