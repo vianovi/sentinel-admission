@@ -1,6 +1,8 @@
-import { FormEvent, useState } from "react";
-import { Head, Link, useForm, router } from "@inertiajs/react";
+import { FormEvent, useEffect, useState } from "react";
+import { Head, Link, useForm, router, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
+import { confirmAction, showSuccessToast, showErrorToast } from "@/utils/swal";
+import type { PageProps } from "@/types";
 
 export type PublicSessionItem = {
     id: number;
@@ -81,7 +83,17 @@ export default function PublicSessions({
     tokens,
     stats,
 }: Props) {
+    const { flash } = usePage<PageProps>().props;
     const [showCreateModal, setShowCreateModal] = useState(false);
+
+    useEffect(() => {
+        if (flash?.success) {
+            showSuccessToast(flash.success);
+        }
+        if (flash?.error) {
+            showErrorToast(flash.error);
+        }
+    }, [flash]);
 
     const createForm = useForm({
         exam_package_id: packages[0]?.id || "",
@@ -128,8 +140,13 @@ export default function PublicSessions({
         });
     };
 
-    const handleRotateToken = (tokenId: number) => {
-        if (confirm("Apakah Anda yakin ingin merotasi token ini? Token lama akan langsung non-aktif dan token baru akan dibuat.")) {
+    const handleRotateToken = async (tokenId: number) => {
+        const confirmed = await confirmAction(
+            "Rotasi Token Proktor?",
+            "Apakah Anda yakin ingin merotasi token ini? Token lama akan langsung non-aktif dan token baru akan otomatis dibuat.",
+            "Ya, Rotasi Token"
+        );
+        if (confirmed) {
             router.post(route("admin.exams.public-sessions.tokens.rotate", tokenId));
         }
     };

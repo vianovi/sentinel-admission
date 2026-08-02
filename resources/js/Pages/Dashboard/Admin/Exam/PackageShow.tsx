@@ -3,6 +3,7 @@ import { Head, Link, router, useForm, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import QuestionBankTable from "@/Components/Exam/Admin/QuestionBankTable";
 import { BackLink, EmptyState, ExamWorkspace, FlashMessage, PageHeader, StatCard, StatusPill, inputClass, labelClass, primaryButtonClass, secondaryButtonClass, textLinkClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
+import { confirmAction } from "@/utils/swal";
 import type { ExamPackageDetail, ExamQuestionPreview, ExamSessionPreview, ExamImportPreview } from "@/types/exam";
 import type { PageProps } from "@/types";
 
@@ -37,8 +38,9 @@ export default function ExamPackageShow({ package: examPackage, questions, sessi
         router.post(`/dashboard/admin/exams/packages/${examPackage.id}/publish`, {}, { preserveScroll: true });
     };
 
-    const close = () => {
-        if (!window.confirm(`Tutup paket "${examPackage.title}"?`)) return;
+    const close = async () => {
+        const confirmed = await confirmAction("Tutup Paket Ujian?", `Apakah Anda yakin ingin menutup paket "${examPackage.title}"?`, "Ya, Tutup Paket");
+        if (!confirmed) return;
         router.post(`/dashboard/admin/exams/packages/${examPackage.id}/close`, {}, { preserveScroll: true });
     };
 

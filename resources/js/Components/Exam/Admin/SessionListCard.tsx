@@ -1,6 +1,7 @@
 import { memo } from "react";
 import { Link, router } from "@inertiajs/react";
 import { EmptyState, StatusPill, dangerButtonClass, secondaryButtonClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
+import { confirmAction } from "@/utils/swal";
 import type { SessionRow } from "./SessionFormCard";
 
 type Props = {
@@ -8,8 +9,9 @@ type Props = {
 };
 
 export const SessionListCard = memo(function SessionListCard({ sessions }: Props) {
-    const destroy = (session: SessionRow) => {
-        if (!window.confirm(`Hapus sesi "${session.title}"?`)) return;
+    const destroy = async (session: SessionRow) => {
+        const confirmed = await confirmAction("Hapus Sesi Ujian?", `Apakah Anda yakin ingin menghapus sesi "${session.title}"?`, "Ya, Hapus Sesi");
+        if (!confirmed) return;
         router.delete(`/dashboard/admin/exams/sessions/${session.id}`, { preserveScroll: true });
     };
 

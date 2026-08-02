@@ -1,6 +1,7 @@
 import { memo } from "react";
 import { router } from "@inertiajs/react";
 import { EmptyState, StatusPill } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
+import { confirmAction } from "@/utils/swal";
 import type { Subject } from "./SubjectFormCard";
 
 type Props = {
@@ -9,8 +10,9 @@ type Props = {
 };
 
 export const SubjectTable = memo(function SubjectTable({ subjects, onEdit }: Props) {
-    const destroy = (subject: Subject) => {
-        if (!window.confirm(`Hapus kategori "${subject.name}"?`)) return;
+    const destroy = async (subject: Subject) => {
+        const confirmed = await confirmAction("Hapus Kategori Ujian?", `Apakah Anda yakin ingin menghapus kategori "${subject.name}"?`, "Ya, Hapus");
+        if (!confirmed) return;
 
         router.delete(`/dashboard/admin/exams/subjects/${subject.id}`, {
             preserveScroll: true,

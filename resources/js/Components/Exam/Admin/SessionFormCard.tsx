@@ -142,7 +142,23 @@ export const SessionFormCard = memo(function SessionFormCard({ packages, waves, 
             </div>
 
             {packages.length === 0 ? (
-                <EmptyState icon="fa-solid fa-box-open" title="Paket belum tersedia" description="Buat paket ujian terlebih dahulu sebelum menjadwalkan sesi." />
+                <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-5 text-center space-y-3">
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                        <i className="fa-solid fa-box-open text-xl" />
+                    </div>
+                    <div>
+                        <h3 className="text-sm font-extrabold text-white">Langkah 2: Buat Paket Soal Ujian</h3>
+                        <p className="mt-1 text-xs text-slate-300 leading-relaxed">
+                            Belum ada Paket Soal Ujian yang dibuat. Sesi Ujian memerlukan Paket Soal sebagai sumber materi ujian. Silakan buat Paket Soal terlebih dahulu.
+                        </p>
+                    </div>
+                    <a
+                        href="/dashboard/admin/exams/packages"
+                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-xs font-black text-slate-950 hover:bg-amber-400 transition-all shadow-lg shadow-amber-500/20"
+                    >
+                        <i className="fa-solid fa-plus text-xs" /> Buat Paket Soal Sekarang
+                    </a>
+                </div>
             ) : (
                 <form onSubmit={submit} className="space-y-4">
                     <div>

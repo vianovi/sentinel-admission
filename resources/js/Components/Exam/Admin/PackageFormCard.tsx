@@ -110,7 +110,23 @@ export const PackageFormCard = memo(function PackageFormCard({ subjects, editing
             </div>
 
             {subjects.length === 0 ? (
-                <EmptyState icon="fa-solid fa-layer-group" title="Kategori belum tersedia" description="Buat kategori ujian sebelum membuat paket." />
+                <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-5 text-center space-y-3">
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                        <i className="fa-solid fa-layer-group text-xl" />
+                    </div>
+                    <div>
+                        <h3 className="text-sm font-extrabold text-white">Langkah 1: Buat Kategori Ujian</h3>
+                        <p className="mt-1 text-xs text-slate-300 leading-relaxed">
+                            Belum ada Kategori / Mata Pelajaran Ujian yang tersedia. Silakan buat kategori ujian terlebih dahulu (contoh: Matematika, Bahasa Indonesia, TPA) sebelum membuat Paket Soal.
+                        </p>
+                    </div>
+                    <a
+                        href="/dashboard/admin/exams/subjects"
+                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-xs font-black text-slate-950 hover:bg-amber-400 transition-all shadow-lg shadow-amber-500/20"
+                    >
+                        <i className="fa-solid fa-plus text-xs" /> Buat Kategori Ujian Sekarang
+                    </a>
+                </div>
             ) : (
                 <form onSubmit={submit} className="space-y-4">
                     <div>

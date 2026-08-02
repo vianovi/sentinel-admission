@@ -1,5 +1,6 @@
 import { Link } from "@inertiajs/react";
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
+import { showSuccessToast, showErrorToast } from "@/utils/swal";
 
 type ExamWorkspaceActive = "packages" | "sessions";
 
@@ -102,13 +103,29 @@ export function StatCard({ label, value, icon, tone = "text-gold" }: { label: st
 }
 
 export function FlashMessage({ value, type = "error" }: { value?: string | null; type?: "error" | "success" }) {
+    useEffect(() => {
+        if (!value) return;
+        if (type === "success") {
+            showSuccessToast(value);
+        } else {
+            showErrorToast(value);
+        }
+    }, [value, type]);
+
     if (!value) return null;
 
     const tone = type === "success"
         ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-200"
         : "border-amber-500/20 bg-amber-500/10 text-amber-800 dark:text-amber-200";
 
-    return <div className={`rounded-lg border px-4 py-3 text-sm font-semibold ${tone}`}>{value}</div>;
+    return (
+        <div className={`rounded-xl border px-4 py-3 text-xs font-semibold shadow-md flex items-center justify-between ${tone}`}>
+            <div className="flex items-center gap-2">
+                <i className={`fa-solid ${type === "success" ? "fa-circle-check text-emerald-400" : "fa-circle-exclamation text-amber-400"} text-sm`} />
+                <span>{value}</span>
+            </div>
+        </div>
+    );
 }
 
 export function BackLink({ href, label = "Kembali" }: { href: string; label?: string }) {

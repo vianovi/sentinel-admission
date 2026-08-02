@@ -1,6 +1,7 @@
 import { memo } from "react";
 import { Link, router } from "@inertiajs/react";
 import { EmptyState, StatusPill, dangerButtonClass, secondaryButtonClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
+import { confirmAction } from "@/utils/swal";
 import type { PackageRow } from "./PackageFormCard";
 
 type Props = {
@@ -12,13 +13,15 @@ export const PackageListCard = memo(function PackageListCard({ packages }: Props
         router.post(`/dashboard/admin/exams/packages/${item.id}/publish`, {}, { preserveScroll: true });
     };
 
-    const close = (item: PackageRow) => {
-        if (!window.confirm(`Tutup paket "${item.title}"?`)) return;
+    const close = async (item: PackageRow) => {
+        const confirmed = await confirmAction("Tutup Paket Ujian?", `Apakah Anda yakin ingin menutup paket "${item.title}"?`, "Ya, Tutup Paket");
+        if (!confirmed) return;
         router.post(`/dashboard/admin/exams/packages/${item.id}/close`, {}, { preserveScroll: true });
     };
 
-    const destroy = (item: PackageRow) => {
-        if (!window.confirm(`Hapus paket "${item.title}"?`)) return;
+    const destroy = async (item: PackageRow) => {
+        const confirmed = await confirmAction("Hapus Paket Ujian?", `Apakah Anda yakin ingin menghapus paket "${item.title}"?`, "Ya, Hapus Paket");
+        if (!confirmed) return;
         router.delete(`/dashboard/admin/exams/packages/${item.id}`, { preserveScroll: true });
     };
 
