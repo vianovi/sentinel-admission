@@ -12,6 +12,7 @@ use App\Models\Exam\ExamSession;
 use App\Models\Exam\ExamSessionCandidate;
 use App\Models\Exam\ExamSessionToken;
 use App\Services\Exam\ExamAuditLogger;
+use App\Services\Exam\ExamSessionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
