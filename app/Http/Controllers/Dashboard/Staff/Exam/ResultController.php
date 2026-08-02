@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Dashboard\Staff\Exam;
 
 use App\Http\Controllers\Controller;
 use App\Models\Exam\ExamAttempt;
-use App\Models\Exam\ExamSession;
 use App\Services\Exam\ExamAuditLogger;
+use App\Services\Exam\ExamResultPresenter;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -13,7 +13,8 @@ use Inertia\Response;
 class ResultController extends Controller
 {
     public function __construct(
-        private readonly ExamAuditLogger $audit
+        private readonly ExamAuditLogger $audit,
+        private readonly ExamResultPresenter $presenter
     ) {}
 
     public function index(Request $request): Response
@@ -43,7 +44,7 @@ class ResultController extends Controller
             ->latest()
             ->paginate(20)
             ->withQueryString()
-            ->through(fn (ExamAttempt $attempt) => $this->attemptRow($attempt));
+            ->through(fn (ExamAttempt $attempt) => $this->presenter->attemptRow($attempt));
 
         return Inertia::render('Dashboard/Staff/Exam/Results', [
             'attempts' => $attempts,
@@ -53,7 +54,7 @@ class ResultController extends Controller
                 'search' => $search,
                 'session' => $sessionId,
             ],
-            'sessions' => $this->sessionOptions(),
+            'sessions' => $this->presenter->sessionOptions(),
         ]);
     }
 
@@ -75,65 +76,7 @@ class ResultController extends Controller
         ], $request);
 
         return Inertia::render('Dashboard/Staff/Exam/ResultShow', [
-            'attempt' => [
-                ...$this->attemptRow($attempt),
-                'started_at' => $attempt->started_at?->format('d M Y H:i'),
-                'submitted_at' => $attempt->submitted_at?->format('d M Y H:i'),
-                'finalized_at' => $attempt->finalized_at?->format('d M Y H:i'),
-                'answers' => $attempt->answers->map(fn ($answer) => [
-                    'id' => $answer->id,
-                    'question_text' => $answer->question?->question_text,
-                    'options' => $answer->question?->options,
-                    'selected_option' => $answer->selected_option,
-                    'correct_answer' => $answer->question?->correct_answer,
-                    'is_correct' => $answer->is_correct,
-                    'point_awarded' => (float) $answer->point_awarded,
-                    'point' => (float) ($answer->question?->point ?? 0),
-                    'explanation' => $answer->question?->explanation,
-                ]),
-            ],
+            'attempt' => $this->presenter->attemptDetail($attempt),
         ]);
-    }
-
-    private function attemptRow(ExamAttempt $attempt): array
-    {
-        return [
-            'id' => $attempt->id,
-            'candidate' => [
-                'id' => $attempt->candidate?->id,
-                'candidate_code' => $attempt->candidate?->candidate_code,
-                'full_name' => $attempt->candidate?->full_name,
-                'nisn' => $attempt->candidate?->nisn,
-                'program_choice' => $attempt->candidate?->program_choice,
-                'status' => $attempt->candidate?->status,
-            ],
-            'session_title' => $attempt->session?->title,
-            'package_title' => $attempt->package?->title,
-            'status' => $attempt->status,
-            'attempt_number' => $attempt->attempt_number,
-            'answered_questions' => $attempt->answered_questions,
-            'total_questions' => $attempt->total_questions,
-            'correct_answers' => $attempt->correct_answers,
-            'wrong_answers' => $attempt->wrong_answers,
-            'raw_score' => (float) $attempt->raw_score,
-            'max_score' => (float) $attempt->max_score,
-            'percentage_score' => $attempt->percentage_score !== null ? (float) $attempt->percentage_score : null,
-            'passing_score' => $attempt->passing_score !== null ? (float) $attempt->passing_score : null,
-            'passed' => $attempt->passed,
-            'submitted_at' => $attempt->submitted_at?->format('d M Y H:i'),
-            'created_at' => $attempt->created_at?->format('d M Y H:i'),
-        ];
-    }
-
-    private function sessionOptions(): array
-    {
-        return ExamSession::query()
-            ->latest()
-            ->get(['id', 'title'])
-            ->map(fn (ExamSession $session) => [
-                'id' => $session->id,
-                'title' => $session->title,
-            ])
-            ->all();
     }
 }

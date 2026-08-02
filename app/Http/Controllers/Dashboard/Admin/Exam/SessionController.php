@@ -21,7 +21,8 @@ use Inertia\Response;
 class SessionController extends Controller
 {
     public function __construct(
-        private readonly ExamAuditLogger $audit
+        private readonly ExamAuditLogger $audit,
+        private readonly ExamSessionService $sessionService
     ) {}
 
     public function index(): Response
@@ -194,32 +195,12 @@ class SessionController extends Controller
     public function assignCandidates(AssignExamCandidatesRequest $request, ExamSession $session): RedirectResponse
     {
         $validated = $request->validated();
-        $created = 0;
-
-        foreach ($validated['candidate_ids'] as $candidateId) {
-            $assignment = ExamSessionCandidate::firstOrCreate(
-                [
-                    'exam_session_id' => $session->id,
-                    'candidate_id' => $candidateId,
-                ],
-                [
-                    'assigned_by' => $request->user()?->id,
-                    'status' => ExamSessionCandidate::STATUS_ELIGIBLE,
-                    'assigned_at' => now(),
-                    'note' => $validated['note'] ?? null,
-                ]
-            );
-
-            if ($assignment->wasRecentlyCreated) {
-                $created++;
-                $this->audit->log('candidate_assigned', [
-                    'candidate_id' => $candidateId,
-                    'exam_session_id' => $session->id,
-                    'exam_package_id' => $session->exam_package_id,
-                    'metadata' => ['assignment_id' => $assignment->id],
-                ], $request);
-            }
-        }
+        $created = $this->sessionService->assignCandidates(
+            $session,
+            $validated['candidate_ids'],
+            $validated['note'] ?? null,
+            $request
+        );
 
         return back()->with('success', "{$created} kandidat berhasil ditugaskan ke sesi ujian.");
     }
@@ -233,19 +214,7 @@ class SessionController extends Controller
             'count' => ['nullable', 'integer', 'min:1', 'max:50'],
         ]);
 
-        $count = $validated['count'] ?? 1;
-
-        for ($i = 0; $i < $count; $i++) {
-            ExamSessionToken::create([
-                'exam_session_id' => $session->id,
-                'token' => Str::upper(Str::random(6)),
-                'label' => $count > 1 ? ($validated['label'] ? "{$validated['label']} #" . ($i + 1) : null) : $validated['label'],
-                'type' => $validated['type'],
-                'max_uses' => $validated['type'] === 'single_use' ? 1 : $validated['max_uses'],
-                'expires_at' => $session->closes_at,
-                'created_by' => $request->user()?->id,
-            ]);
-        }
+        $count = $this->sessionService->generateTokens($session, $validated, $request);
 
         return back()->with('success', "{$count} token akses ujian publik berhasil dibuat.");
     }

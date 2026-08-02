@@ -1,151 +1,44 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import axios from "axios";
 import { Head, Link, router, usePage } from "@inertiajs/react";
-import RichExamText from "@/Components/Dashboard/Exam/RichExamText";
+import RichExamText from "@/Components/Exam/Shared/RichExamText";
+import { useExamTimer, useFullscreenEnforcement, useExamNavigation } from "@/hooks/exam";
+import type { ExamAttemptState, ExamAnswerState, ExamQuestion, ExamParticipant, ExamMeta, ExamSaveState, ExamSaveResponse } from "@/types/exam";
 import type { PageProps } from "@/types";
 
-type Participant = {
-    name: string;
-    email: string | null;
-    is_guest: boolean;
-};
-
-type ExamMeta = {
-    session_id: number;
-    session_title: string | null;
-    package_title: string | null;
-    subject_name: string | null;
-    duration_minutes: number | null;
-    passing_score: number | null;
-    show_result_to_candidate: boolean;
-};
-
-type AttemptState = {
-    id: number;
-    status: string;
-    attempt_number: number;
-    started_at: string | null;
-    started_at_iso: string | null;
-    expires_at: string | null;
-    expires_at_iso: string | null;
-    submitted_at: string | null;
-    remaining_seconds: number;
-    is_locked: boolean;
-    total_questions: number;
-    answered_questions: number;
-    blank_questions: number;
-    score_visible: boolean;
-    percentage_score: number | null;
-    passing_score: number | null;
-    passed: boolean | null;
-};
-
-type Question = {
-    id: number;
-    question_text: string;
-    options: Record<string, string | null>;
-    point: number;
-    difficulty: string;
-};
-
-type AnswerState = {
-    question_id: number;
-    selected_option: string | null;
-    is_marked_for_review: boolean;
-    saved_at: string | null;
-};
-
-type SaveResponse = {
-    message: string;
-    server_time: string;
-    attempt: AttemptState;
-    answer?: AnswerState;
-};
-
 type Props = {
-    participant: Participant;
+    participant: ExamParticipant;
     exam: ExamMeta;
-    attempt: AttemptState;
-    questions: Question[];
-    answers: Record<string, AnswerState>;
+    attempt: ExamAttemptState;
+    questions: ExamQuestion[];
+    answers: Record<string, ExamAnswerState>;
     server_time: string;
 };
-
-type SaveState = "idle" | "saving" | "saved" | "failed" | "locked";
 
 export default function PublicAttemptShow({ participant, exam, attempt, questions, answers }: Props) {
     const { flash, errors } = usePage<PageProps & { errors: Record<string, string>; flash: { success?: string; error?: string } }>().props;
-    const [attemptState, setAttemptState] = useState(attempt);
-    const [remaining, setRemaining] = useState(attempt.remaining_seconds);
-    const [activeIndex, setActiveIndex] = useState(0);
-    const [saveState, setSaveState] = useState<SaveState>("idle");
+    const [attemptState, setAttemptState] = useState<ExamAttemptState>(attempt);
+    const [saveState, setSaveState] = useState<ExamSaveState>("idle");
     const [saveMessage, setSaveMessage] = useState<string | null>(null);
-    const [isFullscreen, setIsFullscreen] = useState(false);
-    const [violationsCount, setViolationsCount] = useState((attempt as AttemptState & { violations_count?: number }).violations_count ?? 0);
-    const saveTimers = useRef<Record<number, number>>({});
-    const expiredSyncTriggered = useRef(false);
-
-    const [answerMap, setAnswerMap] = useState<Record<number, AnswerState>>(() => {
-        const entries = Object.entries(answers).map(([key, value]) => [Number(key), value] as const);
-        return Object.fromEntries(entries);
-    });
 
     const isRunning = attemptState.status === "in_progress" && !attemptState.is_locked && questions.length > 0;
-    const activeQuestion = questions[activeIndex] ?? null;
-    const answeredCount = useMemo(
-        () => questions.filter((question) => Boolean(answerMap[question.id]?.selected_option)).length,
-        [answerMap, questions],
-    );
 
-    const enterFullscreen = () => {
-        if (document.documentElement.requestFullscreen) {
-            document.documentElement.requestFullscreen().catch(() => {});
-        }
-    };
+    const { activeIndex, activeQuestion, answeredCount, answerMap, setActiveIndex, goNext, goPrev, updateAnswer, patchAnswer, saveTimers } = useExamNavigation({
+        questions,
+        initialAnswers: answers,
+    });
 
-    const reportViolation = useCallback(async (type: string) => {
-        setViolationsCount((count) => count + 1);
-        try {
-            await axios.post(route("exam.public.attempts.violation", { attempt: attempt.id }), { type });
-        } catch {
-            // silent fail
-        }
-    }, [attempt.id]);
-
-    useEffect(() => {
-        if (!isRunning) return;
-
-        const handleFullscreenChange = () => {
-            const isFS = Boolean(document.fullscreenElement);
-            setIsFullscreen(isFS);
-
-            if (!isFS) {
-                void reportViolation("exit_fullscreen");
-            }
-        };
-
-        const handleVisibilityChange = () => {
-            if (document.visibilityState === "hidden") {
-                void reportViolation("tab_switch");
-            }
-        };
-
-        document.addEventListener("fullscreenchange", handleFullscreenChange);
-        document.addEventListener("visibilitychange", handleVisibilityChange);
-
-        setIsFullscreen(Boolean(document.fullscreenElement));
-
-        return () => {
-            document.removeEventListener("fullscreenchange", handleFullscreenChange);
-            document.removeEventListener("visibilitychange", handleVisibilityChange);
-        };
-    }, [isRunning, reportViolation]);
+    const { isFullscreen, violationsCount, enterFullscreen } = useFullscreenEnforcement({
+        isRunning,
+        attemptId: attempt.id,
+        violationRoute: route("exam.public.attempts.violation", { attempt: attempt.id }),
+        initialViolations: attempt.violations_count ?? 0,
+    });
 
     const syncAttempt = useCallback(async () => {
         try {
-            const response = await axios.post<{ server_time: string; attempt: AttemptState }>(route("exam.public.attempts.sync", { attempt: attempt.id }));
+            const response = await axios.post<{ server_time: string; attempt: ExamAttemptState }>(route("exam.public.attempts.sync", { attempt: attempt.id }));
             setAttemptState(response.data.attempt);
-            setRemaining(response.data.attempt.remaining_seconds);
 
             if (response.data.attempt.status !== "in_progress") {
                 setSaveState("locked");
@@ -157,79 +50,37 @@ export default function PublicAttemptShow({ participant, exam, attempt, question
         }
     }, [attempt.id]);
 
-    const calcClientRemaining = useCallback((expiresIso: string | null, fallbackSec: number) => {
-        if (!expiresIso) return fallbackSec;
-        const expiresMs = new Date(expiresIso).getTime();
-        if (isNaN(expiresMs)) return fallbackSec;
-        return Math.max(0, Math.floor((expiresMs - Date.now()) / 1000));
-    }, []);
-
-    useEffect(() => {
-        setAttemptState(attempt);
-        setRemaining(calcClientRemaining(attempt.expires_at_iso, attempt.remaining_seconds));
-    }, [attempt, calcClientRemaining]);
-
-    useEffect(() => {
-        if (!isRunning) return;
-
-        const timer = window.setInterval(() => {
-            const currentRemaining = calcClientRemaining(attemptState.expires_at_iso, remaining);
-            setRemaining(currentRemaining);
-
-            if (currentRemaining <= 0) {
-                if (!expiredSyncTriggered.current) {
-                    expiredSyncTriggered.current = true;
-                    void syncAttempt();
-                }
-            }
-        }, 1000);
-
-        return () => window.clearInterval(timer);
-    }, [isRunning, syncAttempt, attemptState.expires_at_iso, calcClientRemaining, remaining]);
-
-    useEffect(() => {
-        if (!isRunning) return;
-
-        const timer = window.setInterval(() => {
+    const { remaining } = useExamTimer({
+        attempt: attemptState,
+        isRunning,
+        onExpired: () => {
             void syncAttempt();
-        }, 20000);
+        },
+        onSync: syncAttempt,
+    });
 
-        return () => window.clearInterval(timer);
-    }, [isRunning, syncAttempt]);
-
-    useEffect(() => {
-        return () => {
-            Object.values(saveTimers.current).forEach((timer) => window.clearTimeout(timer));
-        };
-    }, []);
-
-    const persistAnswer = useCallback(async (answer: AnswerState) => {
+    const persistAnswer = useCallback(async (answer: ExamAnswerState) => {
         setSaveState("saving");
         setSaveMessage("Menyimpan jawaban...");
 
         try {
-            const response = await axios.post<SaveResponse>(route("exam.public.attempts.save-answer", { attempt: attempt.id }), {
+            const response = await axios.post<ExamSaveResponse>(route("exam.public.attempts.save-answer", { attempt: attempt.id }), {
                 question_id: answer.question_id,
                 selected_option: answer.selected_option,
                 is_marked_for_review: answer.is_marked_for_review,
             });
 
             setAttemptState(response.data.attempt);
-            setRemaining(response.data.attempt.remaining_seconds);
 
             if (response.data.answer) {
-                setAnswerMap((current) => ({
-                    ...current,
-                    [response.data.answer!.question_id]: response.data.answer!,
-                }));
+                updateAnswer(response.data.answer.question_id, response.data.answer);
             }
 
             setSaveState("saved");
             setSaveMessage("Jawaban tersimpan");
         } catch (error) {
-            if (axios.isAxiosError<SaveResponse>(error) && error.response?.data?.attempt) {
+            if (axios.isAxiosError<ExamSaveResponse>(error) && error.response?.data?.attempt) {
                 setAttemptState(error.response.data.attempt);
-                setRemaining(error.response.data.attempt.remaining_seconds);
 
                 if (error.response.status === 423) {
                     setSaveState("locked");
@@ -241,33 +92,20 @@ export default function PublicAttemptShow({ participant, exam, attempt, question
             setSaveState("failed");
             setSaveMessage("Gagal menyimpan. Coba pilih ulang jawaban.");
         }
-    }, [attempt.id]);
+    }, [attempt.id, updateAnswer]);
 
-    const changeAnswer = (questionId: number, patch: Partial<AnswerState>) => {
+    const changeAnswer = (questionId: number, patch: Partial<ExamAnswerState>) => {
         if (!isRunning) return;
 
-        setAnswerMap((current) => {
-            const next: AnswerState = {
-                question_id: questionId,
-                selected_option: current[questionId]?.selected_option ?? null,
-                is_marked_for_review: current[questionId]?.is_marked_for_review ?? false,
-                saved_at: current[questionId]?.saved_at ?? null,
-                ...patch,
-            };
+        const next = patchAnswer(questionId, patch);
 
-            if (saveTimers.current[questionId]) {
-                window.clearTimeout(saveTimers.current[questionId]);
-            }
+        if (saveTimers.current[questionId]) {
+            window.clearTimeout(saveTimers.current[questionId]);
+        }
 
-            saveTimers.current[questionId] = window.setTimeout(() => {
-                void persistAnswer(next);
-            }, 400);
-
-            return {
-                ...current,
-                [questionId]: next,
-            };
-        });
+        saveTimers.current[questionId] = window.setTimeout(() => {
+            void persistAnswer(next);
+        }, 400);
     };
 
     const submitAttempt = () => {
@@ -470,7 +308,7 @@ export default function PublicAttemptShow({ participant, exam, attempt, question
                                     <div className="flex items-center gap-2">
                                         <button
                                             type="button"
-                                            onClick={() => setActiveIndex((curr) => Math.max(0, curr - 1))}
+                                            onClick={goPrev}
                                             disabled={activeIndex === 0}
                                             className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-white/10 bg-slate-950 px-4 text-xs font-bold text-slate-300 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
                                         >
@@ -479,7 +317,7 @@ export default function PublicAttemptShow({ participant, exam, attempt, question
 
                                         <button
                                             type="button"
-                                            onClick={() => setActiveIndex((curr) => Math.min(questions.length - 1, curr + 1))}
+                                            onClick={goNext}
                                             disabled={activeIndex === questions.length - 1}
                                             className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-amber-500 px-4 text-xs font-bold text-slate-950 hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed transition"
                                         >

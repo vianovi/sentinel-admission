@@ -1,110 +1,39 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import { BackLink, FlashMessage, PageHeader, StatusPill } from "@/Components/Dashboard/Candidate/Exam/ExamCandidateUi";
-import RichExamText from "@/Components/Dashboard/Exam/RichExamText";
+import RichExamText from "@/Components/Exam/Shared/RichExamText";
+import { useExamTimer, useExamNavigation } from "@/hooks/exam";
+import type { ExamAttemptState, ExamAnswerState, ExamQuestion, ExamCandidate, ExamMeta, ExamSaveState, ExamSaveResponse } from "@/types/exam";
 import type { PageProps } from "@/types";
 
-type Candidate = {
-    id: number;
-    candidate_code: string | null;
-    full_name: string | null;
-    nisn: string | null;
-    program_choice: string | null;
-    status: string | null;
-};
-
-type ExamMeta = {
-    session_id: number;
-    session_title: string | null;
-    package_title: string | null;
-    subject_name: string | null;
-    duration_minutes: number | null;
-    passing_score: number | null;
-    show_result_to_candidate: boolean;
-};
-
-type AttemptState = {
-    id: number;
-    status: string;
-    attempt_number: number;
-    started_at: string | null;
-    started_at_iso: string | null;
-    expires_at: string | null;
-    expires_at_iso: string | null;
-    submitted_at: string | null;
-    remaining_seconds: number;
-    is_locked: boolean;
-    total_questions: number;
-    answered_questions: number;
-    blank_questions: number;
-    score_visible: boolean;
-    percentage_score: number | null;
-    passing_score: number | null;
-    passed: boolean | null;
-};
-
-type Question = {
-    id: number;
-    question_text: string;
-    options: Record<string, string | null>;
-    point: number;
-    difficulty: string;
-};
-
-type AnswerState = {
-    question_id: number;
-    selected_option: string | null;
-    is_marked_for_review: boolean;
-    saved_at: string | null;
-};
-
-type SaveResponse = {
-    message: string;
-    server_time: string;
-    attempt: AttemptState;
-    answer?: AnswerState;
-};
-
 type Props = {
-    candidate: Candidate;
+    candidate: ExamCandidate;
     exam: ExamMeta;
-    attempt: AttemptState;
-    questions: Question[];
-    answers: Record<string, AnswerState>;
+    attempt: ExamAttemptState;
+    questions: ExamQuestion[];
+    answers: Record<string, ExamAnswerState>;
     server_time: string;
 };
-
-type SaveState = "idle" | "saving" | "saved" | "failed" | "locked";
 
 export default function CandidateAttemptShow({ candidate, exam, attempt, questions, answers }: Props) {
     const { flash, errors } = usePage<PageProps & { errors: Record<string, string> }>().props;
-    const [attemptState, setAttemptState] = useState(attempt);
-    const [remaining, setRemaining] = useState(attempt.remaining_seconds);
-    const [activeIndex, setActiveIndex] = useState(0);
-    const [saveState, setSaveState] = useState<SaveState>("idle");
+    const [attemptState, setAttemptState] = useState<ExamAttemptState>(attempt);
+    const [saveState, setSaveState] = useState<ExamSaveState>("idle");
     const [saveMessage, setSaveMessage] = useState<string | null>(null);
-    const saveTimers = useRef<Record<number, number>>({});
-    const expiredSyncTriggered = useRef(false);
-
-    const [answerMap, setAnswerMap] = useState<Record<number, AnswerState>>(() => {
-        const entries = Object.entries(answers).map(([key, value]) => [Number(key), value] as const);
-        return Object.fromEntries(entries);
-    });
 
     const isRunning = attemptState.status === "in_progress" && !attemptState.is_locked && questions.length > 0;
-    const activeQuestion = questions[activeIndex] ?? null;
-    const answeredCount = useMemo(
-        () => questions.filter((question) => Boolean(answerMap[question.id]?.selected_option)).length,
-        [answerMap, questions],
-    );
+
+    const { activeIndex, activeQuestion, answeredCount, answerMap, setActiveIndex, goNext, goPrev, updateAnswer, patchAnswer, saveTimers } = useExamNavigation({
+        questions,
+        initialAnswers: answers,
+    });
 
     const syncAttempt = useCallback(async () => {
         try {
-            const response = await axios.get<{ server_time: string; attempt: AttemptState }>(`/dashboard/seleksi/attempts/${attempt.id}/sync`);
+            const response = await axios.get<{ server_time: string; attempt: ExamAttemptState }>(`/dashboard/seleksi/attempts/${attempt.id}/sync`);
             setAttemptState(response.data.attempt);
-            setRemaining(response.data.attempt.remaining_seconds);
 
             if (response.data.attempt.status !== "in_progress") {
                 setSaveState("locked");
@@ -116,79 +45,37 @@ export default function CandidateAttemptShow({ candidate, exam, attempt, questio
         }
     }, [attempt.id]);
 
-    const calcClientRemaining = useCallback((expiresIso: string | null, fallbackSec: number) => {
-        if (!expiresIso) return fallbackSec;
-        const expiresMs = new Date(expiresIso).getTime();
-        if (isNaN(expiresMs)) return fallbackSec;
-        return Math.max(0, Math.floor((expiresMs - Date.now()) / 1000));
-    }, []);
-
-    useEffect(() => {
-        setAttemptState(attempt);
-        setRemaining(calcClientRemaining(attempt.expires_at_iso, attempt.remaining_seconds));
-    }, [attempt, calcClientRemaining]);
-
-    useEffect(() => {
-        if (!isRunning) return;
-
-        const timer = window.setInterval(() => {
-            const currentRemaining = calcClientRemaining(attemptState.expires_at_iso, remaining);
-            setRemaining(currentRemaining);
-
-            if (currentRemaining <= 0) {
-                if (!expiredSyncTriggered.current) {
-                    expiredSyncTriggered.current = true;
-                    void syncAttempt();
-                }
-            }
-        }, 1000);
-
-        return () => window.clearInterval(timer);
-    }, [isRunning, syncAttempt, attemptState.expires_at_iso, calcClientRemaining, remaining]);
-
-    useEffect(() => {
-        if (!isRunning) return;
-
-        const timer = window.setInterval(() => {
+    const { remaining } = useExamTimer({
+        attempt: attemptState,
+        isRunning,
+        onExpired: () => {
             void syncAttempt();
-        }, 20000);
+        },
+        onSync: syncAttempt,
+    });
 
-        return () => window.clearInterval(timer);
-    }, [isRunning, syncAttempt]);
-
-    useEffect(() => {
-        return () => {
-            Object.values(saveTimers.current).forEach((timer) => window.clearTimeout(timer));
-        };
-    }, []);
-
-    const persistAnswer = useCallback(async (answer: AnswerState) => {
+    const persistAnswer = useCallback(async (answer: ExamAnswerState) => {
         setSaveState("saving");
         setSaveMessage("Menyimpan jawaban...");
 
         try {
-            const response = await axios.post<SaveResponse>(`/dashboard/seleksi/attempts/${attempt.id}/answers`, {
+            const response = await axios.post<ExamSaveResponse>(`/dashboard/seleksi/attempts/${attempt.id}/answers`, {
                 question_id: answer.question_id,
                 selected_option: answer.selected_option,
                 is_marked_for_review: answer.is_marked_for_review,
             });
 
             setAttemptState(response.data.attempt);
-            setRemaining(response.data.attempt.remaining_seconds);
 
             if (response.data.answer) {
-                setAnswerMap((current) => ({
-                    ...current,
-                    [response.data.answer!.question_id]: response.data.answer!,
-                }));
+                updateAnswer(response.data.answer.question_id, response.data.answer);
             }
 
             setSaveState("saved");
             setSaveMessage("Tersimpan");
         } catch (error) {
-            if (axios.isAxiosError<SaveResponse>(error) && error.response?.data?.attempt) {
+            if (axios.isAxiosError<ExamSaveResponse>(error) && error.response?.data?.attempt) {
                 setAttemptState(error.response.data.attempt);
-                setRemaining(error.response.data.attempt.remaining_seconds);
 
                 if (error.response.status === 423) {
                     setSaveState("locked");
@@ -200,33 +87,20 @@ export default function CandidateAttemptShow({ candidate, exam, attempt, questio
             setSaveState("failed");
             setSaveMessage("Gagal menyimpan. Coba pilih ulang jawaban.");
         }
-    }, [attempt.id]);
+    }, [attempt.id, updateAnswer]);
 
-    const changeAnswer = (questionId: number, patch: Partial<AnswerState>) => {
+    const changeAnswer = (questionId: number, patch: Partial<ExamAnswerState>) => {
         if (!isRunning) return;
 
-        setAnswerMap((current) => {
-            const next: AnswerState = {
-                question_id: questionId,
-                selected_option: current[questionId]?.selected_option ?? null,
-                is_marked_for_review: current[questionId]?.is_marked_for_review ?? false,
-                saved_at: current[questionId]?.saved_at ?? null,
-                ...patch,
-            };
+        const next = patchAnswer(questionId, patch);
 
-            if (saveTimers.current[questionId]) {
-                window.clearTimeout(saveTimers.current[questionId]);
-            }
+        if (saveTimers.current[questionId]) {
+            window.clearTimeout(saveTimers.current[questionId]);
+        }
 
-            saveTimers.current[questionId] = window.setTimeout(() => {
-                void persistAnswer(next);
-            }, 500);
-
-            return {
-                ...current,
-                [questionId]: next,
-            };
-        });
+        saveTimers.current[questionId] = window.setTimeout(() => {
+            void persistAnswer(next);
+        }, 500);
     };
 
     const submitAttempt = () => {
@@ -365,7 +239,7 @@ export default function CandidateAttemptShow({ candidate, exam, attempt, questio
                                     <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
                                         <button
                                             type="button"
-                                            onClick={() => setActiveIndex((current) => Math.max(0, current - 1))}
+                                            onClick={goPrev}
                                             disabled={activeIndex === 0}
                                             className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 text-sm font-bold text-slate-700 hover:border-amber-300 hover:text-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:text-slate-200"
                                         >
@@ -373,7 +247,7 @@ export default function CandidateAttemptShow({ candidate, exam, attempt, questio
                                         </button>
                                         <button
                                             type="button"
-                                            onClick={() => setActiveIndex((current) => Math.min(questions.length - 1, current + 1))}
+                                            onClick={goNext}
                                             disabled={activeIndex === questions.length - 1}
                                             className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-amber-500 px-3 text-sm font-bold text-white hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30 disabled:cursor-not-allowed disabled:opacity-50"
                                         >
