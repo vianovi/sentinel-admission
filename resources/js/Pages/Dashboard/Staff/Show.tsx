@@ -7,6 +7,7 @@ import Swal from "sweetalert2";
 import DashboardSplitLayout from "@/Layouts/DashboardSplitLayout";
 import StaffSidebar from "@/Components/Dashboard/Staff/Shared/StaffSidebar";
 import OperationalOverview, { type StaffCandidateOverview } from "@/Components/Dashboard/Staff/Show/OperationalOverview";
+import ResizableSplitGrid from "@/Components/Dashboard/Shared/ResizableSplitGrid";
 import TabDataDiri, { type StaffCandidateData } from "@/Components/Dashboard/Staff/Show/TabDataDiri";
 import TabKesehatan, { type StaffHealthRecord } from "@/Components/Dashboard/Staff/Show/TabKesehatan";
 import TabWali, { type StaffGuardian } from "@/Components/Dashboard/Staff/Show/TabWali";
@@ -387,42 +388,49 @@ export default function StaffCandidateShow({
                     </Link>
                 </div>
 
-                <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
-                    <div className="space-y-5">
-                        <OperationalOverview overview={overview} />
+                <ResizableSplitGrid
+                    storageKey="staff-candidate-show"
+                    initialLeftWidth={800}
+                    minLeftWidth={500}
+                    maxLeftWidth={1100}
+                    left={
+                        <div className="space-y-5">
+                            <OperationalOverview overview={overview} />
 
-                        <div
-                            ref={contentRef}
-                            className="staff-show-item opacity-0 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-slate-900 sm:p-6"
-                        >
-                            <div className="mb-5 flex flex-col gap-3 border-b border-slate-100 pb-4 dark:border-white/10 sm:flex-row sm:items-start sm:justify-between">
-                                <div className="flex items-start gap-3">
-                                    <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-gradient-to-br ${meta.tone}`}>
-                                        <i className={`${meta.icon} text-sm text-white`} />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-black text-slate-900 dark:text-white">{meta.label}</p>
-                                        <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">{meta.description}</p>
+                            <div
+                                ref={contentRef}
+                                className="staff-show-item opacity-0 rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-slate-900 sm:p-6"
+                            >
+                                <div className="mb-5 flex flex-col gap-3 border-b border-slate-100 pb-4 dark:border-white/10 sm:flex-row sm:items-start sm:justify-between">
+                                    <div className="flex items-start gap-3">
+                                        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-gradient-to-br ${meta.tone}`}>
+                                            <i className={`${meta.icon} text-sm text-white`} />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-black text-slate-900 dark:text-white">{meta.label}</p>
+                                            <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">{meta.description}</p>
+                                        </div>
                                     </div>
                                 </div>
+                                {renderSection()}
                             </div>
-                            {renderSection()}
                         </div>
-                    </div>
-
-                    <CandidateActionRail
-                        scope={scope}
-                        candidate={candidate}
-                        overview={overview}
-                        basePath={basePath}
-                        finalStatus={candidateFinalStatus}
-                        finalReason={candidateReason}
-                        processing={candidateProcessing}
-                        onFinalStatusChange={setCandidateFinalStatus}
-                        onFinalReasonChange={setCandidateReason}
-                        onSubmitFinalStatus={submitCandidateStatus}
-                    />
-                </div>
+                    }
+                    right={
+                        <CandidateActionRail
+                            scope={scope}
+                            candidate={candidate}
+                            overview={overview}
+                            basePath={basePath}
+                            finalStatus={candidateFinalStatus}
+                            finalReason={candidateReason}
+                            processing={candidateProcessing}
+                            onFinalStatusChange={setCandidateFinalStatus}
+                            onFinalReasonChange={setCandidateReason}
+                            onSubmitFinalStatus={submitCandidateStatus}
+                        />
+                    }
+                />
             </div>
         </DashboardSplitLayout>
     );

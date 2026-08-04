@@ -3,6 +3,7 @@ import { animate, stagger } from "animejs";
 import { Head, router } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import RequestStatusBanner from "@/Components/Dashboard/Candidate/Shared/RequestStatusBanner";
+import ResizableSplitGrid from "@/Components/Dashboard/Shared/ResizableSplitGrid";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -380,113 +381,116 @@ export default function ProfilePage({
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <ResizableSplitGrid
+                    storageKey="candidate-profile"
+                    initialLeftWidth={400}
+                    minLeftWidth={300}
+                    maxLeftWidth={600}
+                    left={
+                        candidate ? (
+                            <div className="card-item opacity-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-6 shadow-soft h-full">
+                                <div className="flex items-center justify-between mb-5">
+                                    <h2 className="text-sm font-display font-semibold text-slate-800 dark:text-white">
+                                        Data Pendaftaran
+                                    </h2>
+                                    <div className="flex items-center gap-2">
+                                        <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-semibold ${statusBadge(candidate.status)}`}>
+                                            {statusLabel(candidate.status)}
+                                        </span>
+                                        <div className="w-8 h-8 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center">
+                                            <i className="fa-solid fa-id-card text-gold text-xs"></i>
+                                        </div>
+                                    </div>
+                                </div>
 
-                    {/* ── [3] DATA KANDIDAT READ-ONLY ───────────────────────── */}
-                    {candidate && (
+                                <div className="flex flex-col gap-4">
+                                    <InfoRow label="Nama Lengkap"   value={candidate.full_name} />
+                                    <InfoRow label="NISN"           value={candidate.nisn} />
+                                    <InfoRow label="NIK"            value={candidate.nik} />
+                                    <InfoRow label="Alamat"         value={candidate.address_full} />
+                                    <InfoRow
+                                        label="Gelombang"
+                                        value={candidate.admission_wave
+                                            ? `${candidate.admission_wave.title} — ${candidate.admission_wave.academic_year}`
+                                            : null
+                                        }
+                                    />
+                                </div>
+
+                                <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-5 flex items-center gap-1.5">
+                                    <i className="fa-solid fa-lock text-[10px]"></i>
+                                    Data ini tidak dapat diubah. Hubungi staff jika ada kesalahan.
+                                </p>
+                            </div>
+                        ) : <div />
+                    }
+                    right={
                         <div className="card-item opacity-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-6 shadow-soft">
                             <div className="flex items-center justify-between mb-5">
                                 <h2 className="text-sm font-display font-semibold text-slate-800 dark:text-white">
-                                    Data Pendaftaran
+                                    Edit Akun
                                 </h2>
-                                <div className="flex items-center gap-2">
-                                    <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-semibold ${statusBadge(candidate.status)}`}>
-                                        {statusLabel(candidate.status)}
-                                    </span>
-                                    <div className="w-8 h-8 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center">
-                                        <i className="fa-solid fa-id-card text-gold text-xs"></i>
+                                <div className="w-8 h-8 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center">
+                                    <i className="fa-solid fa-pen text-gold text-xs"></i>
+                                </div>
+                            </div>
+
+                            <form onSubmit={handleUpdateProfile} className="flex flex-col gap-4">
+                                <FormInput
+                                    label="Nama Akun"
+                                    value={name}
+                                    onChange={setName}
+                                    error={errors.name}
+                                    placeholder="Nama tampilan akun"
+                                />
+
+                                <div className="border-t border-slate-100 dark:border-white/5 pt-4">
+                                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-3">
+                                        Ganti Password <span className="font-normal">(kosongkan jika tidak ingin ganti)</span>
+                                    </p>
+                                    <div className="flex flex-col gap-3">
+                                        <FormInput
+                                            label="Password Saat Ini"
+                                            type="password"
+                                            value={currentPassword}
+                                            onChange={setCurrentPassword}
+                                            error={errors.current_password}
+                                            placeholder="••••••••"
+                                        />
+                                        <FormInput
+                                            label="Password Baru"
+                                            type="password"
+                                            value={newPassword}
+                                            onChange={setNewPassword}
+                                            error={errors.new_password}
+                                            placeholder="Min. 8 karakter"
+                                            hint="Minimal 8 karakter"
+                                        />
+                                        <FormInput
+                                            label="Konfirmasi Password Baru"
+                                            type="password"
+                                            value={confirmPassword}
+                                            onChange={setConfirmPassword}
+                                            error={errors.confirm_password}
+                                            placeholder="Ulangi password baru"
+                                        />
                                     </div>
                                 </div>
-                            </div>
 
-                            <div className="flex flex-col gap-4">
-                                <InfoRow label="Nama Lengkap"   value={candidate.full_name} />
-                                <InfoRow label="NISN"           value={candidate.nisn} />
-                                <InfoRow label="NIK"            value={candidate.nik} />
-                                <InfoRow label="Alamat"         value={candidate.address_full} />
-                                <InfoRow
-                                    label="Gelombang"
-                                    value={candidate.admission_wave
-                                        ? `${candidate.admission_wave.title} — ${candidate.admission_wave.academic_year}`
-                                        : null
+                                <button
+                                    type="submit"
+                                    disabled={processing}
+                                    className="bg-gold hover:bg-goldhover disabled:opacity-50 text-navy px-5 py-2.5 rounded-xl font-semibold text-sm shadow-glow transition hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2"
+                                >
+                                    {processing
+                                        ? <><i className="fa-solid fa-spinner fa-spin"></i> Menyimpan...</>
+                                        : <><i className="fa-solid fa-floppy-disk"></i> Simpan Perubahan</>
                                     }
-                                />
-                            </div>
-
-                            <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-5 flex items-center gap-1.5">
-                                <i className="fa-solid fa-lock text-[10px]"></i>
-                                Data ini tidak dapat diubah. Hubungi staff jika ada kesalahan.
-                            </p>
+                                </button>
+                            </form>
                         </div>
-                    )}
-
-                    {/* ── [4] EDIT NAMA & PASSWORD ──────────────────────────── */}
-                    <div className="card-item opacity-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-6 shadow-soft">
-                        <div className="flex items-center justify-between mb-5">
-                            <h2 className="text-sm font-display font-semibold text-slate-800 dark:text-white">
-                                Edit Akun
-                            </h2>
-                            <div className="w-8 h-8 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center">
-                                <i className="fa-solid fa-pen text-gold text-xs"></i>
-                            </div>
-                        </div>
-
-                        <form onSubmit={handleUpdateProfile} className="flex flex-col gap-4">
-                            <FormInput
-                                label="Nama Akun"
-                                value={name}
-                                onChange={setName}
-                                error={errors.name}
-                                placeholder="Nama tampilan akun"
-                            />
-
-                            <div className="border-t border-slate-100 dark:border-white/5 pt-4">
-                                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-3">
-                                    Ganti Password <span className="font-normal">(kosongkan jika tidak ingin ganti)</span>
-                                </p>
-                                <div className="flex flex-col gap-3">
-                                    <FormInput
-                                        label="Password Saat Ini"
-                                        type="password"
-                                        value={currentPassword}
-                                        onChange={setCurrentPassword}
-                                        error={errors.current_password}
-                                        placeholder="••••••••"
-                                    />
-                                    <FormInput
-                                        label="Password Baru"
-                                        type="password"
-                                        value={newPassword}
-                                        onChange={setNewPassword}
-                                        error={errors.new_password}
-                                        placeholder="Min. 8 karakter"
-                                        hint="Minimal 8 karakter"
-                                    />
-                                    <FormInput
-                                        label="Konfirmasi Password Baru"
-                                        type="password"
-                                        value={confirmPassword}
-                                        onChange={setConfirmPassword}
-                                        error={errors.confirm_password}
-                                        placeholder="Ulangi password baru"
-                                    />
-                                </div>
-                            </div>
-
-                            <button
-                                type="submit"
-                                disabled={processing}
-                                className="bg-gold hover:bg-goldhover disabled:opacity-50 text-navy px-5 py-2.5 rounded-xl font-semibold text-sm shadow-glow transition hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2"
-                            >
-                                {processing
-                                    ? <><i className="fa-solid fa-spinner fa-spin"></i> Menyimpan...</>
-                                    : <><i className="fa-solid fa-floppy-disk"></i> Simpan Perubahan</>
-                                }
-                            </button>
-                        </form>
-                    </div>
-
-                </div>
+                    }
+                />
 
                 {/* ── [5] REQUEST GANTI EMAIL ───────────────────────────────── */}
                 <div className="card-item opacity-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-6 shadow-soft">

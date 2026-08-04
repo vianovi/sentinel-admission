@@ -166,6 +166,7 @@ it('sends verification mail to the authenticated users stored email through the 
     ]);
 
     config(['app.url' => 'https://demo.example.test']);
+    URL::forceScheme('https');
     URL::forceRootUrl(config('app.url'));
 
     $response = $this

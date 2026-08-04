@@ -4,6 +4,7 @@ import { lazy, Suspense, useEffect } from "react";
 import { Head, usePage } from "@inertiajs/react";
 import { animate, stagger } from "animejs";
 import DashboardLayout from "@/Layouts/DashboardLayout";
+import ResizableSplitGrid from "@/Components/Dashboard/Shared/ResizableSplitGrid";
 import StatsGrid from "@/Components/Dashboard/Staff/Index/StatsGrid";
 import RecentSubmissionsList from "@/Components/Dashboard/Staff/Index/RecentSubmissionsList";
 import type { Stats } from "@/Components/Dashboard/Staff/Index/StatsGrid";
@@ -108,15 +109,23 @@ export default function StaffIndex({ stats, submission_trend, recent_submissions
                 <StatsGrid stats={stats} />
 
                 {/* ── Charts Row ───────────────────────────────────────────── */}
-                <div className="staff-index-section opacity-0
-                                grid grid-cols-1 xl:grid-cols-2 gap-6">
-                    <Suspense fallback={<ChartSkeleton />}>
-                        <StatusDistributionChart stats={stats} />
-                    </Suspense>
-
-                    <Suspense fallback={<ChartSkeleton />}>
-                        <SubmissionTrendChart data={submission_trend} />
-                    </Suspense>
+                <div className="staff-index-section opacity-0">
+                    <ResizableSplitGrid
+                        storageKey="staff-index-charts"
+                        initialLeftWidth={500}
+                        minLeftWidth={350}
+                        maxLeftWidth={750}
+                        left={
+                            <Suspense fallback={<ChartSkeleton />}>
+                                <StatusDistributionChart stats={stats} />
+                            </Suspense>
+                        }
+                        right={
+                            <Suspense fallback={<ChartSkeleton />}>
+                                <SubmissionTrendChart data={submission_trend} />
+                            </Suspense>
+                        }
+                    />
                 </div>
 
                 {/* ── Recent Submissions ───────────────────────────────────── */}

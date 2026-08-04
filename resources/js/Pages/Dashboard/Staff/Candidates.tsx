@@ -6,6 +6,7 @@ import DashboardLayout from "@/Layouts/DashboardLayout";
 import CandidateFilters from "@/Components/Dashboard/Staff/Candidates/CandidateFilters";
 import CandidateTable from "@/Components/Dashboard/Staff/Candidates/CandidateTable";
 import CandidatePagination from "@/Components/Dashboard/Staff/Candidates/CandidatePagination";
+import ResizableSplitGrid from "@/Components/Dashboard/Shared/ResizableSplitGrid";
 import {
     ActionNeededBadge,
     LifecycleBadge,
@@ -163,31 +164,38 @@ export default function StaffCandidates({ candidates, waves, programs, action_op
                     basePath="/dashboard/staff/candidates"
                 />
 
-                <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
-                    <div className="space-y-4">
-                        <CandidateTable
-                            candidates={candidates.data}
-                            basePath="/dashboard/staff/candidates"
-                            selectedCandidateStorageKey="staff:selectedCandidateId"
-                            selectedCandidateId={selectedCandidateId}
-                            onSelectCandidate={(candidate) => setSelectedCandidateId(candidate.id)}
-                        />
+                <ResizableSplitGrid
+                    storageKey="staff-candidates"
+                    initialLeftWidth={820}
+                    minLeftWidth={500}
+                    maxLeftWidth={1150}
+                    left={
+                        <div className="space-y-4">
+                            <CandidateTable
+                                candidates={candidates.data}
+                                basePath="/dashboard/staff/candidates"
+                                selectedCandidateStorageKey="staff:selectedCandidateId"
+                                selectedCandidateId={selectedCandidateId}
+                                onSelectCandidate={(candidate) => setSelectedCandidateId(candidate.id)}
+                            />
 
-                        <CandidatePagination
-                            currentPage={candidates.current_page}
-                            lastPage={candidates.last_page}
-                            total={candidates.total}
-                            links={candidates.links}
-                            filters={filters}
+                            <CandidatePagination
+                                currentPage={candidates.current_page}
+                                lastPage={candidates.last_page}
+                                total={candidates.total}
+                                links={candidates.links}
+                                filters={filters}
+                                basePath="/dashboard/staff/candidates"
+                            />
+                        </div>
+                    }
+                    right={
+                        <CandidateWorkbenchPanel
+                            candidate={selectedCandidate}
                             basePath="/dashboard/staff/candidates"
                         />
-                    </div>
-
-                    <CandidateWorkbenchPanel
-                        candidate={selectedCandidate}
-                        basePath="/dashboard/staff/candidates"
-                    />
-                </div>
+                    }
+                />
 
             </div>
         </DashboardLayout>

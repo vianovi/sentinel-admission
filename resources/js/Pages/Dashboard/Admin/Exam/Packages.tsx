@@ -3,6 +3,7 @@ import DashboardLayout from "@/Layouts/DashboardLayout";
 import { ExamWorkspace, FlashMessage, PageHeader, WorkflowRail, primaryButtonClass, secondaryButtonClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
 import PackageFormCard, { PackageRow, SubjectOption } from "@/Components/Exam/Admin/PackageFormCard";
 import PackageListCard from "@/Components/Exam/Admin/PackageListCard";
+import ResizableSplitGrid from "@/Components/Dashboard/Shared/ResizableSplitGrid";
 import type { PageProps } from "@/types";
 
 type Props = {
@@ -99,10 +100,14 @@ export default function ExamPackages({ packages, subjects, editing_package, mode
                     ]}
                 />
 
-                <div className="grid gap-4 xl:grid-cols-[420px_1fr]">
-                    <PackageFormCard subjects={subjects} editingPackage={editing_package} mode={mode} />
-                    <PackageListCard packages={packages} />
-                </div>
+                <ResizableSplitGrid
+                    storageKey="packages"
+                    initialLeftWidth={420}
+                    minLeftWidth={300}
+                    maxLeftWidth={700}
+                    left={<PackageFormCard subjects={subjects} editingPackage={editing_package} mode={mode} />}
+                    right={<PackageListCard packages={packages} />}
+                />
             </ExamWorkspace>
         </DashboardLayout>
     );

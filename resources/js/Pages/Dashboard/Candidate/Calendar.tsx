@@ -11,6 +11,7 @@ import CalendarSidebar from "@/Components/Dashboard/Candidate/Calendar/CalendarS
 import CalendarSummaryGrid from "@/Components/Dashboard/Candidate/Calendar/CalendarSummaryGrid";
 import CalendarWaveInfo from "@/Components/Dashboard/Candidate/Calendar/CalendarWaveInfo";
 import EventDetailModal from "@/Components/Dashboard/Candidate/Calendar/EventDetailModal";
+import ResizableSplitGrid from "@/Components/Dashboard/Shared/ResizableSplitGrid";
 import { typeTheme } from "@/Components/Dashboard/Candidate/Calendar/constants";
 import { CalendarEvent, CalendarEventType, CalendarPageProps, DateMeta } from "@/Components/Dashboard/Candidate/Calendar/types";
 import { emptyForm, formatHijri, formatWeton, toIsoDate } from "@/Components/Dashboard/Candidate/Calendar/utils";
@@ -220,30 +221,39 @@ export default function CalendarPage({ candidate, settings, endpoints }: Calenda
 
             <CalendarWaveInfo candidate={candidate} />
 
-            <section className="calendar-entrance opacity-0 grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
-                <CalendarPanel
-                    activeFilter={activeFilter}
-                    loading={loading}
-                    loadError={loadError}
-                    events={fullCalendarEvents}
-                    onRetry={lastRange.current ? handleRetry : null}
-                    onFilterChange={setActiveFilter}
-                    onDatesSet={handleDatesSet}
-                    onDateClick={handleDateClick}
-                    onEventClick={handleEventClick}
-                    renderEventContent={renderEventContent}
-                    renderDayCell={renderDayCell}
-                    getDayCellClassNames={(arg) => {
-                        const meta = dateMeta[toIsoDate(arg.date)];
-                        return meta?.isRedDate ? ["spmb-red-date"] : ["spmb-workday"];
-                    }}
+            <div className="calendar-entrance opacity-0">
+                <ResizableSplitGrid
+                    storageKey="candidate-calendar"
+                    initialLeftWidth={840}
+                    minLeftWidth={500}
+                    maxLeftWidth={1150}
+                    left={
+                        <CalendarPanel
+                            activeFilter={activeFilter}
+                            loading={loading}
+                            loadError={loadError}
+                            events={fullCalendarEvents}
+                            onRetry={lastRange.current ? handleRetry : null}
+                            onFilterChange={setActiveFilter}
+                            onDatesSet={handleDatesSet}
+                            onDateClick={handleDateClick}
+                            onEventClick={handleEventClick}
+                            renderEventContent={renderEventContent}
+                            renderDayCell={renderDayCell}
+                            getDayCellClassNames={(arg) => {
+                                const meta = dateMeta[toIsoDate(arg.date)];
+                                return meta?.isRedDate ? ["spmb-red-date"] : ["spmb-workday"];
+                            }}
+                        />
+                    }
+                    right={
+                        <CalendarSidebar
+                            upcomingEvents={upcomingEvents}
+                            onSelectEvent={setSelectedEvent}
+                        />
+                    }
                 />
-
-                <CalendarSidebar
-                    upcomingEvents={upcomingEvents}
-                    onSelectEvent={setSelectedEvent}
-                />
-            </section>
+            </div>
 
             {formOpen && (
                 <AgendaFormModal

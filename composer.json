@@ -12,6 +12,7 @@
         "laravel/framework": "^12.0",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
+        "guzzlehttp/guzzle": "^7.15.2",
         "midtrans/midtrans-php": "^2.6",
         "openspout/openspout": "^5.7",
         "tightenco/ziggy": "^2.0"
@@ -43,6 +44,7 @@
         "setup": [
             "composer install",
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
+            "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
             "@php artisan key:generate",
             "@php artisan migrate --force",
             "npm install",

@@ -3,6 +3,7 @@ import DashboardLayout from "@/Layouts/DashboardLayout";
 import { ExamWorkspace, FlashMessage, PageHeader, WorkflowRail, primaryButtonClass, secondaryButtonClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
 import SessionFormCard, { PackageOption, SessionRow, WaveOption } from "@/Components/Exam/Admin/SessionFormCard";
 import SessionListCard from "@/Components/Exam/Admin/SessionListCard";
+import ResizableSplitGrid from "@/Components/Dashboard/Shared/ResizableSplitGrid";
 import type { PageProps } from "@/types";
 
 type Props = {
@@ -93,10 +94,14 @@ export default function ExamSessions({ sessions, packages, waves, editing_sessio
                     ]}
                 />
 
-                <div className="grid gap-4 xl:grid-cols-[440px_1fr]">
-                    <SessionFormCard packages={packages} waves={waves} editingSession={editing_session} mode={mode} />
-                    <SessionListCard sessions={sessions} />
-                </div>
+                <ResizableSplitGrid
+                    storageKey="sessions"
+                    initialLeftWidth={440}
+                    minLeftWidth={320}
+                    maxLeftWidth={720}
+                    left={<SessionFormCard packages={packages} waves={waves} editingSession={editing_session} mode={mode} />}
+                    right={<SessionListCard sessions={sessions} />}
+                />
             </ExamWorkspace>
         </DashboardLayout>
     );

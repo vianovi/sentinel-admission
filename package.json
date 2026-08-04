@@ -5,13 +5,13 @@
     "scripts": {
         "build": "tsc && vite build",
         "dev": "vite",
+        "dev-mode": "composer dev",
         "lint": "eslint resources/js --ext .js,.jsx,.ts,.tsx --ignore-path .gitignore --fix"
     },
     "devDependencies": {
         "@headlessui/react": "^2.0.0",
         "@inertiajs/react": "^2.0.0",
         "@tailwindcss/forms": "^0.5.3",
-        "@tailwindcss/vite": "^4.0.0",
         "@types/animejs": "^3.1.13",
         "@types/canvas-confetti": "^1.9.0",
         "@types/node": "^25.3.0",

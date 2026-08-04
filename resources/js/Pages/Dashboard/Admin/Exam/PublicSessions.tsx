@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Head, Link, useForm, router, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
+import ResizableSplitGrid from "@/Components/Dashboard/Shared/ResizableSplitGrid";
 import { confirmAction, showSuccessToast, showErrorToast } from "@/utils/swal";
 import type { PageProps } from "@/types";
 
@@ -73,6 +74,16 @@ type Props = {
     };
 };
 
+const formatToLocalDateTime = (date: Date) => {
+    const pad = (num: number) => String(num).padStart(2, '0');
+    const yyyy = date.getFullYear();
+    const mm = pad(date.getMonth() + 1);
+    const dd = pad(date.getDate());
+    const hh = pad(date.getHours());
+    const min = pad(date.getMinutes());
+    return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+};
+
 export default function PublicSessions({
     public_sessions,
     active_session_id,
@@ -85,6 +96,8 @@ export default function PublicSessions({
 }: Props) {
     const { flash } = usePage<PageProps>().props;
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [showOpensQuick, setShowOpensQuick] = useState(false);
+    const [showClosesQuick, setShowClosesQuick] = useState(false);
 
     useEffect(() => {
         if (flash?.success) {
@@ -218,55 +231,59 @@ export default function PublicSessions({
                     </div>
                 </div>
 
-                {/* Main Workspace Layout */}
-                <div className="grid gap-6 md:grid-cols-12">
-                    {/* Left Panel: Public Session Selector List */}
-                    <div className="md:col-span-4 space-y-3">
-                        <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">Daftar Sesi Ujian Publik</h2>
-                        {public_sessions.length === 0 ? (
-                            <div className="rounded-2xl border border-dashed border-white/10 bg-slate-900/40 p-8 text-center">
-                                <i className="fa-solid fa-folder-open text-3xl text-slate-600 mb-2" />
-                                <p className="text-xs font-bold text-slate-400">Belum Ada Sesi Publik</p>
-                                <p className="text-[11px] text-slate-500 mt-1">Klik tombol diatas untuk membuat sesi publik baru.</p>
-                            </div>
-                        ) : (
-                            public_sessions.map((sess) => {
-                                const isActive = sess.id === active_session_id;
-                                return (
-                                    <div
-                                        key={sess.id}
-                                        onClick={() => router.get(route("admin.exams.public-sessions.index"), { session_id: sess.id }, { preserveState: true })}
-                                        className={`group cursor-pointer rounded-2xl border p-4 transition-all ${
-                                            isActive
-                                                ? "border-amber-500/40 bg-gradient-to-r from-amber-500/10 via-slate-900 to-slate-900 shadow-xl"
-                                                : "border-white/10 bg-slate-900/60 hover:border-white/20 hover:bg-slate-900"
-                                        }`}
-                                    >
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">
-                                                {sess.package_title ?? "Paket Ujian"}
-                                            </span>
-                                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                                                sess.is_open ? "bg-emerald-500/20 text-emerald-300" : "bg-slate-800 text-slate-400"
-                                            }`}>
-                                                {sess.is_open ? "Buka" : "Tutup"}
-                                            </span>
+                {/* Main Workspace Layout with Drag-to-Resize Panel Splitter */}
+                <ResizableSplitGrid
+                    storageKey="public-sessions"
+                    initialLeftWidth={360}
+                    minLeftWidth={280}
+                    maxLeftWidth={650}
+                    left={
+                        <div className="space-y-3">
+                            <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">Daftar Sesi Ujian Publik</h2>
+                            {public_sessions.length === 0 ? (
+                                <div className="rounded-2xl border border-dashed border-white/10 bg-slate-900/40 p-8 text-center">
+                                    <i className="fa-solid fa-folder-open text-3xl text-slate-600 mb-2" />
+                                    <p className="text-xs font-bold text-slate-400">Belum Ada Sesi Publik</p>
+                                    <p className="text-[11px] text-slate-500 mt-1">Klik tombol diatas untuk membuat sesi publik baru.</p>
+                                </div>
+                            ) : (
+                                public_sessions.map((sess) => {
+                                    const isActive = sess.id === active_session_id;
+                                    return (
+                                        <div
+                                            key={sess.id}
+                                            onClick={() => router.get(route("admin.exams.public-sessions.index"), { session_id: sess.id }, { preserveState: true })}
+                                            className={`group cursor-pointer rounded-2xl border p-4 transition-all ${
+                                                isActive
+                                                    ? "border-amber-500/40 bg-gradient-to-r from-amber-500/10 via-slate-900 to-slate-900 shadow-xl"
+                                                    : "border-white/10 bg-slate-900/60 hover:border-white/20 hover:bg-slate-900"
+                                            }`}
+                                        >
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">
+                                                    {sess.package_title ?? "Paket Ujian"}
+                                                </span>
+                                                <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                                                    sess.is_open ? "bg-emerald-500/20 text-emerald-300" : "bg-slate-800 text-slate-400"
+                                                }`}>
+                                                    {sess.is_open ? "Buka" : "Tutup"}
+                                                </span>
+                                            </div>
+                                            <h3 className="text-sm font-extrabold text-white mt-1 group-hover:text-amber-400 transition-colors">
+                                                {sess.title}
+                                            </h3>
+                                            <div className="mt-3 flex items-center justify-between text-[11px] text-slate-400 border-t border-white/5 pt-2">
+                                                <span><i className="fa-solid fa-clock text-slate-500 mr-1" /> {sess.duration_minutes} Menit</span>
+                                                <span><i className="fa-solid fa-users text-slate-500 mr-1" /> {sess.attempts_count} Peserta</span>
+                                            </div>
                                         </div>
-                                        <h3 className="text-sm font-extrabold text-white mt-1 group-hover:text-amber-400 transition-colors">
-                                            {sess.title}
-                                        </h3>
-                                        <div className="mt-3 flex items-center justify-between text-[11px] text-slate-400 border-t border-white/5 pt-2">
-                                            <span><i className="fa-solid fa-clock text-slate-500 mr-1" /> {sess.duration_minutes} Menit</span>
-                                            <span><i className="fa-solid fa-users text-slate-500 mr-1" /> {sess.attempts_count} Peserta</span>
-                                        </div>
-                                    </div>
-                                );
-                            })
-                        )}
-                    </div>
-
-                    {/* Right Panel: Active Session Proctor Control & Participant Table */}
-                    <div className="md:col-span-8 space-y-6">
+                                    );
+                                })
+                            )}
+                        </div>
+                    }
+                    right={
+                        <div className="space-y-6">
                         {active_session ? (
                             <>
                                 {/* Proctor Room & Dynamic Token Control Box */}
@@ -447,7 +464,8 @@ export default function PublicSessions({
                             </div>
                         )}
                     </div>
-                </div>
+                }
+            />
             </div>
 
             {/* Create Public Session Modal */}
@@ -522,8 +540,92 @@ export default function PublicSessions({
                             </div>
 
                             <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-300">Waktu Buka (WIB)</label>
+                                <div className="relative">
+                                    <div className="flex items-center justify-between mb-1.5">
+                                        <label className="block text-xs font-bold text-slate-300">Waktu Buka (WIB)</label>
+                                        <div className="relative">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setShowOpensQuick(!showOpensQuick);
+                                                    setShowClosesQuick(false);
+                                                }}
+                                                className="flex items-center gap-1.5 rounded-md bg-amber-500/10 hover:bg-amber-500/20 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-amber-500 transition-all hover:scale-105 active:scale-95 border border-amber-500/20"
+                                                title="Pilihan Cepat"
+                                            >
+                                                <i className="fa-solid fa-bolt animate-pulse text-amber-500" /> Cepat
+                                            </button>
+                                            {showOpensQuick && (
+                                                <>
+                                                    <div className="fixed inset-0 z-40" onClick={() => setShowOpensQuick(false)} />
+                                                    <div className="absolute right-0 top-6 z-50 w-64 rounded-xl border border-white/10 bg-slate-900 p-3 shadow-xl animate-in fade-in slide-in-from-top-2 duration-150 text-slate-100">
+                                                        <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                                                            1. Pilih Hari
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-1.5 mb-3">
+                                                            {[
+                                                                { label: "Hari Ini", offset: 0 },
+                                                                { label: "Besok", offset: 1 },
+                                                                { label: "Lusa", offset: 2 },
+                                                                { label: "+1 Minggu", offset: 7 }
+                                                            ].map((item) => (
+                                                                <button
+                                                                    key={item.label}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        const currentVal = createForm.data.opens_at ? new Date(createForm.data.opens_at) : new Date();
+                                                                        const newDate = new Date();
+                                                                        newDate.setDate(newDate.getDate() + item.offset);
+                                                                        newDate.setHours(currentVal.getHours(), currentVal.getMinutes(), 0, 0);
+                                                                        createForm.setData("opens_at", formatToLocalDateTime(newDate));
+                                                                    }}
+                                                                    className="rounded-lg bg-white/5 hover:bg-white/10 px-2 py-1 text-xs font-medium text-left border border-white/5 text-slate-200 transition-all"
+                                                                >
+                                                                    {item.label}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+
+                                                        <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                                                            2. Pilih Jam
+                                                        </div>
+                                                        <div className="grid grid-cols-3 gap-1 mb-1">
+                                                            {[
+                                                                { label: "Sekarang", time: null },
+                                                                { label: "07:30", time: "07:30" },
+                                                                { label: "08:00", time: "08:00" },
+                                                                { label: "09:00", time: "09:00" },
+                                                                { label: "10:00", time: "10:00" },
+                                                                { label: "13:00", time: "13:00" },
+                                                                { label: "14:00", time: "14:00" },
+                                                                { label: "16:00", time: "16:00" },
+                                                                { label: "19:00", time: "19:00" }
+                                                            ].map((item) => (
+                                                                <button
+                                                                    key={item.label}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        const newDate = createForm.data.opens_at ? new Date(createForm.data.opens_at) : new Date();
+                                                                        if (item.time) {
+                                                                            const [h, m] = item.time.split(":").map(Number);
+                                                                            newDate.setHours(h, m, 0, 0);
+                                                                        } else {
+                                                                            const now = new Date();
+                                                                            newDate.setHours(now.getHours(), now.getMinutes(), 0, 0);
+                                                                        }
+                                                                        createForm.setData("opens_at", formatToLocalDateTime(newDate));
+                                                                    }}
+                                                                    className="rounded-md bg-white/5 hover:bg-white/10 px-1 py-1 text-[11px] font-medium text-center border border-white/5 text-slate-200 transition-all"
+                                                                >
+                                                                    {item.label}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
                                     <input
                                         type="datetime-local"
                                         required
@@ -532,38 +634,93 @@ export default function PublicSessions({
                                         className="mt-1 w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs text-white focus:border-amber-500 focus:outline-none"
                                     />
                                 </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-300">Waktu Tutup (WIB)</label>
+                                <div className="relative">
+                                    <div className="flex items-center justify-between mb-1.5">
+                                        <label className="block text-xs font-bold text-slate-300">Waktu Tutup (WIB)</label>
+                                        <div className="relative">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setShowClosesQuick(!showClosesQuick);
+                                                    setShowOpensQuick(false);
+                                                }}
+                                                className="flex items-center gap-1.5 rounded-md bg-amber-500/10 hover:bg-amber-500/20 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-amber-500 transition-all hover:scale-105 active:scale-95 border border-amber-500/20"
+                                                title="Pilihan Cepat"
+                                            >
+                                                <i className="fa-solid fa-bolt animate-pulse text-amber-500" /> Cepat
+                                            </button>
+                                            {showClosesQuick && (
+                                                <>
+                                                    <div className="fixed inset-0 z-40" onClick={() => setShowClosesQuick(false)} />
+                                                    <div className="absolute right-0 top-6 z-50 w-64 rounded-xl border border-white/10 bg-slate-900 p-3 shadow-xl animate-in fade-in slide-in-from-top-2 duration-150 text-slate-100">
+                                                        <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                                                            Tambah Jam (Waktu Buka)
+                                                        </div>
+                                                        <div className="grid grid-cols-3 gap-1.5 mb-3">
+                                                            {[
+                                                                { label: "+1 Jam", hours: 1 },
+                                                                { label: "+2 Jam", hours: 2 },
+                                                                { label: "+3 Jam", hours: 3 },
+                                                                { label: "+4 Jam", hours: 4 },
+                                                                { label: "+6 Jam", hours: 6 },
+                                                                { label: "+8 Jam", hours: 8 },
+                                                                { label: "+12 Jam", hours: 12 },
+                                                                { label: "+18 Jam", hours: 18 },
+                                                                { label: "+24 Jam", hours: 24 }
+                                                            ].map((item) => (
+                                                                <button
+                                                                    key={item.label}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        const baseStr = createForm.data.opens_at || formatToLocalDateTime(new Date());
+                                                                        const baseDate = new Date(baseStr);
+                                                                        baseDate.setHours(baseDate.getHours() + item.hours);
+                                                                        createForm.setData("closes_at", formatToLocalDateTime(baseDate));
+                                                                        setShowClosesQuick(false);
+                                                                    }}
+                                                                    className="rounded-lg bg-white/5 hover:bg-white/10 px-1 py-1 text-xs font-medium text-center border border-white/5 text-slate-200 transition-all"
+                                                                >
+                                                                    {item.label}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+
+                                                        <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                                                            Tambah Hari
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-1.5">
+                                                            {[
+                                                                { label: "+1 Hari", days: 1 },
+                                                                { label: "+2 Hari", days: 2 },
+                                                                { label: "+3 Hari", days: 3 },
+                                                                { label: "+7 Hari", days: 7 }
+                                                            ].map((item) => (
+                                                                <button
+                                                                    key={item.label}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        const baseStr = createForm.data.opens_at || formatToLocalDateTime(new Date());
+                                                                        const baseDate = new Date(baseStr);
+                                                                        baseDate.setDate(baseDate.getDate() + item.days);
+                                                                        createForm.setData("closes_at", formatToLocalDateTime(baseDate));
+                                                                        setShowClosesQuick(false);
+                                                                    }}
+                                                                    className="rounded-lg bg-white/5 hover:bg-white/10 px-2 py-1 text-xs font-medium text-left border border-white/5 text-slate-200 transition-all"
+                                                                >
+                                                                    {item.label}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
                                     <input
                                         type="datetime-local"
                                         required
                                         value={createForm.data.closes_at}
                                         onChange={(e) => createForm.setData("closes_at", e.target.value)}
-                                        className="mt-1 w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs text-white focus:border-amber-500 focus:outline-none"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-300">Durasi Pengerjaan (Menit)</label>
-                                    <input
-                                        type="number"
-                                        min="5"
-                                        max="300"
-                                        value={createForm.data.duration_minutes}
-                                        onChange={(e) => createForm.setData("duration_minutes", Number(e.target.value))}
-                                        className="mt-1 w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs text-white focus:border-amber-500 focus:outline-none"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-300">Nilai Kelulusan (Passing Score)</label>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        max="100"
-                                        value={createForm.data.passing_score}
-                                        onChange={(e) => createForm.setData("passing_score", Number(e.target.value))}
                                         className="mt-1 w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs text-white focus:border-amber-500 focus:outline-none"
                                     />
                                 </div>

@@ -4,6 +4,7 @@ import DashboardLayout from "@/Layouts/DashboardLayout";
 import { BackLink, ExamWorkspace, FlashMessage, PageHeader } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
 import SubjectFormCard, { Subject } from "@/Components/Exam/Admin/SubjectFormCard";
 import SubjectTable from "@/Components/Exam/Admin/SubjectTable";
+import ResizableSplitGrid from "@/Components/Dashboard/Shared/ResizableSplitGrid";
 import type { PageProps } from "@/types";
 
 type Props = {
@@ -37,14 +38,20 @@ export default function ExamSubjects({ subjects }: Props) {
                 <FlashMessage value={flash.success} type="success" />
                 <FlashMessage value={flash.error ?? pageErrors.subject} />
 
-                <div className="grid gap-4 lg:grid-cols-[380px_1fr]">
-                    <SubjectFormCard
-                        editing={editing}
-                        onCancelEdit={() => setEditing(null)}
-                        onSuccess={() => setEditing(null)}
-                    />
-                    <SubjectTable subjects={subjects} onEdit={(subject) => setEditing(subject)} />
-                </div>
+                <ResizableSplitGrid
+                    storageKey="subjects"
+                    initialLeftWidth={360}
+                    minLeftWidth={280}
+                    maxLeftWidth={650}
+                    left={
+                        <SubjectFormCard
+                            editing={editing}
+                            onCancelEdit={() => setEditing(null)}
+                            onSuccess={() => setEditing(null)}
+                        />
+                    }
+                    right={<SubjectTable subjects={subjects} onEdit={(subject) => setEditing(subject)} />}
+                />
             </ExamWorkspace>
         </DashboardLayout>
     );
