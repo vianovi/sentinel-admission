@@ -11,7 +11,8 @@ mkdir -p storage/framework/cache/data \
          storage/logs \
          bootstrap/cache \
          database
-chmod -R 777 storage bootstrap/cache database
+chmod -R 777 storage bootstrap/cache
+chmod 777 database
 
 # 2. Ensure Composer dependencies and vendor/autoload.php exist FIRST
 if [ ! -f "vendor/autoload.php" ]; then
