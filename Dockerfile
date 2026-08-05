@@ -5,6 +5,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends libzip-dev git unzip curl gnupg \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
+    && npm install -g typescript \
     && docker-php-ext-install pdo_mysql zip \
     && php -m | grep -i '^zip$' \
     && php -r 'exit(class_exists(ZipArchive::class) ? 0 : 1);' \

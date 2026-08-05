@@ -3,7 +3,7 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "tsc && vite build",
+        "build": "npx tsc && npx vite build",
         "dev": "vite",
         "dev-mode": "composer dev",
         "lint": "eslint resources/js --ext .js,.jsx,.ts,.tsx --ignore-path .gitignore --fix"

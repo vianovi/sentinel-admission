@@ -1,6 +1,9 @@
 #!/bin/sh
 set -e
 
+# Export node_modules/.bin to PATH
+export PATH="./node_modules/.bin:$PATH"
+
 # 1. Ensure composer dependencies are installed
 if [ ! -d "vendor" ]; then
     echo "Installing Composer dependencies..."
@@ -30,7 +33,7 @@ echo "Running database migrations..."
 php artisan migrate --force
 
 # 6. Ensure NPM dependencies are installed and built
-if [ ! -d "node_modules" ]; then
+if [ ! -d "node_modules" ] || [ ! -f "node_modules/.bin/tsc" ]; then
     echo "Installing NPM dependencies..."
     npm install
 fi
