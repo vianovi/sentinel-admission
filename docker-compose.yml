@@ -3,9 +3,11 @@ services:
     build: .
     ports:
       - "8080:80"
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     volumes:
       - .:/var/www/html:Z
     entrypoint: /var/www/html/docker-entrypoint.sh
-    user: "1000:1000"
     extra_hosts:
       - "host.docker.internal:host-gateway"
