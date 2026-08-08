@@ -290,7 +290,7 @@ export const navigationConfig: Record<string, NavGroup[]> = {
                     ],
                 },
                 {
-                    label: "Seleksi",
+                    label: "Seleksi / Ujian",
                     icon: "fa-solid fa-file-pen",
                     activeRules: [{ path: "/dashboard/admin/exams" }],
                     children: [
