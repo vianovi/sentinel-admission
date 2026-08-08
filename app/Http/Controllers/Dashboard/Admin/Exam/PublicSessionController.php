@@ -9,6 +9,7 @@ use App\Models\Exam\ExamAttempt;
 use App\Models\Exam\ExamPackage;
 use App\Models\Exam\ExamSession;
 use App\Models\Exam\ExamSessionToken;
+use App\Services\Exam\ExamAttemptService;
 use App\Services\Exam\ExamAuditLogger;
 use App\Services\Exam\ExamSessionService;
 use Illuminate\Http\RedirectResponse;
@@ -21,7 +22,8 @@ class PublicSessionController extends Controller
 {
     public function __construct(
         private readonly ExamAuditLogger $audit,
-        private readonly ExamSessionService $sessionService
+        private readonly ExamSessionService $sessionService,
+        private readonly ExamAttemptService $attemptService
     ) {}
 
     public function index(Request $request): Response
@@ -279,6 +281,37 @@ class PublicSessionController extends Controller
         ], $request);
 
         return back()->with('success', "Token berhasil dirotasi ke token baru: {$newToken->token}");
+    }
+
+    public function forceSubmitAttempt(ExamAttempt $attempt, Request $request): RedirectResponse
+    {
+        if (! $attempt->isInProgress()) {
+            return back()->with('error', 'Sesi peserta ini sudah selesai atau telah dikumpulkan.');
+        }
+
+        $this->attemptService->submit($attempt, true, $request);
+
+        $this->audit->log('proctor_force_submitted_attempt', [
+            'exam_attempt_id' => $attempt->id,
+            'guest_name' => $attempt->guest_name,
+            'exam_session_id' => $attempt->exam_session_id,
+        ], $request);
+
+        return back()->with('success', "Jawaban peserta {$attempt->guest_name} berhasil dikumpulkan secara paksa oleh proktor.");
+    }
+
+    public function resetAttemptViolations(ExamAttempt $attempt, Request $request): RedirectResponse
+    {
+        $oldViolations = $attempt->violations_count;
+        $attempt->update(['violations_count' => 0]);
+
+        $this->audit->log('proctor_reset_violations', [
+            'exam_attempt_id' => $attempt->id,
+            'guest_name' => $attempt->guest_name,
+            'previous_violations' => $oldViolations,
+        ], $request);
+
+        return back()->with('success', "Jumlah pelanggaran peserta {$attempt->guest_name} berhasil di-reset oleh proktor.");
     }
 }
 

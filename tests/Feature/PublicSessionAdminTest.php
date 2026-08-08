@@ -142,3 +142,108 @@ test('admin can toggle result visibility, rotate token, and delete public sessio
         ->assertRedirect();
     expect(ExamSession::find($session->id))->toBeNull();
 });
+
+test('rotate-tokens command auto rotates tokens for active public sessions', function () {
+    $session = ExamSession::create([
+        'exam_package_id' => $this->package->id,
+        'title' => 'Sesi Auto Rotate',
+        'status' => 'published',
+        'opens_at' => now()->subMinutes(10),
+        'closes_at' => now()->addHours(2),
+        'duration_minutes' => 60,
+        'passing_score' => 70,
+        'is_public' => true,
+        'public_access_type' => 'token_required',
+    ]);
+
+    $oldToken = ExamSessionToken::create([
+        'exam_session_id' => $session->id,
+        'token' => 'OLD123',
+        'type' => 'multi_use',
+        'created_at' => now()->subMinutes(20),
+    ]);
+
+    $this->artisan('exam:rotate-tokens', ['--force' => true])
+        ->assertExitCode(0);
+
+    expect($oldToken->fresh()->isExpired())->toBeTrue();
+    $latestToken = ExamSessionToken::where('exam_session_id', $session->id)->latest('id')->first();
+    expect($latestToken->id)->not->toBe($oldToken->id);
+    expect(strlen($latestToken->token))->toBe(6);
+});
+
+test('sync-expired command auto submits candidate attempts whose time limit expired', function () {
+    $session = ExamSession::create([
+        'exam_package_id' => $this->package->id,
+        'title' => 'Sesi Auto Sync',
+        'status' => 'published',
+        'opens_at' => now()->subHour(),
+        'closes_at' => now()->addHour(),
+        'duration_minutes' => 30,
+        'passing_score' => 70,
+        'is_public' => true,
+        'public_access_type' => 'token_required',
+    ]);
+
+    $attempt = \App\Models\Exam\ExamAttempt::create([
+        'exam_session_id' => $session->id,
+        'exam_package_id' => $this->package->id,
+        'guest_name' => 'Budi Santoso',
+        'guest_school' => 'SD Negeri 1',
+        'status' => \App\Models\Exam\ExamAttempt::STATUS_IN_PROGRESS,
+        'started_at' => now()->subMinutes(40),
+        'expires_at' => now()->subMinutes(10),
+        'last_activity_at' => now()->subMinutes(15),
+        'total_questions' => 5,
+        'blank_questions' => 5,
+        'max_score' => 100,
+        'passing_score' => 70,
+    ]);
+
+    $this->artisan('exam:sync-expired')
+        ->assertExitCode(0);
+
+    $attempt->refresh();
+    expect($attempt->status)->toBe(\App\Models\Exam\ExamAttempt::STATUS_AUTO_SUBMITTED);
+});
+
+test('proctor can force submit attempt and reset violations', function () {
+    $session = ExamSession::create([
+        'exam_package_id' => $this->package->id,
+        'title' => 'Sesi Control Proktor',
+        'status' => 'published',
+        'opens_at' => now()->subMinutes(10),
+        'closes_at' => now()->addHour(),
+        'duration_minutes' => 60,
+        'passing_score' => 70,
+        'is_public' => true,
+        'public_access_type' => 'token_required',
+    ]);
+
+    $attempt = \App\Models\Exam\ExamAttempt::create([
+        'exam_session_id' => $session->id,
+        'exam_package_id' => $this->package->id,
+        'guest_name' => 'Ahmad Proktor',
+        'status' => \App\Models\Exam\ExamAttempt::STATUS_IN_PROGRESS,
+        'started_at' => now()->subMinutes(10),
+        'expires_at' => now()->addMinutes(50),
+        'violations_count' => 3,
+        'total_questions' => 5,
+        'blank_questions' => 5,
+        'max_score' => 100,
+        'passing_score' => 70,
+    ]);
+
+    // 1. Reset violations
+    $this->actingAs($this->admin)
+        ->post(route('admin.exams.public-sessions.attempts.reset-violations', $attempt))
+        ->assertRedirect();
+    expect($attempt->fresh()->violations_count)->toBe(0);
+
+    // 2. Force submit
+    $this->actingAs($this->admin)
+        ->post(route('admin.exams.public-sessions.attempts.force-submit', $attempt))
+        ->assertRedirect();
+    expect($attempt->fresh()->status)->toBe(\App\Models\Exam\ExamAttempt::STATUS_AUTO_SUBMITTED);
+});
+

@@ -90,8 +90,8 @@
     "semantic_hash": "0e27794ed414712562b28ee769607534"
   },
   "app/Http/Controllers/Dashboard/Admin/Exam/PublicSessionController.php": {
-    "mtime": 1786158649.9833093,
-    "ast_hash": "99a5626c14a435474fbd6b2346740723",
+    "mtime": 1786231794.7869296,
+    "ast_hash": "1992ae5212abed34fd06bb9968dc950d",
     "semantic_hash": ""
   },
   "app/Http/Controllers/Dashboard/Admin/Exam/QuestionImportController.php": {
@@ -250,9 +250,9 @@
     "semantic_hash": "9dd69262a47ed036444d7a7ca972b710"
   },
   "app/Http/Controllers/Exam/PublicExamController.php": {
-    "mtime": 1785852681.9635003,
-    "ast_hash": "0db088aa5f9eb12c7c8a5140d40607e5",
-    "semantic_hash": "0db088aa5f9eb12c7c8a5140d40607e5"
+    "mtime": 1786228780.8818247,
+    "ast_hash": "6c05050e7cc0af256e9bdea6df6a4638",
+    "semantic_hash": ""
   },
   "app/Http/Controllers/Public/WelcomeController.php": {
     "mtime": 1783959520.372823,
@@ -520,9 +520,9 @@
     "semantic_hash": "6ef9a278ea15647beab5177c9355cf34"
   },
   "app/Services/Exam/ExamAttemptService.php": {
-    "mtime": 1785852681.9635003,
-    "ast_hash": "4f5b054a45128b91a269e4f8eb9169ce",
-    "semantic_hash": "4f5b054a45128b91a269e4f8eb9169ce"
+    "mtime": 1786228767.902729,
+    "ast_hash": "fadb15d2020a7221fa74aca82142f6a1",
+    "semantic_hash": ""
   },
   "app/Services/Exam/ExamAuditLogger.php": {
     "mtime": 1783959520.385045,
@@ -1705,8 +1705,8 @@
     "semantic_hash": "056518e8b1ae45093872dbd5db09deb4"
   },
   "resources/js/Pages/Dashboard/Admin/Exam/PublicSessions.tsx": {
-    "mtime": 1786161540.8060577,
-    "ast_hash": "82b622ba46af505ed449e34e851f08ca",
+    "mtime": 1786232206.4472911,
+    "ast_hash": "fcc0366a9fb946a025c5d03d74f2c255",
     "semantic_hash": ""
   },
   "resources/js/Pages/Dashboard/Admin/Exam/ResultShow.tsx": {
@@ -1915,13 +1915,13 @@
     "semantic_hash": "d5a8ade60a600af546e6467ce563eb4e"
   },
   "resources/js/Pages/Public/Exam/AttemptShow.tsx": {
-    "mtime": 1786227709.874267,
-    "ast_hash": "137b31e8a9383d5b0c3329d1caaf9e35",
+    "mtime": 1786232227.8174658,
+    "ast_hash": "585b19bbb64c3e6265fbda678c7a424f",
     "semantic_hash": ""
   },
   "resources/js/Pages/Public/Exam/Landing.tsx": {
-    "mtime": 1786227205.0330014,
-    "ast_hash": "179b1c90dad644eab3f758fe7d8dbb39",
+    "mtime": 1786228825.6861553,
+    "ast_hash": "c74f4b56a99809c49ee7ba617e76efe3",
     "semantic_hash": ""
   },
   "resources/js/app.tsx": {
@@ -2085,13 +2085,13 @@
     "semantic_hash": "c56c466205fe20a59b9be4fb0c0d70a5"
   },
   "routes/console.php": {
-    "mtime": 1782461259.9779332,
-    "ast_hash": "f6f05299a9feccef8ebad0c8da53089f",
-    "semantic_hash": "f6f05299a9feccef8ebad0c8da53089f"
+    "mtime": 1786231778.4657965,
+    "ast_hash": "0b680ec79e87d8f9362749f0cae212bf",
+    "semantic_hash": ""
   },
   "routes/exam.php": {
-    "mtime": 1786158630.1941497,
-    "ast_hash": "c14652620bd1a73ee462af67ca0d8342",
+    "mtime": 1786231805.4030163,
+    "ast_hash": "808ca94b85452fd6ca5de7fcaabe1047",
     "semantic_hash": ""
   },
   "routes/staff.php": {
@@ -2155,9 +2155,9 @@
     "semantic_hash": "a2abb7745944b6b0a64f800368ea9616"
   },
   "tests/Feature/PublicOnlineExamTest.php": {
-    "mtime": 1785852681.9756277,
-    "ast_hash": "1ff90c00469081a2c6a329b934cf701c",
-    "semantic_hash": "1ff90c00469081a2c6a329b934cf701c"
+    "mtime": 1786228899.6617012,
+    "ast_hash": "808b7a6d0ec58062c5d6f87a185ee5b9",
+    "semantic_hash": ""
   },
   "tests/Feature/RegistrationDraftSecurityTest.php": {
     "mtime": 1785852681.9756277,
@@ -3205,8 +3205,8 @@
     "semantic_hash": ""
   },
   "tests/Feature/PublicSessionAdminTest.php": {
-    "mtime": 1786158642.5682495,
-    "ast_hash": "e2f94f83c287094cfe98e7a56f8fe332",
+    "mtime": 1786231816.4381065,
+    "ast_hash": "7e190ad9da9fec0bcd06b57a995d5a84",
     "semantic_hash": ""
   },
   "resources/js/Components/Dashboard/Shared/SentinelSelect.tsx": {
@@ -3222,6 +3222,16 @@
   ".ai/rules/index.md": {
     "mtime": 1786159294.751634,
     "ast_hash": "1cb0c6c1a71c5048bf46d29bbb746848",
+    "semantic_hash": ""
+  },
+  "app/Console/Commands/RotateExamTokens.php": {
+    "mtime": 1786231767.4964218,
+    "ast_hash": "fa81a81ed03a7a8bb3280df6429105d6",
+    "semantic_hash": ""
+  },
+  "app/Console/Commands/SyncExpiredExamAttempts.php": {
+    "mtime": 1786231773.3457546,
+    "ast_hash": "f2389e8fdf81b55c703375153436ad8f",
     "semantic_hash": ""
   }
 }

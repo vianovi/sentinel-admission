@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useState, useMemo } from "react";
 import { Head, Link, useForm, router, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import ResizableSplitGrid from "@/Components/Dashboard/Shared/ResizableSplitGrid";
@@ -147,7 +147,10 @@ export default function PublicSessions({
         expiry_minutes: 120,
     });
 
-    const selectedPackage = packages.find((p) => p.id === Number(sessionForm.data.exam_package_id)) || packages[0];
+    const selectedPackage = useMemo(
+        () => packages.find((p) => p.id === Number(sessionForm.data.exam_package_id)) || packages[0],
+        [packages, sessionForm.data.exam_package_id]
+    );
 
     const openCreateModal = () => {
         setEditingSessionId(null);
@@ -268,7 +271,29 @@ export default function PublicSessions({
             "Hapus Token"
         );
         if (confirmed) {
-            router.delete(route("admin.exams.public-sessions.tokens.destroy", tokenId));
+            router.delete(route("admin.exams.public-sessions.destroy-token", tokenId));
+        }
+    };
+
+    const handleForceSubmitAttempt = async (attemptId: number, participantName: string) => {
+        const confirmed = await confirmAction(
+            "Paksa Selesai Ujian?",
+            `Tindakan ini akan menghentikan pengerjaan untuk peserta "${participantName}" dan langsung mengumpulkan seluruh jawaban yang tersimpan saat ini.`,
+            "Ya, Paksa Selesai"
+        );
+        if (confirmed) {
+            router.post(route("admin.exams.public-sessions.attempts.force-submit", attemptId));
+        }
+    };
+
+    const handleResetAttemptViolations = async (attemptId: number, participantName: string) => {
+        const confirmed = await confirmAction(
+            "Reset Pelanggaran Peserta?",
+            `Tindakan ini akan menghapus seluruh catatan keluar fullscreen (${participantName}) kembali menjadi 0.`,
+            "Ya, Reset Pelanggaran"
+        );
+        if (confirmed) {
+            router.post(route("admin.exams.public-sessions.attempts.reset-violations", attemptId));
         }
     };
 
@@ -277,63 +302,94 @@ export default function PublicSessions({
         showSuccessToast(`${label} berhasil disalin ke clipboard!`);
     };
 
-    const activeProctorToken = tokens.find((t) => t.is_valid);
-
-    const filteredSessions = public_sessions.filter((sess) =>
-        sess.title.toLowerCase().includes(searchSession.toLowerCase()) ||
-        (sess.package_title && sess.package_title.toLowerCase().includes(searchSession.toLowerCase()))
+    const activeProctorToken = useMemo(
+        () => tokens.find((t) => t.is_valid),
+        [tokens]
     );
 
-    const filteredAttempts = attempts.filter((att) => {
-        const matchesSearch =
-            att.guest_name.toLowerCase().includes(searchParticipant.toLowerCase()) ||
-            att.guest_school.toLowerCase().includes(searchParticipant.toLowerCase()) ||
-            att.token.toLowerCase().includes(searchParticipant.toLowerCase());
-        const matchesStatus =
-            participantStatusFilter === "all" ||
-            (participantStatusFilter === "in_progress" && att.status === "in_progress") ||
-            (participantStatusFilter === "submitted" && (att.status === "submitted" || att.status === "auto_submitted"));
-        return matchesSearch && matchesStatus;
-    });
+    const filteredSessions = useMemo(
+        () =>
+            public_sessions.filter(
+                (sess) =>
+                    sess.title.toLowerCase().includes(searchSession.toLowerCase()) ||
+                    (sess.package_title && sess.package_title.toLowerCase().includes(searchSession.toLowerCase()))
+            ),
+        [public_sessions, searchSession]
+    );
+
+    const filteredAttempts = useMemo(
+        () =>
+            attempts.filter((att) => {
+                const matchesSearch =
+                    att.guest_name.toLowerCase().includes(searchParticipant.toLowerCase()) ||
+                    att.guest_school.toLowerCase().includes(searchParticipant.toLowerCase()) ||
+                    att.token.toLowerCase().includes(searchParticipant.toLowerCase());
+                const matchesStatus =
+                    participantStatusFilter === "all" ||
+                    (participantStatusFilter === "in_progress" && att.status === "in_progress") ||
+                    (participantStatusFilter === "submitted" && (att.status === "submitted" || att.status === "auto_submitted"));
+                return matchesSearch && matchesStatus;
+            }),
+        [attempts, searchParticipant, participantStatusFilter]
+    );
 
     // Options for SentinelSelect dropdowns
-    const packageOptions = packages.map((pkg) => ({
-        value: pkg.id,
-        label: `${pkg.title} (${pkg.code})`,
-        description: `Durasi: ${pkg.duration_minutes}m | Passing Score: ${pkg.passing_score ?? 70}%`,
-        badge: `${pkg.duration_minutes}m`,
-    }));
+    const packageOptions = useMemo(
+        () =>
+            packages.map((pkg) => ({
+                value: pkg.id,
+                label: `${pkg.title} (${pkg.code})`,
+                description: `Durasi: ${pkg.duration_minutes}m | Passing Score: ${pkg.passing_score ?? 70}%`,
+                badge: `${pkg.duration_minutes}m`,
+            })),
+        [packages]
+    );
 
-    const waveOptions = [
-        { value: 0, label: "Tanpa Gelombang (Publik Umum)", description: "Terbuka bagi pendaftar umum" },
-        ...waves.map((w) => ({
-            value: w.id,
-            label: `${w.title} (${w.academic_year})`,
-            description: `Tahun Akademik: ${w.academic_year}`,
-        })),
-    ];
+    const waveOptions = useMemo(
+        () => [
+            { value: 0, label: "Tanpa Gelombang (Publik Umum)", description: "Terbuka bagi pendaftar umum" },
+            ...waves.map((w) => ({
+                value: w.id,
+                label: `${w.title} (${w.academic_year})`,
+                description: `Tahun Akademik: ${w.academic_year}`,
+            })),
+        ],
+        [waves]
+    );
 
-    const accessTypeOptions = [
-        { value: "token_required", label: "Token Proktor Wajib", description: "Peserta wajib memasukkan token 6 karakter untuk masuk" },
-        { value: "open", label: "Akses Terbuka Tanpa Token", description: "Peserta publik langsung mengerjakan tanpa input token" },
-    ];
+    const accessTypeOptions = useMemo(
+        () => [
+            { value: "token_required", label: "Token Proktor Wajib", description: "Peserta wajib memasukkan token 6 karakter untuk masuk" },
+            { value: "open", label: "Akses Terbuka Tanpa Token", description: "Peserta publik langsung mengerjakan tanpa input token" },
+        ],
+        []
+    );
 
-    const statusOptions = [
-        { value: "published", label: "Diterbitkan (Published)", badge: "Live" },
-        { value: "draft", label: "Draft (Disimpan saja)", badge: "Draft" },
-        { value: "closed", label: "Ditutup (Closed)", badge: "Closed" },
-    ];
+    const statusOptions = useMemo(
+        () => [
+            { value: "published", label: "Diterbitkan (Published)", badge: "Live" },
+            { value: "draft", label: "Draft (Disimpan saja)", badge: "Draft" },
+            { value: "closed", label: "Ditutup (Closed)", badge: "Closed" },
+        ],
+        []
+    );
 
-    const tokenTypeOptions = [
-        { value: "multi_use", label: "Multi-Use (Banyak Peserta)" },
-        { value: "single_use", label: "Single-Use (Sekali Pakai)" },
-    ];
+    const tokenTypeOptions = useMemo(
+        () => [
+            { value: "multi_use", label: "Multi-Use (Banyak Peserta)" },
+            { value: "single_use", label: "Single-Use (Sekali Pakai)" },
+        ],
+        []
+    );
 
-    const participantFilterOptions = [
-        { value: "all", label: `Semua Status (${attempts.length})` },
-        { value: "in_progress", label: `Sedang Mengerjakan (${stats.in_progress})` },
-        { value: "submitted", label: `Sudah Selesai (${stats.submitted})` },
-    ];
+    const participantFilterOptions = useMemo(
+        () => [
+            { value: "all", label: `Semua Status (${attempts.length})` },
+            { value: "in_progress", label: `Sedang Mengerjakan (${stats.in_progress})` },
+            { value: "submitted", label: `Sudah Selesai (${stats.submitted})` },
+        ],
+        [attempts.length, stats.in_progress, stats.submitted]
+    );
 
     return (
         <DashboardLayout>
@@ -735,6 +791,7 @@ export default function PublicSessions({
                                                         <th className="py-3 px-3">Status</th>
                                                         <th className="py-3 px-3">Skor Akhir</th>
                                                         <th className="py-3 px-3 text-center">Keluar Fullscreen</th>
+                                                        <th className="py-3 px-3 text-right">Aksi Proktor</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-slate-100 dark:divide-white/5">
@@ -769,6 +826,28 @@ export default function PublicSessions({
                                                                 }`}>
                                                                     {att.violations_count}x
                                                                 </span>
+                                                            </td>
+                                                            <td className="py-3 px-3 text-right">
+                                                                <div className="flex items-center justify-end gap-1.5">
+                                                                    {att.status === "in_progress" && (
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => handleForceSubmitAttempt(att.id, att.guest_name)}
+                                                                            className="rounded-lg bg-red-500/10 hover:bg-red-500/20 px-2 py-1 text-[11px] font-bold text-red-600 dark:text-red-400 border border-red-500/30 transition-all flex items-center gap-1"
+                                                                            title="Paksa Selesai Ujian"
+                                                                        >
+                                                                            <i className="fa-solid fa-flag-checkered text-[10px]" /> Force Submit
+                                                                        </button>
+                                                                    )}
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => handleResetAttemptViolations(att.id, att.guest_name)}
+                                                                        className="rounded-lg bg-amber-500/10 hover:bg-amber-500/20 px-2 py-1 text-[11px] font-bold text-amber-600 dark:text-amber-400 border border-amber-500/30 transition-all flex items-center gap-1"
+                                                                        title="Reset Pelanggaran"
+                                                                    >
+                                                                        <i className="fa-solid fa-rotate-left text-[10px]" /> Reset Violation
+                                                                    </button>
+                                                                </div>
                                                             </td>
                                                         </tr>
                                                     ))}

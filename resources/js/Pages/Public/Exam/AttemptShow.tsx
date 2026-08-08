@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import RichExamText from "@/Components/Exam/Shared/RichExamText";
@@ -35,10 +35,31 @@ export default function PublicAttemptShow({ participant, exam, attempt, question
 
     const isRunning = attemptState.status === "in_progress" && !attemptState.is_locked && questions.length > 0;
 
+    useEffect(() => {
+        if (isRunning && attemptState.expires_at) {
+            const sessionInfo = {
+                attemptId: attempt.id,
+                guestName: participant.name,
+                guestSchool: participant.school ?? "",
+                sessionTitle: exam.session_title ?? exam.package_title ?? "Ujian Publik",
+                subjectName: exam.subject_name ?? "",
+                startedAt: attemptState.started_at,
+                expiresAt: attemptState.expires_at,
+            };
+            localStorage.setItem("SENTINEL_PUBLIC_EXAM_ACTIVE_SESSION", JSON.stringify(sessionInfo));
+        } else if (!isRunning) {
+            localStorage.removeItem("SENTINEL_PUBLIC_EXAM_ACTIVE_SESSION");
+        }
+    }, [isRunning, attempt.id, participant.name, participant.school, exam.session_title, exam.package_title, exam.subject_name, attemptState.expires_at, attemptState.started_at]);
+
     const { activeIndex, activeQuestion, answeredCount, answerMap, setActiveIndex, goNext, goPrev, updateAnswer, patchAnswer, saveTimers } = useExamNavigation({
         questions,
         initialAnswers: answers,
     });
+
+    const markedCount = useMemo(() => {
+        return questions.filter((q) => answerMap[q.id]?.is_marked_for_review).length;
+    }, [questions, answerMap]);
 
     const { isFullscreen, needsInitialFullscreen, violationsCount, enterFullscreen } = useFullscreenEnforcement({
         isRunning,
@@ -448,7 +469,7 @@ export default function PublicAttemptShow({ participant, exam, attempt, question
                             <div className="flex items-center justify-between mb-3">
                                 <span className={`text-[10px] font-bold uppercase tracking-wider ${themeMode === "dark" ? "text-slate-400" : "text-slate-500"}`}>Navigasi Soal</span>
                                 <span className="text-[10px] font-bold text-violet-500">
-                                    {questions.filter((q) => answerMap[q.id]?.is_marked_for_review).length} Ragu
+                                    {markedCount} Ragu
                                 </span>
                             </div>
 
@@ -515,7 +536,7 @@ export default function PublicAttemptShow({ participant, exam, attempt, question
                             <div className="flex items-center justify-between mb-3">
                                 <span className={`text-[10px] font-bold uppercase tracking-wider ${themeMode === "dark" ? "text-slate-400" : "text-slate-500"}`}>Navigasi Soal</span>
                                 <span className="text-[10px] font-bold text-violet-500">
-                                    {questions.filter((q) => answerMap[q.id]?.is_marked_for_review).length} Ragu
+                                    {markedCount} Ragu
                                 </span>
                             </div>
 
