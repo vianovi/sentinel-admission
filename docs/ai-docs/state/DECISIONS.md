@@ -43,3 +43,9 @@
 - Status: active for the email-design slice
 - Decision: Keep Laravel's `VerifyEmail` and `ResetPassword` notification classes, token generation, and routes. Customize only their `toMailUsing` presentation callbacks and render both HTML/plain-text views from `EmailDesignSystem`.
 - Reason: This preserves existing authentication behavior and test contracts while providing one reusable email design surface for future transactional notifications.
+
+## D-008 — Playwright Go / MCP Driver Local Cache Resolution
+
+- Status: active
+- Decision: Configured Playwright Go to use a locally packaged Playwright 1.57.0 driver in `~/.cache/ms-playwright-go/1.57.0/` pointing to Node and the system Chromium executable at `/usr/bin/chromium-browser`.
+- Reason: Microsoft CDN deprecated `playwright-1.57.0-linux.zip` returning a 404 error during automatic download. Packaging the core driver and bypassing the network fetch allows local tests and subagents to run reliably without internet requests.

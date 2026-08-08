@@ -91,9 +91,12 @@ Route::middleware(['auth', RoleMiddleware::class . ':admin'])
 
         Route::get('/public-sessions', [AdminPublicExamSession::class, 'index'])->name('public-sessions.index');
         Route::post('/public-sessions', [AdminPublicExamSession::class, 'store'])->name('public-sessions.store');
+        Route::put('/public-sessions/{session}', [AdminPublicExamSession::class, 'update'])->name('public-sessions.update');
+        Route::delete('/public-sessions/{session}', [AdminPublicExamSession::class, 'destroy'])->name('public-sessions.destroy');
         Route::post('/public-sessions/{session}/toggle-results', [AdminPublicExamSession::class, 'toggleResultVisibility'])->name('public-sessions.toggle-results');
         Route::post('/public-sessions/{session}/tokens', [AdminPublicExamSession::class, 'generateToken'])->name('public-sessions.tokens.store');
         Route::post('/tokens/{token}/rotate', [AdminPublicExamSession::class, 'rotateToken'])->name('public-sessions.tokens.rotate');
+        Route::delete('/public-tokens/{token}', [AdminPublicExamSession::class, 'destroyToken'])->name('public-sessions.tokens.destroy');
 
         Route::post('/sessions/{session}/candidates', [AdminExamSession::class, 'assignCandidates'])->name('sessions.candidates.assign');
         Route::post('/sessions/{session}/tokens', [AdminExamSession::class, 'generateToken'])->name('sessions.tokens.store');

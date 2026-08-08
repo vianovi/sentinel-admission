@@ -90,9 +90,9 @@
     "semantic_hash": "0e27794ed414712562b28ee769607534"
   },
   "app/Http/Controllers/Dashboard/Admin/Exam/PublicSessionController.php": {
-    "mtime": 1785852681.9635003,
-    "ast_hash": "756cfa06a857056617643eacb46598f3",
-    "semantic_hash": "756cfa06a857056617643eacb46598f3"
+    "mtime": 1786158649.9833093,
+    "ast_hash": "99a5626c14a435474fbd6b2346740723",
+    "semantic_hash": ""
   },
   "app/Http/Controllers/Dashboard/Admin/Exam/QuestionImportController.php": {
     "mtime": 1783959520.367961,
@@ -300,9 +300,9 @@
     "semantic_hash": "2c58a6eff1c0c92ce4c6513ea43e8df9"
   },
   "app/Http/Requests/Exam/StoreExamSessionRequest.php": {
-    "mtime": 1785852681.9635003,
-    "ast_hash": "166794d32ee39608f345cd528b971af5",
-    "semantic_hash": "166794d32ee39608f345cd528b971af5"
+    "mtime": 1786158616.6390402,
+    "ast_hash": "745c3c9d8ea8a1e0b19efeaaa3b4b6fd",
+    "semantic_hash": ""
   },
   "app/Http/Requests/Exam/StoreExamSubjectRequest.php": {
     "mtime": 1783959520.373823,
@@ -380,9 +380,9 @@
     "semantic_hash": "679b8d23f94a13cc859557aa944a534f"
   },
   "app/Models/Exam/ExamSession.php": {
-    "mtime": 1785852681.9635003,
-    "ast_hash": "65cc2cf3d4aacfdb180ecaa74c67b048",
-    "semantic_hash": "65cc2cf3d4aacfdb180ecaa74c67b048"
+    "mtime": 1786159670.617742,
+    "ast_hash": "cf7ff3dd859625b72f03a9509fcbc548",
+    "semantic_hash": ""
   },
   "app/Models/Exam/ExamSessionCandidate.php": {
     "mtime": 1783959520.377075,
@@ -685,9 +685,9 @@
     "semantic_hash": "d18593472c5e35d8ab5add4240fc95f6"
   },
   "composer.json": {
-    "mtime": 1785852681.9635003,
-    "ast_hash": "7016480f2d3fac09313578c9cca4eb68",
-    "semantic_hash": "7016480f2d3fac09313578c9cca4eb68"
+    "mtime": 1786156339.9656293,
+    "ast_hash": "d072dcb2a78d7d8f72bbe2cb60b0aff9",
+    "semantic_hash": ""
   },
   "config/app.php": {
     "mtime": 1785852681.9637547,
@@ -930,7 +930,7 @@
     "semantic_hash": "3afdc7e465ba15c28cdd89682677343d"
   },
   "package.json": {
-    "mtime": 1785933469.4204643,
+    "mtime": 1786156338.0679338,
     "ast_hash": "efc0bbe128cb681a52844de355da003d",
     "semantic_hash": "efc0bbe128cb681a52844de355da003d"
   },
@@ -1245,7 +1245,7 @@
     "semantic_hash": "4116a45fe2002c10d39d393e6b4b60ea"
   },
   "resources/js/Components/Dashboard/Shared/ResizableSplitGrid.tsx": {
-    "mtime": 1785852681.9720044,
+    "mtime": 1786156338.0679338,
     "ast_hash": "c160ea2ea6ad66ca8a4640215cc83f37",
     "semantic_hash": "c160ea2ea6ad66ca8a4640215cc83f37"
   },
@@ -1430,7 +1430,7 @@
     "semantic_hash": "685929ce265213c0feeae919ecf92f52"
   },
   "resources/js/Components/Exam/Admin/SessionFormCard.tsx": {
-    "mtime": 1785852681.972431,
+    "mtime": 1786156338.0688004,
     "ast_hash": "396110e35f19ed596b03bc4a8bbf954a",
     "semantic_hash": "396110e35f19ed596b03bc4a8bbf954a"
   },
@@ -1465,14 +1465,14 @@
     "semantic_hash": "7d894587fc5e871442151d6addb91d8f"
   },
   "resources/js/Components/Exam/Public/PublicGuestIdentityForm.tsx": {
-    "mtime": 1785852681.9728153,
-    "ast_hash": "37e75a5d8130c7585a70abdc7d7c2c41",
-    "semantic_hash": "37e75a5d8130c7585a70abdc7d7c2c41"
+    "mtime": 1786162182.5092592,
+    "ast_hash": "68a64424f72b1dd33787e5a174b7b2d3",
+    "semantic_hash": ""
   },
   "resources/js/Components/Exam/Public/PublicTokenLoginForm.tsx": {
-    "mtime": 1785852681.9728968,
-    "ast_hash": "b6a203d7bb4d9a25635eb7f25467062c",
-    "semantic_hash": "b6a203d7bb4d9a25635eb7f25467062c"
+    "mtime": 1786227191.7309155,
+    "ast_hash": "f6f5b0adbd3608d38afed0d388cdf879",
+    "semantic_hash": ""
   },
   "resources/js/Components/Exam/Shared/RichExamText.tsx": {
     "mtime": 1785852681.9728968,
@@ -1700,14 +1700,14 @@
     "semantic_hash": "65ee2654b9db5c9a771cf482243e3e32"
   },
   "resources/js/Pages/Dashboard/Admin/Exam/Packages.tsx": {
-    "mtime": 1785852681.9728968,
+    "mtime": 1786156338.0688004,
     "ast_hash": "056518e8b1ae45093872dbd5db09deb4",
     "semantic_hash": "056518e8b1ae45093872dbd5db09deb4"
   },
   "resources/js/Pages/Dashboard/Admin/Exam/PublicSessions.tsx": {
-    "mtime": 1785852681.9728968,
-    "ast_hash": "98b633a523437b52aefbc1b348ac8632",
-    "semantic_hash": "98b633a523437b52aefbc1b348ac8632"
+    "mtime": 1786161540.8060577,
+    "ast_hash": "82b622ba46af505ed449e34e851f08ca",
+    "semantic_hash": ""
   },
   "resources/js/Pages/Dashboard/Admin/Exam/ResultShow.tsx": {
     "mtime": 1783959520.4399378,
@@ -1725,12 +1725,12 @@
     "semantic_hash": "caf3cba0ca20030c839fa34f93624950"
   },
   "resources/js/Pages/Dashboard/Admin/Exam/Sessions.tsx": {
-    "mtime": 1785852681.9728968,
+    "mtime": 1786156338.0690708,
     "ast_hash": "d09af8cb27027cfd44054e655883f70c",
     "semantic_hash": "d09af8cb27027cfd44054e655883f70c"
   },
   "resources/js/Pages/Dashboard/Admin/Exam/Subjects.tsx": {
-    "mtime": 1785852681.9728968,
+    "mtime": 1786156338.0690708,
     "ast_hash": "0601bc1f3e0b227a4593efc9d68d0072",
     "semantic_hash": "0601bc1f3e0b227a4593efc9d68d0072"
   },
@@ -1765,7 +1765,7 @@
     "semantic_hash": "60fddfd5f1399f9f155783cb578643f1"
   },
   "resources/js/Pages/Dashboard/Candidate/Calendar.tsx": {
-    "mtime": 1785852681.9728968,
+    "mtime": 1786156338.0690708,
     "ast_hash": "acfac69ba95d56cfce2e34ef0f84336c",
     "semantic_hash": "acfac69ba95d56cfce2e34ef0f84336c"
   },
@@ -1790,9 +1790,9 @@
     "semantic_hash": "33fab42c232c9c8d3686944f7e191dee"
   },
   "resources/js/Pages/Dashboard/Candidate/Exam/AttemptShow.tsx": {
-    "mtime": 1785852681.9728968,
-    "ast_hash": "6917d1447fe60ff7d78e930128352b07",
-    "semantic_hash": "6917d1447fe60ff7d78e930128352b07"
+    "mtime": 1786227605.670593,
+    "ast_hash": "dd554ffbfcfd3aee6cc21413c645a6ab",
+    "semantic_hash": ""
   },
   "resources/js/Pages/Dashboard/Candidate/Exam/Index.tsx": {
     "mtime": 1783959520.444185,
@@ -1815,7 +1815,7 @@
     "semantic_hash": "eca6f39b76d010ee3268d225d59465b5"
   },
   "resources/js/Pages/Dashboard/Candidate/Profile.tsx": {
-    "mtime": 1785852681.9728968,
+    "mtime": 1786156338.0690708,
     "ast_hash": "a43633619eaf10a1b65dba86274521b1",
     "semantic_hash": "a43633619eaf10a1b65dba86274521b1"
   },
@@ -1850,7 +1850,7 @@
     "semantic_hash": "bdde43ae05d2dbd31d95adbbc3f45e75"
   },
   "resources/js/Pages/Dashboard/Staff/Candidates.tsx": {
-    "mtime": 1785852681.9728968,
+    "mtime": 1786156338.0690708,
     "ast_hash": "cf6def52acb4b0a36aaa8135f604328d",
     "semantic_hash": "cf6def52acb4b0a36aaa8135f604328d"
   },
@@ -1865,7 +1865,7 @@
     "semantic_hash": "ac53e34ce4d9783415038a04cd154b5f"
   },
   "resources/js/Pages/Dashboard/Staff/Index.tsx": {
-    "mtime": 1785852681.9728968,
+    "mtime": 1786156338.0690708,
     "ast_hash": "30a28cf6396c63c29b304b496509949c",
     "semantic_hash": "30a28cf6396c63c29b304b496509949c"
   },
@@ -1885,12 +1885,12 @@
     "semantic_hash": "d39adef9852b9fb6ca5bf9df8062cfde"
   },
   "resources/js/Pages/Dashboard/Staff/ReportsExportSettings.tsx": {
-    "mtime": 1785852681.9728968,
+    "mtime": 1786156338.0690708,
     "ast_hash": "d060e2c117a6e8aabcf8554ab73b9545",
     "semantic_hash": "d060e2c117a6e8aabcf8554ab73b9545"
   },
   "resources/js/Pages/Dashboard/Staff/Show.tsx": {
-    "mtime": 1785852681.9728968,
+    "mtime": 1786156338.0690708,
     "ast_hash": "27fe831768580491065075f395d2d66f",
     "semantic_hash": "27fe831768580491065075f395d2d66f"
   },
@@ -1915,17 +1915,17 @@
     "semantic_hash": "d5a8ade60a600af546e6467ce563eb4e"
   },
   "resources/js/Pages/Public/Exam/AttemptShow.tsx": {
-    "mtime": 1785852681.973752,
-    "ast_hash": "b2b70d9ef2ecd7a83ae1f6da156ce376",
-    "semantic_hash": "b2b70d9ef2ecd7a83ae1f6da156ce376"
+    "mtime": 1786227709.874267,
+    "ast_hash": "137b31e8a9383d5b0c3329d1caaf9e35",
+    "semantic_hash": ""
   },
   "resources/js/Pages/Public/Exam/Landing.tsx": {
-    "mtime": 1785852681.9738178,
-    "ast_hash": "f941d49e9edd302d5c02a77341e24d41",
-    "semantic_hash": "f941d49e9edd302d5c02a77341e24d41"
+    "mtime": 1786227205.0330014,
+    "ast_hash": "179b1c90dad644eab3f758fe7d8dbb39",
+    "semantic_hash": ""
   },
   "resources/js/app.tsx": {
-    "mtime": 1777127893.0569894,
+    "mtime": 1786162052.7522016,
     "ast_hash": "4baa60d7c8d0c574f4c6f0ba09fd29b4",
     "semantic_hash": "4baa60d7c8d0c574f4c6f0ba09fd29b4"
   },
@@ -1935,9 +1935,9 @@
     "semantic_hash": "78f909acc19aea4717eddca5a87c1ba3"
   },
   "resources/js/config/navigation.ts": {
-    "mtime": 1785852681.9738178,
-    "ast_hash": "a23710f0d15be2df9d53e599e76caae4",
-    "semantic_hash": "a23710f0d15be2df9d53e599e76caae4"
+    "mtime": 1786156338.069934,
+    "ast_hash": "2cccff3c6c8b89d089df64e749b93603",
+    "semantic_hash": ""
   },
   "resources/js/context/CardSizeContext.tsx": {
     "mtime": 1785852681.9738178,
@@ -1950,7 +1950,7 @@
     "semantic_hash": "58174373b96fdb18abc9ee8427a65e96"
   },
   "resources/js/context/ThemeContext.tsx": {
-    "mtime": 1777127893.058524,
+    "mtime": 1786162052.7522016,
     "ast_hash": "387b342a77f5721be653919d841b5cbb",
     "semantic_hash": "387b342a77f5721be653919d841b5cbb"
   },
@@ -1960,9 +1960,9 @@
     "semantic_hash": "298e5a9a8fb02e3cba1d5ab9815971a9"
   },
   "resources/js/hooks/exam/useExamNavigation.ts": {
-    "mtime": 1785852681.9739983,
-    "ast_hash": "66c72f97e571c8f36256a1ac9b0428b0",
-    "semantic_hash": "66c72f97e571c8f36256a1ac9b0428b0"
+    "mtime": 1786163909.177325,
+    "ast_hash": "3fcc4c2900c2fc5afd5b4663f9a3249e",
+    "semantic_hash": ""
   },
   "resources/js/hooks/exam/useExamTimer.ts": {
     "mtime": 1785852681.9739983,
@@ -1970,9 +1970,9 @@
     "semantic_hash": "77f4baa0601d6d4b2c2a6543d6989262"
   },
   "resources/js/hooks/exam/useFullscreenEnforcement.ts": {
-    "mtime": 1785852681.9739983,
-    "ast_hash": "783e161659b1b4baf5a27942d12b664b",
-    "semantic_hash": "783e161659b1b4baf5a27942d12b664b"
+    "mtime": 1786163933.843522,
+    "ast_hash": "a5096aeaee0ce0c45d13793df83bbe3a",
+    "semantic_hash": ""
   },
   "resources/js/hooks/useIdleLogout.ts": {
     "mtime": 1777128427.9390297,
@@ -2025,9 +2025,9 @@
     "semantic_hash": "5206339b9eb951d2e8414bcf89a09139"
   },
   "resources/views/app.blade.php": {
-    "mtime": 1782461259.9779332,
-    "ast_hash": "017107f273a6bd07da7261dc9d9aef74",
-    "semantic_hash": "017107f273a6bd07da7261dc9d9aef74"
+    "mtime": 1786162124.2337842,
+    "ast_hash": "d5f96c374385f621560ee2098ebc34a5",
+    "semantic_hash": ""
   },
   "resources/views/components/email/button.blade.php": {
     "mtime": 1785852681.9742644,
@@ -2090,9 +2090,9 @@
     "semantic_hash": "f6f05299a9feccef8ebad0c8da53089f"
   },
   "routes/exam.php": {
-    "mtime": 1785852681.975302,
-    "ast_hash": "012fa4724c6965ab67286c5ffb23e9a1",
-    "semantic_hash": "012fa4724c6965ab67286c5ffb23e9a1"
+    "mtime": 1786158630.1941497,
+    "ast_hash": "c14652620bd1a73ee462af67ca0d8342",
+    "semantic_hash": ""
   },
   "routes/staff.php": {
     "mtime": 1785852681.9753659,
@@ -2135,7 +2135,7 @@
     "semantic_hash": "e6005b5fbfa49e5c1132a05c8719ec38"
   },
   "tests/Feature/EnvironmentMailDeliveryTest.php": {
-    "mtime": 1785852681.9756277,
+    "mtime": 1786156338.069934,
     "ast_hash": "c03baabc3fc6b3e1172697f6344fcc02",
     "semantic_hash": "c03baabc3fc6b3e1172697f6344fcc02"
   },
@@ -2145,9 +2145,9 @@
     "semantic_hash": "d38ddea7655f855a32c0325991776d48"
   },
   "tests/Feature/OnlineSelectionExamImportTest.php": {
-    "mtime": 1783959520.4543087,
-    "ast_hash": "7f8b5dd62c80aa2c86d5a9ef7618d87e",
-    "semantic_hash": "7f8b5dd62c80aa2c86d5a9ef7618d87e"
+    "mtime": 1786156339.9656293,
+    "ast_hash": "9eab2f2b684b7a6aba5787b842db9388",
+    "semantic_hash": ""
   },
   "tests/Feature/OnlineSelectionExamSecurityTest.php": {
     "mtime": 1783959520.4544532,
@@ -2208,5 +2208,1020 @@
     "mtime": 1782461259.9547455,
     "ast_hash": "7ea5668d530295fdd00bf0a59b60faff",
     "semantic_hash": "7ea5668d530295fdd00bf0a59b60faff"
+  },
+  "boost.json": {
+    "mtime": 1786156338.0519338,
+    "ast_hash": "908023b0d634c497635bac65c5cf97eb",
+    "semantic_hash": ""
+  },
+  "scripts/patch-openspout.php": {
+    "mtime": 1786154473.6002424,
+    "ast_hash": "e979d02f4adac9bdcafda140f91c5f0c",
+    "semantic_hash": ""
+  },
+  ".agents/rules/graphify.md": {
+    "mtime": 1786156338.049213,
+    "ast_hash": "f1e53ecc9194573d3c28fc116c743a2e",
+    "semantic_hash": ""
+  },
+  ".agents/skills/inertia-react-development/SKILL.md": {
+    "mtime": 1786156338.0495384,
+    "ast_hash": "6eb1539fb0933d02f48e642a3249ce7e",
+    "semantic_hash": ""
+  },
+  ".agents/skills/infer-conventions/SKILL.md": {
+    "mtime": 1786156338.0495384,
+    "ast_hash": "5cdf6120ddf8d37135adfebc8f98ef85",
+    "semantic_hash": ""
+  },
+  ".agents/skills/infer-conventions/references/checklist.md": {
+    "mtime": 1786156338.0498085,
+    "ast_hash": "63c8e433789417eecbfb3d4d52f5e7b3",
+    "semantic_hash": ""
+  },
+  ".agents/skills/laravel-best-practices/SKILL.md": {
+    "mtime": 1786156338.0498085,
+    "ast_hash": "c2c01a832148dafbd53386871ba74e77",
+    "semantic_hash": ""
+  },
+  ".agents/skills/laravel-best-practices/rules/advanced-queries.md": {
+    "mtime": 1786156338.0500233,
+    "ast_hash": "9a78d2f8810d0c5a2b8b72df91ca4a18",
+    "semantic_hash": ""
+  },
+  ".agents/skills/laravel-best-practices/rules/architecture.md": {
+    "mtime": 1786156338.050105,
+    "ast_hash": "5ff00fd7c22c0e891f89040370b282f5",
+    "semantic_hash": ""
+  },
+  ".agents/skills/laravel-best-practices/rules/blade-views.md": {
+    "mtime": 1786156338.050105,
+    "ast_hash": "3c259ceaa9074c0e503c01c2d5d5de58",
+    "semantic_hash": ""
+  },
+  ".agents/skills/laravel-best-practices/rules/caching.md": {
+    "mtime": 1786156338.050105,
+    "ast_hash": "50bec263dad9c1611c697480671cdea7",
+    "semantic_hash": ""
+  },
+  ".agents/skills/laravel-best-practices/rules/collections.md": {
+    "mtime": 1786156338.050105,
+    "ast_hash": "a377a223899308ace42da6b71775b8d7",
+    "semantic_hash": ""
+  },
+  ".agents/skills/laravel-best-practices/rules/config.md": {
+    "mtime": 1786156338.050105,
+    "ast_hash": "3cf9e90d78c23ba56cc7158160868104",
+    "semantic_hash": ""
+  },
+  ".agents/skills/laravel-best-practices/rules/db-performance.md": {
+    "mtime": 1786156338.050105,
+    "ast_hash": "30ca712aa13bb1acd2466d42eed36561",
+    "semantic_hash": ""
+  },
+  ".agents/skills/laravel-best-practices/rules/eloquent.md": {
+    "mtime": 1786156338.050105,
+    "ast_hash": "f7494b49ba60ebe433f5968ec4ebdf9c",
+    "semantic_hash": ""
+  },
+  ".agents/skills/laravel-best-practices/rules/error-handling.md": {
+    "mtime": 1786156338.050105,
+    "ast_hash": "75ea9b08d01ff1159c7fc8e7da9b70b9",
+    "semantic_hash": ""
+  },
+  ".agents/skills/laravel-best-practices/rules/events-notifications.md": {
+    "mtime": 1786156338.050105,
+    "ast_hash": "696011b9584ae0df0ca483e55ecd86c9",
+    "semantic_hash": ""
+  },
+  ".agents/skills/laravel-best-practices/rules/http-client.md": {
+    "mtime": 1786156338.050105,
+    "ast_hash": "fef2e702533bc8049f57bd6991296174",
+    "semantic_hash": ""
+  },
+  ".agents/skills/laravel-best-practices/rules/mail.md": {
+    "mtime": 1786156338.050105,
+    "ast_hash": "895f4d0643171b04f7b399027cb00d6c",
+    "semantic_hash": ""
+  },
+  ".agents/skills/laravel-best-practices/rules/migrations.md": {
+    "mtime": 1786156338.050105,
+    "ast_hash": "c46b22f0a58df02235cada95208b3d8a",
+    "semantic_hash": ""
+  },
+  ".agents/skills/laravel-best-practices/rules/queue-jobs.md": {
+    "mtime": 1786156338.050105,
+    "ast_hash": "556b119d5ae10462c69908a8399025c0",
+    "semantic_hash": ""
+  },
+  ".agents/skills/laravel-best-practices/rules/routing.md": {
+    "mtime": 1786156338.050105,
+    "ast_hash": "6a10a65bd0b071eb2428ed6dd31ccf75",
+    "semantic_hash": ""
+  },
+  ".agents/skills/laravel-best-practices/rules/scheduling.md": {
+    "mtime": 1786156338.050105,
+    "ast_hash": "ec51edae2effafe9633103a68ba023e6",
+    "semantic_hash": ""
+  },
+  ".agents/skills/laravel-best-practices/rules/security.md": {
+    "mtime": 1786156338.050105,
+    "ast_hash": "455a4025958caa0b51cfa6f352f55003",
+    "semantic_hash": ""
+  },
+  ".agents/skills/laravel-best-practices/rules/style.md": {
+    "mtime": 1786156338.050105,
+    "ast_hash": "21afa41850594faff9b40c59bb2c242d",
+    "semantic_hash": ""
+  },
+  ".agents/skills/laravel-best-practices/rules/testing.md": {
+    "mtime": 1786156338.050105,
+    "ast_hash": "c31ca40674ed518d8570b089f3eabec4",
+    "semantic_hash": ""
+  },
+  ".agents/skills/laravel-best-practices/rules/validation.md": {
+    "mtime": 1786156338.050105,
+    "ast_hash": "901e4430821794a642694d445f43e43a",
+    "semantic_hash": ""
+  },
+  ".agents/skills/pest-testing/SKILL.md": {
+    "mtime": 1786156338.0509336,
+    "ast_hash": "9de773a573ae82db0da14182043ad939",
+    "semantic_hash": ""
+  },
+  ".agents/skills/tailwindcss-development/SKILL.md": {
+    "mtime": 1786156338.0509336,
+    "ast_hash": "4a5b30840f41ad577f4f6ef56b89f427",
+    "semantic_hash": ""
+  },
+  ".agents/workflows/graphify.md": {
+    "mtime": 1786156338.0509336,
+    "ast_hash": "6d73634a678cf1e1c71930adf80bd1f0",
+    "semantic_hash": ""
+  },
+  "AGENTS.md": {
+    "mtime": 1786156338.0519338,
+    "ast_hash": "0ae3fbc1fba963bb1492053d9890279f",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1768845445.0,
+    "ast_hash": "c9fd29cc7c9057820aebcdcd6bbddca3",
+    "semantic_hash": ""
+  },
+  "docker-compose.yml": {
+    "mtime": 1786098031.0935273,
+    "ast_hash": "a6b499d61af796e6954b827326bbbe69",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/CORE_CONTEXT.md": {
+    "mtime": 1786156338.0535545,
+    "ast_hash": "e4d4a7a91efe3bfab8c73472f988a4c0",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/INDEX.md": {
+    "mtime": 1785852681.966323,
+    "ast_hash": "121110bff547267e1f40aebc6b688985",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/INSTALL.md": {
+    "mtime": 1786156338.0539336,
+    "ast_hash": "9abaae85dc206d2cc5ccda4c34984930",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/OFFICIAL-REFERENCES.md": {
+    "mtime": 1785852681.966323,
+    "ast_hash": "42e4a08daf9508957e805e89b8a83423",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/PACKAGE-MANIFEST.md": {
+    "mtime": 1786156338.0539336,
+    "ast_hash": "754f3374b2688c8012866ec96181ca0f",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/README.md": {
+    "mtime": 1785852681.966323,
+    "ast_hash": "13998702d68516bd84faa5ef838e5a38",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/README.md": {
+    "mtime": 1785852681.966323,
+    "ast_hash": "3d9085b855f82cadb2ab2a9622c31364",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/CORE_CONTEXT.md": {
+    "mtime": 1786156338.0539336,
+    "ast_hash": "e4d4a7a91efe3bfab8c73472f988a4c0",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/audit/candidate-lifecycle-critical-audit.md": {
+    "mtime": 1786156338.0546,
+    "ast_hash": "c2aab558367bc62dbd77aa959158c9b5",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/audit/dashboard-polish-settings-monitoring-audit.md": {
+    "mtime": 1786156338.0546985,
+    "ast_hash": "6a1424564e767d336395af3fd1b822b3",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/audit/selection-exam-audit.md": {
+    "mtime": 1786156338.0546985,
+    "ast_hash": "ae083486c98e2f68d136e8dc699ae359",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/audit/staff-candidate-v2-audit.md": {
+    "mtime": 1786156338.0546985,
+    "ast_hash": "e7e81ad19c6d886de34dd7bdd41a8070",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/audit/staff-operations-redesign-audit.md": {
+    "mtime": 1786156338.0546985,
+    "ast_hash": "644770768bddba0a351ad635debb1f75",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/audit/status-pendaftaran-audit.md": {
+    "mtime": 1786156338.0546985,
+    "ast_hash": "0dc1def65849adbd7178d902d3866313",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/compressed/00_core.md": {
+    "mtime": 1786156338.0546985,
+    "ast_hash": "9bbf807f55936004fdfd7aa4998a418f",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/compressed/01_project.md": {
+    "mtime": 1786156338.0551581,
+    "ast_hash": "6038fa0591fbe33571385f394680577c",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/compressed/02_status.md": {
+    "mtime": 1786156338.0551581,
+    "ast_hash": "7444640493216eb7fb8d5495d0ae94e3",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/compressed/03_skill_base.md": {
+    "mtime": 1786156338.0551581,
+    "ast_hash": "420c16f3e854efe3bf59d7ac9cd7c19a",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/compressed/03_skills.md": {
+    "mtime": 1786156338.0551581,
+    "ast_hash": "95c1681f7dd69ce1b361020aeede53c3",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/compressed/04_skill_frontend.optimized.md": {
+    "mtime": 1786156338.0551581,
+    "ast_hash": "1237d82ab1c61ae818fb3a0305b5c6b4",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/compressed/05_skill_backend.optimized.md": {
+    "mtime": 1786156338.0551581,
+    "ast_hash": "19041c655d1bfa3684e4bcb2b7d86572",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/compressed/06_skill_infra.md": {
+    "mtime": 1786156338.0551581,
+    "ast_hash": "29b6b1138d49108c9563eb61981fbdd1",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/compressed/07_skill_deep_discussion.md": {
+    "mtime": 1786156338.0551581,
+    "ast_hash": "cf2d7ce78ff5cf43ab716fcf838410c1",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/compressed/SPMB_Calendar_Page_Blueprint.md": {
+    "mtime": 1786156338.0551581,
+    "ast_hash": "d32e954b42a583f905200ac7b2fdd1e1",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/compressed/audit_staff_dashboard.final.md": {
+    "mtime": 1786156338.0551581,
+    "ast_hash": "5a0f2166665cb3a29d77697068eb0bbf",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/compressed/blueprint_auth_staff_admin.md": {
+    "mtime": 1786156338.0551581,
+    "ast_hash": "55353e8268274be90b519dac2a2c8d94",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/compressed/blueprint_staff_admin_dashboard.md": {
+    "mtime": 1786156338.0551581,
+    "ast_hash": "a43f88e20c36e1edf6a0da17605209af",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/compressed/build_rules.md": {
+    "mtime": 1786156338.0559337,
+    "ast_hash": "91984418f4e204f59703de58a43306a5",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/compressed/deep-research-report.md": {
+    "mtime": 1786156338.0559337,
+    "ast_hash": "e205669ab17d27b6d675496539942484",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/compressed/intruction_system.md": {
+    "mtime": 1786156338.0559337,
+    "ast_hash": "6e7d10a31690bdfa12cbd1afd6d1a5ea",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/design/admin-exam-v2-stitch-reference.md": {
+    "mtime": 1786156338.0559337,
+    "ast_hash": "406eb6a7ce55129f4e9169700ffed3d9",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/design/dashboard-shell-navigation-v2.md": {
+    "mtime": 1786156338.0567343,
+    "ast_hash": "8ab34818527ae53158bcc8e4d9da0f5e",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/features/candidate-panel-gold.md": {
+    "mtime": 1786156338.0567343,
+    "ast_hash": "f98364f8e5916e3cb1faf2acf82d4bd2",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/features/candidate-status-flow.md": {
+    "mtime": 1786156338.056886,
+    "ast_hash": "63b21dcf610b0cada7efb8cbb15617e7",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/features/dashboard-navigation-v2.md": {
+    "mtime": 1786156338.056886,
+    "ast_hash": "6a3b2700cc99e35df2b99ec51edae728",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/features/dashboard-polish-settings-monitoring.md": {
+    "mtime": 1786156338.056886,
+    "ast_hash": "c6625f4cc73d97003a6afd9629e9aafc",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/features/environment-mail-delivery.md": {
+    "mtime": 1786156338.056886,
+    "ast_hash": "ed0eb166d5c293d105fd3b4aa928c368",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/features/online-selection-exam.md": {
+    "mtime": 1786156338.056886,
+    "ast_hash": "84d9e9fea6a90842ddb003083bc1770a",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/features/staff-candidate-v2.md": {
+    "mtime": 1786156338.056886,
+    "ast_hash": "1d72c33a029f018346e1425b7b0ccf48",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/features/staff-operations-redesign.md": {
+    "mtime": 1786156338.0569336,
+    "ast_hash": "321a3bceee9b5555a0ca1d7f3bded392",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/features/status-pendaftaran.md": {
+    "mtime": 1786156338.0569336,
+    "ast_hash": "e30e6fff825baaee6f823aa949af0dc2",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/state/selection-current-phase.md": {
+    "mtime": 1786156338.0569336,
+    "ast_hash": "9b5838b7c3f41622ba2b9e206a13eef2",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/state/selection-decisions.md": {
+    "mtime": 1786156338.0574734,
+    "ast_hash": "d6b1bcfb5b5b93b84598b39fec9443c3",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/state/selection-known-bugs.md": {
+    "mtime": 1786156338.0574734,
+    "ast_hash": "41cc29827ae60b025e863b7a8124d4c3",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/state/selection-next-actions.md": {
+    "mtime": 1786156338.0574734,
+    "ast_hash": "a3a217f73061300801d5022a0d94c125",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/state/selection-progress.md": {
+    "mtime": 1786156338.0574734,
+    "ast_hash": "7dfb99d393a7b5db3591d25da6d4cf07",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/state/staff-candidate-v2-next-actions.md": {
+    "mtime": 1786156338.0574734,
+    "ast_hash": "8da1cbaea2d0eec032a3f894bee8fbaf",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/state/staff-candidate-v2-progress.md": {
+    "mtime": 1786156338.0574734,
+    "ast_hash": "8396696d18a8ac90b0f8b2ee42fb2359",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/state/staff-operations-redesign-next-actions.md": {
+    "mtime": 1786156338.0574734,
+    "ast_hash": "b5728447599655b07cf9f5b2780cb88a",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/state/staff-operations-redesign-progress.md": {
+    "mtime": 1786156338.0574734,
+    "ast_hash": "864e830febb6bb16289ef9100cdfa900",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/task/candidate-dashboard-v2.md": {
+    "mtime": 1786156338.0574734,
+    "ast_hash": "dcbbb115beb522640b212b20a0353da8",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/task/critical-audit.task-5.md": {
+    "mtime": 1786156338.058144,
+    "ast_hash": "c0d6476b36d0ea93d2fa8b30fc544fd3",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/task/dashboard-shell.task-6.md": {
+    "mtime": 1786156338.058144,
+    "ast_hash": "3f6817bb4c7be6ea81feacde9b2e204f",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/task/selection-online-exam.directive.md": {
+    "mtime": 1786156338.058144,
+    "ast_hash": "472a8766422311def4a3800408870c2b",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/task/selection-online-exam.task-2.md": {
+    "mtime": 1786156338.058144,
+    "ast_hash": "928aef52e4148a67b7cb77a7daa904b8",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/task/selection-online-exam.task-3.md": {
+    "mtime": 1786156338.058144,
+    "ast_hash": "8730eaebcfb48966d503724576f2849a",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/task/selection-online-exam.task-4.md": {
+    "mtime": 1786156338.058144,
+    "ast_hash": "d59b3194b2d3ee2f6cdad30867053116",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/task/staff-candidate-v2.task-7.md": {
+    "mtime": 1786156338.058144,
+    "ast_hash": "0af59bf47208efa173f935cea1d408de",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/archive/docs-ai-legacy/task/staff-operations-redesign.task-8.md": {
+    "mtime": 1786156338.058144,
+    "ast_hash": "d69f30004390157ffb8a8391a320f23c",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/audit/00-foundation/discovery-audit.md": {
+    "mtime": 1785852681.9690962,
+    "ast_hash": "54c452e82d5b25b230b43a51343c5c2f",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/audit/01-public-shared-runtime/public-shared-runtime-audit.md": {
+    "mtime": 1785852681.9690962,
+    "ast_hash": "cb98b2ba69fc99df57b95a2433614f3e",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/audit/README.md": {
+    "mtime": 1785852681.9690962,
+    "ast_hash": "70334d40c5aeaa022caa85272bcf377c",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/audit/email-design-system-audit.md": {
+    "mtime": 1785852681.9690962,
+    "ast_hash": "b7c0047bdb31b92a9a379389fa08688a",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/audit/email-design-system-final-report.md": {
+    "mtime": 1785852681.9690962,
+    "ast_hash": "079a6f6820bf303a23617e6e87970196",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/audit/sidebar-collapsed-menu-audit.md": {
+    "mtime": 1785852681.9690962,
+    "ast_hash": "1de1fdbf898e32d2e758381cf021eb60",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/evidence/00-foundation/2026-07-14/build.md": {
+    "mtime": 1785852681.9693253,
+    "ast_hash": "06538266018d2f8dc25ee6cd1a66a78c",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/evidence/00-foundation/2026-07-14/commands.md": {
+    "mtime": 1785852681.9693658,
+    "ast_hash": "3889e912fb0a52e62cdefd477fde7f00",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/evidence/00-foundation/2026-07-14/dependencies.md": {
+    "mtime": 1785852681.9693658,
+    "ast_hash": "459a40e2943019818eb9e009781948ae",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/evidence/00-foundation/2026-07-14/diff-review.md": {
+    "mtime": 1785852681.9693658,
+    "ast_hash": "9df8be01d74eeba6eedc153106d84e53",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/evidence/00-foundation/2026-07-14/evidence-index.md": {
+    "mtime": 1785852681.9693658,
+    "ast_hash": "6e00f184d1de1371b617a566c52c3df7",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/evidence/00-foundation/2026-07-14/routes.md": {
+    "mtime": 1785852681.9693658,
+    "ast_hash": "069b3a14c3d882930c892617a023fecd",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/evidence/00-foundation/2026-07-14/security.md": {
+    "mtime": 1785852681.9693658,
+    "ast_hash": "99498f58f01b632c5fe227191c84848b",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/evidence/00-foundation/2026-07-14/tests.md": {
+    "mtime": 1785852681.9693658,
+    "ast_hash": "3f44f89e7c22cc5ff8e3dd062aa4ce7b",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/evidence/01-public-shared-runtime/2026-07-14/commands.md": {
+    "mtime": 1785852681.9695132,
+    "ast_hash": "007338555af759d928d0d49770fcc41a",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/evidence/01-public-shared-runtime/2026-07-14/evidence-index.md": {
+    "mtime": 1785852681.9695404,
+    "ast_hash": "b3d08d037084825ccc107488192e8685",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/evidence/01-public-shared-runtime/2026-07-14/public-contract.md": {
+    "mtime": 1785852681.9695404,
+    "ast_hash": "c1d480a79ab2b910d2eac1ff720cf7c5",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/evidence/README.md": {
+    "mtime": 1785852681.9695404,
+    "ast_hash": "b91e93fa121cf7188d75dc3235edb163",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/evidence/email-design-system/2026-07-22/build.md": {
+    "mtime": 1785852681.9696083,
+    "ast_hash": "899d4259047a97d4dc97c3a248ef7693",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/evidence/email-design-system/2026-07-22/commands.md": {
+    "mtime": 1785852681.9696348,
+    "ast_hash": "2d8635420d8ab8994e7ea23b79b2397a",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/evidence/email-design-system/2026-07-22/diff-review.md": {
+    "mtime": 1785852681.9696348,
+    "ast_hash": "b5530faef4ad7e20ddcbbde927e79b33",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/evidence/email-design-system/2026-07-22/evidence-index.md": {
+    "mtime": 1785852681.9696348,
+    "ast_hash": "abd181b7f066a331afcc0ef6307f8715",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/evidence/email-design-system/2026-07-22/security.md": {
+    "mtime": 1785852681.9696348,
+    "ast_hash": "576f064f97b93c00b8adc3d89a82e36f",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/evidence/email-design-system/2026-07-22/tests.md": {
+    "mtime": 1785852681.9696348,
+    "ast_hash": "456cc9a76a091729792c647e3699e9ab",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/evidence/email-design-system/2026-07-28/build.md": {
+    "mtime": 1785852681.9696348,
+    "ast_hash": "09d9102e99f650787c1d04e56675527c",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/evidence/email-design-system/2026-07-28/commands.md": {
+    "mtime": 1785852681.9697614,
+    "ast_hash": "5bfbdb7b0a0735aff1d86c984887070e",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/evidence/email-design-system/2026-07-28/diff-review.md": {
+    "mtime": 1785852681.9697614,
+    "ast_hash": "2e83191474cca7c8643532bf80cf336b",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/evidence/email-design-system/2026-07-28/evidence-index.md": {
+    "mtime": 1785852681.9697614,
+    "ast_hash": "0b843120615a5de7df677ac41b36bdb7",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/evidence/email-design-system/2026-07-28/security.md": {
+    "mtime": 1785852681.9697614,
+    "ast_hash": "a90c71fa8bdcfc0f2f41c7428142f476",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/evidence/email-design-system/2026-07-28/tests.md": {
+    "mtime": 1785852681.9697614,
+    "ast_hash": "cfe776447947325afe309f1bb4962b74",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/evidence/sidebar-collapsed-menu/2026-07-30/build.md": {
+    "mtime": 1785852681.9698563,
+    "ast_hash": "8dfcd95371d42eb16555c20e92035d4a",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/evidence/sidebar-collapsed-menu/2026-07-30/commands.md": {
+    "mtime": 1785852681.9698796,
+    "ast_hash": "a342dd3accef0ae39b063bdbfbb1f172",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/evidence/sidebar-collapsed-menu/2026-07-30/diff-review.md": {
+    "mtime": 1785852681.9698796,
+    "ast_hash": "f3e5121c6c83f8db26fdac1a3b0b036c",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/evidence/sidebar-collapsed-menu/2026-07-30/evidence-index.md": {
+    "mtime": 1785852681.9698796,
+    "ast_hash": "c2e174f2ebc41769a3c81daba4418e5f",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/evidence/sidebar-collapsed-menu/2026-07-30/tests.md": {
+    "mtime": 1785852681.9698796,
+    "ast_hash": "88e8cc613c3c47a71c159a6bda6ff88b",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/instructions/auditor-charter.md": {
+    "mtime": 1785852681.9698796,
+    "ast_hash": "eec53630ea7eb94f98153b97edab1116",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/instructions/autonomy-and-stop-policy.md": {
+    "mtime": 1785852681.969974,
+    "ast_hash": "6896c6bdcc4559a7932b72d42e9212ec",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/instructions/branching-and-promotion.md": {
+    "mtime": 1785852681.969974,
+    "ast_hash": "11cb9d222bdc21334c4ffec876512492",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/instructions/documentation-policy.md": {
+    "mtime": 1785852681.969974,
+    "ast_hash": "f029ae995fa16ee19da70c47096d5681",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/instructions/evidence-policy.md": {
+    "mtime": 1785852681.969974,
+    "ast_hash": "8e631580db78c03033bc40f26ba0bd0f",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/instructions/execution-runbook.md": {
+    "mtime": 1785852681.969974,
+    "ast_hash": "feb401c86fa08aa336c5a24ff581c022",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/instructions/operating-rules.md": {
+    "mtime": 1785852681.969974,
+    "ast_hash": "9057fb375a318b9e61986f744253da8e",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/instructions/release-gates.md": {
+    "mtime": 1785852681.969974,
+    "ast_hash": "2fd3b7b984618d98e4594bb169ccf93d",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/instructions/security-standard.md": {
+    "mtime": 1785852681.969974,
+    "ast_hash": "52d5c3705071eb1845f3cfe05846cfed",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/release/HUMAN-REVIEW-CHECKLIST.md": {
+    "mtime": 1785852681.969974,
+    "ast_hash": "b9cbb73d8a04048944256117ab8b7b93",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/release/PRODUCTION-MANIFEST.md": {
+    "mtime": 1785852681.9701698,
+    "ast_hash": "a980061b06f40fc4e8e3c0638ed84c4a",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/release/PRODUCTION-READINESS.md": {
+    "mtime": 1785852681.9701698,
+    "ast_hash": "8cf6760ce5861490ad17d579fb40ee13",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/release/PROMOTION-LEDGER.md": {
+    "mtime": 1785852681.9701698,
+    "ast_hash": "745c3c8bdf679bd466789426c0638445",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/release/ROLLBACK-NOTES.md": {
+    "mtime": 1785852681.9701698,
+    "ast_hash": "03845276853e6a57922d4dfb85e26614",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/state/BLOCKERS.md": {
+    "mtime": 1785852681.9701698,
+    "ast_hash": "ed542fee22f77c870b17dfa68a503429",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/state/CONTEXT-SUMMARY.md": {
+    "mtime": 1785852681.9702704,
+    "ast_hash": "9719e75ad84b7f50206c6a8690c594b2",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/state/CURRENT.md": {
+    "mtime": 1786157821.8516293,
+    "ast_hash": "df3b7b15bff839c1c6f6e2f534447e09",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/state/DECISIONS.md": {
+    "mtime": 1786157816.8045886,
+    "ast_hash": "c92e9bf280e219aa3e995f1e6dee953c",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/state/HANDOFF.md": {
+    "mtime": 1785852681.9702704,
+    "ast_hash": "78717b4d3dab83c3de753e32b78fd11d",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/state/QUEUE.md": {
+    "mtime": 1785852681.9702704,
+    "ast_hash": "1582cdbdcffa98a15b1bd5605db1aafc",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/tasks/master-production-audit.task.md": {
+    "mtime": 1785852681.9702704,
+    "ast_hash": "b6983a3dea21ba932f10c191131efb2c",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/tasks/task-00-discovery-foundation.task.md": {
+    "mtime": 1785852681.970407,
+    "ast_hash": "fa59cc9aad19533aeb86172f5e58e8e6",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/tasks/task-01-public-shared-runtime.task.md": {
+    "mtime": 1785852681.970407,
+    "ast_hash": "2e2b989c0118aa3f17239180abfe9aca",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/tasks/task-02-auth-registration.task.md": {
+    "mtime": 1785852681.970407,
+    "ast_hash": "e1cf2c62a0841b31592007bef2046d9e",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/tasks/task-03-candidate-lifecycle-profile.task.md": {
+    "mtime": 1785852681.970407,
+    "ast_hash": "09baa72e0ff1da1913a43ed0fe2af501",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/tasks/task-04-documents-storage.task.md": {
+    "mtime": 1785852681.970407,
+    "ast_hash": "1b75f987e2b91247f5eac0be0e020864",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/tasks/task-05-payment-midtrans.task.md": {
+    "mtime": 1785852681.970407,
+    "ast_hash": "1370bb01c5068c484fe913c83fe361c5",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/tasks/task-06-selection-exam.task.md": {
+    "mtime": 1785852681.970407,
+    "ast_hash": "323bfe380a7d0f6774e8e9d474b72526",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/tasks/task-07-staff-operations.task.md": {
+    "mtime": 1785852681.970407,
+    "ast_hash": "a04839ba7b7ec8ebf0b6b96ab81fbbf3",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/tasks/task-08-admin-operations.task.md": {
+    "mtime": 1785852681.970407,
+    "ast_hash": "e5bc31008d13f1e3ccdb46dab54649f7",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/tasks/task-09-reporting-export.task.md": {
+    "mtime": 1785852681.970407,
+    "ast_hash": "5c07fa7a39286e9fcfe4b8b343b03676",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/tasks/task-10-infrastructure-deployment.task.md": {
+    "mtime": 1785852681.970407,
+    "ast_hash": "c8536bac717e3b97f232d19bf2b440fb",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/tasks/task-11-integration-regression.task.md": {
+    "mtime": 1785852681.970407,
+    "ast_hash": "7c3b09c987975437113c919e0f0dfc67",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/tasks/task.template.md": {
+    "mtime": 1785852681.970407,
+    "ast_hash": "4eb65508217d49651974c8b77cf72334",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/templates/audit-report.template.md": {
+    "mtime": 1785852681.970407,
+    "ast_hash": "eef7a6ea9a0f3b65352eae7d8b25e827",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/templates/blocker.template.md": {
+    "mtime": 1785852681.9706767,
+    "ast_hash": "a78e4d638e02e7cea8aa371ae18a9e75",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/templates/decision.template.md": {
+    "mtime": 1785852681.9706767,
+    "ast_hash": "c633698e6aa7dc8f9f2a50d0eb6f88da",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/templates/evidence-index.template.md": {
+    "mtime": 1785852681.9706767,
+    "ast_hash": "f6313de693f46bb4e234416479a82db4",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/templates/slice-checklist.template.md": {
+    "mtime": 1785852681.9706767,
+    "ast_hash": "86aaf7afcffcbf9661f93d5fdbcaf39c",
+    "semantic_hash": ""
+  },
+  "public/robots.txt": {
+    "mtime": 1773908278.9716911,
+    "ast_hash": "b6216d61c03e6ce0c9aea6ca7808f7ca",
+    "semantic_hash": ""
+  },
+  "public/assets/landing/brochure/brosur.pdf": {
+    "mtime": 1782461259.8569324,
+    "ast_hash": "f86575ceebcb5283d46fc864cb22da5f",
+    "semantic_hash": ""
+  },
+  "public/assets/icons/banks/BSI.webp": {
+    "mtime": 1782461259.8479323,
+    "ast_hash": "672a555a5a884f5812b31e14a554233b",
+    "semantic_hash": ""
+  },
+  "public/assets/icons/brand/logo-email.png": {
+    "mtime": 1785852681.9706767,
+    "ast_hash": "14322228667dc9dd77337570b22ccbee",
+    "semantic_hash": ""
+  },
+  "public/assets/icons/brand/logo.webp": {
+    "mtime": 1782461259.8479323,
+    "ast_hash": "b1561b7b89ff2b0e35f8a27a4617e1b0",
+    "semantic_hash": ""
+  },
+  "public/assets/icons/favicons/apple-touch-icon.png": {
+    "mtime": 1782461259.8479323,
+    "ast_hash": "3191a8e56b58ef6a967a4c0510cdbd45",
+    "semantic_hash": ""
+  },
+  "public/assets/icons/favicons/favicon-16x16.png": {
+    "mtime": 1782461259.8488748,
+    "ast_hash": "79e469c1e91ada18c502c0d3f22433f2",
+    "semantic_hash": ""
+  },
+  "public/assets/icons/favicons/favicon-192x192.png": {
+    "mtime": 1782461259.8489323,
+    "ast_hash": "2c32ef93d0a4ec1cd860ccce3f2d9f59",
+    "semantic_hash": ""
+  },
+  "public/assets/icons/favicons/favicon-32x32.png": {
+    "mtime": 1782461259.8489323,
+    "ast_hash": "a66739adf106b82e3f7bcc3b66e25027",
+    "semantic_hash": ""
+  },
+  "public/assets/icons/favicons/favicon-48x48.png": {
+    "mtime": 1782461259.8489323,
+    "ast_hash": "ab1e63bb8f6f378f145376ec0a05d976",
+    "semantic_hash": ""
+  },
+  "public/assets/icons/favicons/favicon-512x512.png": {
+    "mtime": 1782461259.8489323,
+    "ast_hash": "aa04b95de739232bb227a3a1a7cd5a8a",
+    "semantic_hash": ""
+  },
+  "public/assets/landing/brochure/brosur.jpg": {
+    "mtime": 1783959520.4138649,
+    "ast_hash": "bc69d145d2f233a71a82a61110d2654e",
+    "semantic_hash": ""
+  },
+  "public/assets/landing/gallery/photo-01-600x800-tall.webp": {
+    "mtime": 1782461259.8574584,
+    "ast_hash": "279d19e93af2a169eb91aca555cf7cda",
+    "semantic_hash": ""
+  },
+  "public/assets/landing/gallery/photo-02-800x500-wide.webp": {
+    "mtime": 1782461259.8576672,
+    "ast_hash": "1b22515b82d4870707cb6c2092f6e5d2",
+    "semantic_hash": ""
+  },
+  "public/assets/landing/gallery/photo-03-600x600-small.webp": {
+    "mtime": 1782461259.8578944,
+    "ast_hash": "18bb652b3615fad4b3b738e5969873e7",
+    "semantic_hash": ""
+  },
+  "public/assets/landing/gallery/photo-04-600x600-small.webp": {
+    "mtime": 1782461259.8581064,
+    "ast_hash": "a44f412369ff83e979fba99cf00dc732",
+    "semantic_hash": ""
+  },
+  "public/assets/landing/gallery/photo-05-600x600-small.webp": {
+    "mtime": 1782461259.8582962,
+    "ast_hash": "c7c2f5fce3df844ac0d60acae95ba5e2",
+    "semantic_hash": ""
+  },
+  "public/assets/landing/gallery/photo-06-600x800-tall.webp": {
+    "mtime": 1782461259.8585494,
+    "ast_hash": "207060fdb050953b6831a4b094300892",
+    "semantic_hash": ""
+  },
+  "public/assets/landing/gallery/photo-07-800x500-wide.webp": {
+    "mtime": 1782461259.8587775,
+    "ast_hash": "e909b881eaa6b11d6df6d9051beb7db9",
+    "semantic_hash": ""
+  },
+  "public/assets/landing/gallery/photo-08-600x600-small.webp": {
+    "mtime": 1782461259.8589914,
+    "ast_hash": "625b454ccf8f39b1a20ed0f181be00d0",
+    "semantic_hash": ""
+  },
+  "public/assets/landing/hero/background-mobile.webp": {
+    "mtime": 1782461259.859052,
+    "ast_hash": "d32face0b9473faeb6edb8d4ba7f8b83",
+    "semantic_hash": ""
+  },
+  "public/assets/landing/hero/background.webp": {
+    "mtime": 1782461259.859254,
+    "ast_hash": "1f13b3b4f15f08d5264c30c7021f39de",
+    "semantic_hash": ""
+  },
+  "public/assets/landing/highlights/asrama.webp": {
+    "mtime": 1782461259.8594532,
+    "ast_hash": "a45b996786d1ec0f351606144fcc203a",
+    "semantic_hash": ""
+  },
+  "public/assets/landing/highlights/seleksi.webp": {
+    "mtime": 1782461259.8596146,
+    "ast_hash": "357dc6fb576ec98cac567711b26bb6d0",
+    "semantic_hash": ""
+  },
+  "public/assets/landing/profile/thumbnail.webp": {
+    "mtime": 1782461259.8599784,
+    "ast_hash": "86d97f6237e77940e2dd159fe34398c3",
+    "semantic_hash": ""
+  },
+  "public/assets/landing/trustcooperation/bsi_desktop.png": {
+    "mtime": 1783959520.4167452,
+    "ast_hash": "aa59a5452f52d3b0320ca6e3f6a04812",
+    "semantic_hash": ""
+  },
+  "public/assets/landing/trustcooperation/bsi_mobile.png": {
+    "mtime": 1783959520.4167452,
+    "ast_hash": "5813c5a9a3a8fb0d8dff7c274a9aed24",
+    "semantic_hash": ""
+  },
+  "public/assets/landing/trustcooperation/laravel_desktop.png": {
+    "mtime": 1783959520.4171498,
+    "ast_hash": "1e71f4d8431bc9022eeb88e6502d9a04",
+    "semantic_hash": ""
+  },
+  "public/assets/landing/trustcooperation/laravel_mobile.png": {
+    "mtime": 1783959520.4172125,
+    "ast_hash": "08fedd0a05f9d73934eae525c3739f78",
+    "semantic_hash": ""
+  },
+  "public/assets/landing/trustcooperation/muhammadiyah_desktop.png": {
+    "mtime": 1783959520.4172125,
+    "ast_hash": "ae1d923c83b0a55448f7b6eb5c8c1de2",
+    "semantic_hash": ""
+  },
+  "public/assets/landing/trustcooperation/muhammadiyah_mobile.png": {
+    "mtime": 1783959520.4172125,
+    "ast_hash": "7c8c6f4a1904f97e298112b91ce1b164",
+    "semantic_hash": ""
+  },
+  "public/assets/landing/vision-mission/misi.webp": {
+    "mtime": 1782461259.9595401,
+    "ast_hash": "ee399bb0b377ed6b881dccd7903c2d22",
+    "semantic_hash": ""
+  },
+  "public/assets/landing/vision-mission/visi.webp": {
+    "mtime": 1782461259.9598415,
+    "ast_hash": "9bca9bd573ef2ebc91ed02e85d557c56",
+    "semantic_hash": ""
+  },
+  "tests/Feature/PublicSessionAdminTest.php": {
+    "mtime": 1786158642.5682495,
+    "ast_hash": "e2f94f83c287094cfe98e7a56f8fe332",
+    "semantic_hash": ""
+  },
+  "resources/js/Components/Dashboard/Shared/SentinelSelect.tsx": {
+    "mtime": 1786161550.146133,
+    "ast_hash": "3b415cb5857d99c792048c66c6d0f802",
+    "semantic_hash": ""
+  },
+  ".ai/rules/frontend.md": {
+    "mtime": 1786159298.9576685,
+    "ast_hash": "96822b22f70de0032836ccc456780299",
+    "semantic_hash": ""
+  },
+  ".ai/rules/index.md": {
+    "mtime": 1786159294.751634,
+    "ast_hash": "1cb0c6c1a71c5048bf46d29bbb746848",
+    "semantic_hash": ""
   }
 }

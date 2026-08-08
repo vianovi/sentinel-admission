@@ -12,6 +12,15 @@ class StoreExamSessionRequest extends FormRequest
         return $this->user()?->role === 'admin';
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('admission_wave_id') && ($this->admission_wave_id === '' || $this->admission_wave_id === 'null')) {
+            $this->merge([
+                'admission_wave_id' => null,
+            ]);
+        }
+    }
+
     public function rules(): array
     {
         return [
@@ -32,3 +41,4 @@ class StoreExamSessionRequest extends FormRequest
         ];
     }
 }
+

@@ -23,5 +23,5 @@
 - Parallel scoped user task: Email Design System implementation and delivery hardening are committed at `e9300bb` (presentation baseline `dd1047a`); evidence is under `evidence/email-design-system/2026-07-28/`; code status `PASS WITH NOTES`, with Gmail/Outlook human visual review pending.
 - Parallel scoped user task: Sidebar Collapsed Menu behavior fixes to toggle submenu flyout on click in collapsed/quickbar mode, correct the hover flyouts check, and persist the open/collapsed state in localStorage. Evidence is under `docs/ai-docs/evidence/sidebar-collapsed-menu/2026-07-30/`; code status `PASS WITH NOTES`, with human visual review pending. Committed at `f352434`.
 - Parallel scoped user task: Public Online Exam Engine completed with guest attempt token validation, anonymous participant state management, token generation in session management UI, and admin result filtering.
-- Last updated: `2026-07-30`
+- Last updated: `2026-08-08` (Playwright Go / MCP resolution verified successfully)
 

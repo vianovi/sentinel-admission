@@ -634,3 +634,40 @@ html[data-card-size="expanded"] .card-density-responsive {
     gap: 1.75rem !important;
 }
 
+/* =============================================================================
+   SENTINEL CUSTOM FORM & DROPDOWN UTILITY SYSTEM
+   ============================================================================= */
+
+.sentinel-field {
+    width: 100%;
+    border-radius: 0.75rem;
+    border: 1px solid #cbd5e1;
+    background-color: #ffffff;
+    padding: 0.55rem 0.85rem;
+    font-size: 0.75rem;
+    color: #0f172a;
+    transition: all 0.2s ease;
+}
+
+.sentinel-field::placeholder {
+    color: #94a3b8;
+}
+
+.dark .sentinel-field {
+    border-color: rgba(255, 255, 255, 0.1);
+    background-color: #020617;
+    color: #f8fafc;
+}
+
+.dark .sentinel-field::placeholder {
+    color: #475569;
+}
+
+.sentinel-field:focus,
+.sentinel-field:focus-within {
+    outline: none !important;
+    border-color: #f59e0b !important;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2) !important;
+}
+
+

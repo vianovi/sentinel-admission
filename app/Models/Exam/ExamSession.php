@@ -68,6 +68,12 @@ class ExamSession extends Model
         return $this->hasMany(ExamSessionToken::class);
     }
 
+    public function tokens(): HasMany
+    {
+        return $this->hasMany(ExamSessionToken::class);
+    }
+
+
     public function attempts(): HasMany
     {
         return $this->hasMany(ExamAttempt::class);
