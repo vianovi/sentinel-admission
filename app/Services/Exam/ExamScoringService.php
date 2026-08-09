@@ -48,6 +48,8 @@ class ExamScoringService
             $rawScore = 0.0;
             $maxScore = 0.0;
 
+            $bulkUpdates = [];
+
             foreach ($questionIds as $questionId) {
                 $question = $questions->get($questionId);
 
@@ -73,10 +75,46 @@ class ExamScoringService
                     $rawScore += $awarded;
                 }
 
-                $answer->update([
-                    'is_correct' => $isCorrect,
-                    'point_awarded' => $awarded,
-                ]);
+                if ($answer) {
+                    $bulkUpdates[] = [
+                        'id' => $answer->id,
+                        'is_correct' => $isCorrect,
+                        'point_awarded' => $awarded,
+                    ];
+                }
+            }
+
+            // B-01 FIX: Single bulk UPDATE replaces N per-row updates.
+            // Uses raw CASE WHEN to set different values per row in one query.
+            if (! empty($bulkUpdates)) {
+                $ids = [];
+                $correctCases = [];
+                $pointCases = [];
+                $correctBindings = [];
+                $pointBindings = [];
+
+                foreach ($bulkUpdates as $update) {
+                    $ids[] = $update['id'];
+                    $correctCases[] = 'WHEN id = ? THEN ?';
+                    $correctBindings[] = $update['id'];
+                    $correctBindings[] = $update['is_correct'] ? 1 : 0;
+                    $pointCases[] = 'WHEN id = ? THEN ?';
+                    $pointBindings[] = $update['id'];
+                    $pointBindings[] = $update['point_awarded'];
+                }
+
+                $idPlaceholders = implode(',', array_fill(0, count($ids), '?'));
+                $now = now()->toDateTimeString();
+                // Bindings must match SQL clause order: is_correct CASEs, point_awarded CASEs, updated_at, WHERE IN
+                $bindings = array_merge($correctBindings, $pointBindings, [$now], $ids);
+
+                DB::update(
+                    'UPDATE exam_attempt_answers SET '
+                    .'is_correct = CASE '.implode(' ', $correctCases).' END, '
+                    .'point_awarded = CASE '.implode(' ', $pointCases).' END, '
+                    ."updated_at = ? WHERE id IN ({$idPlaceholders})",
+                    $bindings
+                );
             }
 
             $blank = max(0, $total - $answered);

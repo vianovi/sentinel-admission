@@ -13,14 +13,27 @@ The performance audit for the online selection exam (SCOPE EXAM) is isolated on 
 - Application, routes, migrations, middleware, storage, integrations, tests, and deployment surfaces mapped.
 - Full baseline verification passed and evidence was written under `evidence/00-foundation/2026-07-14/`.
 - Switched to `audit/exam-performance` to begin the performance audit for the online selection exam (Task 06).
+- Completed systematically audited scope definition, frontend rendering bottlenecks, backend query loops, network polling overhead, database index coverage, God Component audit, and MariaDB EXPLAIN verification.
+- Written detailed exam performance audit report with Phase 2 supplemental findings appended to `docs/ai-docs/evidence/exam-performance-audit.md`.
+- **Milestone 1 implementation complete (2026-08-09):**
+  - Q-01: Added `(exam_session_id, last_activity_at)` and `(status, last_activity_at)` composite indexes on `exam_attempts`. EXPLAIN verified: `Using filesort` eliminated for single-session queries.
+  - Q-02: Added `(exam_session_id, guest_name, guest_school, status)` composite index on `exam_attempts`. EXPLAIN verified: full 4-column coverage in `possible_keys`.
+  - B-01: Refactored `ExamScoringService::score()` from N per-row UPDATE to single bulk CASE WHEN UPDATE. All 87 tests / 712 assertions passing.
+  - Migration file: `database/migrations/2026_08_09_115835_add_exam_performance_indexes.php`
+  - Source change: `app/Services/Exam/ExamScoringService.php`
+  - Evidence recorded in `docs/ai-docs/evidence/exam-performance-audit.md` (Phase 3 Milestone 1 section).
 
 ## In progress
 
-- Initiating Performance Audit of SCOPE EXAM (Task 06).
+- Milestone 1 is fully verified. Commit pending.
+- Milestone 2 (God Component Split) is NEXT.
 
 ## Important decisions
 
 See `DECISIONS.md`.
+
+- B-01: Chose raw SQL `CASE WHEN` over Eloquent `upsert()` because each answer row needs different values and we only need UPDATE (not INSERT-or-UPDATE). Used `now()->toDateTimeString()` instead of SQL `NOW()` for SQLite test compatibility.
+- Q-02 note: MariaDB optimizer prefers old 2-column index at low data volumes; at production scale with hundreds of attempts, the 4-column index will be selected automatically.
 
 ## Known blockers
 
@@ -35,15 +48,21 @@ None for the Performance Audit of SCOPE EXAM. (Task 01 remains blocked by B-001)
 
 ## Last verification
 
-All tests passing: 87 tests, 712 assertions on `audit/exam-performance` on 2026-08-09.
+Full test suite: 87 tests, 712 assertions, all passing on `audit/exam-performance` on 2026-08-09.
 
 ## Uncommitted changes
 
-None.
+- `database/migrations/2026_08_09_115835_add_exam_performance_indexes.php` (NEW — Q-01/Q-02 indexes)
+- `app/Services/Exam/ExamScoringService.php` (MODIFIED — B-01 bulk scoring)
+- `docs/ai-docs/evidence/exam-performance-audit.md` (MODIFIED — Phase 3 M1 evidence appended)
+- `docs/ai-docs/state/CURRENT.md` (MODIFIED — M1 status tracking)
+- `docs/ai-docs/state/HANDOFF.md` (MODIFIED — this file)
 
 ## Next exact action
 
-Identify performance bottlenecks in the online selection exam scope (such as database query optimization, memory leaks, and assets weight) and create the performance audit report.
+1. **Commit Milestone 1** with message: `perf: fix B-01 N-query scoring loop + Q-01/Q-02 indexes`
+2. **Proceed to Milestone 2** — God Component splits (PublicSessions.tsx → 4 components, Landing.tsx → 3, AttemptShow.tsx → 3, MonitoringDisplay.tsx → 2, SessionFormCard.tsx → 1). Follow decomposition plan in Phase 2 audit section.
+3. **Verify first:** After each component split, check that no missing props, broken imports, or unused state remains.
 
 ## Parallel scoped email-design task
 
