@@ -550,9 +550,9 @@
     "semantic_hash": "785b12947cf23a0337e41f117f690403"
   },
   "app/Services/Exam/ExamScoringService.php": {
-    "mtime": 1783959520.385045,
-    "ast_hash": "a277ed376985cebe3b2e266da31bf72a",
-    "semantic_hash": "a277ed376985cebe3b2e266da31bf72a"
+    "mtime": 1786251715.5002816,
+    "ast_hash": "cfee73a4ea3909a7a65e0a42b908799a",
+    "semantic_hash": ""
   },
   "app/Services/Exam/ExamSessionService.php": {
     "mtime": 1785852681.9635003,
@@ -1705,8 +1705,8 @@
     "semantic_hash": "056518e8b1ae45093872dbd5db09deb4"
   },
   "resources/js/Pages/Dashboard/Admin/Exam/PublicSessions.tsx": {
-    "mtime": 1786232206.4472911,
-    "ast_hash": "fcc0366a9fb946a025c5d03d74f2c255",
+    "mtime": 1786266209.75127,
+    "ast_hash": "4c0a3991b88106d1494c969562e0b781",
     "semantic_hash": ""
   },
   "resources/js/Pages/Dashboard/Admin/Exam/ResultShow.tsx": {
@@ -1790,8 +1790,8 @@
     "semantic_hash": "33fab42c232c9c8d3686944f7e191dee"
   },
   "resources/js/Pages/Dashboard/Candidate/Exam/AttemptShow.tsx": {
-    "mtime": 1786227605.670593,
-    "ast_hash": "dd554ffbfcfd3aee6cc21413c645a6ab",
+    "mtime": 1786266260.7496667,
+    "ast_hash": "cfda4b81836786c2cdbcb4ed9eeae13b",
     "semantic_hash": ""
   },
   "resources/js/Pages/Dashboard/Candidate/Exam/Index.tsx": {
@@ -1915,13 +1915,13 @@
     "semantic_hash": "d5a8ade60a600af546e6467ce563eb4e"
   },
   "resources/js/Pages/Public/Exam/AttemptShow.tsx": {
-    "mtime": 1786232227.8174658,
-    "ast_hash": "585b19bbb64c3e6265fbda678c7a424f",
+    "mtime": 1786266281.1468253,
+    "ast_hash": "cb9149d2c24eae268a75c2da82d663e0",
     "semantic_hash": ""
   },
   "resources/js/Pages/Public/Exam/Landing.tsx": {
-    "mtime": 1786228825.6861553,
-    "ast_hash": "c74f4b56a99809c49ee7ba617e76efe3",
+    "mtime": 1786266233.2384527,
+    "ast_hash": "2f938055107df968b25674257604981e",
     "semantic_hash": ""
   },
   "resources/js/app.tsx": {
@@ -2925,8 +2925,8 @@
     "semantic_hash": ""
   },
   "docs/ai-docs/state/CURRENT.md": {
-    "mtime": 1786157821.8516293,
-    "ast_hash": "df3b7b15bff839c1c6f6e2f534447e09",
+    "mtime": 1786266296.263943,
+    "ast_hash": "394babc54b504bb3c2375e7112b956ff",
     "semantic_hash": ""
   },
   "docs/ai-docs/state/DECISIONS.md": {
@@ -2935,8 +2935,8 @@
     "semantic_hash": ""
   },
   "docs/ai-docs/state/HANDOFF.md": {
-    "mtime": 1785852681.9702704,
-    "ast_hash": "78717b4d3dab83c3de753e32b78fd11d",
+    "mtime": 1786266303.4969993,
+    "ast_hash": "30906ecbe1a15ce46b53023889f6deb2",
     "semantic_hash": ""
   },
   "docs/ai-docs/state/QUEUE.md": {
@@ -3232,6 +3232,66 @@
   "app/Console/Commands/SyncExpiredExamAttempts.php": {
     "mtime": 1786231773.3457546,
     "ast_hash": "f2389e8fdf81b55c703375153436ad8f",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_08_09_115835_add_exam_performance_indexes.php": {
+    "mtime": 1786251527.075804,
+    "ast_hash": "697c7c5d67609e58c3b1d85bde68d36d",
+    "semantic_hash": ""
+  },
+  "resources/js/Components/Exam/Admin/PublicParticipantMonitorTable.tsx": {
+    "mtime": 1786266199.1951878,
+    "ast_hash": "1f5869fa406d789dffda62a9386c941f",
+    "semantic_hash": ""
+  },
+  "resources/js/Components/Exam/Admin/PublicProctorFullscreenScreen.tsx": {
+    "mtime": 1786266188.8251073,
+    "ast_hash": "61bd0607dfb8950e81779f24b46522b8",
+    "semantic_hash": ""
+  },
+  "resources/js/Components/Exam/Admin/PublicProctorTokenManager.tsx": {
+    "mtime": 1786266180.3740416,
+    "ast_hash": "5ca5dd43acfeeed39f56d7a639721089",
+    "semantic_hash": ""
+  },
+  "resources/js/Components/Exam/Admin/PublicSessionFormModal.tsx": {
+    "mtime": 1786266174.8579986,
+    "ast_hash": "8163dbd85d5993ba5e59e97f08d00de3",
+    "semantic_hash": ""
+  },
+  "resources/js/Components/Exam/Candidate/CandidateQuestionWorkspace.tsx": {
+    "mtime": 1786266253.6586115,
+    "ast_hash": "64114b2266581d059ab2a5e11a90830f",
+    "semantic_hash": ""
+  },
+  "resources/js/Components/Exam/Candidate/QuestionPaletteNavigator.tsx": {
+    "mtime": 1786266248.2815697,
+    "ast_hash": "ef6637ce4aa5c5761d911ec1655ce70f",
+    "semantic_hash": ""
+  },
+  "resources/js/Components/Exam/Landing/PublicActiveSessionCard.tsx": {
+    "mtime": 1786266219.634347,
+    "ast_hash": "2c4d4545eb2b74e0ce827d286fcd8c37",
+    "semantic_hash": ""
+  },
+  "resources/js/Components/Exam/Landing/PublicExamSecurityInfo.tsx": {
+    "mtime": 1786266225.5933933,
+    "ast_hash": "9efd7ffbb9c2cdabca95b874236762ce",
+    "semantic_hash": ""
+  },
+  "resources/js/Components/Exam/Public/PublicExamQuestionWorkspace.tsx": {
+    "mtime": 1786266273.5717664,
+    "ast_hash": "4a440b3922cde0ff0be15042901a21e9",
+    "semantic_hash": ""
+  },
+  "resources/js/Components/Exam/Public/PublicQuestionPalette.tsx": {
+    "mtime": 1786266268.8697298,
+    "ast_hash": "9274f130e2d073df86298ab2784ff456",
+    "semantic_hash": ""
+  },
+  "docs/ai-docs/evidence/exam-performance-audit.md": {
+    "mtime": 1786251834.1302152,
+    "ast_hash": "6063953f99983a5002dcf93fe068c797",
     "semantic_hash": ""
   }
 }

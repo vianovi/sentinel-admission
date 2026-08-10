@@ -1,6 +1,7 @@
-import { FormEvent, memo, useEffect, useState } from "react";
+import { FormEvent, memo, useEffect } from "react";
 import { useForm } from "@inertiajs/react";
-import { EmptyState, inputClass, labelClass, primaryButtonClass, secondaryButtonClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
+import { inputClass, labelClass, primaryButtonClass, secondaryButtonClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
+import QuickDateTimePicker from "@/Components/Exam/Admin/QuickDateTimePicker";
 
 export type PackageOption = {
     id: number;
@@ -81,19 +82,7 @@ const defaultForm = (pkg?: PackageOption): SessionForm => ({
     status: "draft",
 });
 
-const formatToLocalDateTime = (date: Date) => {
-    const pad = (num: number) => String(num).padStart(2, '0');
-    const yyyy = date.getFullYear();
-    const mm = pad(date.getMonth() + 1);
-    const dd = pad(date.getDate());
-    const hh = pad(date.getHours());
-    const min = pad(date.getMinutes());
-    return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
-};
-
 export const SessionFormCard = memo(function SessionFormCard({ packages, waves, editingSession, mode }: Props) {
-    const [showOpensQuick, setShowOpensQuick] = useState(false);
-    const [showClosesQuick, setShowClosesQuick] = useState(false);
     const firstPackage = packages[0];
     const form = useForm<SessionForm>(defaultForm(firstPackage));
     const isEditing = mode === "edit" && editingSession !== null;
@@ -223,88 +212,11 @@ export const SessionFormCard = memo(function SessionFormCard({ packages, waves, 
                         <div className="relative">
                             <div className="flex items-center justify-between mb-1.5">
                                 <label className={labelClass} htmlFor="session-opens">Waktu Buka (WIB)</label>
-                                <div className="relative">
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setShowOpensQuick(!showOpensQuick);
-                                            setShowClosesQuick(false);
-                                        }}
-                                        className="flex items-center gap-1.5 rounded-md bg-amber-500/10 hover:bg-amber-500/20 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-amber-500 transition-all hover:scale-105 active:scale-95 border border-amber-500/20"
-                                        title="Pilihan Cepat"
-                                    >
-                                        <i className="fa-solid fa-bolt animate-pulse text-amber-500" /> Cepat
-                                    </button>
-                                    {showOpensQuick && (
-                                        <>
-                                            <div className="fixed inset-0 z-40" onClick={() => setShowOpensQuick(false)} />
-                                            <div className="absolute right-0 top-6 z-50 w-64 rounded-xl border border-slate-200 bg-white p-3 shadow-xl dark:border-white/10 dark:bg-slate-900 animate-in fade-in slide-in-from-top-2 duration-150 text-slate-800 dark:text-slate-100">
-                                                <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                                                    1. Pilih Hari
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-1.5 mb-3">
-                                                    {[
-                                                        { label: "Hari Ini", offset: 0 },
-                                                        { label: "Besok", offset: 1 },
-                                                        { label: "Lusa", offset: 2 },
-                                                        { label: "+1 Minggu", offset: 7 }
-                                                    ].map((item) => (
-                                                        <button
-                                                            key={item.label}
-                                                            type="button"
-                                                            onClick={() => {
-                                                                const currentVal = form.data.opens_at ? new Date(form.data.opens_at) : new Date();
-                                                                const newDate = new Date();
-                                                                newDate.setDate(newDate.getDate() + item.offset);
-                                                                newDate.setHours(currentVal.getHours(), currentVal.getMinutes(), 0, 0);
-                                                                form.setData("opens_at", formatToLocalDateTime(newDate));
-                                                            }}
-                                                            className="rounded-lg bg-slate-50 hover:bg-slate-100 dark:bg-white/5 dark:hover:bg-white/10 px-2 py-1 text-xs font-medium text-left border border-slate-100 dark:border-white/5 text-slate-700 dark:text-slate-200 transition-all"
-                                                        >
-                                                            {item.label}
-                                                        </button>
-                                                    ))}
-                                                </div>
-
-                                                <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                                                    2. Pilih Jam
-                                                </div>
-                                                <div className="grid grid-cols-3 gap-1 mb-1">
-                                                    {[
-                                                        { label: "Sekarang", time: null },
-                                                        { label: "07:30", time: "07:30" },
-                                                        { label: "08:00", time: "08:00" },
-                                                        { label: "09:00", time: "09:00" },
-                                                        { label: "10:00", time: "10:00" },
-                                                        { label: "13:00", time: "13:00" },
-                                                        { label: "14:00", time: "14:00" },
-                                                        { label: "16:00", time: "16:00" },
-                                                        { label: "19:00", time: "19:00" }
-                                                    ].map((item) => (
-                                                        <button
-                                                            key={item.label}
-                                                            type="button"
-                                                            onClick={() => {
-                                                                const newDate = form.data.opens_at ? new Date(form.data.opens_at) : new Date();
-                                                                if (item.time) {
-                                                                    const [h, m] = item.time.split(":").map(Number);
-                                                                    newDate.setHours(h, m, 0, 0);
-                                                                } else {
-                                                                    const now = new Date();
-                                                                    newDate.setHours(now.getHours(), now.getMinutes(), 0, 0);
-                                                                }
-                                                                form.setData("opens_at", formatToLocalDateTime(newDate));
-                                                            }}
-                                                            className="rounded-md bg-slate-50 hover:bg-slate-100 dark:bg-white/5 dark:hover:bg-white/10 px-1 py-1 text-[11px] font-medium text-center border border-slate-100 dark:border-white/5 text-slate-700 dark:text-slate-200 transition-all"
-                                                        >
-                                                            {item.label}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
+                                <QuickDateTimePicker
+                                    type="opens"
+                                    currentValue={form.data.opens_at}
+                                    onSelect={(val) => form.setData("opens_at", val)}
+                                />
                             </div>
                             <input
                                 id="session-opens"
@@ -318,84 +230,12 @@ export const SessionFormCard = memo(function SessionFormCard({ packages, waves, 
                         <div className="relative">
                             <div className="flex items-center justify-between mb-1.5">
                                 <label className={labelClass} htmlFor="session-closes">Waktu Tutup (WIB)</label>
-                                <div className="relative">
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setShowClosesQuick(!showClosesQuick);
-                                            setShowOpensQuick(false);
-                                        }}
-                                        className="flex items-center gap-1.5 rounded-md bg-amber-500/10 hover:bg-amber-500/20 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-amber-500 transition-all hover:scale-105 active:scale-95 border border-amber-500/20"
-                                        title="Pilihan Cepat"
-                                    >
-                                        <i className="fa-solid fa-bolt animate-pulse text-amber-500" /> Cepat
-                                    </button>
-                                    {showClosesQuick && (
-                                        <>
-                                            <div className="fixed inset-0 z-40" onClick={() => setShowClosesQuick(false)} />
-                                            <div className="absolute right-0 top-6 z-50 w-64 rounded-xl border border-slate-200 bg-white p-3 shadow-xl dark:border-white/10 dark:bg-slate-900 animate-in fade-in slide-in-from-top-2 duration-150 text-slate-800 dark:text-slate-100">
-                                                <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                                                    Tambah Jam (Waktu Buka)
-                                                </div>
-                                                <div className="grid grid-cols-3 gap-1.5 mb-3">
-                                                    {[
-                                                        { label: "+1 Jam", hours: 1 },
-                                                        { label: "+2 Jam", hours: 2 },
-                                                        { label: "+3 Jam", hours: 3 },
-                                                        { label: "+4 Jam", hours: 4 },
-                                                        { label: "+6 Jam", hours: 6 },
-                                                        { label: "+8 Jam", hours: 8 },
-                                                        { label: "+12 Jam", hours: 12 },
-                                                        { label: "+18 Jam", hours: 18 },
-                                                        { label: "+24 Jam", hours: 24 }
-                                                    ].map((item) => (
-                                                        <button
-                                                            key={item.label}
-                                                            type="button"
-                                                            onClick={() => {
-                                                                const baseStr = form.data.opens_at || formatToLocalDateTime(new Date());
-                                                                const baseDate = new Date(baseStr);
-                                                                baseDate.setHours(baseDate.getHours() + item.hours);
-                                                                form.setData("closes_at", formatToLocalDateTime(baseDate));
-                                                                setShowClosesQuick(false);
-                                                            }}
-                                                            className="rounded-lg bg-slate-50 hover:bg-slate-100 dark:bg-white/5 dark:hover:bg-white/10 px-1 py-1 text-xs font-medium text-center border border-slate-100 dark:border-white/5 text-slate-700 dark:text-slate-200 transition-all"
-                                                        >
-                                                            {item.label}
-                                                        </button>
-                                                    ))}
-                                                </div>
-
-                                                <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                                                    Tambah Hari
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-1.5">
-                                                    {[
-                                                        { label: "+1 Hari", days: 1 },
-                                                        { label: "+2 Hari", days: 2 },
-                                                        { label: "+3 Hari", days: 3 },
-                                                        { label: "+7 Hari", days: 7 }
-                                                    ].map((item) => (
-                                                        <button
-                                                            key={item.label}
-                                                            type="button"
-                                                            onClick={() => {
-                                                                const baseStr = form.data.opens_at || formatToLocalDateTime(new Date());
-                                                                const baseDate = new Date(baseStr);
-                                                                baseDate.setDate(baseDate.getDate() + item.days);
-                                                                form.setData("closes_at", formatToLocalDateTime(baseDate));
-                                                                setShowClosesQuick(false);
-                                                            }}
-                                                            className="rounded-lg bg-slate-50 hover:bg-slate-100 dark:bg-white/5 dark:hover:bg-white/10 px-2 py-1 text-xs font-medium text-left border border-slate-100 dark:border-white/5 text-slate-700 dark:text-slate-200 transition-all"
-                                                        >
-                                                            {item.label}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
+                                <QuickDateTimePicker
+                                    type="closes"
+                                    currentValue={form.data.closes_at}
+                                    baseOpensAt={form.data.opens_at}
+                                    onSelect={(val) => form.setData("closes_at", val)}
+                                />
                             </div>
                             <input
                                 id="session-closes"

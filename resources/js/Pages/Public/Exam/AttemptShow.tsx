@@ -1,8 +1,9 @@
 import { useCallback, useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { Head, Link, router, usePage } from "@inertiajs/react";
-import RichExamText from "@/Components/Exam/Shared/RichExamText";
 import { useExamTimer, useFullscreenEnforcement, useExamNavigation } from "@/hooks/exam";
+import PublicQuestionPalette from "@/Components/Exam/Public/PublicQuestionPalette";
+import PublicExamQuestionWorkspace from "@/Components/Exam/Public/PublicExamQuestionWorkspace";
 import type { ExamAttemptState, ExamAnswerState, ExamQuestion, ExamParticipant, ExamMeta, ExamSaveState, ExamSaveResponse } from "@/types/exam";
 import type { PageProps } from "@/types";
 
@@ -226,7 +227,7 @@ export default function PublicAttemptShow({ participant, exam, attempt, question
         }`}>
             <Head title={`Ruang Ujian - ${exam.session_title ?? "Public Exam"}`} />
 
-            {/* INITIAL Fullscreen Overlay — blocks ONLY before user first clicks "Mulai" */}
+            {/* INITIAL Fullscreen Overlay */}
             {needsInitialFullscreen && isRunning && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-slate-950/95">
                     <div className="w-full max-w-md rounded-2xl border border-amber-500/30 bg-slate-900 p-6 text-center shadow-2xl">
@@ -276,7 +277,6 @@ export default function PublicAttemptShow({ participant, exam, attempt, question
                     </div>
 
                     <div className="flex items-center justify-between lg:justify-end gap-3">
-                        {/* Theme Toggle Button */}
                         <button
                             type="button"
                             onClick={toggleTheme}
@@ -314,7 +314,6 @@ export default function PublicAttemptShow({ participant, exam, attempt, question
 
             {/* Main Question & Navigator Body */}
             <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 pb-6">
-                {/* Non-blocking fullscreen warning — visible only after user has already started */}
                 {!isFullscreen && !needsInitialFullscreen && isRunning && (
                     <div className="mb-4 flex items-center gap-3 rounded-xl border border-orange-500/40 bg-orange-500/10 px-4 py-3 text-xs text-orange-400">
                         <i className="fa-solid fa-triangle-exclamation shrink-0" />
@@ -340,239 +339,43 @@ export default function PublicAttemptShow({ participant, exam, attempt, question
                 )}
 
                 <div className="grid gap-6 xl:grid-cols-[1fr_320px]">
-                    {/* Active Question Display */}
-                    <main className={`flex flex-col justify-between min-h-[calc(100vh-12rem)] xl:min-h-0 rounded-2xl border p-5 shadow-xl backdrop-blur-xl sm:p-6 transition-colors ${
-                        themeMode === "dark" ? "border-white/10 bg-slate-900/80" : "border-slate-200 bg-white"
-                    }`}>
-                        {activeQuestion ? (
-                            <>
-                                <div className="flex-1 flex flex-col justify-start">
-                                    <div className={`flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between border-b pb-4 ${
-                                        themeMode === "dark" ? "border-white/10" : "border-slate-200"
-                                    }`}>
-                                        <div>
-                                            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-500">
-                                                Soal Nomor {activeIndex + 1} dari {questions.length}
-                                            </span>
-                                            <div className={`mt-2 text-base md:text-lg font-semibold leading-relaxed ${
-                                                themeMode === "dark" ? "text-white" : "text-slate-900"
-                                            }`}>
-                                                <RichExamText text={activeQuestion.question_text} />
-                                            </div>
-                                        </div>
-                                        <div className="shrink-0 flex items-center gap-2">
-                                            <span className={`rounded-lg px-2.5 py-1 text-xs font-bold border ${
-                                                themeMode === "dark" ? "bg-slate-800 text-slate-300 border-white/5" : "bg-slate-100 text-slate-700 border-slate-200"
-                                            }`}>
-                                                {activeQuestion.point} Poin
-                                            </span>
-                                        </div>
-                                    </div>
+                    {activeQuestion && (
+                        <PublicExamQuestionWorkspace
+                            activeQuestion={activeQuestion}
+                            activeAnswer={activeAnswer}
+                            activeIndex={activeIndex}
+                            totalQuestions={questions.length}
+                            themeMode={themeMode}
+                            changeAnswer={changeAnswer}
+                            goPrev={goPrev}
+                            goNext={goNext}
+                        />
+                    )}
 
-                                    {/* Options List */}
-                                    <div className="mt-6 space-y-3">
-                                        {Object.entries(activeQuestion.options).map(([key, value]) => value ? (
-                                            <button
-                                                key={key}
-                                                type="button"
-                                                onClick={() => changeAnswer(activeQuestion.id, {
-                                                    selected_option: activeAnswer?.selected_option === key ? null : key,
-                                                })}
-                                                className={`flex min-h-14 w-full items-start gap-3 rounded-xl border px-4 py-3.5 text-left text-sm md:text-base transition focus:outline-none ${
-                                                    activeAnswer?.selected_option === key
-                                                        ? "border-amber-500 bg-amber-500/15 text-amber-500 font-bold shadow-md shadow-amber-500/10"
-                                                        : themeMode === "dark"
-                                                            ? "border-white/10 bg-slate-950/60 text-slate-300 hover:border-amber-500/40 hover:bg-slate-950"
-                                                            : "border-slate-200 bg-slate-50 text-slate-800 hover:border-amber-500/40 hover:bg-slate-100"
-                                                }`}
-                                            >
-                                                <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-sm font-black ${
-                                                    activeAnswer?.selected_option === key
-                                                        ? "bg-amber-500 text-slate-950"
-                                                        : themeMode === "dark" ? "bg-slate-800 text-slate-300" : "bg-slate-200 text-slate-700"
-                                                }`}>
-                                                    {key}
-                                                </span>
-                                                <RichExamText text={value} className="leading-relaxed pt-0.5" />
-                                            </button>
-                                        ) : null)}
-                                    </div>
-                                </div>
-
-                                {/* Footer Action Controls */}
-                                <div className={`mt-8 flex flex-col gap-4 border-t pt-5 sm:flex-row sm:items-center sm:justify-between ${
-                                    themeMode === "dark" ? "border-white/10" : "border-slate-200"
-                                }`}>
-                                    <label className={`flex items-center gap-2 text-xs font-semibold cursor-pointer select-none ${
-                                        themeMode === "dark" ? "text-slate-400" : "text-slate-600"
-                                    }`}>
-                                        <input
-                                            type="checkbox"
-                                            checked={Boolean(activeAnswer?.is_marked_for_review)}
-                                            onChange={(e) => changeAnswer(activeQuestion.id, { is_marked_for_review: e.target.checked })}
-                                            className="rounded border-slate-300 bg-slate-950 text-amber-500 focus:ring-amber-500/40"
-                                        />
-                                        Ragu-ragu / Tandai untuk Ditinjau
-                                    </label>
-
-                                    <div className="flex items-center gap-2">
-                                        <button
-                                            type="button"
-                                            onClick={goPrev}
-                                            disabled={activeIndex === 0}
-                                            className={`inline-flex min-h-10 items-center gap-1.5 rounded-xl border px-4 text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed transition ${
-                                                themeMode === "dark" ? "border-white/10 bg-slate-950 text-slate-300 hover:bg-slate-800" : "border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
-                                            }`}
-                                        >
-                                            <i className="fa-solid fa-arrow-left text-[10px]" /> Sebelum
-                                        </button>
-
-                                        <button
-                                            type="button"
-                                            onClick={goNext}
-                                            disabled={activeIndex === questions.length - 1}
-                                            className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-amber-500 px-4 text-xs font-bold text-slate-950 hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed transition shadow-lg shadow-amber-500/20"
-                                        >
-                                            Berikut <i className="fa-solid fa-arrow-right text-[10px]" />
-                                        </button>
-                                    </div>
-                                </div>
-                            </>
-                        ) : null}
-                    </main>
-
-                    {/* Mobile Question Navigator (below main question in normal flow) */}
-                    <div className="xl:hidden space-y-4 mt-6">
-                        {/* Progress */}
-                        <div className={`rounded-2xl border p-4 shadow-xl backdrop-blur-xl transition-colors ${
-                            themeMode === "dark" ? "border-white/10 bg-slate-900/80" : "border-slate-200 bg-white"
-                        }`}>
-                            <span className={`text-[10px] font-bold uppercase tracking-wider ${themeMode === "dark" ? "text-slate-400" : "text-slate-500"}`}>Kemajuan Dijawab</span>
-                            <div className="mt-2 flex items-baseline justify-between">
-                                <p className={`text-xl font-black ${themeMode === "dark" ? "text-white" : "text-slate-900"}`}>{answeredCount} / {questions.length}</p>
-                                <p className="text-xs font-bold text-amber-500">
-                                    {Math.round((answeredCount / Math.max(1, questions.length)) * 100)}%
-                                </p>
-                            </div>
-                            <div className={`mt-2.5 h-1.5 overflow-hidden rounded-full ${themeMode === "dark" ? "bg-slate-950" : "bg-slate-200"}`}>
-                                <div
-                                    className="h-full rounded-full bg-gradient-to-r from-amber-500 to-emerald-500 transition-all duration-300"
-                                    style={{ width: `${(answeredCount / Math.max(1, questions.length)) * 100}%` }}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Question Palette Grid */}
-                        <div className={`rounded-2xl border p-4 shadow-xl backdrop-blur-xl transition-colors ${
-                            themeMode === "dark" ? "border-white/10 bg-slate-900/80" : "border-slate-200 bg-white"
-                        }`}>
-                            <div className="flex items-center justify-between mb-3">
-                                <span className={`text-[10px] font-bold uppercase tracking-wider ${themeMode === "dark" ? "text-slate-400" : "text-slate-500"}`}>Navigasi Soal</span>
-                                <span className="text-[10px] font-bold text-violet-500">
-                                    {markedCount} Ragu
-                                </span>
-                            </div>
-
-                            <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2">
-                                {questions.map((question, idx) => {
-                                    const answer = answerMap[question.id];
-                                    const answered = Boolean(answer?.selected_option);
-                                    const marked = Boolean(answer?.is_marked_for_review);
-                                    const active = idx === activeIndex;
-
-                                    return (
-                                        <button
-                                            key={question.id}
-                                            type="button"
-                                            onClick={() => setActiveIndex(idx)}
-                                            className={`relative flex h-10 items-center justify-center rounded-xl text-xs font-black transition ${
-                                                active
-                                                    ? "bg-amber-500 text-slate-950 ring-2 ring-amber-400 shadow-md shadow-amber-500/20"
-                                                    : answered
-                                                        ? "bg-emerald-500/20 text-emerald-500 border border-emerald-500/30"
-                                                        : themeMode === "dark"
-                                                            ? "bg-slate-950 text-slate-400 border border-white/5 hover:border-white/20"
-                                                            : "bg-slate-100 text-slate-700 border border-slate-200 hover:border-slate-300"
-                                            }`}
-                                        >
-                                            {idx + 1}
-                                            {marked && (
-                                                <span className={`absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-violet-500 ring-2 ${
-                                                    themeMode === "dark" ? "ring-slate-900" : "ring-white"
-                                                }`} />
-                                            )}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
+                    {/* Mobile Question Navigator */}
+                    <div className="xl:hidden mt-6">
+                        <PublicQuestionPalette
+                            questions={questions}
+                            answerMap={answerMap}
+                            activeIndex={activeIndex}
+                            answeredCount={answeredCount}
+                            markedCount={markedCount}
+                            themeMode={themeMode}
+                            setActiveIndex={setActiveIndex}
+                        />
                     </div>
 
-                    {/* Question Navigator Sidebar */}
-                    <aside className="hidden xl:block space-y-4">
-                        {/* Progress */}
-                        <div className={`rounded-2xl border p-4 shadow-xl backdrop-blur-xl transition-colors ${
-                            themeMode === "dark" ? "border-white/10 bg-slate-900/80" : "border-slate-200 bg-white"
-                        }`}>
-                            <span className={`text-[10px] font-bold uppercase tracking-wider ${themeMode === "dark" ? "text-slate-400" : "text-slate-500"}`}>Kemajuan Dijawab</span>
-                            <div className="mt-2 flex items-baseline justify-between">
-                                <p className={`text-xl font-black ${themeMode === "dark" ? "text-white" : "text-slate-900"}`}>{answeredCount} / {questions.length}</p>
-                                <p className="text-xs font-bold text-amber-500">
-                                    {Math.round((answeredCount / Math.max(1, questions.length)) * 100)}%
-                                </p>
-                            </div>
-                            <div className={`mt-2.5 h-1.5 overflow-hidden rounded-full ${themeMode === "dark" ? "bg-slate-950" : "bg-slate-200"}`}>
-                                <div
-                                    className="h-full rounded-full bg-gradient-to-r from-amber-500 to-emerald-500 transition-all duration-300"
-                                    style={{ width: `${(answeredCount / Math.max(1, questions.length)) * 100}%` }}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Question Palette Grid */}
-                        <div className={`rounded-2xl border p-4 shadow-xl backdrop-blur-xl transition-colors ${
-                            themeMode === "dark" ? "border-white/10 bg-slate-900/80" : "border-slate-200 bg-white"
-                        }`}>
-                            <div className="flex items-center justify-between mb-3">
-                                <span className={`text-[10px] font-bold uppercase tracking-wider ${themeMode === "dark" ? "text-slate-400" : "text-slate-500"}`}>Navigasi Soal</span>
-                                <span className="text-[10px] font-bold text-violet-500">
-                                    {markedCount} Ragu
-                                </span>
-                            </div>
-
-                            <div className="grid grid-cols-5 gap-2">
-                                {questions.map((question, idx) => {
-                                    const answer = answerMap[question.id];
-                                    const answered = Boolean(answer?.selected_option);
-                                    const marked = Boolean(answer?.is_marked_for_review);
-                                    const active = idx === activeIndex;
-
-                                    return (
-                                        <button
-                                            key={question.id}
-                                            type="button"
-                                            onClick={() => setActiveIndex(idx)}
-                                            className={`relative flex h-10 items-center justify-center rounded-xl text-xs font-black transition ${
-                                                active
-                                                    ? "bg-amber-500 text-slate-950 ring-2 ring-amber-400 shadow-md shadow-amber-500/20"
-                                                    : answered
-                                                        ? "bg-emerald-500/20 text-emerald-500 border border-emerald-500/30"
-                                                        : themeMode === "dark"
-                                                            ? "bg-slate-950 text-slate-400 border border-white/5 hover:border-white/20"
-                                                            : "bg-slate-100 text-slate-700 border border-slate-200 hover:border-slate-300"
-                                            }`}
-                                        >
-                                            {idx + 1}
-                                            {marked && (
-                                                <span className={`absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-violet-500 ring-2 ${
-                                                    themeMode === "dark" ? "ring-slate-900" : "ring-white"
-                                                }`} />
-                                            )}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
+                    {/* Desktop Question Navigator Sidebar */}
+                    <aside className="hidden xl:block">
+                        <PublicQuestionPalette
+                            questions={questions}
+                            answerMap={answerMap}
+                            activeIndex={activeIndex}
+                            answeredCount={answeredCount}
+                            markedCount={markedCount}
+                            themeMode={themeMode}
+                            setActiveIndex={setActiveIndex}
+                        />
                     </aside>
                 </div>
             </div>

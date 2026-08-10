@@ -1,11 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import axios from "axios";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import { BackLink, FlashMessage, PageHeader, StatusPill } from "@/Components/Dashboard/Candidate/Exam/ExamCandidateUi";
-import RichExamText from "@/Components/Exam/Shared/RichExamText";
 import { useExamTimer, useExamNavigation } from "@/hooks/exam";
 import { useTheme } from "@/context/ThemeContext";
+import QuestionPaletteNavigator from "@/Components/Exam/Candidate/QuestionPaletteNavigator";
+import CandidateQuestionWorkspace from "@/Components/Exam/Candidate/CandidateQuestionWorkspace";
 import type { ExamAttemptState, ExamAnswerState, ExamQuestion, ExamCandidate, ExamMeta, ExamSaveState, ExamSaveResponse } from "@/types/exam";
 import type { PageProps } from "@/types";
 
@@ -180,8 +181,7 @@ export default function CandidateAttemptShow({ candidate, exam, attempt, questio
                                 <Link href={`/dashboard/seleksi/sesi/${exam.session_id}`} className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-2.5 text-xs font-bold text-slate-700 hover:border-amber-300 hover:text-amber-600 dark:border-white/10 dark:text-slate-200">
                                     <i className="fa-solid fa-arrow-left text-[10px]" /> Sesi
                                 </Link>
-                                
-                                {/* Theme Toggle Button */}
+
                                 <button
                                     type="button"
                                     onClick={toggleTheme}
@@ -218,211 +218,44 @@ export default function CandidateAttemptShow({ candidate, exam, attempt, questio
                 <FlashMessage value={flash.error ?? errors.exam} />
 
                 <div className="grid gap-4 xl:grid-cols-[1fr_320px]">
-                    <main className="flex flex-col justify-between min-h-[calc(100vh-10rem)] xl:min-h-0 rounded-lg border border-slate-200 bg-white p-3 dark:border-white/10 dark:bg-slate-900 sm:p-4">
-                        {activeQuestion ? (
-                            <>
-                                <div className="flex-1 flex flex-col justify-start">
-                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                                        <div>
-                                            <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Soal {activeIndex + 1} dari {questions.length}</p>
-                                            <h2 className="mt-2 text-base font-bold leading-7 text-slate-900 dark:text-white">
-                                                <RichExamText text={activeQuestion.question_text} />
-                                            </h2>
-                                        </div>
-                                        <div className="flex flex-wrap gap-2">
-                                            <StatusPill value={`${activeQuestion.point} poin`} />
-                                            <StatusPill value={activeQuestion.difficulty} />
-                                        </div>
-                                    </div>
+                    {activeQuestion && (
+                        <CandidateQuestionWorkspace
+                            activeQuestion={activeQuestion}
+                            activeAnswer={activeAnswer}
+                            activeIndex={activeIndex}
+                            totalQuestions={questions.length}
+                            changeAnswer={changeAnswer}
+                            goPrev={goPrev}
+                            goNext={goNext}
+                        />
+                    )}
 
-                                    <div className="mt-5 space-y-3">
-                                        {Object.entries(activeQuestion.options).map(([key, value]) => value ? (
-                                            <button
-                                                key={key}
-                                                type="button"
-                                                onClick={() => changeAnswer(activeQuestion.id, {
-                                                    selected_option: activeAnswer?.selected_option === key ? null : key,
-                                                })}
-                                                className={`flex min-h-12 w-full items-start gap-3 rounded-lg border px-3 py-3 text-left text-sm transition focus:outline-none focus:ring-2 focus:ring-amber-500/20 sm:px-4 ${
-                                                    activeAnswer?.selected_option === key
-                                                        ? "border-amber-400 bg-amber-500/10 text-amber-800 dark:text-amber-200"
-                                                        : "border-slate-200 text-slate-700 hover:border-amber-300 dark:border-white/10 dark:text-slate-200"
-                                                }`}
-                                            >
-                                                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-xs font-black text-slate-700 dark:bg-white/10 dark:text-slate-200">{key}</span>
-                                                <RichExamText text={value} className="leading-6" />
-                                            </button>
-                                        ) : null)}
-                                    </div>
-                                </div>
-
-                                <div className="mt-5 flex flex-col gap-3 border-t border-slate-200 pt-4 dark:border-white/10 sm:flex-row sm:items-center sm:justify-between">
-                                    <label className="flex items-center gap-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
-                                        <input
-                                            type="checkbox"
-                                            checked={Boolean(activeAnswer?.is_marked_for_review)}
-                                            onChange={(event) => changeAnswer(activeQuestion.id, { is_marked_for_review: event.target.checked })}
-                                            className="rounded border-slate-300 text-amber-500 focus:ring-amber-500"
-                                        />
-                                        Tandai untuk ditinjau
-                                    </label>
-                                    <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
-                                        <button
-                                            type="button"
-                                            onClick={goPrev}
-                                            disabled={activeIndex === 0}
-                                            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 text-sm font-bold text-slate-700 hover:border-amber-300 hover:text-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:text-slate-200"
-                                        >
-                                            <i className="fa-solid fa-arrow-left text-xs" /> Sebelumnya
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={goNext}
-                                            disabled={activeIndex === questions.length - 1}
-                                            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-amber-500 px-3 text-sm font-bold text-white hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30 disabled:cursor-not-allowed disabled:opacity-50"
-                                        >
-                                            Berikutnya <i className="fa-solid fa-arrow-right text-xs" />
-                                        </button>
-                                    </div>
-                                </div>
-                            </>
-                        ) : null}
-                    </main>
-
-                    {/* Mobile Question Navigator (below main question in normal flow) */}
-                    <div className="xl:hidden space-y-4 mt-6">
-                        {/* Progress */}
-                        <div className={`rounded-lg border p-4 transition-colors ${
-                            theme === "dark" ? "border-white/10 bg-slate-900" : "border-slate-200 bg-white"
-                        }`}>
-                            <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Progress</p>
-                            <div className="mt-3 flex items-end justify-between">
-                                <p className="text-2xl font-black text-slate-900 dark:text-white">{answeredCount}/{questions.length}</p>
-                                <p className="text-xs font-semibold text-slate-500">{Math.round((answeredCount / Math.max(1, questions.length)) * 100)}%</p>
-                            </div>
-                            <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
-                                <div className="h-full rounded-full bg-amber-500" style={{ width: `${(answeredCount / Math.max(1, questions.length)) * 100}%` }} />
-                            </div>
-                        </div>
-
-                        {/* Question Palette Grid */}
-                        <div className={`rounded-lg border p-4 transition-colors ${
-                            theme === "dark" ? "border-white/10 bg-slate-900" : "border-slate-200 bg-white"
-                        }`}>
-                            <div className="mb-3 flex items-center justify-between">
-                                <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Navigasi soal</p>
-                                <span className="text-xs font-semibold text-slate-500">{questions.filter((question) => answerMap[question.id]?.is_marked_for_review).length} ditandai</span>
-                            </div>
-                            <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2">
-                                {questions.map((question, index) => {
-                                    const answer = answerMap[question.id];
-                                    const answered = Boolean(answer?.selected_option);
-                                    const marked = Boolean(answer?.is_marked_for_review);
-                                    const active = index === activeIndex;
-
-                                    return (
-                                        <button
-                                            key={question.id}
-                                            type="button"
-                                            onClick={() => setActiveIndex(index)}
-                                            className={`relative flex h-10 items-center justify-center rounded-xl text-xs font-black transition focus:outline-none focus:ring-2 focus:ring-amber-500/20 ${
-                                                active
-                                                    ? "bg-amber-500 text-slate-950 ring-2 ring-amber-400 shadow-md shadow-amber-500/20"
-                                                    : answered
-                                                        ? "bg-emerald-500/20 text-emerald-500 border border-emerald-500/30"
-                                                        : theme === "dark"
-                                                            ? "bg-slate-950 text-slate-400 border border-white/5 hover:border-white/20"
-                                                            : "bg-slate-100 text-slate-700 border border-slate-200 hover:border-slate-300"
-                                            }`}
-                                            aria-label={`Soal ${index + 1}`}
-                                        >
-                                            {index + 1}
-                                            {marked && (
-                                                <span className={`absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-violet-500 ring-2 ${
-                                                    theme === "dark" ? "ring-slate-900" : "ring-white"
-                                                }`} />
-                                            )}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        {/* Summary Info Card */}
-                        <div className={`rounded-lg border p-4 text-sm transition-colors ${
-                            theme === "dark" ? "border-white/10 bg-slate-900 text-slate-300" : "border-slate-200 bg-white text-slate-600"
-                        }`}>
-                            <p className="font-bold text-slate-900 dark:text-white">Ringkasan sesi</p>
-                            <dl className="mt-3 space-y-2">
-                                <Info label="Paket" value={exam.package_title ?? "-"} />
-                                <Info label="Mapel" value={exam.subject_name ?? "-"} />
-                                <Info label="Mulai" value={attemptState.started_at ?? "-"} />
-                                <Info label="Berakhir" value={attemptState.expires_at ?? "-"} />
-                            </dl>
-                        </div>
+                    {/* Mobile Navigator */}
+                    <div className="xl:hidden mt-6">
+                        <QuestionPaletteNavigator
+                            questions={questions}
+                            answerMap={answerMap}
+                            activeIndex={activeIndex}
+                            answeredCount={answeredCount}
+                            theme={theme}
+                            exam={exam}
+                            attemptState={attemptState}
+                            setActiveIndex={setActiveIndex}
+                        />
                     </div>
 
-                    <aside className="hidden xl:block space-y-4">
-                        <section className="rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-900">
-                            <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Progress</p>
-                            <div className="mt-3 flex items-end justify-between">
-                                <p className="text-2xl font-black text-slate-900 dark:text-white">{answeredCount}/{questions.length}</p>
-                                <p className="text-xs font-semibold text-slate-500">{Math.round((answeredCount / Math.max(1, questions.length)) * 100)}%</p>
-                            </div>
-                            <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
-                                <div className="h-full rounded-full bg-amber-500" style={{ width: `${(answeredCount / Math.max(1, questions.length)) * 100}%` }} />
-                            </div>
-                        </section>
-
-                        <section className="rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-900">
-                            <div className="mb-3 flex items-center justify-between">
-                                <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Navigasi soal</p>
-                                <span className="text-xs font-semibold text-slate-500">{questions.filter((question) => answerMap[question.id]?.is_marked_for_review).length} ditandai</span>
-                            </div>
-                            <div className="grid grid-cols-5 gap-2">
-                                {questions.map((question, index) => {
-                                    const answer = answerMap[question.id];
-                                    const answered = Boolean(answer?.selected_option);
-                                    const marked = Boolean(answer?.is_marked_for_review);
-                                    const active = index === activeIndex;
-
-                                    return (
-                                        <button
-                                            key={question.id}
-                                            type="button"
-                                            onClick={() => setActiveIndex(index)}
-                                            className={`relative flex h-10 items-center justify-center rounded-xl text-xs font-black transition focus:outline-none focus:ring-2 focus:ring-amber-500/20 ${
-                                                active
-                                                    ? "bg-amber-500 text-slate-950 ring-2 ring-amber-400 shadow-md shadow-amber-500/20"
-                                                    : answered
-                                                        ? "bg-emerald-500/20 text-emerald-500 border border-emerald-500/30"
-                                                        : theme === "dark"
-                                                            ? "bg-slate-950 text-slate-400 border border-white/5 hover:border-white/20"
-                                                            : "bg-slate-100 text-slate-700 border border-slate-200 hover:border-slate-300"
-                                            }`}
-                                            aria-label={`Soal ${index + 1}`}
-                                        >
-                                            {index + 1}
-                                            {marked && (
-                                                <span className={`absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-violet-500 ring-2 ${
-                                                    theme === "dark" ? "ring-slate-900" : "ring-white"
-                                                }`} />
-                                            )}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </section>
-
-                        <section className="rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-600 dark:border-white/10 dark:bg-slate-900 dark:text-slate-300">
-                            <p className="font-bold text-slate-900 dark:text-white">Ringkasan sesi</p>
-                            <dl className="mt-3 space-y-2">
-                                <Info label="Paket" value={exam.package_title ?? "-"} />
-                                <Info label="Mapel" value={exam.subject_name ?? "-"} />
-                                <Info label="Mulai" value={attemptState.started_at ?? "-"} />
-                                <Info label="Berakhir" value={attemptState.expires_at ?? "-"} />
-                            </dl>
-                        </section>
+                    {/* Desktop Sidebar Navigator */}
+                    <aside className="hidden xl:block">
+                        <QuestionPaletteNavigator
+                            questions={questions}
+                            answerMap={answerMap}
+                            activeIndex={activeIndex}
+                            answeredCount={answeredCount}
+                            theme={theme}
+                            exam={exam}
+                            attemptState={attemptState}
+                            setActiveIndex={setActiveIndex}
+                        />
                     </aside>
                 </div>
             </div>
@@ -439,13 +272,4 @@ function formatTime(seconds: number): string {
     return [hours, minutes, secs]
         .map((value) => value.toString().padStart(2, "0"))
         .join(":");
-}
-
-function Info({ label, value }: { label: string; value: string }) {
-    return (
-        <div className="flex items-start justify-between gap-3">
-            <dt className="text-xs text-slate-500 dark:text-slate-400">{label}</dt>
-            <dd className="text-right text-xs font-semibold text-slate-800 dark:text-slate-100">{value}</dd>
-        </div>
-    );
 }
