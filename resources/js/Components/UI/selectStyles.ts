@@ -6,7 +6,7 @@
 // isDark di-pass sebagai parameter dari komponen yang sudah subscribe ke
 // ThemeContext, sehingga re-render terjadi setiap kali theme berubah.
 
-export const makeSelectStyles = (hasError = false, isDark = false) => ({
+export const makeSelectStyles = (hasError = false, isDark = false, accentColor = "#d4a017") => ({
     control: (base: any, state: any) => ({
         ...base,
         backgroundColor: hasError
@@ -14,17 +14,19 @@ export const makeSelectStyles = (hasError = false, isDark = false) => ({
             : isDark ? "rgba(15, 23, 42, 0.6)"   : "#ffffff",
         borderColor: hasError
             ? isDark ? "rgba(244, 63, 94, 0.55)" : "#e11d48"
-            : state.isFocused ? "#d4a017"
+            : state.isFocused ? accentColor
             : isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)",
         borderRadius: "0.625rem",
         padding:      "2px 4px",
-        boxShadow:    "none",
+        boxShadow:    state.isFocused
+            ? isDark ? `0 0 0 2px ${accentColor}40` : `0 0 0 2px ${accentColor}30`
+            : "none",
         minHeight:    "44px",
-        transition:   "border-color 0.2s, background-color 0.2s",
+        transition:   "border-color 0.2s, background-color 0.2s, box-shadow 0.2s",
         "&:hover": {
             borderColor: hasError
                 ? isDark ? "rgba(244, 63, 94, 0.55)" : "#e11d48"
-                : "#d4a017",
+                : accentColor,
         },
     }),
     menu: (base: any) => ({
@@ -56,9 +58,9 @@ export const makeSelectStyles = (hasError = false, isDark = false) => ({
         ...base,
         borderRadius: "0.5rem",
         backgroundColor: state.isSelected
-            ? "#d4a017"
-            : state.isFocused ? "rgba(212,160,23,0.15)" : "transparent",
-        color:    state.isSelected ? "#0f172a" : isDark ? "#e2e8f0" : "#1e293b",
+            ? accentColor
+            : state.isFocused ? (accentColor === "#d4a017" ? "rgba(212,160,23,0.15)" : "rgba(139,92,246,0.15)") : "transparent",
+        color:    state.isSelected ? "#ffffff" : isDark ? "#e2e8f0" : "#1e293b",
         cursor:   "pointer",
         fontSize: "13px",
         lineHeight: "1.35",
@@ -72,9 +74,9 @@ export const makeSelectStyles = (hasError = false, isDark = false) => ({
             : isDark ? "#e2e8f0" : "#1e293b",
         fontSize: "14px",
     }),
-    multiValue:       (base: any) => ({ ...base, backgroundColor: "rgba(212,160,23,0.2)", borderRadius: "6px" }),
-    multiValueLabel:  (base: any) => ({ ...base, color: "#d4a017", fontSize: "12px" }),
-    multiValueRemove: (base: any) => ({ ...base, color: "#d4a017", "&:hover": { backgroundColor: "rgba(212,160,23,0.3)", color: "#fff" } }),
+    multiValue:       (base: any) => ({ ...base, backgroundColor: `${accentColor}33`, borderRadius: "6px" }),
+    multiValueLabel:  (base: any) => ({ ...base, color: accentColor, fontSize: "12px" }),
+    multiValueRemove: (base: any) => ({ ...base, color: accentColor, "&:hover": { backgroundColor: `${accentColor}4d`, color: "#fff" } }),
     placeholder: (base: any) => ({
         ...base,
         color: hasError
@@ -94,8 +96,8 @@ export const makeSelectStyles = (hasError = false, isDark = false) => ({
     }),
     dropdownIndicator: (base: any, state: any) => ({
         ...base,
-        color: state.isFocused ? "#d4a017" : isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)",
-        "&:hover": { color: "#d4a017" },
+        color: state.isFocused ? accentColor : isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)",
+        "&:hover": { color: accentColor },
         transition: "color 0.2s",
     }),
 });

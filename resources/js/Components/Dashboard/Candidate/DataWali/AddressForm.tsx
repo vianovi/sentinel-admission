@@ -20,10 +20,10 @@ function inputCls(hasError = false) {
         'dark:text-slate-200 text-slate-800',
         'placeholder:dark:text-slate-600 placeholder:text-slate-400',
         'transition-colors duration-200',
-        'focus:outline-none focus:ring-2 dark:focus:ring-gold/40 focus:ring-amber-300/50',
+        'focus:outline-none focus:ring-2 dark:focus:ring-violet-500/40 focus:ring-violet-500/30',
         hasError
             ? 'border-red-500/60 focus:border-red-500'
-            : 'dark:border-content-border border-black/[0.10] dark:focus:border-gold/60 focus:border-amber-400/60',
+            : 'dark:border-content-border border-black/[0.10] dark:focus:border-violet-500/60 focus:border-violet-500/60',
     ].join(' ')
 }
 
@@ -50,9 +50,9 @@ export default function AddressForm({ prefix, data, errors, onChange, candidateA
                 <button
                     type="button"
                     onClick={copyFromCandidate}
-                    className="flex items-center gap-2 rounded-lg border border-gold/40 bg-gold/5
-                               px-3 py-2.5 text-xs font-medium text-gold
-                               transition-all duration-200 hover:bg-gold/10 hover:border-gold/60
+                    className="flex items-center gap-2 rounded-lg border border-violet-500/40 bg-violet-500/5
+                               px-3 py-2.5 text-xs font-medium text-violet-500 dark:text-violet-400
+                               transition-all duration-200 hover:bg-violet-500/10 hover:border-violet-500/60
                                min-h-[44px]"
                 >
                     <i className="fa-solid fa-copy text-xs" />
