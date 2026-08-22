@@ -126,6 +126,7 @@ export default function TabProfilKeluarga({ data, errors, onChange, candidateFam
                     value={data.family_email ?? ''}
                     onChange={e => onChange('family_email', e.target.value)}
                     placeholder="contoh@gmail.com"
+                    maxLength={100}
                 />
                 {data.family_email && !data.family_email.endsWith('@gmail.com') && (
                     <p className="mt-1 text-xs text-amber-400">
@@ -170,7 +171,16 @@ export default function TabProfilKeluarga({ data, errors, onChange, candidateFam
                         type="number"
                         className={inputCls(!!errors.family_dependents)}
                         value={data.family_dependents ?? ''}
-                        onChange={e => onChange('family_dependents', e.target.value === '' ? null : parseInt(e.target.value))}
+                        onChange={e => {
+                            if (e.target.value === '') {
+                                onChange('family_dependents', null)
+                                return
+                            }
+                            const val = parseInt(e.target.value, 10)
+                            if (isNaN(val)) return
+                            const clamped = Math.max(0, Math.min(30, val))
+                            onChange('family_dependents', clamped)
+                        }}
                         placeholder="cth: 4"
                         min={0}
                         max={30}

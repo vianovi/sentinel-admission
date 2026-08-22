@@ -68,6 +68,7 @@ export default function AddressForm({ prefix, data, errors, onChange, candidateA
                         value={(get('province') as string) ?? ''}
                         onChange={e => set('province', e.target.value)}
                         placeholder="cth: Jawa Tengah"
+                        maxLength={100}
                     />
                 </Field>
 
@@ -78,6 +79,7 @@ export default function AddressForm({ prefix, data, errors, onChange, candidateA
                         value={(get('city') as string) ?? ''}
                         onChange={e => set('city', e.target.value)}
                         placeholder="cth: Kota Semarang"
+                        maxLength={100}
                     />
                 </Field>
 
@@ -88,6 +90,7 @@ export default function AddressForm({ prefix, data, errors, onChange, candidateA
                         value={(get('district') as string) ?? ''}
                         onChange={e => set('district', e.target.value)}
                         placeholder="cth: Banyumanik"
+                        maxLength={100}
                     />
                 </Field>
 
@@ -98,6 +101,7 @@ export default function AddressForm({ prefix, data, errors, onChange, candidateA
                         value={(get('village') as string) ?? ''}
                         onChange={e => set('village', e.target.value)}
                         placeholder="cth: Pudakpayung"
+                        maxLength={100}
                     />
                 </Field>
 
@@ -120,6 +124,7 @@ export default function AddressForm({ prefix, data, errors, onChange, candidateA
                     onChange={e => set('address', e.target.value)}
                     placeholder="Jalan, nomor rumah, RT/RW, dsb."
                     rows={3}
+                    maxLength={500}
                 />
             </Field>
         </div>

@@ -242,8 +242,12 @@ export default function DataWali({ guardian, completion: initialCompletion, user
 
     // ── Submit per-tab + auto next ────────────────────────────────────────────
     const handleSubmit = () => {
+        const currentTabKey = TABS[activeTab].key
         setSubmitting(true)
-        router.put(route('dashboard.data-wali.update'), form as unknown as Record<string, string>, {
+        router.put(route('dashboard.data-wali.update'), {
+            ...form,
+            tab: currentTabKey,
+        } as unknown as Record<string, string>, {
             preserveScroll: true,
             onSuccess: () => {
                 swalDark.fire({
@@ -260,7 +264,7 @@ export default function DataWali({ guardian, completion: initialCompletion, user
                 swalDark.fire({
                     toast: true, position: 'top-end', icon: 'warning',
                     title: 'Data belum terisi',
-                    text: 'Lengkapi field yang ditandai merah.',
+                    text: 'Lengkapi field yang ditandai merah pada tab ini.',
                     showConfirmButton: false, timer: 3000, timerProgressBar: true,
                 })
             },
@@ -281,7 +285,10 @@ export default function DataWali({ guardian, completion: initialCompletion, user
         if (!confirm.isConfirmed) return
 
         setSubmitting(true)
-        router.put(route('dashboard.data-wali.update'), form as unknown as Record<string, string>, {
+        router.put(route('dashboard.data-wali.update'), {
+            ...form,
+            tab: 'rangkuman',
+        } as unknown as Record<string, string>, {
             preserveScroll: true,
             onSuccess: () => {
                 swalDark.fire({

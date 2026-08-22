@@ -128,6 +128,7 @@ export default function PersonForm({
                         value={(get('name') as string) ?? ''}
                         onChange={e => set('name', e.target.value)}
                         placeholder={`Nama lengkap ${label.toLowerCase()}`}
+                        maxLength={100}
                     />
                 </Field>
 
@@ -139,6 +140,7 @@ export default function PersonForm({
                             value={(get('relation') as string) ?? ''}
                             onChange={e => set('relation', e.target.value)}
                             placeholder="cth: Nenek, Paman, Bibi"
+                            maxLength={100}
                         />
                     </Field>
                 )}
@@ -161,6 +163,7 @@ export default function PersonForm({
                         value={(get('place_of_birth') as string) ?? ''}
                         onChange={e => set('place_of_birth', e.target.value)}
                         placeholder="Kota tempat lahir"
+                        maxLength={100}
                     />
                 </Field>
 
@@ -197,6 +200,7 @@ export default function PersonForm({
                             value={(get('phone') as string) ?? ''}
                             onChange={e => set('phone', e.target.value.replace(/\D/g, '').slice(0, 14))}
                             placeholder="08xxxxxxxxxx"
+                            maxLength={14}
                         />
                         {(prefix === 'father' || prefix === 'mother') && wizardPhone && (
                             <button
@@ -228,6 +232,7 @@ export default function PersonForm({
                         value={(get('job_ktp') as string) ?? ''}
                         onChange={e => set('job_ktp', e.target.value)}
                         placeholder="cth: Petani, Wiraswasta, PNS"
+                        maxLength={100}
                     />
                 </Field>
 
@@ -238,6 +243,7 @@ export default function PersonForm({
                         value={(get('job_actual') as string) ?? ''}
                         onChange={e => set('job_actual', e.target.value)}
                         placeholder="cth: Freelance, pedagang online"
+                        maxLength={100}
                     />
                 </Field>
 
