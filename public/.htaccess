@@ -24,6 +24,18 @@
     RewriteRule ^ index.php [L]
 </IfModule>
 
+## UPLOAD LIMITS: Sesuai batas validasi Laravel (max:5120 = 5MB)
+## Margin 20% untuk multipart overhead
+<IfModule mod_php.c>
+    php_value upload_max_filesize 10M
+    php_value post_max_size 12M
+</IfModule>
+<IfModule mod_php8.c>
+    php_value upload_max_filesize 10M
+    php_value post_max_size 12M
+</IfModule>
+
+
 ## PERFORMANCE: Cache Headers + Compression (LCP + cache lifetime hardening)
 <IfModule mod_expires.c>
     ExpiresActive on
