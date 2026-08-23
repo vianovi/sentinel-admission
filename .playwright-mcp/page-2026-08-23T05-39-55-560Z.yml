@@ -1,0 +1,65 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - link "Al-Muntaha School Al-Muntaha School." [ref=e6] [cursor=pointer]:
+      - /url: https://spmb.playground-ku.my.id/
+      - img "Al-Muntaha School" [ref=e7]
+      - generic [ref=e8]: Al-Muntaha School.
+    - generic [ref=e9]:
+      - generic [ref=e10]:
+        - generic [ref=e11]: Portal Staff & Tenaga Pendidik
+        - heading "Command Center." [level=1] [ref=e14]: CommandCenter.
+        - paragraph [ref=e15]: Akses terbatas untuk tenaga pendidik dan administrasi. Kelola seleksi, verifikasi, dan pantau proses penerimaan.
+      - generic [ref=e16]:
+        - generic [ref=e17]:
+          - generic [ref=e18]: 
+          - generic [ref=e20]:
+            - paragraph [ref=e21]: Koneksi Terenkripsi
+            - paragraph [ref=e22]: Jalur data diamankan dengan AES-256 SSL
+        - generic [ref=e23]:
+          - generic [ref=e24]: 
+          - generic [ref=e26]:
+            - paragraph [ref=e27]: Akses Terotorisasi
+            - paragraph [ref=e28]: Hanya untuk staff & instruktur terdaftar
+        - generic [ref=e29]:
+          - generic [ref=e30]: 
+          - generic [ref=e32]:
+            - paragraph [ref=e33]: Sistem Audit Log
+            - paragraph [ref=e34]: Seluruh aktivitas login terekam oleh sistem
+    - link " Portal Kandidat " [ref=e36] [cursor=pointer]:
+      - /url: https://spmb.playground-ku.my.id/login
+      - generic [ref=e37]: 
+      - text: Portal Kandidat
+      - generic [ref=e39]: 
+  - generic [ref=e40]:
+    - link " Beranda" [ref=e42] [cursor=pointer]:
+      - /url: https://spmb.playground-ku.my.id/
+      - generic [ref=e43]: 
+      - text: Beranda
+    - text: 
+    - generic [ref=e44]:
+      - generic [ref=e45]:
+        - generic [ref=e46]: 
+        - heading "Masuk ke Portal Staff" [level=2] [ref=e48]
+        - paragraph [ref=e49]: Khusus tenaga pendidik dan administrasi sekolah.
+      - generic [ref=e50]:
+        - generic [ref=e51]:
+          - generic [ref=e52]: Email *
+          - generic [ref=e53]:
+            - generic [ref=e54]: 
+            - textbox "nama@email.com" [active] [ref=e56]
+        - generic [ref=e57]:
+          - generic [ref=e58]: Password *
+          - generic [ref=e59]:
+            - generic [ref=e60]: 
+            - textbox "••••••••" [ref=e62]
+            - button "" [ref=e63] [cursor=pointer]
+        - link "Lupa password?" [ref=e66] [cursor=pointer]:
+          - /url: https://spmb.playground-ku.my.id/forgot-password
+        - button " Masuk ke Dashboard" [ref=e68] [cursor=pointer]:
+          - generic [ref=e69]: 
+          - text: Masuk ke Dashboard
+      - text:   
+    - generic [ref=e70]:
+      - generic [ref=e71]: 
+      - generic [ref=e72]: Akses Terbatas · Hanya untuk Staff Terotorisasi
+    - text:  

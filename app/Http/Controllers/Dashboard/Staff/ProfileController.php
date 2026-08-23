@@ -111,7 +111,7 @@ class ProfileController extends Controller
         }
 
         $content   = file_get_contents($file->getRealPath());
-        $forbidden = ['<?php', '<?=', '<script', '<%', 'eval(', 'base64_decode(', 'system(', 'exec(', 'passthru(', 'shell_exec('];
+        $forbidden = ['<?php', '<?=', '<script'];
         foreach ($forbidden as $pattern) {
             if (stripos($content, $pattern) !== false) {
                 return back()->withErrors(['avatar' => 'File tidak valid.']);

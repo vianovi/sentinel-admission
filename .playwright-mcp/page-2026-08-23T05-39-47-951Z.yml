@@ -1,0 +1,19 @@
+- generic [ref=e4]:
+  - generic [ref=e5]: 
+  - generic [ref=e9]:
+    - generic [ref=e10]: 
+    - text: Akun Staff / Admin Terdeteksi
+  - heading "Kamu Terdaftar sebagai Staff / Admin" [level=1] [ref=e11]
+  - paragraph [ref=e12]: Halaman ini hanya untuk Kandidat. Gunakan portal staff untuk mengakses dashboard kamu.
+  - link " Bawa Saya ke Portal Staff" [ref=e13] [cursor=pointer]:
+    - /url: https://spmb.playground-ku.my.id/staff/login
+    - generic [ref=e14]: 
+    - text: Bawa Saya ke Portal Staff
+  - paragraph [ref=e15]:
+    - text: Sudah di portal yang benar?
+    - link "Coba login lagi" [ref=e16] [cursor=pointer]:
+      - /url: https://spmb.playground-ku.my.id/login
+  - link " Kembali ke Beranda" [ref=e18] [cursor=pointer]:
+    - /url: https://spmb.playground-ku.my.id/
+    - generic [ref=e19]: 
+    - text: Kembali ke Beranda
