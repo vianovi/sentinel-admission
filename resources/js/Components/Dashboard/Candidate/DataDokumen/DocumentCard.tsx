@@ -526,7 +526,7 @@ export default function DocumentCard({
                 ].join(' ')}>
                     <i className="fa-solid fa-arrow-up-from-bracket text-[11px] text-amber-500/80 dark:text-amber-400/80"></i>
                     <span>
-                        {isDragOver ? 'Lepaskan file di sini untuk upload' : 'watch -n 2 "agy --execute \'/credits\'"'}
+                        {isDragOver ? 'Lepaskan file di sini untuk upload' : 'Seret & lepas file ke baris ini, atau klik tombol Upload'}
                     </span>
                 </div>
             )}
