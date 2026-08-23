@@ -100,8 +100,7 @@ class ProfileController extends Controller
 
         $detected = null;
         foreach (self::AVATAR_SIGNATURES as $signature => $meta) {
-            if (str_starts_with($header, $signature)) {
-                if ($signature === 'RIFF' && substr($header, 8, 4) !== 'WEBP') continue;
+            if (substr($header, 0, strlen($signature)) === $signature) {
                 $detected = $meta;
                 break;
             }
