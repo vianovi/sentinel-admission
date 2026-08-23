@@ -125,7 +125,15 @@ class DocumentController extends Controller
         $securityResult = $this->security->runAll($file, $uploadIp, $userAgent);
 
         if (! $this->security->isSafeToStore($securityResult)) {
-            $msg = 'Format file tidak didukung. Pastikan file berupa JPEG, PNG, atau PDF yang valid.';
+            Log::error('Document upload security check failed', [
+                'user_id' => $user->id,
+                'candidate_code' => $candidate->candidate_code,
+                'doc_type' => $docType,
+                'magic_bytes' => $securityResult['magic_bytes_result'],
+                'polyglot_clean' => $securityResult['polyglot_clean'],
+                'polyglot_detail' => $securityResult['polyglot_detail'],
+            ]);
+            $msg = 'Berkas dokumen gagal diunggah karena tidak memenuhi standar format atau keamanan sistem kami.';
             if ($isJson) return response()->json(['errors' => ['file' => $msg]], 422);
             return back()->withErrors(['file' => $msg]);
         }
