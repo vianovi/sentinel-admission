@@ -183,10 +183,15 @@ export default function DocumentCard({
             })
         } catch (err: any) {
             shakeRow()
-            const msg = err?.response?.data?.errors?.file?.[0]
+            const errorsFile = err?.response?.data?.errors?.file
+            const msg = (Array.isArray(errorsFile) ? errorsFile[0] : errorsFile)
                 ?? err?.response?.data?.message
-                ?? 'Gagal mengupload. Coba lagi.'
-            await swalDark.fire({ icon: 'error', title: 'Upload gagal', text: msg })
+                ?? 'Berkas dokumen gagal diunggah. Pastikan format file adalah JPEG, PNG, atau PDF (maks. 5MB), lalu coba lagi.'
+            await swalDark.fire({
+                icon: 'error',
+                title: 'Upload gagal',
+                text: msg,
+            })
         } finally {
             setIsUploading(false)
             setUploadProgress(0)
