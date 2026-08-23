@@ -96,7 +96,7 @@ export default function AvatarSection({
                         ref={fileRef}
                         type="file"
                         className="hidden"
-                        accept=".jpg,.jpeg,.png,.webp"
+                        accept=".jpg,.jpeg,.png"
                         onChange={handleFileChange}
                         aria-hidden="true"
                     />

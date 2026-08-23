@@ -172,6 +172,26 @@ export default function DataDokumen({
                     </div>
                 </div>
 
+                {/* ── Drag & Drop Interactive Info Banner ─────────────────── */}
+                <div className="dokumen-card rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent p-4 dark:border-amber-500/25 dark:from-amber-500/15 dark:via-amber-500/5">
+                    <div className="flex items-center gap-3.5">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/20 text-amber-500 dark:text-amber-400">
+                            <i className="fa-solid fa-arrow-up-from-bracket text-base" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                                <span>Upload Dokumen Cepat &amp; Mudah</span>
+                                <span className="hidden sm:inline-block rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                                    Drag &amp; Drop Ready
+                                </span>
+                            </p>
+                            <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Kamu bisa <strong>menyeret (drag) file langsung dari komputermu</strong> ke baris dokumen di bawah, atau klik tombol <strong>Upload</strong>. Mendukung JPG, PNG, PDF (maks. 5MB).
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
                 {/* ── Status Kelengkapan — compact ─────────────────────── */}
                 <div className="dokumen-card rounded-xl border overflow-hidden
                                 dark:border-white/[0.07] border-black/[0.07]

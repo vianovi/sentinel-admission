@@ -313,78 +313,78 @@ export default function DocumentCard({
                 <div className="flex-1 min-w-0">
 
                     {/* Row 1: label + required badge + status badge */}
-                    <div className="flex items-center gap-1.5 flex-wrap">
+                    <div className="flex items-center gap-2 flex-wrap">
                         <p className={[
-                            'text-[13px] font-medium truncate transition-colors duration-150',
+                            'text-sm font-semibold truncate transition-colors duration-150',
                             isLocked
                                 ? 'dark:text-emerald-300 text-emerald-700'
                                 : status === 'rejected'
-                                    ? 'dark:text-red-300 text-red-700'
-                                    : 'dark:text-slate-200 text-slate-700',
+                                    ? 'dark:text-red-400 text-red-600'
+                                    : 'dark:text-slate-100 text-slate-800',
                         ].join(' ')}>
                             {label}
                         </p>
 
                         {/* Required badge */}
-                        <span className={`shrink-0 inline-flex items-center px-1.5 py-px rounded text-[9px]
-                                         font-semibold border ${reqCfg.cls}`}>
+                        <span className={`shrink-0 inline-flex items-center px-2 py-0.5 rounded text-[10px]
+                                         font-bold border ${reqCfg.cls}`}>
                             {reqCfg.label}
                         </span>
 
                         {/* Status badge — visible di sm+, hidden di mobile */}
                         {status !== 'empty' && (
-                            <span className={`hidden sm:inline-flex items-center gap-1 px-2 py-px
-                                             rounded-full text-[10px] font-medium border shrink-0 ${cfg.badge}`}>
+                            <span className={`hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5
+                                             rounded-full text-[11px] font-semibold border shrink-0 ${cfg.badge}`}>
                                 {cfg.pulse && (
                                     <span className={[
-                                        'w-1 h-1 rounded-full',
+                                        'w-1.5 h-1.5 rounded-full',
                                         status === 'uploading' ? 'bg-blue-400 animate-pulse' : 'bg-amber-400 animate-pulse',
                                     ].join(' ')} />
                                 )}
-                                {status === 'verified' && <i className="fa-solid fa-check text-[8px]"></i>}
-                                {status === 'rejected' && <i className="fa-solid fa-xmark text-[8px]"></i>}
+                                {status === 'verified' && <i className="fa-solid fa-check text-[9px]"></i>}
+                                {status === 'rejected' && <i className="fa-solid fa-xmark text-[9px]"></i>}
                                 {cfg.label}
                             </span>
                         )}
                     </div>
 
                     {/* Row 2: sub-info — hint / filename / progress bar / drag hint */}
-                    <div className="mt-0.5">
+                    <div className="mt-1">
                         {status === 'uploading' ? (
                             /* Progress bar — slim, animated */
                             <div className="flex items-center gap-2">
-                                <div className="flex-1 max-w-[160px] h-[3px] rounded-full
+                                <div className="flex-1 max-w-[180px] h-1.5 rounded-full
                                                 dark:bg-white/[0.08] bg-black/[0.07] overflow-hidden">
                                     <div
                                         className="h-full rounded-full bg-blue-400 transition-all duration-300"
                                         style={{ width: `${uploadProgress}%` }}
                                     />
                                 </div>
-                                <span className="text-[10px] dark:text-blue-400 text-blue-600 font-medium">
+                                <span className="text-xs dark:text-blue-400 text-blue-600 font-bold">
                                     {uploadProgress}%
                                 </span>
                             </div>
                         ) : docRecord?.original_filename ? (
-                            <p className="text-[11px] dark:text-slate-500 text-slate-400 truncate flex items-center gap-1">
-                                <i className="fa-solid fa-paperclip text-[9px] shrink-0"></i>
+                            <p className="text-xs dark:text-slate-400 text-slate-600 font-medium truncate flex items-center gap-1.5">
+                                <i className="fa-solid fa-paperclip text-[10px] shrink-0 text-slate-400 dark:text-slate-500"></i>
                                 {docRecord.original_filename}
                             </p>
                         ) : (
                             <p className={[
-                                'text-[11px] truncate transition-colors duration-150',
+                                'text-xs truncate transition-colors duration-150',
                                 isDragOver
-                                    ? 'dark:text-amber-400 text-amber-500 font-medium'
-                                    : 'dark:text-slate-600 text-slate-400',
+                                    ? 'dark:text-amber-300 text-amber-600 font-bold'
+                                    : 'dark:text-slate-400 text-slate-600 font-normal',
                             ].join(' ')}>
-                                {isDragOver ? '↓ Lepas file di sini' : hint}
+                                {isDragOver ? '↓ Lepas file di sini untuk upload' : hint}
                             </p>
                         )}
 
                         {/* Surat Pernyataan extra hint */}
                         {showTemplate && status === 'empty' && (
-                            <p className="text-[10px] dark:text-slate-600 text-slate-400 mt-0.5 leading-relaxed">
-                                Bisa <strong className="dark:text-slate-500 text-slate-500">offline</strong> (tulis tangan) atau{' '}
-                                <strong className="dark:text-slate-500 text-slate-500">online</strong> (unduh template di bawah)
+                            <p className="text-xs dark:text-slate-400 text-slate-500 mt-1 leading-relaxed">
+                                Bisa <strong className="dark:text-slate-300 text-slate-700">offline</strong> (tulis tangan) atau{' '}
+                                <strong className="dark:text-slate-300 text-slate-700">online</strong> (unduh template di samping)
                             </p>
                         )}
                     </div>
@@ -392,10 +392,9 @@ export default function DocumentCard({
 
                 {/* ── Actions kanan ─────────────────────────────────────── */}
                 <div className={[
-                    'flex items-center gap-1 shrink-0',
+                    'flex items-center gap-1.5 shrink-0',
                     'transition-opacity duration-150',
-                    // Fade in on hover — empty state actions sedikit muted sebelum hover
-                    (isEmpty && !isHovered) ? 'opacity-60' : 'opacity-100',
+                    (isEmpty && !isHovered) ? 'opacity-90 sm:opacity-100' : 'opacity-100',
                 ].join(' ')}>
 
                     {/* Download template */}
@@ -404,22 +403,22 @@ export default function DocumentCard({
                             href={templateUrl}
                             download
                             title="Unduh template"
-                            className="flex items-center gap-1 px-2 py-1.5 rounded-lg
-                                       dark:bg-white/[0.04] bg-slate-100
-                                       dark:hover:bg-white/[0.08] hover:bg-slate-200
-                                       dark:text-slate-400 text-slate-500
-                                       border dark:border-white/[0.07] border-black/[0.07]
-                                       text-[10px] font-semibold transition-all duration-150
-                                       min-h-[30px] active:scale-95"
+                            className="flex items-center gap-1.5 px-3 py-2 rounded-xl
+                                       dark:bg-white/[0.05] bg-slate-100
+                                       dark:hover:bg-white/[0.10] hover:bg-slate-200
+                                       dark:text-slate-300 text-slate-700
+                                       border dark:border-white/10 border-black/10
+                                       text-xs font-bold transition-all duration-150
+                                       min-h-[36px] active:scale-95"
                         >
-                            <i className="fa-solid fa-file-arrow-down text-[9px]"></i>
+                            <i className="fa-solid fa-file-arrow-down text-xs"></i>
                             <span className="hidden sm:inline">Template</span>
                         </a>
                     )}
 
                     {/* Preview */}
                     {docRecord && status !== 'uploading' && (
-                        <div className="min-h-[30px] flex items-center">
+                        <div className="min-h-[36px] flex items-center">
                             <FilePreviewModal
                                 serverUrl={route('dashboard.data-dokumen.preview', { document: docRecord.id })}
                                 mimeType={mimeFromFilename(docRecord.original_filename)}
@@ -434,18 +433,18 @@ export default function DocumentCard({
                             <button
                                 onClick={() => inputRef.current?.click()}
                                 className={[
-                                    'flex items-center gap-1 px-2.5 py-1.5 rounded-lg',
-                                    'text-[10px] font-semibold min-h-[30px]',
-                                    'border transition-all duration-150 active:scale-95',
+                                    'flex items-center gap-1.5 px-3 py-2 rounded-xl',
+                                    'text-xs font-bold min-h-[36px]',
+                                    'border transition-all duration-150 active:scale-95 shadow-sm',
                                     docRecord
                                         // Ganti — subtle
-                                        ? 'dark:bg-white/[0.04] bg-white dark:border-white/[0.08] border-black/[0.08] dark:text-slate-400 text-slate-500 dark:hover:bg-white/[0.08] hover:bg-slate-100'
+                                        ? 'dark:bg-white/[0.06] bg-white dark:border-white/10 border-black/10 dark:text-slate-300 text-slate-700 dark:hover:bg-white/10 hover:bg-slate-100'
                                         // Upload — amber accent
-                                        : 'dark:bg-amber-500/10 bg-amber-50 dark:border-amber-500/20 border-amber-200 dark:text-amber-400 text-amber-600 dark:hover:bg-amber-500/20 hover:bg-amber-100',
+                                        : 'dark:bg-amber-500/20 bg-amber-100/80 dark:border-amber-500/40 border-amber-300 dark:text-amber-300 text-amber-800 dark:hover:bg-amber-500/30 hover:bg-amber-200',
                                 ].join(' ')}
                             >
-                                <i className={`text-[9px] fa-solid ${docRecord ? 'fa-arrow-rotate-left' : 'fa-cloud-arrow-up'}`}></i>
-                                <span className="hidden sm:inline">
+                                <i className={`text-xs fa-solid ${docRecord ? 'fa-arrow-rotate-left' : 'fa-cloud-arrow-up'}`}></i>
+                                <span>
                                     {docRecord ? 'Ganti' : 'Upload'}
                                 </span>
                             </button>
@@ -464,14 +463,14 @@ export default function DocumentCard({
                         <button
                             onClick={handleDelete}
                             title="Hapus dokumen"
-                            className="w-[30px] h-[30px] flex items-center justify-center rounded-lg
-                                       dark:bg-red-500/[0.08] bg-red-50
-                                       dark:hover:bg-red-500/15 hover:bg-red-100
-                                       dark:text-red-400 text-red-500
-                                       border dark:border-red-500/15 border-red-200
+                            className="w-9 h-9 flex items-center justify-center rounded-xl
+                                       dark:bg-red-500/10 bg-red-50
+                                       dark:hover:bg-red-500/20 hover:bg-red-100
+                                       dark:text-red-400 text-red-600
+                                       border dark:border-red-500/20 border-red-200
                                        transition-all duration-150 active:scale-95"
                         >
-                            <i className="fa-solid fa-trash-can text-[9px]"></i>
+                            <i className="fa-solid fa-trash-can text-xs"></i>
                         </button>
                     )}
 
@@ -479,15 +478,15 @@ export default function DocumentCard({
                     {isLocked && docRecord && (
                         <a
                             href={route('dashboard.data-dokumen.download', { document: docRecord.id })}
-                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg
-                                       dark:bg-emerald-500/[0.08] bg-emerald-50
-                                       dark:hover:bg-emerald-500/15 hover:bg-emerald-100
-                                       dark:text-emerald-400 text-emerald-600
-                                       border dark:border-emerald-500/15 border-emerald-200
-                                       text-[10px] font-semibold transition-all duration-150
-                                       min-h-[30px] active:scale-95"
+                            className="flex items-center gap-1.5 px-3 py-2 rounded-xl
+                                       dark:bg-emerald-500/10 bg-emerald-50
+                                       dark:hover:bg-emerald-500/20 hover:bg-emerald-100
+                                       dark:text-emerald-400 text-emerald-700
+                                       border dark:border-emerald-500/20 border-emerald-200
+                                       text-xs font-bold transition-all duration-150
+                                       min-h-[36px] active:scale-95"
                         >
-                            <i className="fa-solid fa-download text-[9px]"></i>
+                            <i className="fa-solid fa-download text-xs"></i>
                             <span className="hidden sm:inline">Unduh</span>
                         </a>
                     )}
@@ -496,36 +495,38 @@ export default function DocumentCard({
                     {isLocked && (
                         <div
                             title="Dokumen terverifikasi dan terkunci"
-                            className="w-[30px] h-[30px] flex items-center justify-center rounded-lg
-                                       dark:bg-emerald-500/[0.08] bg-emerald-50
-                                       border dark:border-emerald-500/15 border-emerald-200"
+                            className="w-9 h-9 flex items-center justify-center rounded-xl
+                                       dark:bg-emerald-500/10 bg-emerald-50
+                                       border dark:border-emerald-500/20 border-emerald-200"
                         >
-                            <i className="fa-solid fa-lock text-[9px] dark:text-emerald-400 text-emerald-600"></i>
+                            <i className="fa-solid fa-lock text-xs dark:text-emerald-400 text-emerald-700"></i>
                         </div>
                     )}
                 </div>
             </div>
 
-            {/* ── Rejection reason — inline, compact ────────────────────── */}
+            {/* ── Rejection reason — inline ────────────────────── */}
             {status === 'rejected' && docRecord?.rejection_reason && (
-                <div className="flex items-start gap-1.5 pl-8 pr-3 pb-2.5">
-                    <i className="fa-solid fa-circle-info text-[9px] text-red-400 mt-0.5 shrink-0"></i>
-                    <p className="text-[11px] dark:text-red-400/70 text-red-500 leading-relaxed">
+                <div className="flex items-start gap-2 pl-9 pr-4 pb-3">
+                    <i className="fa-solid fa-circle-info text-xs text-red-500 dark:text-red-400 mt-0.5 shrink-0"></i>
+                    <p className="text-xs dark:text-red-400 text-red-600 font-medium leading-relaxed">
                         {docRecord.rejection_reason}
                     </p>
                 </div>
             )}
 
-            {/* ── Drag & drop overlay hint — desktop only, empty state ──── */}
+            {/* ── Drag & drop hint — permanently clear in empty state, dynamic on drag ──── */}
             {isEmpty && !isLocked && (
                 <div className={[
-                    'hidden sm:flex items-center gap-1.5 pl-8 pb-2',
-                    'transition-all duration-200',
-                    isDragOver ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
+                    'flex items-center gap-2 pl-9 pb-2.5 pt-0.5 text-xs',
+                    'transition-all duration-150',
+                    isDragOver
+                        ? 'dark:text-amber-300 text-amber-600 font-bold'
+                        : 'dark:text-slate-400 text-slate-500 font-medium',
                 ].join(' ')}>
-                    <i className="fa-solid fa-arrow-up-from-bracket text-[9px] dark:text-slate-600 text-slate-300"></i>
-                    <span className="text-[10px] dark:text-slate-600 text-slate-400">
-                        atau seret &amp; lepas file ke sini
+                    <i className="fa-solid fa-arrow-up-from-bracket text-[11px] text-amber-500/80 dark:text-amber-400/80"></i>
+                    <span>
+                        {isDragOver ? 'Lepaskan file di sini untuk upload' : 'Seret & lepas file ke baris ini, atau klik tombol Upload'}
                     </span>
                 </div>
             )}

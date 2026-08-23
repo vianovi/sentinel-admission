@@ -94,7 +94,6 @@ class ProfileController extends Controller
     private const AVATAR_SIGNATURES = [
         "\xFF\xD8\xFF"      => ['mime' => 'image/jpeg', 'ext' => 'jpg'],
         "\x89PNG\r\n\x1A\n" => ['mime' => 'image/png',  'ext' => 'png'],
-        "RIFF"              => ['mime' => 'image/webp',  'ext' => 'webp'],
     ];
 
     public function updateAvatar(Request $request)
@@ -102,10 +101,14 @@ class ProfileController extends Controller
         $request->validate([
             'avatar' => [
                 'required', 'file',
-                'mimes:jpg,jpeg,png,webp',
-                'mimetypes:image/jpeg,image/png,image/webp',
-                'max:1024',
+                'mimes:jpg,jpeg,png',
+                'mimetypes:image/jpeg,image/png',
+                'max:3072',
             ],
+        ], [
+            'avatar.mimes'     => 'Format avatar hanya boleh JPG atau PNG.',
+            'avatar.mimetypes' => 'Format avatar hanya boleh JPG atau PNG.',
+            'avatar.max'       => 'Ukuran foto maksimal adalah 3MB.',
         ]);
 
         $file   = $request->file('avatar');

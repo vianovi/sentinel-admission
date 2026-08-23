@@ -7,6 +7,7 @@ import Swal from "sweetalert2";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import AvatarSection from "@/Components/Dashboard/Staff/Profile/AvatarSection";
 import ProfileEditForm from "@/Components/Dashboard/Staff/Profile/ProfileEditForm";
+import AvatarCropperModal from "@/Components/UI/AvatarCropperModal";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -68,6 +69,8 @@ export default function StaffProfile({ user, flash }: Props) {
     const [errors, setErrors]                   = useState<Record<string, string>>({});
     const [processing, setProcessing]           = useState(false);
     const [avatarProcessing, setAvatarProcessing] = useState(false);
+    const [selectedAvatarFile, setSelectedAvatarFile] = useState<File | null>(null);
+    const [isCropOpen, setIsCropOpen]           = useState(false);
 
     // ── Entrance animation ───────────────────────────────────────────────────
     useEffect(() => {
@@ -157,9 +160,14 @@ export default function StaffProfile({ user, flash }: Props) {
         );
     };
 
-    const handleAvatarChange = (file: File) => {
+    const handleSelectAvatarFile = (file: File) => {
+        setSelectedAvatarFile(file);
+        setIsCropOpen(true);
+    };
+
+    const handleCroppedAvatar = (croppedFile: File) => {
         const fd = new FormData();
-        fd.append("avatar", file);
+        fd.append("avatar", croppedFile);
 
         setAvatarProcessing(true);
         router.post(`${basePath}/profile/avatar`, fd, {
@@ -207,7 +215,7 @@ export default function StaffProfile({ user, flash }: Props) {
                         created_at={user.created_at}
                         avatarProcessing={avatarProcessing}
                         avatarError={errors.avatar}
-                        onAvatarChange={handleAvatarChange}
+                        onAvatarChange={handleSelectAvatarFile}
                     />
                 </div>
 
@@ -229,6 +237,18 @@ export default function StaffProfile({ user, flash }: Props) {
                         onSubmit={handleSubmit}
                     />
                 </div>
+
+                {/* ── Avatar Cropper Modal ─────────────────────────────────── */}
+                <AvatarCropperModal
+                    isOpen={isCropOpen}
+                    imageFile={selectedAvatarFile}
+                    onClose={() => {
+                        setIsCropOpen(false);
+                        setSelectedAvatarFile(null);
+                    }}
+                    onCropComplete={handleCroppedAvatar}
+                    title={`Sesuaikan Foto Profil ${roleLabel}`}
+                />
 
             </div>
         </DashboardLayout>

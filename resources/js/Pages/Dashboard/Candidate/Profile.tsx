@@ -4,6 +4,7 @@ import { Head, router } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import RequestStatusBanner from "@/Components/Dashboard/Candidate/Shared/RequestStatusBanner";
 import ResizableSplitGrid from "@/Components/Dashboard/Shared/ResizableSplitGrid";
+import AvatarCropperModal from "@/Components/UI/AvatarCropperModal";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -165,6 +166,8 @@ export default function ProfilePage({
     const [errors, setErrors]                   = useState<Record<string, string>>({});
     const [processing, setProcessing]           = useState(false);
     const [avatarProcessing, setAvatarProcessing] = useState(false);
+    const [selectedAvatarFile, setSelectedAvatarFile] = useState<File | null>(null);
+    const [isCropOpen, setIsCropOpen]           = useState(false);
     const [emailProcessing, setEmailProcessing]   = useState(false);
     const [applyEmailProcessing, setApplyEmailProcessing] = useState(false);
 
@@ -206,23 +209,28 @@ export default function ProfilePage({
         });
     };
 
-    // ── Submit avatar ─────────────────────────────────────────────────────────
+    // ── Select avatar file for cropping ───────────────────────────────────────
     const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
+        setSelectedAvatarFile(file);
+        setIsCropOpen(true);
+        if (avatarRef.current) avatarRef.current.value = "";
+    };
+
+    // ── Upload cropped avatar ─────────────────────────────────────────────────
+    const handleCroppedAvatar = (croppedFile: File) => {
         setAvatarProcessing(true);
         const fd = new FormData();
-        fd.append("avatar", file);
+        fd.append("avatar", croppedFile);
 
         router.post(route("dashboard.profile.avatar.update"), fd, {
             onSuccess: () => {
-                // Reload data user dari server — supaya avatar_url terbaru (dengan timestamp baru) ikut ter-update
                 router.reload({ only: ["user"] });
             },
             onFinish: () => {
                 setAvatarProcessing(false);
-                if (avatarRef.current) avatarRef.current.value = "";
             },
         });
     };
@@ -350,7 +358,7 @@ export default function ProfilePage({
                         <input
                             ref={avatarRef}
                             type="file"
-                            accept=".jpg,.jpeg,.png,.webp"
+                            accept=".jpg,.jpeg,.png"
                             onChange={handleAvatarChange}
                             className="hidden"
                         />
@@ -600,6 +608,18 @@ export default function ProfilePage({
                         </div>
                     )}
                 </div>
+
+                {/* ── [6] AVATAR CROPPER MODAL ─────────────────────────────── */}
+                <AvatarCropperModal
+                    isOpen={isCropOpen}
+                    imageFile={selectedAvatarFile}
+                    onClose={() => {
+                        setIsCropOpen(false);
+                        setSelectedAvatarFile(null);
+                    }}
+                    onCropComplete={handleCroppedAvatar}
+                    title="Sesuaikan Foto Profil Kandidat"
+                />
 
             </div>
         </DashboardLayout>

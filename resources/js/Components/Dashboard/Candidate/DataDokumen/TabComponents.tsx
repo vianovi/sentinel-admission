@@ -132,12 +132,12 @@ function AddDocumentRow({ label, docType }: { label: string; docType: string }) 
     return (
         <div
             className={[
-                'flex items-center gap-2.5 px-4 py-2.5 cursor-pointer',
-                'border-t dark:border-white/[0.05] border-black/[0.05]',
+                'flex items-center gap-3 px-4 py-3 cursor-pointer',
+                'border-t dark:border-white/10 border-black/10',
                 'transition-colors duration-150',
                 isDrag
-                    ? 'dark:bg-amber-500/[0.05] bg-amber-50/40'
-                    : 'dark:hover:bg-white/[0.02] hover:bg-slate-50',
+                    ? 'dark:bg-amber-500/10 bg-amber-50'
+                    : 'dark:hover:bg-white/[0.04] hover:bg-slate-50',
             ].join(' ')}
             onClick={() => inputRef.current?.click()}
             onDragOver={e => { e.preventDefault(); setIsDrag(true) }}
@@ -150,17 +150,17 @@ function AddDocumentRow({ label, docType }: { label: string; docType: string }) 
             }}
         >
             {/* Plus icon */}
-            <div className="w-5 h-5 rounded-md flex items-center justify-center shrink-0
-                            dark:bg-amber-500/10 bg-amber-50
-                            border dark:border-amber-500/20 border-amber-200">
-                <i className="fa-solid fa-plus text-amber-400 text-[9px]"></i>
+            <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0
+                            dark:bg-amber-500/20 bg-amber-100
+                            border dark:border-amber-500/30 border-amber-300">
+                <i className="fa-solid fa-plus text-amber-500 dark:text-amber-400 text-xs"></i>
             </div>
 
-            <p className="text-[12px] dark:text-slate-500 text-slate-400 flex-1">
-                {isDrag ? 'Lepas file di sini' : label}
+            <p className="text-xs font-semibold dark:text-slate-200 text-slate-700 flex-1">
+                {isDrag ? '↓ Lepaskan file sertifikat di sini' : label}
             </p>
 
-            <span className="text-[10px] dark:text-slate-600 text-slate-300">
+            <span className="text-xs dark:text-slate-400 text-slate-500 font-medium">
                 {isDrag ? '' : 'JPG, PNG, PDF · maks. 5MB'}
             </span>
 
