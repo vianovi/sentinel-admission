@@ -372,11 +372,16 @@ export default function DocumentCard({
                         ) : (
                             <p className={[
                                 'text-xs truncate transition-colors duration-150',
-                                isDragOver
+                                (isDragOver || isHovered)
                                     ? 'dark:text-amber-300 text-amber-600 font-bold'
                                     : 'dark:text-slate-400 text-slate-600 font-normal',
                             ].join(' ')}>
-                                {isDragOver ? '↓ Lepas file di sini untuk upload' : hint}
+                                {isDragOver 
+                                    ? '↓ Lepas file di sini untuk upload' 
+                                    : isHovered 
+                                        ? 'Seret & lepas file ke baris ini untuk upload' 
+                                        : hint
+                                }
                             </p>
                         )}
 
@@ -512,22 +517,6 @@ export default function DocumentCard({
                     <p className="text-xs dark:text-red-400 text-red-600 font-medium leading-relaxed">
                         {docRecord.rejection_reason}
                     </p>
-                </div>
-            )}
-
-            {/* ── Drag & drop hint — permanently clear in empty state, dynamic on drag ──── */}
-            {isEmpty && !isLocked && isHovered && (
-                <div className={[
-                    'flex items-center gap-2 pl-9 pb-2.5 pt-0.5 text-xs',
-                    'transition-all duration-150',
-                    isDragOver
-                        ? 'dark:text-amber-300 text-amber-600 font-bold'
-                        : 'dark:text-slate-400 text-slate-500 font-medium',
-                ].join(' ')}>
-                    <i className="fa-solid fa-arrow-up-from-bracket text-[11px] text-amber-500/80 dark:text-amber-400/80"></i>
-                    <span>
-                        {isDragOver ? 'Lepaskan file di sini untuk upload' : 'Seret & lepas file ke baris ini, atau klik tombol Upload'}
-                    </span>
                 </div>
             )}
         </div>
