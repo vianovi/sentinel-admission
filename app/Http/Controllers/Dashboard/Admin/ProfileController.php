@@ -129,7 +129,9 @@ class ProfileController extends Controller
             return back()->withErrors(['avatar' => 'Gagal menyimpan avatar. Silakan coba lagi.']);
         }
 
-        $user->update(['avatar' => $path]);
+        $user->avatar = $path;
+        $user->save();
+        $user->touch();
 
         if ($oldPath && $oldPath !== $path && Storage::disk('private')->exists($oldPath)) {
             Storage::disk('private')->delete($oldPath);
