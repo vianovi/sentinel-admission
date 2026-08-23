@@ -149,7 +149,7 @@ export default function DocumentCard({
         }
         if (file.size > 5 * 1024 * 1024) {
             shakeRow()
-            await swalDark.fire({ icon: 'error', title: 'File terlalu besar', text: 'Maksimum 5MB.' })
+            await swalDark.fire({ icon: 'error', title: 'File terlalu besar', text: 'Ukuran file melebihi batas 5MB. Kompres atau perkecil ukuran file terlebih dahulu.' })
             return
         }
 

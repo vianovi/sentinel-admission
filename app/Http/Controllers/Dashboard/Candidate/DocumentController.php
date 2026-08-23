@@ -108,15 +108,24 @@ class DocumentController extends Controller
             return $this->lockedResponse($request, $gate['reason'] ?? 'Halaman dokumen masih terkunci.');
         }
 
-        $validated = $request->validate([
-            'file' => [
-                'required',
-                'file',
-                'mimes:jpeg,jpg,png,pdf',
-                'mimetypes:image/jpeg,image/png,application/pdf',
-                'max:5120',
+        $validated = $request->validate(
+            [
+                'file' => [
+                    'required',
+                    'file',
+                    'mimes:jpeg,jpg,png,pdf',
+                    'mimetypes:image/jpeg,image/png,application/pdf',
+                    'max:5120',
+                ],
             ],
-        ]);
+            [
+                'file.required'   => 'File dokumen wajib diunggah.',
+                'file.file'       => 'Berkas yang diunggah tidak valid.',
+                'file.mimes'      => 'Format tidak didukung. Gunakan file JPEG, PNG, atau PDF.',
+                'file.mimetypes'  => 'Format tidak didukung. Gunakan file JPEG, PNG, atau PDF.',
+                'file.max'        => 'Ukuran file terlalu besar. Maksimal yang diizinkan adalah 5MB.',
+            ]
+        );
 
         $file      = $request->file('file');
         $uploadIp  = $request->ip();
