@@ -121,6 +121,7 @@ class DocumentController extends Controller
             [
                 'file.required'   => 'File dokumen wajib diunggah.',
                 'file.file'       => 'Berkas yang diunggah tidak valid.',
+                'file.uploaded'   => 'Ukuran file terlalu besar. Maksimal yang diizinkan adalah 5MB. Pastikan ukuran file tidak melebihi batas yang ditentukan.',
                 'file.mimes'      => 'Format tidak didukung. Gunakan file JPEG, PNG, atau PDF.',
                 'file.mimetypes'  => 'Format tidak didukung. Gunakan file JPEG, PNG, atau PDF.',
                 'file.max'        => 'Ukuran file terlalu besar. Maksimal yang diizinkan adalah 5MB.',
