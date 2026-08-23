@@ -172,7 +172,7 @@ export default function StaffProfile({ user, flash }: Props) {
         setAvatarProcessing(true);
         router.post(`${basePath}/profile/avatar`, fd, {
             preserveScroll: true,
-            onSuccess: () => router.reload({ only: ["user"] }),
+            onSuccess: () => router.reload(),
             onError: (e) => setErrors(e as Record<string, string>),
             onFinish: () => setAvatarProcessing(false),
         });

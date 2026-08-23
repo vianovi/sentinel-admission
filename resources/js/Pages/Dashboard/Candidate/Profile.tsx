@@ -159,6 +159,7 @@ export default function ProfilePage({
 
     // ── Form state ────────────────────────────────────────────────────────────
     const [name, setName]                       = useState(user.name);
+    const [avatarUrl, setAvatarUrl]             = useState(user.avatar_url);
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword]         = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -170,6 +171,10 @@ export default function ProfilePage({
     const [isCropOpen, setIsCropOpen]           = useState(false);
     const [emailProcessing, setEmailProcessing]   = useState(false);
     const [applyEmailProcessing, setApplyEmailProcessing] = useState(false);
+
+    useEffect(() => {
+        setAvatarUrl(user.avatar_url);
+    }, [user.avatar_url]);
 
     // ── Entrance animation ────────────────────────────────────────────────────
     useEffect(() => {
@@ -226,8 +231,9 @@ export default function ProfilePage({
         fd.append("avatar", croppedFile);
 
         router.post(route("dashboard.profile.avatar.update"), fd, {
+            preserveScroll: true,
             onSuccess: () => {
-                router.reload({ only: ["user"] });
+                router.reload();
             },
             onFinish: () => {
                 setAvatarProcessing(false);
@@ -330,9 +336,9 @@ export default function ProfilePage({
                     {/* Avatar */}
                     <div className="relative shrink-0">
                         <div className="w-20 h-20 rounded-2xl overflow-hidden bg-gold/20 border-2 border-gold/30 flex items-center justify-center">
-                            {user.avatar_url ? (
+                            {avatarUrl ? (
                                 <img
-                                    src={user.avatar_url}
+                                    src={avatarUrl}
                                     alt={user.name}
                                     className="w-full h-full object-cover"
                                 />

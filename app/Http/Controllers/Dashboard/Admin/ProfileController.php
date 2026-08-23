@@ -146,6 +146,10 @@ class ProfileController extends Controller
             abort(404);
         }
 
-        return Storage::disk('private')->response($user->avatar);
+        return Storage::disk('private')->response($user->avatar, null, [
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'Pragma'        => 'no-cache',
+            'Expires'       => '0',
+        ]);
     }
 }
