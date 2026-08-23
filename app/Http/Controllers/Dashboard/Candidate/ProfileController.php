@@ -125,14 +125,21 @@ class ProfileController extends Controller
         }
 
         if (! $detected) {
-            return back()->withErrors(['avatar' => 'File tidak valid.']);
+            \Illuminate\Support\Facades\Log::warning('Avatar upload validation failed: Invalid magic bytes signature', [
+                'user_id' => $request->user()->id,
+            ]);
+            return back()->withErrors(['avatar' => 'Berkas gambar yang diunggah rusak atau formatnya tidak didukung.']);
         }
 
         $content   = file_get_contents($file->getRealPath());
         $forbidden = ['<?php', '<?=', '<script'];
         foreach ($forbidden as $pattern) {
             if (stripos($content, $pattern) !== false) {
-                return back()->withErrors(['avatar' => 'File tidak valid.']);
+                \Illuminate\Support\Facades\Log::error('Avatar upload security alert: Forbidden pattern detected in content', [
+                    'user_id' => $request->user()->id,
+                    'detected_pattern' => $pattern,
+                ]);
+                return back()->withErrors(['avatar' => 'Berkas gambar tidak memenuhi standar keamanan sistem kami.']);
             }
         }
 
@@ -144,7 +151,11 @@ class ProfileController extends Controller
         $path = $directory . '/' . Str::uuid() . '.' . $detected['ext'];
 
         if (! Storage::disk('private')->put($path, file_get_contents($file->getRealPath()))) {
-            return back()->withErrors(['avatar' => 'Gagal menyimpan avatar. Silakan coba lagi.']);
+            \Illuminate\Support\Facades\Log::error('Avatar storage write error', [
+                'user_id' => $user->id,
+                'path' => $path,
+            ]);
+            return back()->withErrors(['avatar' => 'Gagal memperbarui foto profil karena kendala teknis internal. Silakan coba lagi.']);
         }
 
         $user->avatar = $path;
