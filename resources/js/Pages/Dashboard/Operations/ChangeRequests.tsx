@@ -230,7 +230,7 @@ export default function ChangeRequestsPage({ scope, data_requests, email_request
     };
 
     return (
-        <DashboardLayout>
+        <>
             <Head title={theme.title} />
 
             <div className="flex flex-col gap-6 pb-8">
@@ -342,6 +342,8 @@ export default function ChangeRequestsPage({ scope, data_requests, email_request
                     )
                 )}
             </div>
-        </DashboardLayout>
+        </>
     );
 }
+
+ChangeRequestsPage.layout = (page: any) => <DashboardLayout>{page}</DashboardLayout>;

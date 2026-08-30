@@ -95,7 +95,7 @@ export default function ExamResults({ attempts, filters, sessions }: Props) {
     };
 
     return (
-        <DashboardLayout>
+        <>
             <Head title="Hasil Ujian" />
 
             <ExamWorkspace active="sessions">
@@ -220,7 +220,7 @@ export default function ExamResults({ attempts, filters, sessions }: Props) {
                     ) : null}
                 </section>
             </ExamWorkspace>
-        </DashboardLayout>
+        </>
     );
 }
 
@@ -231,3 +231,5 @@ function decodePaginationLabel(label: string): string {
         .replace("Previous", "Sebelumnya")
         .replace("Next", "Berikutnya");
 }
+
+ExamResults.layout = (page: any) => <DashboardLayout>{page}</DashboardLayout>;

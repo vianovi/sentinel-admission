@@ -78,7 +78,7 @@ export default function CandidateSelectionStatus({ selection_status }: Props) {
     }, []);
 
     return (
-        <DashboardLayout>
+        <>
             <Head title="Status Seleksi" />
 
             <div className="flex flex-col gap-5 pb-8">
@@ -187,7 +187,7 @@ export default function CandidateSelectionStatus({ selection_status }: Props) {
                     </section>
                 )}
             </div>
-        </DashboardLayout>
+        </>
     );
 }
 
@@ -199,3 +199,5 @@ function Info({ label, value }: { label: string; value: string }) {
         </div>
     );
 }
+
+CandidateSelectionStatus.layout = (page: any) => <DashboardLayout>{page}</DashboardLayout>;

@@ -16,7 +16,7 @@ export default function ExamSubjects({ subjects }: Props) {
     const [editing, setEditing] = useState<Subject | null>(null);
 
     return (
-        <DashboardLayout>
+        <>
             <Head title="Kategori Ujian" />
 
             <ExamWorkspace active="packages">
@@ -53,6 +53,8 @@ export default function ExamSubjects({ subjects }: Props) {
                     right={<SubjectTable subjects={subjects} onEdit={(subject) => setEditing(subject)} />}
                 />
             </ExamWorkspace>
-        </DashboardLayout>
+        </>
     );
 }
+
+ExamSubjects.layout = (page: any) => <DashboardLayout>{page}</DashboardLayout>;

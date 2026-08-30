@@ -273,7 +273,7 @@ export default function ProfilePage({
     const canShowEmailForm = !email_change_request || email_change_request.status === "rejected";
 
     return (
-        <DashboardLayout>
+        <>
             <Head title="Profil Saya" />
 
             <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
@@ -628,6 +628,8 @@ export default function ProfilePage({
                 />
 
             </div>
-        </DashboardLayout>
+        </>
     );
 }
+
+ProfilePage.layout = (page: any) => <DashboardLayout>{page}</DashboardLayout>;

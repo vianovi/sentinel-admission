@@ -91,7 +91,7 @@ export default function StaffCandidates({ candidates, waves, programs, action_op
     }, [candidates.data, selectedCandidateId]);
 
     return (
-        <DashboardLayout>
+        <>
             <Head title="Kandidat — Staff" />
 
             <div className="flex flex-col gap-6 pb-8">
@@ -198,7 +198,7 @@ export default function StaffCandidates({ candidates, waves, programs, action_op
                 />
 
             </div>
-        </DashboardLayout>
+        </>
     );
 }
 
@@ -328,3 +328,5 @@ function Info({ label, value, wide = false }: { label: string; value: string; wi
         </div>
     );
 }
+
+StaffCandidates.layout = (page: any) => <DashboardLayout>{page}</DashboardLayout>;

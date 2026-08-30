@@ -16,7 +16,7 @@ export default function CandidateExamSessionShow({ candidate, assignment, attemp
     const { flash, errors } = usePage<PageProps & { errors: Record<string, string> }>().props;
 
     return (
-        <DashboardLayout>
+        <>
             <Head title={`${assignment.session.title} - Ujian Seleksi`} />
 
             <div className="space-y-5 pb-8">
@@ -33,6 +33,8 @@ export default function CandidateExamSessionShow({ candidate, assignment, attemp
                 <CandidateSessionCard candidate={candidate} assignment={assignment} />
                 <CandidateAttemptHistory attempts={attempts} />
             </div>
-        </DashboardLayout>
+        </>
     );
 }
+
+CandidateExamSessionShow.layout = (page: any) => <DashboardLayout>{page}</DashboardLayout>;

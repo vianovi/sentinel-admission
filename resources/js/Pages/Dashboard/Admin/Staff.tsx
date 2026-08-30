@@ -83,7 +83,7 @@ export default function AdminStaff({ staff_list, total_active, total }: Props) {
     };
 
     return (
-        <DashboardLayout>
+        <>
             <Head title="Staff - Admin" />
 
             <div className="flex flex-col gap-6 pb-8">
@@ -175,7 +175,7 @@ export default function AdminStaff({ staff_list, total_active, total }: Props) {
                     )}
                 </section>
             </div>
-        </DashboardLayout>
+        </>
     );
 }
 
@@ -192,3 +192,5 @@ function SummaryCard({ label, value, icon, tone }: { label: string; value: numbe
         </div>
     );
 }
+
+AdminStaff.layout = (page: any) => <DashboardLayout>{page}</DashboardLayout>;

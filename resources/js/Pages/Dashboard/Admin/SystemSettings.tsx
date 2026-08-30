@@ -296,7 +296,7 @@ export default function SystemSettings({
     };
 
     return (
-        <DashboardLayout>
+        <>
             <Head title="Pengaturan Sistem - Admin" />
 
             <div className="flex flex-col gap-6 pb-8">
@@ -515,7 +515,7 @@ export default function SystemSettings({
                     </div>
                 )}
             </div>
-        </DashboardLayout>
+        </>
     );
 }
 
@@ -725,3 +725,5 @@ function EmptyText({ text }: { text: string }) {
         </div>
     );
 }
+
+SystemSettings.layout = (page: any) => <DashboardLayout>{page}</DashboardLayout>;

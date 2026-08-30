@@ -60,7 +60,7 @@ export default function ReportsExportSettings({ export_groups, export_state, gen
     );
 
     return (
-        <DashboardLayout>
+        <>
             <Head title="Pengaturan Export Laporan - Staff" />
 
             <div className="flex flex-col gap-6 pb-8">
@@ -244,6 +244,8 @@ export default function ReportsExportSettings({ export_groups, export_state, gen
                     }
                 />
             </div>
-        </DashboardLayout>
+        </>
     );
 }
+
+ReportsExportSettings.layout = (page: any) => <DashboardLayout>{page}</DashboardLayout>;

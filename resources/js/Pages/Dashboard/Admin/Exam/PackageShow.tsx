@@ -45,7 +45,7 @@ export default function ExamPackageShow({ package: examPackage, questions, sessi
     };
 
     return (
-        <DashboardLayout>
+        <>
             <Head title={`${examPackage.title} - Paket Ujian`} />
 
             <ExamWorkspace active="packages">
@@ -218,6 +218,8 @@ export default function ExamPackageShow({ package: examPackage, questions, sessi
                 {/* Bank Soal Table Section */}
                 <QuestionBankTable questions={questions} />
             </ExamWorkspace>
-        </DashboardLayout>
+        </>
     );
 }
+
+ExamPackageShow.layout = (page: any) => <DashboardLayout>{page}</DashboardLayout>;

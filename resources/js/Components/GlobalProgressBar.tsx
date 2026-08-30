@@ -13,51 +13,63 @@ export default function GlobalProgressBar() {
     const barRef     = useRef<HTMLDivElement>(null)
     const glowRef    = useRef<HTMLDivElement>(null)
     const timerRef   = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const startDelayRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const activeRef  = useRef(false)
 
     const start = () => {
         if (activeRef.current) return
-        activeRef.current = true
 
-        const bar  = barRef.current
-        const glow = glowRef.current
-        if (!bar || !glow) return
+        // Delay 250ms sebelum memunculkan bar.
+        // Jika request selesai sebelum 250ms (misal karena prefetch atau polling),
+        // bar tidak akan muncul sama sekali.
+        startDelayRef.current = setTimeout(() => {
+            activeRef.current = true
 
-        // Reset posisi
-        bar.style.opacity  = '1'
-        bar.style.width    = '0%'
-        glow.style.opacity = '1'
+            const bar  = barRef.current
+            const glow = glowRef.current
+            if (!bar || !glow) return
 
-        // Fase 1 — cepat sampai 70%
-        animate(bar, {
-            width:    ['0%', '70%'],
-            duration: 400,
-            ease:     'outQuart',
-        })
+            // Reset posisi
+            bar.style.opacity  = '1'
+            bar.style.width    = '0%'
+            glow.style.opacity = '1'
 
-        animate(glow, {
-            width:    ['0%', '70%'],
-            duration: 400,
-            ease:     'outQuart',
-        })
-
-        // Fase 2 — lambat sampai 90% (simulasi "menunggu server")
-        timerRef.current = setTimeout(() => {
-            if (!activeRef.current) return
+            // Fase 1 — cepat sampai 70%
             animate(bar, {
-                width:    '90%',
-                duration: 8000,
-                ease:     'linear',
+                width:    ['0%', '70%'],
+                duration: 400,
+                ease:     'outQuart',
             })
+
             animate(glow, {
-                width:    '90%',
-                duration: 8000,
-                ease:     'linear',
+                width:    ['0%', '70%'],
+                duration: 400,
+                ease:     'outQuart',
             })
-        }, 400)
+
+            // Fase 2 — lambat sampai 90% (simulasi "menunggu server")
+            timerRef.current = setTimeout(() => {
+                if (!activeRef.current) return
+                animate(bar, {
+                    width:    '90%',
+                    duration: 8000,
+                    ease:     'linear',
+                })
+                animate(glow, {
+                    width:    '90%',
+                    duration: 8000,
+                    ease:     'linear',
+                })
+            }, 400)
+        }, 250)
     }
 
     const finish = () => {
+        if (startDelayRef.current) {
+            clearTimeout(startDelayRef.current)
+            startDelayRef.current = null
+        }
+
         if (!activeRef.current) return
         activeRef.current = false
 

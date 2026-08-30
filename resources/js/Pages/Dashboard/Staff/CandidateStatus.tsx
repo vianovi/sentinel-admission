@@ -330,7 +330,7 @@ export default function CandidateStatus({ rows, summary, waves, programs, filter
     const hasActiveFilter = Boolean(filters.search || filters.status || filters.wave || filters.program || filters.waiting);
 
     return (
-        <DashboardLayout>
+        <>
             <Head title="Status Kandidat - Staff" />
 
             <div className="flex flex-col gap-4 pb-8">
@@ -411,7 +411,7 @@ export default function CandidateStatus({ rows, summary, waves, programs, filter
                     <CandidateInspector row={selected} />
                 </div>
             </div>
-        </DashboardLayout>
+        </>
     );
 }
 
@@ -606,3 +606,5 @@ function CandidateInspector({ row }: { row: CandidateStatusRow | null }) {
         </aside>
     );
 }
+
+CandidateStatus.layout = (page: any) => <DashboardLayout>{page}</DashboardLayout>;

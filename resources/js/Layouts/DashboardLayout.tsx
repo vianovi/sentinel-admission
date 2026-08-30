@@ -64,7 +64,7 @@ function LayoutInner({ children, aside, asideWidth = "280px" }: Props) {
                 <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
 
                     {/* ── Kolom KIRI — konten utama, bisa scroll ────────────── */}
-                    <div className="flex-1 overflow-y-auto overflow-x-hidden min-w-0">
+                    <div scroll-region="true" className="flex-1 overflow-y-auto overflow-x-hidden min-w-0">
                         <div className="p-4 sm:p-6">
                             {/* Mobile: aside tampil di atas konten */}
                             {aside && (

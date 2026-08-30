@@ -404,6 +404,7 @@ export default function Sidebar({ role }: Props) {
                 ) : (
                     <Link
                         href={href ?? "#"}
+                        prefetch
                         className={className}
                         style={{ transitionDelay: childOpen ? `${index * 24}ms` : "0ms" }}
                         title={waitingForCandidate ? "Buka daftar kandidat atau pilih kandidat dulu" : undefined}
@@ -550,6 +551,7 @@ export default function Sidebar({ role }: Props) {
                                         ) : (
                                             <Link
                                                 href={itemHref ?? "#"}
+                                                prefetch
                                                 className={baseItemClass}
                                                 title={!isVisible ? item.label : waitingForCandidate ? "Buka daftar kandidat atau pilih kandidat dulu" : undefined}
                                             >

@@ -90,7 +90,7 @@ export default function ExamMonitoring({ snapshot, feed_url, display_url }: Prop
     }, [feed_url]);
 
     return (
-        <DashboardLayout>
+        <>
             <Head title="Monitoring Ujian" />
 
             <ExamWorkspace active="sessions">
@@ -211,7 +211,7 @@ export default function ExamMonitoring({ snapshot, feed_url, display_url }: Prop
                     </div>
                 </section>
             </ExamWorkspace>
-        </DashboardLayout>
+        </>
     );
 }
 
@@ -251,3 +251,5 @@ function formatTime(seconds: number): string {
 
     return [hours, minutes, secs].map((value) => value.toString().padStart(2, "0")).join(":");
 }
+
+ExamMonitoring.layout = (page: any) => <DashboardLayout>{page}</DashboardLayout>;

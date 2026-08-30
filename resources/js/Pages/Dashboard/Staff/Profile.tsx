@@ -183,7 +183,7 @@ export default function StaffProfile({ user, flash }: Props) {
     // ─────────────────────────────────────────────────────────────────────────
 
     return (
-        <DashboardLayout>
+        <>
             <Head title={`${roleLabel} - Profil`} />
 
             <div className="flex flex-col gap-6 max-w-3xl mx-auto pb-8">
@@ -251,6 +251,8 @@ export default function StaffProfile({ user, flash }: Props) {
                 />
 
             </div>
-        </DashboardLayout>
+        </>
     );
 }
+
+StaffProfile.layout = (page: any) => <DashboardLayout>{page}</DashboardLayout>;

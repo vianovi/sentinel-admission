@@ -38,7 +38,7 @@ export default function ExamSessionShow({ session, assigned_candidates, availabl
     const { flash, errors: pageErrors } = usePage<PageProps & { errors: Record<string, string> }>().props;
 
     return (
-        <DashboardLayout>
+        <>
             <Head title={`${session.title} - Sesi Ujian`} />
 
             <ExamWorkspace active="sessions">
@@ -101,6 +101,8 @@ export default function ExamSessionShow({ session, assigned_candidates, availabl
                     <SessionAssignedTable assignedCandidates={assigned_candidates} />
                 </div>
             </ExamWorkspace>
-        </DashboardLayout>
+        </>
     );
 }
+
+ExamSessionShow.layout = (page: any) => <DashboardLayout>{page}</DashboardLayout>;

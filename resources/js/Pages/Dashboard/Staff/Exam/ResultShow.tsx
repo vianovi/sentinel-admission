@@ -53,7 +53,7 @@ export default function StaffExamResultShow({ attempt }: Props) {
     const passLabel = attempt.passed === null ? "pending" : attempt.passed ? "lulus" : "belum lulus";
 
     return (
-        <DashboardLayout>
+        <>
             <Head title={`Hasil ${attempt.candidate.full_name ?? "Kandidat"}`} />
 
             <div className="space-y-5 pb-8">
@@ -169,7 +169,7 @@ export default function StaffExamResultShow({ attempt }: Props) {
                     )}
                 </section>
             </div>
-        </DashboardLayout>
+        </>
     );
 }
 
@@ -201,3 +201,5 @@ function Info({ label, value }: { label: string; value: string }) {
         </div>
     );
 }
+
+StaffExamResultShow.layout = (page: any) => <DashboardLayout>{page}</DashboardLayout>;

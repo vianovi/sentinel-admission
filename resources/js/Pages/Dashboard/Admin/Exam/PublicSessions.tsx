@@ -167,7 +167,7 @@ export default function PublicSessions({
     const activeProctorToken = tokens.find((t) => t.is_valid);
 
     return (
-        <DashboardLayout>
+        <>
             <Head title="Pengaturan Ujian Publik & Proktor" />
 
             <div className="space-y-6">
@@ -747,6 +747,8 @@ export default function PublicSessions({
                     </div>
                 </div>
             )}
-        </DashboardLayout>
+        </>
     );
 }
+
+PublicSessions.layout = (page: any) => <DashboardLayout>{page}</DashboardLayout>;

@@ -93,7 +93,7 @@ export default function CandidatePaymentHistory({ summary, payments }: Props) {
     }, [payments.current_page]);
 
     return (
-        <DashboardLayout>
+        <>
             <Head title="Riwayat Pembayaran" />
 
             <div className="flex flex-col gap-5 pb-8">
@@ -205,7 +205,7 @@ export default function CandidatePaymentHistory({ summary, payments }: Props) {
                     </section>
                 )}
             </div>
-        </DashboardLayout>
+        </>
     );
 }
 
@@ -217,3 +217,5 @@ function Info({ label, value }: { label: string; value: string }) {
         </div>
     );
 }
+
+CandidatePaymentHistory.layout = (page: any) => <DashboardLayout>{page}</DashboardLayout>;

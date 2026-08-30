@@ -28,7 +28,7 @@ export default function CandidateStatusPendaftaran({ status_summary }: Props) {
 
     if (!status_summary) {
         return (
-            <DashboardLayout>
+            <>
                 <Head title="Status Pendaftaran" />
                 <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 text-center">
                     <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-gold/20 bg-gold/10">
@@ -45,12 +45,12 @@ export default function CandidateStatusPendaftaran({ status_summary }: Props) {
                         Ke Halaman Utama
                     </Link>
                 </div>
-            </DashboardLayout>
+            </>
         );
     }
 
     return (
-        <DashboardLayout>
+        <>
             <Head title="Status Pendaftaran" />
 
             <div className="flex flex-col gap-5 pb-8">
@@ -73,7 +73,7 @@ export default function CandidateStatusPendaftaran({ status_summary }: Props) {
 
                 <QuickLinks links={status_summary.quick_links} />
             </div>
-        </DashboardLayout>
+        </>
     );
 }
 
@@ -104,3 +104,5 @@ function QuickLinks({ links }: { links: QuickLink[] }) {
         </section>
     );
 }
+
+CandidateStatusPendaftaran.layout = (page: any) => <DashboardLayout>{page}</DashboardLayout>;

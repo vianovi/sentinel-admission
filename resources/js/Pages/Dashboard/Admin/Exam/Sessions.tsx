@@ -23,7 +23,7 @@ export default function ExamSessions({ sessions, packages, waves, editing_sessio
     const monitoredSessions = sessions.filter((session) => session.attempts_count > 0).length;
 
     return (
-        <DashboardLayout>
+        <>
             <Head title="Sesi Ujian" />
 
             <ExamWorkspace active="sessions">
@@ -103,6 +103,8 @@ export default function ExamSessions({ sessions, packages, waves, editing_sessio
                     right={<SessionListCard sessions={sessions} />}
                 />
             </ExamWorkspace>
-        </DashboardLayout>
+        </>
     );
 }
+
+ExamSessions.layout = (page: any) => <DashboardLayout>{page}</DashboardLayout>;

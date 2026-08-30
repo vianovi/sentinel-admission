@@ -31,7 +31,7 @@ export default function AdminCandidates({ candidates, waves, filters }: Props) {
     const { flash } = usePage<PageProps>().props;
 
     return (
-        <DashboardLayout>
+        <>
             <Head title="Kandidat - Admin" />
 
             <div className="flex flex-col gap-6 pb-8">
@@ -83,6 +83,8 @@ export default function AdminCandidates({ candidates, waves, filters }: Props) {
                     basePath="/dashboard/admin/candidates"
                 />
             </div>
-        </DashboardLayout>
+        </>
     );
 }
+
+AdminCandidates.layout = (page: any) => <DashboardLayout>{page}</DashboardLayout>;
