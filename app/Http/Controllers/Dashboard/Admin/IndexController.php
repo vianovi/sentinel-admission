@@ -7,7 +7,6 @@ use App\Models\AdmissionWave;
 use App\Models\Candidate;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -24,41 +23,41 @@ class IndexController extends Controller
         return Inertia::render('Dashboard/Admin/Index', [
             'stats' => [
                 'total_candidates' => Candidate::count(),
-                'total_staff'      => User::where('role', 'staff')->count(),
-                'quota_target'     => $activeWave?->quota_target ?? 0,
-                'quota_filled'     => Candidate::where('status', 'accepted')->count(),
-                'pending_verify'   => Candidate::where('status', 'submitted')->count(),
-                'by_status'        => [
-                    'draft'     => Candidate::where('status', 'draft')->count(),
+                'total_staff' => User::where('role', 'staff')->count(),
+                'quota_target' => $activeWave?->quota_target ?? 0,
+                'quota_filled' => Candidate::where('status', 'accepted')->count(),
+                'pending_verify' => Candidate::where('status', 'submitted')->count(),
+                'by_status' => [
+                    'draft' => Candidate::where('status', 'draft')->count(),
                     'submitted' => Candidate::where('status', 'submitted')->count(),
-                    'verified'  => Candidate::where('status', 'verified')->count(),
-                    'accepted'  => Candidate::where('status', 'accepted')->count(),
-                    'rejected'  => Candidate::where('status', 'rejected')->count(),
+                    'verified' => Candidate::where('status', 'verified')->count(),
+                    'accepted' => Candidate::where('status', 'accepted')->count(),
+                    'rejected' => Candidate::where('status', 'rejected')->count(),
                 ],
             ],
             'active_wave' => $activeWave ? [
-                'id'            => $activeWave->id,
-                'title'         => $activeWave->title,
+                'id' => $activeWave->id,
+                'title' => $activeWave->title,
                 'academic_year' => $activeWave->academic_year,
-                'end_date'      => $activeWave->end_date?->format('d F Y'),
-                'quota_target'  => $activeWave->quota_target,
+                'end_date' => $activeWave->end_date?->format('d F Y'),
+                'quota_target' => $activeWave->quota_target,
             ] : null,
             'recent_candidates' => Candidate::with('user')
                 ->latest()->take(5)->get()
                 ->map(fn ($c) => [
-                    'id'         => $c->id,
-                    'full_name'  => $c->full_name,
-                    'nisn'       => $c->nisn,
-                    'status'     => $c->status,
+                    'id' => $c->id,
+                    'full_name' => $c->full_name,
+                    'nisn' => $c->nisn,
+                    'status' => $c->status,
                     'created_at' => $c->created_at->diffForHumans(),
                 ]),
             'staff_list' => User::where('role', 'staff')
                 ->latest()->get()
                 ->map(fn ($s) => [
-                    'id'         => $s->id,
-                    'name'       => $s->name,
-                    'email'      => $s->email,
-                    'is_active'  => $s->is_active,
+                    'id' => $s->id,
+                    'name' => $s->name,
+                    'email' => $s->email,
+                    'is_active' => $s->is_active,
                     'created_at' => $s->created_at->format('d M Y'),
                 ]),
         ]);

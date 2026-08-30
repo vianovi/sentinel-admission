@@ -53,7 +53,7 @@ return new class extends Migration
     }
 
     /**
-     * @param array<int, string> $values
+     * @param  array<int, string>  $values
      */
     private function alterIncomeEnums(array $values): void
     {

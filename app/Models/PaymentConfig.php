@@ -1,8 +1,8 @@
 <?php
+
 // =============================================================================
 // LOKASI FILE: app/Models/PaymentConfig.php
 // =============================================================================
-
 
 namespace App\Models;
 
@@ -29,7 +29,7 @@ class PaymentConfig extends Model
 
     protected $casts = [
         'gateway_fee_value' => 'decimal:2',
-        'is_active'         => 'boolean',
+        'is_active' => 'boolean',
     ];
 
     // ─────────────────────────────────────────────
@@ -37,15 +37,16 @@ class PaymentConfig extends Model
     // ─────────────────────────────────────────────
 
     const FEE_TYPE_PERCENTAGE = 'percentage';
-    const FEE_TYPE_FLAT       = 'flat';
+
+    const FEE_TYPE_FLAT = 'flat';
 
     const BANK_LOGOS = [
-        'bca'     => 'BCA',
-        'bri'     => 'BRI',
+        'bca' => 'BCA',
+        'bri' => 'BRI',
         'mandiri' => 'Mandiri',
-        'bni'     => 'BNI',
-        'bsi'     => 'BSI',
-        'other'   => 'Bank Lainnya',
+        'bni' => 'BNI',
+        'bsi' => 'BSI',
+        'other' => 'Bank Lainnya',
     ];
 
     // ─────────────────────────────────────────────
@@ -111,12 +112,12 @@ class PaymentConfig extends Model
         }
 
         $message = "Halo {$this->whatsapp_contact_label}, saya {$candidateName} "
-            . "dengan kode kandidat {$candidateCode} sudah melakukan upload "
-            . "bukti pembayaran biaya pendaftaran. Mohon untuk segera diverifikasi. "
-            . "Terima kasih 🙏";
+            ."dengan kode kandidat {$candidateCode} sudah melakukan upload "
+            .'bukti pembayaran biaya pendaftaran. Mohon untuk segera diverifikasi. '
+            .'Terima kasih 🙏';
 
-        return 'https://wa.me/' . $this->whatsapp_contact
-            . '?text=' . urlencode($message);
+        return 'https://wa.me/'.$this->whatsapp_contact
+            .'?text='.urlencode($message);
     }
 
     // ─────────────────────────────────────────────

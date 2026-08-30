@@ -34,7 +34,7 @@ class NationalHolidayService
             ->unique()
             ->sort()
             ->flatMap(fn (int $year) => $this->holidaysForYear($year))
-            ->unique(fn (array $holiday) => $holiday['date'] . '|' . $holiday['name'])
+            ->unique(fn (array $holiday) => $holiday['date'].'|'.$holiday['name'])
             ->values()
             ->all();
     }
@@ -72,9 +72,9 @@ class NationalHolidayService
 
             return collect($response->json('data', []))
                 ->map(fn (array $item) => [
-                    'date'   => (string) ($item['date'] ?? ''),
-                    'name'   => (string) ($item['name'] ?? 'Hari libur nasional'),
-                    'type'   => ($item['type'] ?? 'holiday') === 'leave' ? 'leave' : 'holiday',
+                    'date' => (string) ($item['date'] ?? ''),
+                    'name' => (string) ($item['name'] ?? 'Hari libur nasional'),
+                    'type' => ($item['type'] ?? 'holiday') === 'leave' ? 'leave' : 'holiday',
                     'source' => 'tanggalmerah.upset.dev',
                 ])
                 ->filter(fn (array $item) => $item['date'] !== '')
@@ -107,9 +107,9 @@ class NationalHolidayService
 
             return collect($response->json())
                 ->map(fn (array $item) => [
-                    'date'   => (string) ($item['date'] ?? ''),
-                    'name'   => (string) ($item['localName'] ?? $item['name'] ?? 'Hari libur nasional'),
-                    'type'   => 'holiday',
+                    'date' => (string) ($item['date'] ?? ''),
+                    'name' => (string) ($item['localName'] ?? $item['name'] ?? 'Hari libur nasional'),
+                    'type' => 'holiday',
                     'source' => 'date.nager.at',
                 ])
                 ->filter(fn (array $item) => $item['date'] !== '')

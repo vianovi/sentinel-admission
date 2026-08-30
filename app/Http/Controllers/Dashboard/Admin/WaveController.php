@@ -23,25 +23,25 @@ class WaveController extends Controller
             ->latest()
             ->get()
             ->map(fn ($w) => [
-                'id'               => $w->id,
-                'title'            => $w->title,
-                'academic_year'    => $w->academic_year,
-                'description'      => $w->description,
-                'start_date_raw'   => $w->start_date?->format('Y-m-d'),
-                'end_date_raw'     => $w->end_date?->format('Y-m-d'),
-                'start_date'       => $w->start_date?->format('d M Y'),
-                'end_date'         => $w->end_date?->format('d M Y'),
-                'exam_info'        => $w->exam_info,
+                'id' => $w->id,
+                'title' => $w->title,
+                'academic_year' => $w->academic_year,
+                'description' => $w->description,
+                'start_date_raw' => $w->start_date?->format('Y-m-d'),
+                'end_date_raw' => $w->end_date?->format('Y-m-d'),
+                'start_date' => $w->start_date?->format('d M Y'),
+                'end_date' => $w->end_date?->format('d M Y'),
+                'exam_info' => $w->exam_info,
                 'announcement_info' => $w->announcement_info,
                 'reregistration_date_raw' => $w->reregistration_date?->format('Y-m-d'),
                 'reregistration_date' => $w->reregistration_date?->format('d M Y'),
                 'registration_fee' => (float) $w->registration_fee,
-                'quota_target'     => $w->quota_target,
+                'quota_target' => $w->quota_target,
                 'available_majors' => $w->available_majors ?? [],
-                'is_active'        => $w->is_active,
-                'majors_enabled'   => $w->majors_enabled,
+                'is_active' => $w->is_active,
+                'majors_enabled' => $w->majors_enabled,
                 'candidates_count' => $w->candidates_count,
-                'quota_filled'     => Candidate::where('admission_wave_id', $w->id)
+                'quota_filled' => Candidate::where('admission_wave_id', $w->id)
                     ->where('status', 'accepted')
                     ->count(),
             ]);

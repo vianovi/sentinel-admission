@@ -42,7 +42,7 @@ class ExamPackageTemplateService
             throw new \RuntimeException('EXAM_TEMPLATE_COPY_FAILED');
         }
 
-        $archive = new ZipArchive();
+        $archive = new ZipArchive;
 
         if ($archive->open($target) !== true) {
             @unlink($target);

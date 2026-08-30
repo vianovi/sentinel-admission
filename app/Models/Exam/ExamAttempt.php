@@ -10,10 +10,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class ExamAttempt extends Model
 {
     public const STATUS_IN_PROGRESS = 'in_progress';
+
     public const STATUS_SUBMITTED = 'submitted';
+
     public const STATUS_AUTO_SUBMITTED = 'auto_submitted';
+
     public const STATUS_EXPIRED = 'expired';
+
     public const STATUS_CANCELLED = 'cancelled';
+
     public const STATUS_INVALIDATED = 'invalidated';
 
     protected $fillable = [

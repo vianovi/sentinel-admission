@@ -130,7 +130,7 @@ class CandidateGateService
     }
 
     /**
-     * @param array<int, string> $reasons
+     * @param  array<int, string>  $reasons
      */
     private function gate(string $key, bool $allowed, array $reasons, ?string $fallbackRoute): array
     {

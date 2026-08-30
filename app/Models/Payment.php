@@ -1,8 +1,8 @@
 <?php
+
 // =============================================================================
 // LOKASI FILE: app/Models/Payment.php
 // =============================================================================
-
 
 namespace App\Models;
 
@@ -41,36 +41,45 @@ class Payment extends Model
     ];
 
     protected $casts = [
-        'base_amount'       => 'decimal:2',
-        'fee_amount'        => 'decimal:2',
-        'final_amount'      => 'decimal:2',
-        'metadata'          => 'array',
-        'paid_at'           => 'datetime',
-        'expired_at'        => 'datetime',
-        'verified_at'       => 'datetime',
+        'base_amount' => 'decimal:2',
+        'fee_amount' => 'decimal:2',
+        'final_amount' => 'decimal:2',
+        'metadata' => 'array',
+        'paid_at' => 'datetime',
+        'expired_at' => 'datetime',
+        'verified_at' => 'datetime',
         'proof_uploaded_at' => 'datetime',
-        'transfer_date'     => 'date',
-        'proof_attempt'     => 'integer',
+        'transfer_date' => 'date',
+        'proof_attempt' => 'integer',
     ];
 
     // ─────────────────────────────────────────────
     // Constants
     // ─────────────────────────────────────────────
 
-    const CHANNEL_GATEWAY  = 'gateway';
-    const CHANNEL_TRANSFER = 'transfer';
-    const CHANNEL_CASH     = 'cash';
+    const CHANNEL_GATEWAY = 'gateway';
 
-    const STATUS_PENDING   = 'pending';
-    const STATUS_PAID      = 'paid';
-    const STATUS_FAILED    = 'failed';
-    const STATUS_EXPIRED   = 'expired';
+    const CHANNEL_TRANSFER = 'transfer';
+
+    const CHANNEL_CASH = 'cash';
+
+    const STATUS_PENDING = 'pending';
+
+    const STATUS_PAID = 'paid';
+
+    const STATUS_FAILED = 'failed';
+
+    const STATUS_EXPIRED = 'expired';
+
     const STATUS_CANCELLED = 'cancelled';
 
-    const MANUAL_WAITING_PROOF  = 'waiting_proof';
+    const MANUAL_WAITING_PROOF = 'waiting_proof';
+
     const MANUAL_PROOF_UPLOADED = 'proof_uploaded';
-    const MANUAL_VERIFIED       = 'verified';
-    const MANUAL_REJECTED       = 'rejected';
+
+    const MANUAL_VERIFIED = 'verified';
+
+    const MANUAL_REJECTED = 'rejected';
 
     // ─────────────────────────────────────────────
     // Relations

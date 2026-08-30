@@ -4,7 +4,6 @@ namespace App\Services\CandidateStatus;
 
 use App\Models\Candidate;
 use App\Models\Guardian;
-use App\Models\HealthRecord;
 
 class CandidateCompletionEvaluator
 {
@@ -229,7 +228,7 @@ class CandidateCompletionEvaluator
     }
 
     /**
-     * @param array<string, string> $fields
+     * @param  array<string, string>  $fields
      * @return array<int, CandidateRequirement>
      */
     private function requirementsFromMap(array $fields, string $group): array

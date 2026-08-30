@@ -1,5 +1,7 @@
 <?php
+
 // app/Events/WaveUpdated.php
+
 namespace App\Events;
 
 use App\Models\AdmissionWave;
@@ -24,7 +26,7 @@ class WaveUpdated implements ShouldBroadcastNow
     public function broadcastOn(): array
     {
         // Channel public, karena info kuota ini untuk semua visitor di landing page
-        return[
+        return [
             new Channel('public-waves'),
         ];
     }

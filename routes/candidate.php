@@ -18,7 +18,7 @@ use App\Http\Controllers\Dashboard\SecureFileController;
 use App\Http\Middleware\RoleMiddleware;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', RoleMiddleware::class . ':candidate'])
+Route::middleware(['auth', RoleMiddleware::class.':candidate'])
     ->prefix('dashboard')
     ->name('dashboard.')
     ->group(function () {

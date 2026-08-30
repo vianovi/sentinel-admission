@@ -23,7 +23,7 @@ class ProfileController extends Controller
 
     public function show(Request $request): Response
     {
-        $user      = $request->user();
+        $user = $request->user();
         $user->loadMissing('pendingEmailReviewer');
         $candidate = $user->candidate()->with('admissionWave')->first();
         $emailChangeRequest = CandidateRequestPresenter::formatEmailChangeRequest($user);
@@ -31,22 +31,22 @@ class ProfileController extends Controller
 
         return Inertia::render('Dashboard/Candidate/Profile', [
             'user' => [
-                'id'                => $user->id,
-                'name'              => $user->name,
-                'email'             => $user->email,
-                'avatar_url'        => $user->avatar_url,
-                'initials'          => $user->initials,
-                'whatsapp_number'   => $user->whatsapp_number,
-                'email_verified'    => $user->hasVerifiedEmail(),
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'avatar_url' => $user->avatar_url,
+                'initials' => $user->initials,
+                'whatsapp_number' => $user->whatsapp_number,
+                'email_verified' => $user->hasVerifiedEmail(),
             ],
             'candidate' => $candidate ? [
-                'full_name'      => $candidate->full_name,
-                'nisn'           => $candidate->nisn,
-                'nik'            => $candidate->nik,
-                'status'         => $candidate->status,
-                'address_full'   => $candidate->address_full,
+                'full_name' => $candidate->full_name,
+                'nisn' => $candidate->nisn,
+                'nik' => $candidate->nik,
+                'status' => $candidate->status,
+                'address_full' => $candidate->address_full,
                 'admission_wave' => $candidate->admissionWave ? [
-                    'title'         => $candidate->admissionWave->title,
+                    'title' => $candidate->admissionWave->title,
                     'academic_year' => $candidate->admissionWave->academic_year,
                 ] : null,
             ] : null,
@@ -68,9 +68,9 @@ class ProfileController extends Controller
         $user = $request->user();
 
         $validated = $request->validate([
-            'name'             => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
             'current_password' => ['nullable', 'string'],
-            'new_password'     => ['nullable', 'confirmed', Password::min(8)],
+            'new_password' => ['nullable', 'confirmed', Password::min(8)],
         ]);
 
         if ($request->filled('new_password')) {
@@ -92,7 +92,7 @@ class ProfileController extends Controller
     // =========================================================================
 
     private const AVATAR_SIGNATURES = [
-        "\xFF\xD8\xFF"      => ['mime' => 'image/jpeg', 'ext' => 'jpg'],
+        "\xFF\xD8\xFF" => ['mime' => 'image/jpeg', 'ext' => 'jpg'],
         "\x89PNG\r\n\x1A\n" => ['mime' => 'image/png',  'ext' => 'png'],
     ];
 
@@ -106,12 +106,12 @@ class ProfileController extends Controller
                 'max:3072',
             ],
         ], [
-            'avatar.mimes'     => 'Format avatar hanya boleh JPG atau PNG.',
+            'avatar.mimes' => 'Format avatar hanya boleh JPG atau PNG.',
             'avatar.mimetypes' => 'Format avatar hanya boleh JPG atau PNG.',
-            'avatar.max'       => 'Ukuran foto maksimal adalah 3MB.',
+            'avatar.max' => 'Ukuran foto maksimal adalah 3MB.',
         ]);
 
-        $file   = $request->file('avatar');
+        $file = $request->file('avatar');
         $handle = fopen($file->getRealPath(), 'rb');
         $header = fread($handle, 12);
         fclose($handle);
@@ -128,10 +128,11 @@ class ProfileController extends Controller
             \Illuminate\Support\Facades\Log::warning('Avatar upload validation failed: Invalid magic bytes signature', [
                 'user_id' => $request->user()->id,
             ]);
+
             return back()->withErrors(['avatar' => 'Berkas gambar yang diunggah rusak atau formatnya tidak didukung.']);
         }
 
-        $content   = file_get_contents($file->getRealPath());
+        $content = file_get_contents($file->getRealPath());
         $forbidden = ['<?php', '<?=', '<script'];
         foreach ($forbidden as $pattern) {
             if (stripos($content, $pattern) !== false) {
@@ -139,6 +140,7 @@ class ProfileController extends Controller
                     'user_id' => $request->user()->id,
                     'detected_pattern' => $pattern,
                 ]);
+
                 return back()->withErrors(['avatar' => 'Berkas gambar tidak memenuhi standar keamanan sistem kami.']);
             }
         }
@@ -148,13 +150,14 @@ class ProfileController extends Controller
         $candidate = $user->candidate()->firstOrFail();
         $oldPath = $user->avatar;
         $directory = SentinelStoragePaths::candidateAvatarDirectory($candidate->candidate_code);
-        $path = $directory . '/' . Str::uuid() . '.' . $detected['ext'];
+        $path = $directory.'/'.Str::uuid().'.'.$detected['ext'];
 
         if (! Storage::disk('private')->put($path, file_get_contents($file->getRealPath()))) {
             \Illuminate\Support\Facades\Log::error('Avatar storage write error', [
                 'user_id' => $user->id,
                 'path' => $path,
             ]);
+
             return back()->withErrors(['avatar' => 'Gagal memperbarui foto profil karena kendala teknis internal. Silakan coba lagi.']);
         }
 
@@ -183,8 +186,8 @@ class ProfileController extends Controller
 
         return Storage::disk('private')->response($user->avatar, null, [
             'Cache-Control' => 'no-cache, no-store, must-revalidate',
-            'Pragma'        => 'no-cache',
-            'Expires'       => '0',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
         ]);
     }
 
@@ -209,11 +212,11 @@ class ProfileController extends Controller
         ]);
 
         $user->update([
-            'pending_email'              => $request->new_email,
-            'pending_email_token'        => Str::random(64),
-            'pending_email_status'       => 'pending',
-            'pending_email_reviewed_by'  => null,
-            'pending_email_reviewed_at'  => null,
+            'pending_email' => $request->new_email,
+            'pending_email_token' => Str::random(64),
+            'pending_email_status' => 'pending',
+            'pending_email_reviewed_by' => null,
+            'pending_email_reviewed_at' => null,
             'pending_email_rejection_reason' => null,
             'pending_email_requested_at' => now(),
         ]);
@@ -234,11 +237,11 @@ class ProfileController extends Controller
         }
 
         $user->update([
-            'pending_email'              => null,
-            'pending_email_token'        => null,
-            'pending_email_status'       => null,
-            'pending_email_reviewed_by'  => null,
-            'pending_email_reviewed_at'  => null,
+            'pending_email' => null,
+            'pending_email_token' => null,
+            'pending_email_status' => null,
+            'pending_email_reviewed_by' => null,
+            'pending_email_reviewed_at' => null,
             'pending_email_rejection_reason' => null,
             'pending_email_requested_at' => null,
         ]);

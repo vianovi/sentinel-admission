@@ -18,14 +18,14 @@ class DocumentSecurityService
     ];
 
     private const MAGIC_SIGNATURES = [
-        'image/jpeg'      => ['ffd8ff'],
-        'image/png'       => ['89504e47'],
+        'image/jpeg' => ['ffd8ff'],
+        'image/png' => ['89504e47'],
         'application/pdf' => ['25504446'], // %PDF
     ];
 
     private const MIME_TO_EXTENSION = [
-        'image/jpeg'      => 'jpg',
-        'image/png'       => 'png',
+        'image/jpeg' => 'jpg',
+        'image/png' => 'png',
         'application/pdf' => 'pdf',
     ];
 
@@ -66,13 +66,13 @@ class DocumentSecurityService
 
         return [
             'magic_bytes_result' => $magicResult['result'],
-            'polyglot_clean'     => $polyglotResult['clean'],
-            'polyglot_detail'    => $polyglotResult['detail'],
-            'detected_mime'      => $magicResult['detected_mime'],
-            'file_hash'          => $fileHash,
-            'upload_ip'          => $uploadIp,
-            'user_agent'         => $userAgent,
-            'scanned_at'         => now(),
+            'polyglot_clean' => $polyglotResult['clean'],
+            'polyglot_detail' => $polyglotResult['detail'],
+            'detected_mime' => $magicResult['detected_mime'],
+            'file_hash' => $fileHash,
+            'upload_ip' => $uploadIp,
+            'user_agent' => $userAgent,
+            'scanned_at' => now(),
         ];
     }
 
@@ -85,11 +85,12 @@ class DocumentSecurityService
         // Sentinel Toggle — hanya aktif di branch lab-hack
         if (config('sentinel.layer_magic_bytes', true) === false) {
             Log::warning('[LAB-HACK] Magic bytes check DISABLED — layer 3B bypassed', [
-                'user_id'  => auth()->id(),
+                'user_id' => auth()->id(),
                 'filename' => $file->getClientOriginalName(),
             ]);
+
             return [
-                'result'        => 'passed',
+                'result' => 'passed',
                 'detected_mime' => $file->getMimeType(),
             ];
         }
@@ -113,19 +114,20 @@ class DocumentSecurityService
         // Tidak ada signature yang cocok → reject
         if ($detectedMime === null) {
             Log::warning('[SENTINEL] Magic bytes tidak cocok dengan format apapun', [
-                'user_id'      => auth()->id(),
-                'filename'     => $file->getClientOriginalName(),
-                'header_hex'   => $header,
+                'user_id' => auth()->id(),
+                'filename' => $file->getClientOriginalName(),
+                'header_hex' => $header,
                 'claimed_mime' => $file->getMimeType(),
             ]);
+
             return [
-                'result'        => 'rejected',
+                'result' => 'rejected',
                 'detected_mime' => 'unknown',
             ];
         }
 
         return [
-            'result'        => 'passed',
+            'result' => 'passed',
             'detected_mime' => $detectedMime,
         ];
     }
@@ -139,9 +141,10 @@ class DocumentSecurityService
         // Sentinel Toggle — hanya aktif di branch lab-hack
         if (config('sentinel.layer_polyglot_scan', true) === false) {
             Log::warning('[LAB-HACK] Polyglot scan DISABLED — layer 3C bypassed', [
-                'user_id'  => auth()->id(),
+                'user_id' => auth()->id(),
                 'filename' => $file->getClientOriginalName(),
             ]);
+
             return ['clean' => true, 'detail' => null];
         }
 
@@ -152,13 +155,14 @@ class DocumentSecurityService
                 $offset = stripos($content, $pattern);
                 // Log detail hanya ke server — TIDAK pernah ke user
                 Log::warning('[SENTINEL] Polyglot pattern detected', [
-                    'user_id'  => auth()->id(),
-                    'pattern'  => $pattern,
-                    'offset'   => $offset,
+                    'user_id' => auth()->id(),
+                    'pattern' => $pattern,
+                    'offset' => $offset,
                     'filename' => $file->getClientOriginalName(),
                 ]);
+
                 return [
-                    'clean'  => false,
+                    'clean' => false,
                     'detail' => "Pattern '{$pattern}' found at offset {$offset}",
                 ];
             }
@@ -175,6 +179,7 @@ class DocumentSecurityService
     {
         if (config('sentinel.layer_hash_check', true) === false) {
             Log::warning('[LAB-HACK] Hash generation DISABLED', ['user_id' => auth()->id()]);
+
             return '';
         }
 
@@ -191,10 +196,11 @@ class DocumentSecurityService
             Log::warning('[LAB-HACK] UUID rename DISABLED — using random name', [
                 'user_id' => auth()->id(),
             ]);
-            return 'lab_' . uniqid() . '.' . (self::MIME_TO_EXTENSION[$detectedMime] ?? 'bin');
+
+            return 'lab_'.uniqid().'.'.(self::MIME_TO_EXTENSION[$detectedMime] ?? 'bin');
         }
 
-        $uuid      = \Illuminate\Support\Str::uuid()->toString();
+        $uuid = \Illuminate\Support\Str::uuid()->toString();
         $extension = self::MIME_TO_EXTENSION[$detectedMime] ?? 'bin';
 
         return "{$uuid}.{$extension}";

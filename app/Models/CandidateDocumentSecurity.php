@@ -28,7 +28,7 @@ class CandidateDocumentSecurity extends Model
 
     protected $casts = [
         'polyglot_clean' => 'boolean',
-        'scanned_at'     => 'datetime',
+        'scanned_at' => 'datetime',
     ];
 
     // ─────────────────────────────────────────────

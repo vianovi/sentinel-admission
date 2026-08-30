@@ -36,10 +36,10 @@ class CandidateDocument extends Model
     // =============================================
 
     const DOC_GROUPS = [
-        'identity'       => 'Kelompok A — Identitas & Kependudukan',
-        'academic'       => 'Kelompok B — Akademik',
-        'achievement'    => 'Kelompok C — Prestasi (multi-upload)',
-        'welfare'        => 'Kelompok D — Bantuan & Afirmasi',
+        'identity' => 'Kelompok A — Identitas & Kependudukan',
+        'academic' => 'Kelompok B — Akademik',
+        'achievement' => 'Kelompok C — Prestasi (multi-upload)',
+        'welfare' => 'Kelompok D — Bantuan & Afirmasi',
         'administration' => 'Kelompok E — Administrasi & Pernyataan',
     ];
 
@@ -49,98 +49,98 @@ class CandidateDocument extends Model
 
     const DOC_TYPES = [
         // ─── Kelompok A — identity ────────────────────────────────
-        'photo_formal'            => [
+        'photo_formal' => [
             'group' => 'identity',
             'label' => 'Pas Foto Resmi',
-            'hint'  => 'Untuk kartu peserta & arsip digital',
+            'hint' => 'Untuk kartu peserta & arsip digital',
         ],
-        'birth_certificate'       => [
+        'birth_certificate' => [
             'group' => 'identity',
             'label' => 'Akta Kelahiran',
-            'hint'  => 'Verifikasi identitas resmi',
+            'hint' => 'Verifikasi identitas resmi',
         ],
-        'family_card'             => [
+        'family_card' => [
             'group' => 'identity',
             'label' => 'Kartu Keluarga (KK)',
-            'hint'  => 'Verifikasi data keluarga & domisili',
+            'hint' => 'Verifikasi data keluarga & domisili',
         ],
-        'parent_id_card'          => [
+        'parent_id_card' => [
             'group' => 'identity',
             'label' => 'KTP Orang Tua / Wali',
-            'hint'  => 'Legalitas pendaftaran oleh wali',
+            'hint' => 'Legalitas pendaftaran oleh wali',
         ],
 
         // ─── Kelompok B — academic ────────────────────────────────
-        'graduation_certificate'  => [
+        'graduation_certificate' => [
             'group' => 'academic',
             'label' => 'Ijazah / SKL',
-            'hint'  => 'Bukti kelulusan jenjang sebelumnya',
+            'hint' => 'Bukti kelulusan jenjang sebelumnya',
         ],
-        'report_card'             => [
+        'report_card' => [
             'group' => 'academic',
             'label' => 'Rapor Semester Terakhir',
-            'hint'  => 'Rekam jejak akademik terkini',
+            'hint' => 'Rekam jejak akademik terkini',
         ],
-        'academic_transcript'     => [
+        'academic_transcript' => [
             'group' => 'academic',
             'label' => 'Transkrip Nilai Lengkap',
-            'hint'  => 'Gambaran akademik menyeluruh untuk evaluasi',
+            'hint' => 'Gambaran akademik menyeluruh untuk evaluasi',
         ],
         // transfer_letter masuk academic — dokumen riwayat pendidikan,
         // bukan eksklusif boarding. Berlaku untuk semua jenis sekolah.
-        'transfer_letter'         => [
-            'group'           => 'academic',
-            'label'           => 'Surat Keterangan Pindah',
-            'hint'            => 'Wajib jika kamu mendaftar sebagai siswa pindahan',
-            'conditional'     => true,
+        'transfer_letter' => [
+            'group' => 'academic',
+            'label' => 'Surat Keterangan Pindah',
+            'hint' => 'Wajib jika kamu mendaftar sebagai siswa pindahan',
+            'conditional' => true,
             'condition_field' => 'is_transfer',
         ],
 
         // ─── Kelompok C — achievement (multi-upload) ─────────────
-        'achievement_academic'    => [
+        'achievement_academic' => [
             'group' => 'achievement',
             'label' => 'Sertifikat Prestasi Akademik',
-            'hint'  => 'OSN, olimpiade sains, karya tulis ilmiah, dll',
+            'hint' => 'OSN, olimpiade sains, karya tulis ilmiah, dll',
         ],
         'achievement_nonacademic' => [
             'group' => 'achievement',
             'label' => 'Sertifikat Prestasi Non-Akademik',
-            'hint'  => 'O2SN, FLS2N, olahraga, seni, debat, dll',
+            'hint' => 'O2SN, FLS2N, olahraga, seni, debat, dll',
         ],
-        'achievement_religious'   => [
+        'achievement_religious' => [
             'group' => 'achievement',
             'label' => 'Sertifikat Prestasi Keagamaan',
-            'hint'  => 'MTQ, tahfidz, lomba keagamaan',
+            'hint' => 'MTQ, tahfidz, lomba keagamaan',
         ],
 
         // ─── Kelompok D — welfare (pilih salah satu) ─────────────
-        'kip_card'                => [
+        'kip_card' => [
             'group' => 'welfare',
             'label' => 'Kartu Indonesia Pintar (KIP)',
-            'hint'  => 'Untuk pengusulan PIP — bantuan biaya pendidikan dari pemerintah',
+            'hint' => 'Untuk pengusulan PIP — bantuan biaya pendidikan dari pemerintah',
         ],
-        'welfare_card'            => [
+        'welfare_card' => [
             'group' => 'welfare',
             'label' => 'Kartu KKS / PKH',
-            'hint'  => 'Bukti keluarga penerima program kesejahteraan sosial',
+            'hint' => 'Bukti keluarga penerima program kesejahteraan sosial',
         ],
-        'poverty_letter'          => [
+        'poverty_letter' => [
             'group' => 'welfare',
             'label' => 'Surat Keterangan Tidak Mampu (SKTM)',
-            'hint'  => 'Alternatif jika belum punya KIP/KKS, diurus di kelurahan',
+            'hint' => 'Alternatif jika belum punya KIP/KKS, diurus di kelurahan',
         ],
 
         // ─── Kelompok E — administration ─────────────────────────
         // Dokumen administratif & pernyataan — universal untuk semua jenis sekolah
-        'parent_statement'        => [
+        'parent_statement' => [
             'group' => 'administration',
             'label' => 'Surat Pernyataan Orang Tua',
-            'hint'  => 'Persetujuan & kesanggupan mengikuti tata tertib sekolah',
+            'hint' => 'Persetujuan & kesanggupan mengikuti tata tertib sekolah',
         ],
-        'recommendation_letter'   => [
+        'recommendation_letter' => [
             'group' => 'administration',
             'label' => 'Surat Rekomendasi',
-            'hint'  => 'Dari guru atau kepala sekolah (opsional)',
+            'hint' => 'Dari guru atau kepala sekolah (opsional)',
         ],
     ];
 

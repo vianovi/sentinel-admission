@@ -10,8 +10,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class ExamPackage extends Model
 {
     public const STATUS_DRAFT = 'draft';
+
     public const STATUS_PUBLISHED = 'published';
+
     public const STATUS_CLOSED = 'closed';
+
     public const STATUS_ARCHIVED = 'archived';
 
     protected $fillable = [

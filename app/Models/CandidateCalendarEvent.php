@@ -44,9 +44,9 @@ class CandidateCalendarEvent extends Model
 
     protected $casts = [
         'event_date' => 'date',
-        'starts_at'  => 'datetime',
-        'ends_at'    => 'datetime',
-        'all_day'    => 'boolean',
+        'starts_at' => 'datetime',
+        'ends_at' => 'datetime',
+        'all_day' => 'boolean',
     ];
 
     public function user()

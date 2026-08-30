@@ -14,16 +14,20 @@ use App\Http\Controllers\Dashboard\StatusPendaftaranController as InternalStatus
 use App\Http\Middleware\RoleMiddleware;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', RoleMiddleware::class . ':admin'])
+Route::middleware(['auth', RoleMiddleware::class.':admin'])
     ->prefix('dashboard/admin')
     ->name('admin.')
     ->group(function () {
         Route::get('/', [AdminDashboard::class, 'index'])
             ->name('dashboard');
-        Route::get('/calendar', ComingSoonController::class)
-            ->defaults('feature', 'admin.calendar')
+        Route::get('/calendar', [\App\Http\Controllers\Dashboard\Admin\CalendarController::class, 'show'])
             ->name('calendar');
-
+        Route::get('/calendar/events', [\App\Http\Controllers\Dashboard\Admin\CalendarController::class, 'events'])
+            ->name('calendar.events');
+        Route::post('/calendar/events', [\App\Http\Controllers\Dashboard\Admin\CalendarController::class, 'store'])
+            ->name('calendar.store');
+        Route::patch('/calendar/settings', [\App\Http\Controllers\Dashboard\Admin\CalendarController::class, 'updateSettings'])
+            ->name('calendar.settings.update');
         Route::get('/candidates', [AdminCandidate::class, 'index'])
             ->name('candidates.index');
         Route::get('/candidates/{candidate}', [StaffDashboard::class, 'show'])
@@ -119,8 +123,7 @@ Route::middleware(['auth', RoleMiddleware::class . ':admin'])
         Route::get('/selection-status', ComingSoonController::class)
             ->defaults('feature', 'admin.selection-status')
             ->name('selection-status');
-        Route::get('/reports', ComingSoonController::class)
-            ->defaults('feature', 'admin.reports')
+        Route::get('/reports', [\App\Http\Controllers\Dashboard\Admin\ReportController::class, 'index'])
             ->name('reports');
         Route::get('/announcements', ComingSoonController::class)
             ->defaults('feature', 'admin.announcements')
@@ -128,10 +131,10 @@ Route::middleware(['auth', RoleMiddleware::class . ':admin'])
         Route::get('/payment-recap', ComingSoonController::class)
             ->defaults('feature', 'admin.payment-recap')
             ->name('payment-recap');
-        Route::get('/users', ComingSoonController::class)
-            ->defaults('feature', 'admin.users')
-            ->name('users');
-
+        Route::get('/users', [\App\Http\Controllers\Dashboard\Admin\UserController::class, 'index'])
+            ->name('users.index');
+        Route::post('/users/{user}/toggle-status', [\App\Http\Controllers\Dashboard\Admin\UserController::class, 'toggleStatus'])
+            ->name('users.toggle-status');
         Route::get('/profile', [AdminProfile::class, 'show'])
             ->name('profile');
         Route::put('/profile', [AdminProfile::class, 'update'])

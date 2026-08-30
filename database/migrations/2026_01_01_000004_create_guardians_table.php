@@ -28,13 +28,13 @@ return new class extends Migration
             $table->date('father_date_of_birth')->nullable();
             $table->enum('father_education', [
                 'tidak_sekolah', 'sd_sederajat', 'smp_sederajat',
-                'sma_smk_sederajat', 'd1', 'd2', 'd3', 'd4_s1', 's2', 's3'
+                'sma_smk_sederajat', 'd1', 'd2', 'd3', 'd4_s1', 's2', 's3',
             ])->nullable();
             $table->string('father_job_ktp')->nullable();
             $table->string('father_job_actual')->nullable();
             $table->enum('father_income_range', [
                 'tidak_berpenghasilan', 'tidak_ingin_memberitahu', 'di_bawah_1jt', '1jt_2_5jt',
-                '2_5jt_3_5jt', '3_5jt_5jt', '5jt_10jt', 'di_atas_10jt'
+                '2_5jt_3_5jt', '3_5jt_5jt', '5jt_10jt', 'di_atas_10jt',
             ])->nullable();
             $table->string('father_phone')->nullable();
             $table->string('father_province')->nullable();
@@ -52,13 +52,13 @@ return new class extends Migration
             $table->date('mother_date_of_birth')->nullable();
             $table->enum('mother_education', [
                 'tidak_sekolah', 'sd_sederajat', 'smp_sederajat',
-                'sma_smk_sederajat', 'd1', 'd2', 'd3', 'd4_s1', 's2', 's3'
+                'sma_smk_sederajat', 'd1', 'd2', 'd3', 'd4_s1', 's2', 's3',
             ])->nullable();
             $table->string('mother_job_ktp')->nullable();
             $table->string('mother_job_actual')->nullable();
             $table->enum('mother_income_range', [
                 'tidak_berpenghasilan', 'tidak_ingin_memberitahu', 'di_bawah_1jt', '1jt_2_5jt',
-                '2_5jt_3_5jt', '3_5jt_5jt', '5jt_10jt', 'di_atas_10jt'
+                '2_5jt_3_5jt', '3_5jt_5jt', '5jt_10jt', 'di_atas_10jt',
             ])->nullable();
             $table->string('mother_phone')->nullable();
             $table->string('mother_province')->nullable();
@@ -77,13 +77,13 @@ return new class extends Migration
             $table->date('guardian_date_of_birth')->nullable();
             $table->enum('guardian_education', [
                 'tidak_sekolah', 'sd_sederajat', 'smp_sederajat',
-                'sma_smk_sederajat', 'd1', 'd2', 'd3', 'd4_s1', 's2', 's3'
+                'sma_smk_sederajat', 'd1', 'd2', 'd3', 'd4_s1', 's2', 's3',
             ])->nullable();
             $table->string('guardian_job_ktp')->nullable();
             $table->string('guardian_job_actual')->nullable();
             $table->enum('guardian_income_range', [
                 'tidak_berpenghasilan', 'tidak_ingin_memberitahu', 'di_bawah_1jt', '1jt_2_5jt',
-                '2_5jt_3_5jt', '3_5jt_5jt', '5jt_10jt', 'di_atas_10jt'
+                '2_5jt_3_5jt', '3_5jt_5jt', '5jt_10jt', 'di_atas_10jt',
             ])->nullable();
             $table->string('guardian_phone')->nullable();
             $table->string('guardian_province')->nullable();
@@ -96,13 +96,13 @@ return new class extends Migration
             // ─── PROFIL KELUARGA ──────────────────────────────────────────
             $table->string('family_email')->nullable(); // wajib @gmail.com
             $table->enum('marital_status', [
-                'nikah_tercatat', 'cerai_hidup', 'cerai_mati'
+                'nikah_tercatat', 'cerai_hidup', 'cerai_mati',
             ])->nullable();
             $table->enum('house_ownership', [
-                'milik_sendiri', 'kontrak', 'menumpang', 'rumah_dinas'
+                'milik_sendiri', 'kontrak', 'menumpang', 'rumah_dinas',
             ])->nullable();
             $table->enum('vehicle_ownership', [
-                'tidak_ada', 'motor', 'mobil', 'motor_dan_mobil'
+                'tidak_ada', 'motor', 'mobil', 'motor_dan_mobil',
             ])->nullable();
             $table->unsignedTinyInteger('family_dependents')->nullable();
 

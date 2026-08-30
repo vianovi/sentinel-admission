@@ -24,7 +24,7 @@ class DataDiriController extends Controller
 
     public function show(Request $request): Response
     {
-        $user      = $request->user();
+        $user = $request->user();
         $candidate = $user->candidate()->with(['admissionWave.programs'])->first();
         if ($candidate && empty($candidate->phone_number) && $candidate->registrationDraft?->whatsapp_number) {
             $candidate->updateQuietly([
@@ -36,63 +36,63 @@ class DataDiriController extends Controller
 
         return Inertia::render('Dashboard/Candidate/DataDiri', [
             'user' => [
-                'name'       => $user->name,
+                'name' => $user->name,
                 'avatar_url' => $user->avatar_url,
-                'initials'   => $user->initials,
+                'initials' => $user->initials,
             ],
             'candidate' => $candidate ? [
                 // ── Data kunci (read-only) ────────────────────────────────
-                'id'                  => $candidate->id,
-                'full_name'           => $candidate->full_name,
-                'nisn'                => $candidate->nisn,
-                'nik'                 => $candidate->nik,
-                'gender'              => $candidate->gender,
-                'gender_label'        => $candidate->genderLabel(),
-                'place_of_birth'      => $candidate->place_of_birth,
-                'date_of_birth'       => $candidate->date_of_birth?->format('Y-m-d'),
+                'id' => $candidate->id,
+                'full_name' => $candidate->full_name,
+                'nisn' => $candidate->nisn,
+                'nik' => $candidate->nik,
+                'gender' => $candidate->gender,
+                'gender_label' => $candidate->genderLabel(),
+                'place_of_birth' => $candidate->place_of_birth,
+                'date_of_birth' => $candidate->date_of_birth?->format('Y-m-d'),
                 'date_of_birth_label' => $candidate->date_of_birth?->format('d F Y'),
-                'address_full'        => $candidate->address_full,
-                'address_detail'      => $candidate->address_detail,
-                'school_origin'       => $candidate->school_origin,
+                'address_full' => $candidate->address_full,
+                'address_detail' => $candidate->address_detail,
+                'school_origin' => $candidate->school_origin,
                 // ── Data tambahan (bisa diedit) ───────────────────────────
-                'email'                      => $candidate->email,
-                'phone_number'               => $candidate->phone_number,
-                'religion'                   => $candidate->religion,
-                'child_order'                => $candidate->child_order,
-                'siblings_count'             => $candidate->siblings_count,
-                'hobbies'                    => $candidate->hobbies,
-                'ambitions'                  => $candidate->ambitions,
-                'habits'                     => $candidate->habits,
-                'extracurricular_interests'  => $candidate->extracurricular_interests ?? [],
-                'postal_code'                => $candidate->postal_code,
-                'school_npsn'                => $candidate->school_npsn,
-                'certificate_number'         => $candidate->certificate_number,
-                'birth_certificate_number'   => $candidate->birth_certificate_number,
-                'family_card_number'         => $candidate->family_card_number,
-                'program_choice'             => $candidate->program_choice,
-                'major_choice'               => $candidate->major_choice,
-                'is_transfer'                => (bool) $candidate->is_transfer,
+                'email' => $candidate->email,
+                'phone_number' => $candidate->phone_number,
+                'religion' => $candidate->religion,
+                'child_order' => $candidate->child_order,
+                'siblings_count' => $candidate->siblings_count,
+                'hobbies' => $candidate->hobbies,
+                'ambitions' => $candidate->ambitions,
+                'habits' => $candidate->habits,
+                'extracurricular_interests' => $candidate->extracurricular_interests ?? [],
+                'postal_code' => $candidate->postal_code,
+                'school_npsn' => $candidate->school_npsn,
+                'certificate_number' => $candidate->certificate_number,
+                'birth_certificate_number' => $candidate->birth_certificate_number,
+                'family_card_number' => $candidate->family_card_number,
+                'program_choice' => $candidate->program_choice,
+                'major_choice' => $candidate->major_choice,
+                'is_transfer' => (bool) $candidate->is_transfer,
                 // ── Status & change request ───────────────────────────────
-                'status'              => $candidate->status,
-                'has_pending_change'  => $candidate->hasPendingChangeRequest(),
+                'status' => $candidate->status,
+                'has_pending_change' => $candidate->hasPendingChangeRequest(),
                 'data_change_request' => $candidate->data_change_request,
                 // ── Admission wave ────────────────────────────────────────
                 'admission_wave' => $candidate->admissionWave ? [
-                    'title'            => $candidate->admissionWave->title,
-                    'academic_year'    => $candidate->admissionWave->academic_year,
-                    'majors_enabled'   => $candidate->admissionWave->majors_enabled,
+                    'title' => $candidate->admissionWave->title,
+                    'academic_year' => $candidate->admissionWave->academic_year,
+                    'majors_enabled' => $candidate->admissionWave->majors_enabled,
                     'available_majors' => $candidate->admissionWave->available_majors ?? [],
                     'programs' => $candidate->admissionWave->programs
                         ->where('is_active', true)
                         ->sortBy('priority')
                         ->values()
                         ->map(fn ($p) => [
-                            'name'          => $p->name,
-                            'quota_zone'    => $p->quotaZone(),
-                            'warning'       => $p->warningMessage('candidate'),
+                            'name' => $p->name,
+                            'quota_zone' => $p->quotaZone(),
+                            'warning' => $p->warningMessage('candidate'),
                             'is_open_quota' => $p->is_open_quota,
                         ])->all(),
-                    ] : null,
+                ] : null,
             ] : null,
             'data_change_request_result' => $dataChangeResult,
             'extracurricular_options' => Extracurricular::query()
@@ -117,7 +117,7 @@ class DataDiriController extends Controller
 
     public function update(Request $request)
     {
-        $user      = $request->user();
+        $user = $request->user();
         $candidate = $user->candidate()->with(['admissionWave.programs'])->firstOrFail();
         $validatingIdentity = $request->hasAny([
             'email',
@@ -140,41 +140,41 @@ class DataDiriController extends Controller
         ]);
 
         $validated = $request->validate([
-            'email'                       => ['nullable', 'email', 'max:255', 'regex:/^[^\s@]+@gmail\.com$/i'],
-            'phone_number'                => [Rule::requiredIf($validatingIdentity), 'nullable', 'string', 'regex:/^08[0-9]{8,12}$/'],
-            'religion'                    => [Rule::requiredIf($validatingIdentity), 'nullable', 'string', 'max:50', 'in:Islam,Kristen,Katolik,Hindu,Buddha,Konghucu'],
-            'child_order'                 => ['nullable', 'integer', 'min:1', 'max:20'],
-            'siblings_count'              => ['nullable', 'integer', 'min:0', 'max:20'],
-            'hobbies'                     => ['nullable', 'string', 'max:500'],
-            'ambitions'                   => ['nullable', 'string', 'max:500'],
-            'habits'                      => ['nullable', 'string', 'max:1000'],
-            'extracurricular_interests'   => ['nullable', 'array'],
+            'email' => ['nullable', 'email', 'max:255', 'regex:/^[^\s@]+@gmail\.com$/i'],
+            'phone_number' => [Rule::requiredIf($validatingIdentity), 'nullable', 'string', 'regex:/^08[0-9]{8,12}$/'],
+            'religion' => [Rule::requiredIf($validatingIdentity), 'nullable', 'string', 'max:50', 'in:Islam,Kristen,Katolik,Hindu,Buddha,Konghucu'],
+            'child_order' => ['nullable', 'integer', 'min:1', 'max:20'],
+            'siblings_count' => ['nullable', 'integer', 'min:0', 'max:20'],
+            'hobbies' => ['nullable', 'string', 'max:500'],
+            'ambitions' => ['nullable', 'string', 'max:500'],
+            'habits' => ['nullable', 'string', 'max:1000'],
+            'extracurricular_interests' => ['nullable', 'array'],
             'extracurricular_interests.*' => ['string', 'max:100'],
-            'postal_code'                 => [Rule::requiredIf($validatingAddress), 'nullable', 'digits:5'],
-            'school_npsn'                 => [Rule::requiredIf($validatingAddress), 'nullable', 'digits:8'],
-            'certificate_number'          => ['nullable', 'string', 'max:100'],
-            'birth_certificate_number'    => ['nullable', 'string', 'max:100'],
-            'family_card_number'          => [Rule::requiredIf($validatingIdentity), 'nullable', 'digits:16'],
-            'program_choice'              => [Rule::requiredIf($validatingProgram), 'nullable', 'string', 'max:100'],
-            'major_choice'                => ['nullable', 'string', 'max:100'],
-            'is_transfer'                 => ['nullable', 'boolean'],
+            'postal_code' => [Rule::requiredIf($validatingAddress), 'nullable', 'digits:5'],
+            'school_npsn' => [Rule::requiredIf($validatingAddress), 'nullable', 'digits:8'],
+            'certificate_number' => ['nullable', 'string', 'max:100'],
+            'birth_certificate_number' => ['nullable', 'string', 'max:100'],
+            'family_card_number' => [Rule::requiredIf($validatingIdentity), 'nullable', 'digits:16'],
+            'program_choice' => [Rule::requiredIf($validatingProgram), 'nullable', 'string', 'max:100'],
+            'major_choice' => ['nullable', 'string', 'max:100'],
+            'is_transfer' => ['nullable', 'boolean'],
         ], [
-            'email.regex'               => 'Email harus berupa Gmail. Contoh: nama@gmail.com',
-            'phone_number.required'     => 'Nomor HP/WA siswa wajib diisi.',
-            'religion.required'         => 'Agama wajib dipilih.',
-            'phone_number.regex'        => 'Nomor HP harus diawali 08 dan terdiri dari 10-14 digit.',
-            'postal_code.required'      => 'Kode pos wajib diisi.',
-            'postal_code.digits'        => 'Kode pos harus 5 digit angka.',
-            'school_npsn.required'      => 'NPSN sekolah wajib diisi.',
-            'school_npsn.digits'        => 'NPSN harus 8 digit angka.',
+            'email.regex' => 'Email harus berupa Gmail. Contoh: nama@gmail.com',
+            'phone_number.required' => 'Nomor HP/WA siswa wajib diisi.',
+            'religion.required' => 'Agama wajib dipilih.',
+            'phone_number.regex' => 'Nomor HP harus diawali 08 dan terdiri dari 10-14 digit.',
+            'postal_code.required' => 'Kode pos wajib diisi.',
+            'postal_code.digits' => 'Kode pos harus 5 digit angka.',
+            'school_npsn.required' => 'NPSN sekolah wajib diisi.',
+            'school_npsn.digits' => 'NPSN harus 8 digit angka.',
             'family_card_number.required' => 'Nomor KK wajib diisi.',
             'family_card_number.digits' => 'Nomor KK harus 16 digit angka.',
-            'program_choice.required'   => 'Pilihan program wajib diisi.',
+            'program_choice.required' => 'Pilihan program wajib diisi.',
         ]);
 
         // Validasi program_choice harus dari programs aktif di gelombang
         if ($request->filled('program_choice') && $candidate->admissionWave) {
-            $wave            = $candidate->admissionWave;
+            $wave = $candidate->admissionWave;
             $waveTotalFilled = $wave->totalFilled();
 
             $program = $wave->programs
@@ -220,18 +220,18 @@ class DataDiriController extends Controller
         }
 
         $validated = $request->validate([
-            'field'     => ['required', 'string', 'in:full_name,nisn,nik,gender,place_of_birth,date_of_birth,address_detail,school_origin'],
+            'field' => ['required', 'string', 'in:full_name,nisn,nik,gender,place_of_birth,date_of_birth,address_detail,school_origin'],
             'new_value' => ['required', 'string', 'max:500'],
-            'reason'    => ['required', 'string', 'min:10', 'max:500'],
+            'reason' => ['required', 'string', 'min:10', 'max:500'],
         ]);
 
         $candidate->update([
             'data_change_request' => [
-                'field'        => $validated['field'],
-                'old_value'    => $this->formatChangeRequestOldValue($candidate, $validated['field']),
-                'new_value'    => $validated['new_value'],
-                'reason'       => $validated['reason'],
-                'status'       => 'pending',
+                'field' => $validated['field'],
+                'old_value' => $this->formatChangeRequestOldValue($candidate, $validated['field']),
+                'new_value' => $validated['new_value'],
+                'reason' => $validated['reason'],
+                'status' => 'pending',
                 'requested_at' => now()->toIso8601String(),
             ],
         ]);
@@ -274,9 +274,9 @@ class DataDiriController extends Controller
 
         return implode(', ', array_filter([
             $detail['jalan'] ?? '',
-            $rtRw ? 'RT/RW ' . $rtRw : null,
+            $rtRw ? 'RT/RW '.$rtRw : null,
             $detail['kelurahan'] ?? '',
-            ($detail['kecamatan'] ?? '') ? 'Kec. ' . $detail['kecamatan'] : null,
+            ($detail['kecamatan'] ?? '') ? 'Kec. '.$detail['kecamatan'] : null,
             $detail['kabupaten'] ?? '',
             $detail['provinsi'] ?? '',
         ]));

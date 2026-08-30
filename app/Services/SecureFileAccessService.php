@@ -16,19 +16,19 @@ class SecureFileAccessService
     private const HEALTH_DOCUMENTS = [
         'chronic-disease' => [
             'column' => 'chronic_disease_doc_path',
-            'label'  => 'chronic-disease',
+            'label' => 'chronic-disease',
         ],
         'surat-sehat' => [
             'column' => 'surat_sehat_path',
-            'label'  => 'surat-sehat',
+            'label' => 'surat-sehat',
         ],
         'bpjs-card' => [
             'column' => 'bpjs_card_path',
-            'label'  => 'bpjs-card',
+            'label' => 'bpjs-card',
         ],
         'vaccine-card' => [
             'column' => 'vaccine_card_path',
-            'label'  => 'vaccine-card',
+            'label' => 'vaccine-card',
         ],
     ];
 
@@ -44,7 +44,7 @@ class SecureFileAccessService
         $user = $request->user();
         $candidate = $user?->candidate;
         $target = $document->candidate;
-        $fileType = 'candidate_document:' . $document->doc_type;
+        $fileType = 'candidate_document:'.$document->doc_type;
 
         if (! $user || ! $candidate || $document->candidate_id !== $candidate->id) {
             $this->logAttempt($request, $fileType, $action, $target, 'denied');
@@ -66,7 +66,7 @@ class SecureFileAccessService
         $user = $request->user();
         $candidate = $user?->candidate;
         $config = $this->healthDocumentConfig($docType);
-        $fileType = 'health_document:' . ($config['label'] ?? 'invalid');
+        $fileType = 'health_document:'.($config['label'] ?? 'invalid');
 
         if (! $user || ! $candidate || ! $config) {
             $this->logAttempt($request, $fileType, $action, $candidate, 'denied');
@@ -116,7 +116,7 @@ class SecureFileAccessService
             request: $request,
             path: $document->file_path,
             filename: $document->original_filename ?: $document->stored_filename,
-            fileType: 'candidate_document:' . $document->doc_type,
+            fileType: 'candidate_document:'.$document->doc_type,
             action: $action,
             candidate: $document->candidate
         );
@@ -169,7 +169,7 @@ class SecureFileAccessService
     private function healthDocumentForCandidate(Request $request, Candidate $candidate, string $docType, string $action): array
     {
         $config = $this->healthDocumentConfig($docType);
-        $fileType = 'health_document:' . ($config['label'] ?? 'invalid');
+        $fileType = 'health_document:'.($config['label'] ?? 'invalid');
 
         if (! $config) {
             $this->logAttempt($request, $fileType, $action, $candidate, 'denied');
@@ -240,7 +240,7 @@ class SecureFileAccessService
     {
         $extension = $path ? pathinfo($path, PATHINFO_EXTENSION) : null;
 
-        return $candidate->candidate_code . '-' . $docType . ($extension ? ".{$extension}" : '');
+        return $candidate->candidate_code.'-'.$docType.($extension ? ".{$extension}" : '');
     }
 
     private function safeFilename(?string $filename, string $path): string

@@ -26,13 +26,13 @@ class AdmissionWave extends Model
     ];
 
     protected $casts = [
-        'start_date'          => 'date',
-        'end_date'            => 'date',
+        'start_date' => 'date',
+        'end_date' => 'date',
         'reregistration_date' => 'date',
-        'registration_fee'    => 'decimal:2',
-        'available_majors'    => 'array',
-        'majors_enabled'      => 'boolean',
-        'is_active'           => 'boolean',
+        'registration_fee' => 'decimal:2',
+        'available_majors' => 'array',
+        'majors_enabled' => 'boolean',
+        'is_active' => 'boolean',
     ];
 
     // ─────────────────────────────────────────────

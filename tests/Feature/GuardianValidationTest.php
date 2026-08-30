@@ -1,9 +1,8 @@
 <?php
 
 use App\Models\AdmissionWave;
-use App\Models\User;
 use App\Models\Candidate;
-use App\Models\Guardian;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);

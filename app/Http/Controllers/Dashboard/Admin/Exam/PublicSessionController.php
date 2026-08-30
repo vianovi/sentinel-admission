@@ -188,7 +188,7 @@ class PublicSessionController extends Controller
         $token = ExamSessionToken::create([
             'exam_session_id' => $session->id,
             'token' => Str::upper(Str::random(6)),
-            'label' => $validated['label'] ?? 'Token Proktor (' . now()->format('H:i') . ')',
+            'label' => $validated['label'] ?? 'Token Proktor ('.now()->format('H:i').')',
             'type' => $validated['type'],
             'max_uses' => $validated['type'] === 'single_use' ? 1 : ($validated['max_uses'] ?? 0),
             'expires_at' => $expiresAt,
@@ -215,7 +215,7 @@ class PublicSessionController extends Controller
         $newToken = ExamSessionToken::create([
             'exam_session_id' => $session->id,
             'token' => Str::upper(Str::random(6)),
-            'label' => 'Token Proktor Rotasi (' . now()->format('H:i') . ')',
+            'label' => 'Token Proktor Rotasi ('.now()->format('H:i').')',
             'type' => $token->type,
             'max_uses' => $token->max_uses,
             'expires_at' => $session->closes_at,

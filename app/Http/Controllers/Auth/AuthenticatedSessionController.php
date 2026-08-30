@@ -43,7 +43,7 @@ class AuthenticatedSessionController extends Controller
             $request->session()->regenerateToken();
 
             return Inertia::render('Errors/WrongPortal', [
-                'from'         => 'candidate',
+                'from' => 'candidate',
                 'correctRoute' => route('staff.login'),
             ]);
         }
@@ -82,7 +82,7 @@ class AuthenticatedSessionController extends Controller
             $request->session()->regenerateToken();
 
             return Inertia::render('Errors/WrongPortal', [
-                'from'         => 'staff',
+                'from' => 'staff',
                 'correctRoute' => route('login'),
             ]);
         }

@@ -21,11 +21,11 @@ class AdmissionProgram extends Model
     ];
 
     protected $casts = [
-        'priority'       => 'integer',
-        'quota_ideal'    => 'integer',
-        'quota_max'      => 'integer',
-        'is_open_quota'  => 'boolean',
-        'is_active'      => 'boolean',
+        'priority' => 'integer',
+        'quota_ideal' => 'integer',
+        'quota_max' => 'integer',
+        'is_open_quota' => 'boolean',
+        'is_active' => 'boolean',
     ];
 
     // ─────────────────────────────────────────────
@@ -118,9 +118,9 @@ class AdmissionProgram extends Model
 
         return match ($role) {
             'candidate' => 'Kuota ideal program ini kemungkinan sudah terpenuhi, namun Anda masih dapat mendaftarkan diri. Pendaftaran di luar kuota ideal tetap akan diproses.',
-            'staff'     => "Program {$this->name} telah melewati kuota ideal ({$this->quota_ideal}). Pendaftaran masih dibuka hingga kuota maksimal ({$this->quota_max}).",
-            'admin'     => "Program {$this->name}: {$this->filledCount()} terdaftar — melebihi ideal {$this->quota_ideal}, batas maksimal {$this->quota_max}.",
-            default     => null,
+            'staff' => "Program {$this->name} telah melewati kuota ideal ({$this->quota_ideal}). Pendaftaran masih dibuka hingga kuota maksimal ({$this->quota_max}).",
+            'admin' => "Program {$this->name}: {$this->filledCount()} terdaftar — melebihi ideal {$this->quota_ideal}, batas maksimal {$this->quota_max}.",
+            default => null,
         };
     }
 

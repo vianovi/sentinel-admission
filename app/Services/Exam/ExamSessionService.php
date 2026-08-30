@@ -60,7 +60,7 @@ class ExamSessionService
             ExamSessionToken::create([
                 'exam_session_id' => $session->id,
                 'token' => Str::upper(Str::random(6)),
-                'label' => $count > 1 ? ($data['label'] ? "{$data['label']} #" . ($i + 1) : null) : ($data['label'] ?? null),
+                'label' => $count > 1 ? ($data['label'] ? "{$data['label']} #".($i + 1) : null) : ($data['label'] ?? null),
                 'type' => $data['type'],
                 'max_uses' => $data['type'] === 'single_use' ? 1 : $data['max_uses'],
                 'expires_at' => $session->closes_at,

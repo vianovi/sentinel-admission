@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class ExamSessionToken extends Model
 {
     public const TYPE_SINGLE_USE = 'single_use';
+
     public const TYPE_MULTI_USE = 'multi_use';
 
     protected $fillable = [

@@ -29,7 +29,7 @@ class PaymentController extends Controller
 
     public function show(Request $request): Response
     {
-        $user      = $request->user();
+        $user = $request->user();
         $candidate = $user->candidate()->with('admissionWave')->firstOrFail();
         $this->statusService->syncAfterEvent($candidate, 'payment.show');
         $candidate->refresh();
@@ -57,32 +57,32 @@ class PaymentController extends Controller
 
         return Inertia::render('Dashboard/Candidate/Pembayaran', [
             'user' => [
-                'name'       => $user->name,
+                'name' => $user->name,
                 'avatar_url' => $user->avatar_url,
-                'initials'   => $user->initials,
+                'initials' => $user->initials,
             ],
             'candidate' => [
-                'full_name'      => $candidate->full_name,
+                'full_name' => $candidate->full_name,
                 'candidate_code' => $candidate->candidate_code,
-                'status'         => $candidate->status,
+                'status' => $candidate->status,
                 'program_choice' => $candidate->program_choice,
-                'nisn'           => $candidate->nisn ?? null,
-                'school_origin'  => $candidate->school_origin ?? null,
-                'mother_name'    => $candidate->guardian?->mother_name ?? null,
+                'nisn' => $candidate->nisn ?? null,
+                'school_origin' => $candidate->school_origin ?? null,
+                'mother_name' => $candidate->guardian?->mother_name ?? null,
                 'admission_wave' => $wave ? [
-                    'title'            => $wave->title,
-                    'academic_year'    => $wave->academic_year ?? null,
+                    'title' => $wave->title,
+                    'academic_year' => $wave->academic_year ?? null,
                     'registration_fee' => (float) $wave->registration_fee,
-                    'end_date'         => $wave->end_date?->toDateString() ?? null,
+                    'end_date' => $wave->end_date?->toDateString() ?? null,
                 ] : null,
             ],
-            'payment'      => $payment ? $this->formatPayment($payment) : null,
-            'config'       => $config ? $this->formatConfig($config) : null,
-            'proof_url'    => $proofUrl,
+            'payment' => $payment ? $this->formatPayment($payment) : null,
+            'config' => $config ? $this->formatConfig($config) : null,
+            'proof_url' => $proofUrl,
             'whatsapp_url' => $whatsappUrl,
-            'base_amount'  => (float) $wave?->registration_fee,
-            'gate'         => $this->gateService->payment($candidate, $user),
-            'gateway'      => [
+            'base_amount' => (float) $wave?->registration_fee,
+            'gate' => $this->gateService->payment($candidate, $user),
+            'gateway' => [
                 'client_key' => config('midtrans.client_key'),
                 'script_url' => config('midtrans.is_production')
                     ? 'https://app.midtrans.com/snap/snap.js'
@@ -105,8 +105,8 @@ class PaymentController extends Controller
             ], 403);
         }
 
-        $payment   = $this->resolveActivePayment($candidate);
-        $config    = $this->paymentService->resolveConfig($candidate->admission_wave_id);
+        $payment = $this->resolveActivePayment($candidate);
+        $config = $this->paymentService->resolveConfig($candidate->admission_wave_id);
 
         $proofUrl = null;
         if ($payment?->isManualChannel() && $payment->proof_path) {
@@ -122,8 +122,8 @@ class PaymentController extends Controller
         }
 
         return response()->json([
-            'payment'      => $payment ? $this->formatPayment($payment) : null,
-            'proof_url'    => $proofUrl,
+            'payment' => $payment ? $this->formatPayment($payment) : null,
+            'proof_url' => $proofUrl,
             'whatsapp_url' => $whatsappUrl,
         ]);
     }
@@ -147,7 +147,7 @@ class PaymentController extends Controller
             return back()->withErrors(['gate' => $gate['reason'] ?? 'Pembayaran masih terkunci.']);
         }
 
-        $channel   = $request->input('channel');
+        $channel = $request->input('channel');
 
         try {
             DB::transaction(function () use ($candidate, $channel) {
@@ -179,17 +179,19 @@ class PaymentController extends Controller
         } catch (\RuntimeException $e) {
             $message = match ($e->getMessage()) {
                 'DUPLICATE_PENDING' => 'Masih ada transaksi yang sedang diproses.',
-                'ALREADY_PAID'      => 'Pembayaran sudah berhasil dilakukan.',
-                default             => 'Sistem sedang mengalami gangguan. Silakan coba beberapa saat lagi.',
+                'ALREADY_PAID' => 'Pembayaran sudah berhasil dilakukan.',
+                default => 'Sistem sedang mengalami gangguan. Silakan coba beberapa saat lagi.',
             };
+
             return back()->withErrors(['channel' => $message]);
 
         } catch (\Exception $e) {
             Log::error('PaymentController@create failed', [
                 'candidate_id' => $candidate->id,
-                'channel'      => $channel,
-                'error'        => $e->getMessage(),
+                'channel' => $channel,
+                'error' => $e->getMessage(),
             ]);
+
             return back()->withErrors([
                 'channel' => 'Sistem sedang mengalami gangguan. Silakan coba beberapa saat lagi.',
             ]);
@@ -226,20 +228,20 @@ class PaymentController extends Controller
         }
 
         try {
-            \Midtrans\Config::$serverKey    = config('midtrans.server_key');
+            \Midtrans\Config::$serverKey = config('midtrans.server_key');
             \Midtrans\Config::$isProduction = config('midtrans.is_production');
-            \Midtrans\Config::$isSanitized  = true;
-            \Midtrans\Config::$is3ds        = true;
+            \Midtrans\Config::$isSanitized = true;
+            \Midtrans\Config::$is3ds = true;
 
             $params = [
                 'transaction_details' => [
-                    'order_id'     => $payment->order_id,
+                    'order_id' => $payment->order_id,
                     'gross_amount' => (int) $payment->final_amount,
                 ],
                 'customer_details' => [
                     'first_name' => $candidate->full_name,
-                    'email'      => $candidate->user->email,
-                    'phone'      => $candidate->phone_number,
+                    'email' => $candidate->user->email,
+                    'phone' => $candidate->phone_number,
                 ],
                 'callbacks' => [
                     'finish' => route('dashboard.pembayaran'),
@@ -254,8 +256,9 @@ class PaymentController extends Controller
         } catch (\Exception $e) {
             Log::error('PaymentController@snapToken failed', [
                 'payment_id' => $payment->id,
-                'error'      => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
+
             return response()->json([
                 'error' => 'Gagal menghubungi payment gateway. Silakan coba lagi.',
             ], 500);
@@ -304,14 +307,16 @@ class PaymentController extends Controller
         try {
             $this->paymentService->uploadProof($payment, $request->file('proof'));
             $this->statusService->syncAfterEvent($candidate, 'payment.proof_uploaded');
+
             return back()->with('success', 'Bukti pembayaran berhasil diupload. Menunggu verifikasi staff.');
 
         } catch (\Exception $e) {
             Log::error('PaymentController@uploadProof failed', [
-                'payment_id'   => $payment->id,
+                'payment_id' => $payment->id,
                 'candidate_id' => $candidate->id,
-                'error'        => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
+
             return back()->withErrors([
                 'proof' => 'Sistem sedang mengalami gangguan. Silakan coba beberapa saat lagi.',
             ]);
@@ -344,7 +349,7 @@ class PaymentController extends Controller
         try {
             DB::transaction(function () use ($payment) {
                 $payment->updateQuietly([
-                    'status'        => Payment::STATUS_CANCELLED,
+                    'status' => Payment::STATUS_CANCELLED,
                     'manual_status' => null,
                 ]);
             });
@@ -355,10 +360,11 @@ class PaymentController extends Controller
 
         } catch (\Exception $e) {
             Log::error('PaymentController@cancel failed', [
-                'payment_id'   => $payment->id,
+                'payment_id' => $payment->id,
                 'candidate_id' => $candidate->id,
-                'error'        => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
+
             return back()->withErrors([
                 'payment' => 'Sistem sedang mengalami gangguan. Silakan coba beberapa saat lagi.',
             ]);
@@ -372,28 +378,28 @@ class PaymentController extends Controller
     private function formatPayment(Payment $payment): array
     {
         return [
-            'id'                      => $payment->id,
-            'order_id'                => $payment->order_id,
-            'payment_channel'         => $payment->payment_channel,
-            'base_amount'             => (float) $payment->base_amount,
-            'fee_amount'              => (float) $payment->fee_amount,
-            'final_amount'            => (float) $payment->final_amount,
-            'snap_token'              => $payment->snap_token,
-            'payment_method'          => $payment->payment_method,
-            'status'                  => $payment->status,
-            'manual_status'           => $payment->manual_status,
+            'id' => $payment->id,
+            'order_id' => $payment->order_id,
+            'payment_channel' => $payment->payment_channel,
+            'base_amount' => (float) $payment->base_amount,
+            'fee_amount' => (float) $payment->fee_amount,
+            'final_amount' => (float) $payment->final_amount,
+            'snap_token' => $payment->snap_token,
+            'payment_method' => $payment->payment_method,
+            'status' => $payment->status,
+            'manual_status' => $payment->manual_status,
             'proof_original_filename' => $payment->proof_original_filename,
-            'proof_uploaded_at'       => $payment->proof_uploaded_at?->toISOString(),
-            'proof_attempt'           => $payment->proof_attempt,
-            'bank_name'               => $payment->bank_name,
-            'account_name'            => $payment->account_name,
-            'transfer_date'           => $payment->transfer_date?->toDateString(),
-            'rejection_reason'        => $payment->rejection_reason,
-            'paid_at'                 => $payment->paid_at?->toISOString(),
-            'expired_at'              => $payment->expired_at?->toISOString(),
-            'is_expired'              => $payment->isExpired(),
-            'can_upload_proof'        => $payment->canUploadProof(),
-            'is_cancellable'          => $payment->isCancellable(),
+            'proof_uploaded_at' => $payment->proof_uploaded_at?->toISOString(),
+            'proof_attempt' => $payment->proof_attempt,
+            'bank_name' => $payment->bank_name,
+            'account_name' => $payment->account_name,
+            'transfer_date' => $payment->transfer_date?->toDateString(),
+            'rejection_reason' => $payment->rejection_reason,
+            'paid_at' => $payment->paid_at?->toISOString(),
+            'expired_at' => $payment->expired_at?->toISOString(),
+            'is_expired' => $payment->isExpired(),
+            'can_upload_proof' => $payment->canUploadProof(),
+            'is_cancellable' => $payment->isCancellable(),
         ];
     }
 
@@ -404,14 +410,14 @@ class PaymentController extends Controller
         }
 
         return [
-            'gateway_fee_type'       => $config->gateway_fee_type,
-            'gateway_fee_value'      => (float) $config->gateway_fee_value,
-            'gateway_fee_label'      => $config->gateway_fee_label,
-            'bank_name'              => $config->bank_name,
-            'bank_account_number'    => $config->bank_account_number,
-            'bank_account_name'      => $config->bank_account_name,
-            'bank_logo_key'          => $config->bank_logo_key,
-            'bank_logo_label'        => $config->bank_logo_label,
+            'gateway_fee_type' => $config->gateway_fee_type,
+            'gateway_fee_value' => (float) $config->gateway_fee_value,
+            'gateway_fee_label' => $config->gateway_fee_label,
+            'bank_name' => $config->bank_name,
+            'bank_account_number' => $config->bank_account_number,
+            'bank_account_name' => $config->bank_account_name,
+            'bank_logo_key' => $config->bank_logo_key,
+            'bank_logo_label' => $config->bank_logo_label,
             'whatsapp_contact_label' => $config->whatsapp_contact_label,
         ];
     }

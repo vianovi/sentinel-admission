@@ -291,7 +291,7 @@ class StaffPaymentOperationalService
     }
 
     /**
-     * @param array<string, mixed> $metadata
+     * @param  array<string, mixed>  $metadata
      */
     private function providerSnapshot(array $metadata): array
     {

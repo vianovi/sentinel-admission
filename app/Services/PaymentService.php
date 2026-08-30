@@ -1,14 +1,14 @@
 <?php
+
 // =============================================================================
 // LOKASI FILE: app/Services/PaymentService.php
 // =============================================================================
 
-
 namespace App\Services;
 
+use App\Models\Candidate;
 use App\Models\Payment;
 use App\Models\PaymentConfig;
-use App\Models\Candidate;
 use App\Services\CandidateStatus\CandidateStatusService;
 use App\Support\SentinelStoragePaths;
 use Illuminate\Http\UploadedFile;
@@ -47,26 +47,26 @@ class PaymentService
      */
     public function createGatewayPayment(Candidate $candidate): Payment
     {
-        $wave   = $candidate->admissionWave;
+        $wave = $candidate->admissionWave;
         $config = $this->resolveConfig($wave->id);
 
-        $baseAmount  = (float) $wave->registration_fee;
-        $feeAmount   = $config ? $config->calculateFee($baseAmount) : 0.0;
+        $baseAmount = (float) $wave->registration_fee;
+        $feeAmount = $config ? $config->calculateFee($baseAmount) : 0.0;
         $finalAmount = $baseAmount + $feeAmount;
 
         return DB::transaction(function () use ($candidate, $wave, $baseAmount, $feeAmount, $finalAmount) {
             return Payment::create([
-                'candidate_id'     => $candidate->id,
-                'admission_wave_id'=> $wave->id,
-                'candidate_code'   => $candidate->candidate_code,
-                'order_id'         => $this->generateOrderId($candidate->candidate_code),
-                'payment_channel'  => Payment::CHANNEL_GATEWAY,
-                'base_amount'      => $baseAmount,
-                'fee_amount'       => $feeAmount,
-                'final_amount'     => $finalAmount,
-                'status'           => Payment::STATUS_PENDING,
+                'candidate_id' => $candidate->id,
+                'admission_wave_id' => $wave->id,
+                'candidate_code' => $candidate->candidate_code,
+                'order_id' => $this->generateOrderId($candidate->candidate_code),
+                'payment_channel' => Payment::CHANNEL_GATEWAY,
+                'base_amount' => $baseAmount,
+                'fee_amount' => $feeAmount,
+                'final_amount' => $finalAmount,
+                'status' => Payment::STATUS_PENDING,
                 // manual_status intentionally null untuk gateway
-                'expired_at'       => now()->addHours(24),
+                'expired_at' => now()->addHours(24),
             ]);
         });
     }
@@ -81,22 +81,22 @@ class PaymentService
             throw new \InvalidArgumentException("Invalid manual channel: {$channel}");
         }
 
-        $wave        = $candidate->admissionWave;
-        $baseAmount  = (float) $wave->registration_fee;
+        $wave = $candidate->admissionWave;
+        $baseAmount = (float) $wave->registration_fee;
 
         return DB::transaction(function () use ($candidate, $wave, $baseAmount, $channel) {
             return Payment::create([
-                'candidate_id'     => $candidate->id,
-                'admission_wave_id'=> $wave->id,
-                'candidate_code'   => $candidate->candidate_code,
-                'order_id'         => $this->generateOrderId($candidate->candidate_code),
-                'payment_channel'  => $channel,
-                'base_amount'      => $baseAmount,
-                'fee_amount'       => 0,
-                'final_amount'     => $baseAmount,
-                'status'           => Payment::STATUS_PENDING,
-                'manual_status'    => Payment::MANUAL_WAITING_PROOF,
-                'expired_at'       => now()->addDays(3),
+                'candidate_id' => $candidate->id,
+                'admission_wave_id' => $wave->id,
+                'candidate_code' => $candidate->candidate_code,
+                'order_id' => $this->generateOrderId($candidate->candidate_code),
+                'payment_channel' => $channel,
+                'base_amount' => $baseAmount,
+                'fee_amount' => 0,
+                'final_amount' => $baseAmount,
+                'status' => Payment::STATUS_PENDING,
+                'manual_status' => Payment::MANUAL_WAITING_PROOF,
+                'expired_at' => now()->addDays(3),
             ]);
         });
     }
@@ -128,7 +128,7 @@ class PaymentService
         if ($magicResult['result'] !== 'passed') {
             Log::warning('PaymentService: magic bytes check failed for proof upload', [
                 'payment_id' => $payment->id,
-                'candidate'  => $payment->candidate_code,
+                'candidate' => $payment->candidate_code,
                 'detected_mime' => $magicResult['detected_mime'] ?? null,
             ]);
             throw new \Exception('Format file tidak didukung.');
@@ -139,18 +139,17 @@ class PaymentService
         if (! $polyglotResult['clean']) {
             Log::warning('PaymentService: polyglot scan failed for proof upload', [
                 'payment_id' => $payment->id,
-                'candidate'  => $payment->candidate_code,
-                'detail'     => $polyglotResult['detail'],
+                'candidate' => $payment->candidate_code,
+                'detail' => $polyglotResult['detail'],
             ]);
             throw new \Exception('Format file tidak didukung.');
         }
 
         // ── Sentinel Layer D: UUID Rename + Private Storage ───────────────
 
-
         $storedFilename = $this->securityService->generateStoredFilename($magicResult['detected_mime']);
         $storageDirectory = SentinelStoragePaths::paymentProofDirectory($payment->candidate_code);
-        $storedPath     = "{$storageDirectory}/{$storedFilename}";
+        $storedPath = "{$storageDirectory}/{$storedFilename}";
 
         $oldPath = $payment->proof_path;
 
@@ -163,12 +162,12 @@ class PaymentService
 
             DB::transaction(function () use ($payment, $file, $storedPath) {
                 $payment->updateQuietly([
-                    'proof_path'              => $storedPath,
+                    'proof_path' => $storedPath,
                     'proof_original_filename' => $file->getClientOriginalName(),
-                    'proof_uploaded_at'       => now(),
-                    'proof_attempt'           => $payment->proof_attempt + 1,
-                    'manual_status'           => Payment::MANUAL_PROOF_UPLOADED,
-                    'rejection_reason'        => null,
+                    'proof_uploaded_at' => now(),
+                    'proof_attempt' => $payment->proof_attempt + 1,
+                    'manual_status' => Payment::MANUAL_PROOF_UPLOADED,
+                    'rejection_reason' => null,
                 ]);
             });
         } catch (\Throwable $e) {
@@ -204,10 +203,10 @@ class PaymentService
         DB::transaction(function () use ($payment, $staffId) {
             $payment->updateQuietly([
                 'manual_status' => Payment::MANUAL_VERIFIED,
-                'status'        => Payment::STATUS_PAID,
-                'verified_by'   => $staffId,
-                'verified_at'   => now(),
-                'paid_at'       => now(),
+                'status' => Payment::STATUS_PAID,
+                'verified_by' => $staffId,
+                'verified_at' => now(),
+                'paid_at' => now(),
                 'rejection_reason' => null,
             ]);
         });
@@ -236,9 +235,9 @@ class PaymentService
 
         DB::transaction(function () use ($payment, $staffId, $reason) {
             $payment->updateQuietly([
-                'manual_status'    => Payment::MANUAL_REJECTED,
-                'verified_by'      => $staffId,
-                'verified_at'      => now(),
+                'manual_status' => Payment::MANUAL_REJECTED,
+                'verified_by' => $staffId,
+                'verified_at' => now(),
                 'rejection_reason' => $reason,
             ]);
         });
@@ -272,15 +271,17 @@ class PaymentService
             Log::warning('PaymentService: webhook received for unknown order_id', [
                 'order_id' => $payload['order_id'],
             ]);
+
             return;
         }
 
         // Guard: hanya proses kalau channel gateway
         if (! $payment->isGateway()) {
             Log::warning('PaymentService: webhook received for non-gateway payment', [
-                'payment_id'      => $payment->id,
+                'payment_id' => $payment->id,
                 'payment_channel' => $payment->payment_channel,
             ]);
+
             return;
         }
 
@@ -295,15 +296,15 @@ class PaymentService
         }
 
         $transactionStatus = $payload['transaction_status'] ?? '';
-        $fraudStatus       = $payload['fraud_status'] ?? '';
+        $fraudStatus = $payload['fraud_status'] ?? '';
 
         $newStatus = match (true) {
             $transactionStatus === 'capture' && $fraudStatus === 'accept' => Payment::STATUS_PAID,
-            $transactionStatus === 'settlement'                           => Payment::STATUS_PAID,
-            $transactionStatus === 'cancel'                               => Payment::STATUS_CANCELLED,
-            $transactionStatus === 'deny'                                 => Payment::STATUS_FAILED,
-            $transactionStatus === 'expire'                               => Payment::STATUS_EXPIRED,
-            default                                                       => null,
+            $transactionStatus === 'settlement' => Payment::STATUS_PAID,
+            $transactionStatus === 'cancel' => Payment::STATUS_CANCELLED,
+            $transactionStatus === 'deny' => Payment::STATUS_FAILED,
+            $transactionStatus === 'expire' => Payment::STATUS_EXPIRED,
+            default => null,
         };
 
         if ($newStatus === null) {
@@ -312,11 +313,11 @@ class PaymentService
 
         DB::transaction(function () use ($payment, $newStatus, $payload) {
             $payment->updateQuietly([
-                'status'                   => $newStatus,
-                'payment_method'           => $payload['payment_type'] ?? null,
-                'midtrans_transaction_id'  => $payload['transaction_id'] ?? null,
-                'paid_at'                  => $newStatus === Payment::STATUS_PAID ? now() : null,
-                'metadata'                 => $payload,
+                'status' => $newStatus,
+                'payment_method' => $payload['payment_type'] ?? null,
+                'midtrans_transaction_id' => $payload['transaction_id'] ?? null,
+                'paid_at' => $newStatus === Payment::STATUS_PAID ? now() : null,
+                'metadata' => $payload,
             ]);
         });
 
@@ -327,7 +328,7 @@ class PaymentService
 
         Log::info('PaymentService: webhook processed', [
             'payment_id' => $payment->id,
-            'order_id'   => $payment->order_id,
+            'order_id' => $payment->order_id,
             'new_status' => $newStatus,
         ]);
     }
@@ -359,12 +360,12 @@ class PaymentService
 
             $newStatus = match (true) {
                 $transactionStatus === 'capture' && $fraudStatus === 'accept' => Payment::STATUS_PAID,
-                $transactionStatus === 'settlement'                           => Payment::STATUS_PAID,
-                $transactionStatus === 'cancel'                               => Payment::STATUS_CANCELLED,
-                $transactionStatus === 'deny'                                 => Payment::STATUS_FAILED,
-                $transactionStatus === 'expire'                               => Payment::STATUS_EXPIRED,
-                $transactionStatus === 'failure'                              => Payment::STATUS_FAILED,
-                default                                                       => Payment::STATUS_PENDING,
+                $transactionStatus === 'settlement' => Payment::STATUS_PAID,
+                $transactionStatus === 'cancel' => Payment::STATUS_CANCELLED,
+                $transactionStatus === 'deny' => Payment::STATUS_FAILED,
+                $transactionStatus === 'expire' => Payment::STATUS_EXPIRED,
+                $transactionStatus === 'failure' => Payment::STATUS_FAILED,
+                default => Payment::STATUS_PENDING,
             };
 
             $changed = (
@@ -376,13 +377,13 @@ class PaymentService
             if ($changed) {
                 DB::transaction(function () use ($payment, $newStatus, $payload) {
                     $payment->updateQuietly([
-                        'status'                  => $newStatus,
-                        'payment_method'          => $payload['payment_type'] ?? $payment->payment_method,
+                        'status' => $newStatus,
+                        'payment_method' => $payload['payment_type'] ?? $payment->payment_method,
                         'midtrans_transaction_id' => $payload['transaction_id'] ?? $payment->midtrans_transaction_id,
-                        'paid_at'                 => $newStatus === Payment::STATUS_PAID
+                        'paid_at' => $newStatus === Payment::STATUS_PAID
                             ? ($payment->paid_at ?? now())
                             : null,
-                        'metadata'                => $payload,
+                        'metadata' => $payload,
                     ]);
                 });
 
@@ -394,8 +395,8 @@ class PaymentService
         } catch (\Throwable $e) {
             Log::warning('PaymentService: gateway sync failed', [
                 'payment_id' => $payment->id,
-                'order_id'   => $payment->order_id,
-                'error'      => $e->getMessage(),
+                'order_id' => $payment->order_id,
+                'error' => $e->getMessage(),
             ]);
         }
 
@@ -416,6 +417,7 @@ class PaymentService
             Log::warning('PaymentService: proof file not found', [
                 'payment_id' => $payment->id,
             ]);
+
             return null;
         }
 
@@ -428,7 +430,7 @@ class PaymentService
 
     private function generateOrderId(string $candidateCode): string
     {
-        return $candidateCode . '-' . now()->timestamp;
+        return $candidateCode.'-'.now()->timestamp;
     }
 
     /**
@@ -442,9 +444,9 @@ class PaymentService
         $serverKey = config('midtrans.server_key');
 
         $signatureKey = hash('sha512',
-            ($payload['order_id']    ?? '') .
-            ($payload['status_code'] ?? '') .
-            ($payload['gross_amount']?? '') .
+            ($payload['order_id'] ?? '').
+            ($payload['status_code'] ?? '').
+            ($payload['gross_amount'] ?? '').
             $serverKey
         );
 

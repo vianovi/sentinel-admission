@@ -42,11 +42,11 @@ class User extends Authenticatable implements MustVerifyEmail
     protected function casts(): array
     {
         return [
-            'email_verified_at'          => 'datetime',
+            'email_verified_at' => 'datetime',
             'pending_email_requested_at' => 'datetime',
-            'pending_email_reviewed_at'  => 'datetime',
-            'password'                   => 'hashed',
-            'is_active'                  => 'boolean',
+            'pending_email_reviewed_at' => 'datetime',
+            'password' => 'hashed',
+            'is_active' => 'boolean',
         ];
     }
 
@@ -60,7 +60,9 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function getAvatarUrlAttribute(): ?string
     {
-        if (! $this->avatar) return null;
+        if (! $this->avatar) {
+            return null;
+        }
         // Tambah timestamp sebagai cache buster — browser paksa fetch ulang setiap avatar diganti
         $routeName = match ($this->role) {
             'staff' => 'staff.profile.avatar',
@@ -70,7 +72,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
         $version = $this->updated_at?->timestamp ?? time();
 
-        return route($routeName) . '?v=' . $version;
+        return route($routeName).'?v='.$version;
     }
 
     /**
@@ -109,7 +111,10 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function isPendingEmailTokenValid(): bool
     {
-        if (! $this->pending_email_requested_at) return false;
+        if (! $this->pending_email_requested_at) {
+            return false;
+        }
+
         return $this->pending_email_requested_at->diffInHours(now()) < 24;
     }
 
@@ -140,8 +145,9 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $words = explode(' ', trim($this->name));
         if (count($words) >= 2) {
-            return strtoupper($words[0][0] . $words[1][0]);
+            return strtoupper($words[0][0].$words[1][0]);
         }
+
         return strtoupper(substr($this->name, 0, 2));
     }
 

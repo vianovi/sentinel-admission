@@ -1,8 +1,7 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\WelcomeController;
 use App\Http\Controllers\FormWizardController;
+use App\Http\Controllers\WelcomeController;
 use App\Http\Middleware\RoleMiddleware;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -21,7 +20,7 @@ Route::middleware('guest')->group(function () {
 });
 
 // ─── Dashboard Candidate ──────────────────────────────────────────────────────
-Route::middleware(['auth', RoleMiddleware::class . ':candidate'])
+Route::middleware(['auth', RoleMiddleware::class.':candidate'])
     ->prefix('dashboard')
     ->name('dashboard')
     ->group(function () {
@@ -29,7 +28,7 @@ Route::middleware(['auth', RoleMiddleware::class . ':candidate'])
     });
 
 // ─── Dashboard Staff ──────────────────────────────────────────────────────────
-Route::middleware(['auth', RoleMiddleware::class . ':staff'])
+Route::middleware(['auth', RoleMiddleware::class.':staff'])
     ->prefix('dashboard/staff')
     ->name('staff.')
     ->group(function () {
@@ -37,7 +36,7 @@ Route::middleware(['auth', RoleMiddleware::class . ':staff'])
     });
 
 // ─── Dashboard Admin ──────────────────────────────────────────────────────────
-Route::middleware(['auth', RoleMiddleware::class . ':admin'])
+Route::middleware(['auth', RoleMiddleware::class.':admin'])
     ->prefix('dashboard/admin')
     ->name('admin.')
     ->group(function () {

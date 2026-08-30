@@ -51,7 +51,7 @@ class ExamMonitoringService
     }
 
     /**
-     * @param array<int, int> $sessionIds
+     * @param  array<int, int>  $sessionIds
      * @return array<int, array<string, mixed>>
      */
     private function sessions(array $sessionIds): array
@@ -91,7 +91,7 @@ class ExamMonitoringService
     }
 
     /**
-     * @param array<int, int> $sessionIds
+     * @param  array<int, int>  $sessionIds
      * @return array<int, array<string, mixed>>
      */
     private function attempts(array $sessionIds): array

@@ -12,7 +12,9 @@ class ExamQuestion extends Model
     use SoftDeletes;
 
     public const DIFFICULTY_EASY = 'easy';
+
     public const DIFFICULTY_MEDIUM = 'medium';
+
     public const DIFFICULTY_HARD = 'hard';
 
     protected $fillable = [

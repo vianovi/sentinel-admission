@@ -6,17 +6,17 @@
 // Covers: Public guest exam, Candidate exam, Staff exam results, Admin exam management.
 // ─────────────────────────────────────────────────────────────────────────────
 
-use App\Http\Controllers\Dashboard\Admin\Exam\IndexController     as AdminExamDashboard;
-use App\Http\Controllers\Dashboard\Admin\Exam\SubjectController   as AdminExamSubject;
-use App\Http\Controllers\Dashboard\Admin\Exam\PackageController   as AdminExamPackage;
-use App\Http\Controllers\Dashboard\Admin\Exam\QuestionImportController as AdminExamImport;
-use App\Http\Controllers\Dashboard\Admin\Exam\SessionController   as AdminExamSession;
-use App\Http\Controllers\Dashboard\Admin\Exam\ResultController    as AdminExamResult;
+use App\Http\Controllers\Dashboard\Admin\Exam\IndexController as AdminExamDashboard;
 use App\Http\Controllers\Dashboard\Admin\Exam\MonitoringController as AdminExamMonitoring;
+use App\Http\Controllers\Dashboard\Admin\Exam\PackageController as AdminExamPackage;
 use App\Http\Controllers\Dashboard\Admin\Exam\PublicSessionController as AdminPublicExamSession;
-use App\Http\Controllers\Dashboard\Candidate\Exam\ExamController  as CandidateExam;
+use App\Http\Controllers\Dashboard\Admin\Exam\QuestionImportController as AdminExamImport;
+use App\Http\Controllers\Dashboard\Admin\Exam\ResultController as AdminExamResult;
+use App\Http\Controllers\Dashboard\Admin\Exam\SessionController as AdminExamSession;
+use App\Http\Controllers\Dashboard\Admin\Exam\SubjectController as AdminExamSubject;
 use App\Http\Controllers\Dashboard\Candidate\Exam\AttemptController as CandidateExamAttempt;
-use App\Http\Controllers\Dashboard\Staff\Exam\ResultController    as StaffExamResult;
+use App\Http\Controllers\Dashboard\Candidate\Exam\ExamController as CandidateExam;
+use App\Http\Controllers\Dashboard\Staff\Exam\ResultController as StaffExamResult;
 use App\Http\Controllers\Exam\PublicExamController;
 use App\Http\Middleware\RoleMiddleware;
 use Illuminate\Support\Facades\Route;
@@ -39,7 +39,7 @@ Route::prefix('exam')->name('exam.public.')->group(function () {
 // CANDIDATE EXAM — Authenticated candidates taking assigned exams
 // ─────────────────────────────────────────────────────────────────────────────
 
-Route::middleware(['auth', RoleMiddleware::class . ':candidate'])
+Route::middleware(['auth', RoleMiddleware::class.':candidate'])
     ->prefix('dashboard/seleksi')
     ->name('dashboard.exam.')
     ->group(function () {
@@ -56,7 +56,7 @@ Route::middleware(['auth', RoleMiddleware::class . ':candidate'])
 // STAFF EXAM — Staff viewing exam results
 // ─────────────────────────────────────────────────────────────────────────────
 
-Route::middleware(['auth', RoleMiddleware::class . ':staff'])
+Route::middleware(['auth', RoleMiddleware::class.':staff'])
     ->prefix('dashboard/staff/exams')
     ->name('staff.exams.')
     ->group(function () {
@@ -68,7 +68,7 @@ Route::middleware(['auth', RoleMiddleware::class . ':staff'])
 // ADMIN EXAM — Full exam management: subjects, packages, sessions, results
 // ─────────────────────────────────────────────────────────────────────────────
 
-Route::middleware(['auth', RoleMiddleware::class . ':admin'])
+Route::middleware(['auth', RoleMiddleware::class.':admin'])
     ->prefix('dashboard/admin/exams')
     ->name('admin.exams.')
     ->group(function () {

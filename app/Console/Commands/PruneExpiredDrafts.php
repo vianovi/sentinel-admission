@@ -7,7 +7,8 @@ use Illuminate\Console\Command;
 
 class PruneExpiredDrafts extends Command
 {
-    protected $signature   = 'drafts:prune';
+    protected $signature = 'drafts:prune';
+
     protected $description = 'Soft delete expired drafts and permanently delete drafts trashed for over 30 days';
 
     public function handle(): int

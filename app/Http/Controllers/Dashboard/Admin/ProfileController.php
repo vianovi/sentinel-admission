@@ -24,15 +24,15 @@ class ProfileController extends Controller
 
         return Inertia::render('Dashboard/Admin/Profile', [
             'user' => [
-                'id'              => $user->id,
-                'name'            => $user->name,
-                'email'           => $user->email,
-                'role'            => $user->role,
-                'is_active'       => $user->is_active,
-                'avatar_url'      => $user->avatar_url,
-                'initials'        => $user->initials,
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'is_active' => $user->is_active,
+                'avatar_url' => $user->avatar_url,
+                'initials' => $user->initials,
                 'whatsapp_number' => $user->whatsapp_number,
-                'created_at'      => $user->created_at->format('d F Y'),
+                'created_at' => $user->created_at->format('d F Y'),
             ],
         ]);
     }
@@ -46,10 +46,10 @@ class ProfileController extends Controller
         $user = $request->user();
 
         $validated = $request->validate([
-            'name'             => ['required', 'string', 'max:255'],
-            'whatsapp_number'  => ['nullable', 'string', 'regex:/^08[0-9]{8,12}$/'],
+            'name' => ['required', 'string', 'max:255'],
+            'whatsapp_number' => ['nullable', 'string', 'regex:/^08[0-9]{8,12}$/'],
             'current_password' => ['nullable', 'string'],
-            'new_password'     => ['nullable', 'confirmed', Password::min(8)],
+            'new_password' => ['nullable', 'confirmed', Password::min(8)],
         ], [
             'whatsapp_number.regex' => 'Nomor WhatsApp harus diawali 08 dan terdiri dari 10-14 digit.',
         ]);
@@ -61,7 +61,7 @@ class ProfileController extends Controller
             $user->password = Hash::make($validated['new_password']);
         }
 
-        $user->name            = $validated['name'];
+        $user->name = $validated['name'];
         $user->whatsapp_number = $validated['whatsapp_number'] ?? $user->whatsapp_number;
         $user->save();
 
@@ -74,7 +74,7 @@ class ProfileController extends Controller
     // =============================================
 
     private const AVATAR_SIGNATURES = [
-        "\xFF\xD8\xFF"      => ['mime' => 'image/jpeg', 'ext' => 'jpg'],
+        "\xFF\xD8\xFF" => ['mime' => 'image/jpeg', 'ext' => 'jpg'],
         "\x89PNG\r\n\x1A\n" => ['mime' => 'image/png',  'ext' => 'png'],
     ];
 
@@ -88,12 +88,12 @@ class ProfileController extends Controller
                 'max:3072',
             ],
         ], [
-            'avatar.mimes'     => 'Format avatar hanya boleh JPG atau PNG.',
+            'avatar.mimes' => 'Format avatar hanya boleh JPG atau PNG.',
             'avatar.mimetypes' => 'Format avatar hanya boleh JPG atau PNG.',
-            'avatar.max'       => 'Ukuran foto maksimal adalah 3MB.',
+            'avatar.max' => 'Ukuran foto maksimal adalah 3MB.',
         ]);
 
-        $file   = $request->file('avatar');
+        $file = $request->file('avatar');
         $handle = fopen($file->getRealPath(), 'rb');
         $header = fread($handle, 12);
         fclose($handle);
@@ -111,10 +111,11 @@ class ProfileController extends Controller
                 'user_id' => $request->user()->id,
                 'header_hex' => bin2hex($header),
             ]);
+
             return back()->withErrors(['avatar' => 'Berkas gambar yang diunggah rusak atau formatnya tidak didukung.']);
         }
 
-        $content   = file_get_contents($file->getRealPath());
+        $content = file_get_contents($file->getRealPath());
         $forbidden = ['<?php', '<?=', '<script'];
         foreach ($forbidden as $pattern) {
             if (stripos($content, $pattern) !== false) {
@@ -122,6 +123,7 @@ class ProfileController extends Controller
                     'user_id' => $request->user()->id,
                     'detected_pattern' => $pattern,
                 ]);
+
                 return back()->withErrors(['avatar' => 'Berkas gambar tidak memenuhi standar keamanan sistem kami.']);
             }
         }
@@ -130,13 +132,14 @@ class ProfileController extends Controller
 
         $oldPath = $user->avatar;
         $directory = SentinelStoragePaths::adminAvatarDirectory($user->id);
-        $path = $directory . '/' . Str::uuid() . '.' . $detected['ext'];
+        $path = $directory.'/'.Str::uuid().'.'.$detected['ext'];
 
         if (! Storage::disk('private')->put($path, file_get_contents($file->getRealPath()))) {
             \Illuminate\Support\Facades\Log::error('Avatar storage write error', [
                 'user_id' => $user->id,
                 'path' => $path,
             ]);
+
             return back()->withErrors(['avatar' => 'Gagal memperbarui foto profil karena kendala teknis internal. Silakan coba lagi.']);
         }
 
@@ -161,8 +164,8 @@ class ProfileController extends Controller
 
         return Storage::disk('private')->response($user->avatar, null, [
             'Cache-Control' => 'no-cache, no-store, must-revalidate',
-            'Pragma'        => 'no-cache',
-            'Expires'       => '0',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
         ]);
     }
 }

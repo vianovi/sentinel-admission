@@ -1,8 +1,8 @@
 <?php
+
 // =============================================================================
 // LOKASI FILE: database/migrations/2026_01_01_000012_create_payment_configs_table.php
 // =============================================================================
-
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;

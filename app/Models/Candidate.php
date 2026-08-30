@@ -53,13 +53,13 @@ class Candidate extends Model
     ];
 
     protected $casts = [
-        'date_of_birth'              => 'date',
-        'address_detail'             => 'array',
-        'data_change_request'        => 'array',
-        'child_order'                => 'integer',
-        'siblings_count'             => 'integer',
-        'extracurricular_interests'  => 'array',
-        'is_transfer'                => 'boolean',
+        'date_of_birth' => 'date',
+        'address_detail' => 'array',
+        'data_change_request' => 'array',
+        'child_order' => 'integer',
+        'siblings_count' => 'integer',
+        'extracurricular_interests' => 'array',
+        'is_transfer' => 'boolean',
     ];
 
     // =============================================
@@ -124,22 +124,22 @@ class Candidate extends Model
             : null;
 
         $candidate = self::create([
-            'user_id'               => $userId,
-            'admission_wave_id'     => $draft->admission_wave_id,
+            'user_id' => $userId,
+            'admission_wave_id' => $draft->admission_wave_id,
             'registration_draft_id' => $draft->id,
-            'candidate_code'        => $candidateCode,
-            'nisn'                  => $draft->nisn,
-            'nik'                   => $draft->nik,
-            'full_name'             => $draft->full_name,
-            'gender'                => $draft->gender,
-            'place_of_birth'        => $draft->place_of_birth,
-            'date_of_birth'         => $draft->date_of_birth,
-            'address_full'          => $draft->address_full,
-            'address_detail'        => $draft->address_detail,
-            'school_origin'         => $draft->school_origin,
-            'email'                 => $draft->email,
-            'phone_number'          => self::normalizePhoneNumber($draft->whatsapp_number),
-            'status'                => 'draft',
+            'candidate_code' => $candidateCode,
+            'nisn' => $draft->nisn,
+            'nik' => $draft->nik,
+            'full_name' => $draft->full_name,
+            'gender' => $draft->gender,
+            'place_of_birth' => $draft->place_of_birth,
+            'date_of_birth' => $draft->date_of_birth,
+            'address_full' => $draft->address_full,
+            'address_detail' => $draft->address_detail,
+            'school_origin' => $draft->school_origin,
+            'email' => $draft->email,
+            'phone_number' => self::normalizePhoneNumber($draft->whatsapp_number),
+            'status' => 'draft',
             // program_choice   → diisi kandidat sendiri setelah login
         ]);
 
@@ -179,9 +179,9 @@ class Candidate extends Model
         $number = preg_replace('/\D+/', '', $value) ?? '';
 
         if (str_starts_with($number, '0062')) {
-            $number = '0' . substr($number, 4);
+            $number = '0'.substr($number, 4);
         } elseif (str_starts_with($number, '62')) {
-            $number = '0' . substr($number, 2);
+            $number = '0'.substr($number, 2);
         }
 
         return $number !== '' ? substr($number, 0, 14) : null;

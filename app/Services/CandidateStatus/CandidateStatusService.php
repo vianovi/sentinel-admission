@@ -65,7 +65,7 @@ class CandidateStatusService
     }
 
     /**
-     * @param array<int, array{from: string, to: string}> $transitions
+     * @param  array<int, array{from: string, to: string}>  $transitions
      */
     private function transition(
         Candidate $candidate,
@@ -93,7 +93,7 @@ class CandidateStatusService
     }
 
     /**
-     * @param array<int, array{from: string, to: string}> $transitions
+     * @param  array<int, array{from: string, to: string}>  $transitions
      */
     private function result(
         Candidate $candidate,

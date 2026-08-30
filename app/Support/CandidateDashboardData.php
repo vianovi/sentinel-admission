@@ -107,8 +107,7 @@ class CandidateDashboardData
         Candidate $candidate,
         Collection $documents,
         CandidateVerificationEvaluator $verificationEvaluator
-    ): array
-    {
+    ): array {
         $requiredTypes = $verificationEvaluator->requiredDocumentTypes($candidate);
         $requiredLabels = collect($verificationEvaluator->requiredDocumentLabels($candidate));
 
@@ -400,5 +399,4 @@ class CandidateDashboardData
             ? 'Ada bagian yang perlu dilengkapi sebelum proses berikutnya.'
             : 'Yang perlu dilengkapi: '.implode(', ', $items).'.';
     }
-
 }

@@ -143,7 +143,7 @@ class CalendarController extends Controller
     private function formatCustomEvent(CandidateCalendarEvent $event): array
     {
         return [
-            'id' => 'custom-' . $event->id,
+            'id' => 'custom-'.$event->id,
             'source_id' => $event->id,
             'source' => 'custom',
             'title' => $event->title,
@@ -184,9 +184,9 @@ class CalendarController extends Controller
 
         if ($waveStart && $waveEnd && $waveEnd->gte($start) && $waveStart->lte($endInclusive)) {
             $events[] = [
-                'id' => 'wave-registration-' . $wave->id,
+                'id' => 'wave-registration-'.$wave->id,
                 'source' => 'admission_wave',
-                'title' => 'Periode pendaftaran ' . $wave->title,
+                'title' => 'Periode pendaftaran '.$wave->title,
                 'description' => $wave->description,
                 'start' => $waveStart->toDateString(),
                 'end' => $waveEnd->copy()->addDay()->toDateString(),
@@ -198,10 +198,10 @@ class CalendarController extends Controller
             ];
 
             $events[] = [
-                'id' => 'wave-deadline-' . $wave->id,
+                'id' => 'wave-deadline-'.$wave->id,
                 'source' => 'admission_wave',
                 'title' => 'Batas akhir pendaftaran',
-                'description' => 'Deadline pendaftaran untuk ' . $wave->title,
+                'description' => 'Deadline pendaftaran untuk '.$wave->title,
                 'start' => $wave->end_date->toDateString(),
                 'end' => null,
                 'allDay' => true,
@@ -214,10 +214,10 @@ class CalendarController extends Controller
 
         if ($wave->reregistration_date && $wave->reregistration_date->betweenIncluded($start, $endInclusive)) {
             $events[] = [
-                'id' => 'wave-reregistration-' . $wave->id,
+                'id' => 'wave-reregistration-'.$wave->id,
                 'source' => 'admission_wave',
                 'title' => 'Deadline daftar ulang',
-                'description' => 'Batas daftar ulang untuk ' . $wave->title,
+                'description' => 'Batas daftar ulang untuk '.$wave->title,
                 'start' => $wave->reregistration_date->toDateString(),
                 'end' => null,
                 'allDay' => true,
@@ -240,10 +240,11 @@ class CalendarController extends Controller
         return collect($holidays)
             ->filter(function (array $holiday) use ($start, $endInclusive) {
                 $date = Carbon::parse($holiday['date']);
+
                 return $date->betweenIncluded($start, $endInclusive);
             })
             ->map(fn (array $holiday) => [
-                'id' => 'holiday-' . $holiday['date'] . '-' . md5($holiday['name']),
+                'id' => 'holiday-'.$holiday['date'].'-'.md5($holiday['name']),
                 'source' => 'holiday_api',
                 'title' => $holiday['name'],
                 'description' => $holiday['type'] === 'leave'

@@ -5,7 +5,7 @@ namespace App\Services\CandidateStatus;
 final class CandidateStatusResult
 {
     /**
-     * @param array<int, array{from: string, to: string}> $transitions
+     * @param  array<int, array{from: string, to: string}>  $transitions
      */
     public function __construct(
         public readonly string $event,

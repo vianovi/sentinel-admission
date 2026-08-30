@@ -32,8 +32,8 @@ class RegistrationDraft extends Model
     ];
 
     protected $casts = [
-        'date_of_birth'  => 'date',
-        'expires_at'     => 'datetime',
+        'date_of_birth' => 'date',
+        'expires_at' => 'datetime',
         'address_detail' => 'array',
     ];
 
@@ -45,15 +45,15 @@ class RegistrationDraft extends Model
     {
         return self::create([
             'admission_wave_id' => $waveId,
-            'secret_token'      => Str::random(64),
-            'current_step'      => 1,
-            'expires_at'        => now()->addDays(2),
-            'nisn'              => $data['nisn'],
-            'nik'               => $data['nik'],
-            'full_name'         => $data['full_name'],
-            'gender'            => $data['gender'],
-            'place_of_birth'    => $data['place_of_birth'],
-            'date_of_birth'     => $data['date_of_birth'],
+            'secret_token' => Str::random(64),
+            'current_step' => 1,
+            'expires_at' => now()->addDays(2),
+            'nisn' => $data['nisn'],
+            'nik' => $data['nik'],
+            'full_name' => $data['full_name'],
+            'gender' => $data['gender'],
+            'place_of_birth' => $data['place_of_birth'],
+            'date_of_birth' => $data['date_of_birth'],
         ]);
     }
 
@@ -63,31 +63,31 @@ class RegistrationDraft extends Model
     public function updateFromStep2(array $data): self
     {
         $addressDetail = [
-            'jalan'     => $data['addr_jalan'] ?? '',
-            'rt'        => $data['addr_rt']    ?? '',
-            'rw'        => $data['addr_rw']    ?? '',
-            'kelurahan' => $data['addr_desa']  ?? '',
-            'kecamatan' => $data['addr_kec']   ?? '',
-            'kabupaten' => $data['addr_kab']   ?? '',
-            'provinsi'  => $data['addr_prov']  ?? '',
+            'jalan' => $data['addr_jalan'] ?? '',
+            'rt' => $data['addr_rt'] ?? '',
+            'rw' => $data['addr_rw'] ?? '',
+            'kelurahan' => $data['addr_desa'] ?? '',
+            'kecamatan' => $data['addr_kec'] ?? '',
+            'kabupaten' => $data['addr_kab'] ?? '',
+            'provinsi' => $data['addr_prov'] ?? '',
         ];
 
         $addressFull = implode(', ', array_filter([
             $addressDetail['jalan'],
-            'RT ' . $addressDetail['rt'] . '/RW ' . $addressDetail['rw'],
+            'RT '.$addressDetail['rt'].'/RW '.$addressDetail['rw'],
             $addressDetail['kelurahan'],
-            'Kec. ' . $addressDetail['kecamatan'],
+            'Kec. '.$addressDetail['kecamatan'],
             $addressDetail['kabupaten'],
             $addressDetail['provinsi'],
         ]));
 
         $this->update([
-            'current_step'    => 2,
-            'mother_name'     => $data['mother_name'],
+            'current_step' => 2,
+            'mother_name' => $data['mother_name'],
             'whatsapp_number' => $data['whatsapp_number'],
-            'email'           => $data['email'],
-            'address_full'    => $addressFull,
-            'address_detail'  => $addressDetail,
+            'email' => $data['email'],
+            'address_full' => $addressFull,
+            'address_detail' => $addressDetail,
         ]);
 
         return $this;
@@ -99,12 +99,12 @@ class RegistrationDraft extends Model
     public static function findActive(string $nisn, string $nik): ?self
     {
         return self::where(function ($q) use ($nisn, $nik) {
-                $q->where('nisn', $nisn)->orWhere('nik', $nik);
-            })
+            $q->where('nisn', $nisn)->orWhere('nik', $nik);
+        })
             ->whereNull('deleted_at')
             ->where(function ($q) {
                 $q->whereNull('expires_at')
-                  ->orWhere('expires_at', '>', now());
+                    ->orWhere('expires_at', '>', now());
             })
             ->latest()
             ->first();
@@ -133,7 +133,7 @@ class RegistrationDraft extends Model
 
         do {
             $random = strtoupper(Str::random(4));
-            $code   = "REG-{$random}-{$year}-G{$waveNumber}";
+            $code = "REG-{$random}-{$year}-G{$waveNumber}";
         } while (self::withTrashed()->where('registration_code', $code)->exists());
 
         return $code;

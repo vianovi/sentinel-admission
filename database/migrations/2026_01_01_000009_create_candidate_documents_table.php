@@ -15,8 +15,8 @@ return new class extends Migration
 
             // ─── RELASI ───────────────────────────────────────────────────
             $table->foreignId('candidate_id')
-                  ->constrained()
-                  ->onDelete('cascade');
+                ->constrained()
+                ->onDelete('cascade');
 
             // Denormalisasi — konsisten dengan guardians, health_records, payments
             $table->string('candidate_code')->nullable()->index();
@@ -60,9 +60,9 @@ return new class extends Migration
             // Diisi staff saat reject — ditampilkan ke kandidat dengan bahasa sopan
 
             $table->foreignId('verified_by')
-                  ->nullable()
-                  ->constrained('users')
-                  ->nullOnDelete();
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
             $table->timestamp('verified_at')->nullable();
 
             $table->timestamps();

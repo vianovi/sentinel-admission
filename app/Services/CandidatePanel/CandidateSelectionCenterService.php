@@ -276,22 +276,42 @@ class CandidateSelectionCenterService
 
     private function blockReason(ExamSessionCandidate $assignment, string $scheduleState, int $attemptsRemaining, bool $hasInProgress): ?string
     {
-        if ($hasInProgress) return 'Masih ada pengerjaan yang berlangsung.';
-        if ($assignment->status === ExamSessionCandidate::STATUS_BLOCKED) return 'Akses sesi sedang dibatasi.';
-        if (! $assignment->isEligible()) return 'Sesi ini sudah selesai atau tidak tersedia.';
-        if ($scheduleState === 'not_published') return 'Sesi belum dipublish.';
-        if ($scheduleState === 'not_open') return 'Sesi belum dibuka.';
-        if ($scheduleState === 'closed') return 'Sesi sudah ditutup.';
-        if ($attemptsRemaining < 1) return 'Batas percobaan sudah tercapai.';
+        if ($hasInProgress) {
+            return 'Masih ada pengerjaan yang berlangsung.';
+        }
+        if ($assignment->status === ExamSessionCandidate::STATUS_BLOCKED) {
+            return 'Akses sesi sedang dibatasi.';
+        }
+        if (! $assignment->isEligible()) {
+            return 'Sesi ini sudah selesai atau tidak tersedia.';
+        }
+        if ($scheduleState === 'not_published') {
+            return 'Sesi belum dipublish.';
+        }
+        if ($scheduleState === 'not_open') {
+            return 'Sesi belum dibuka.';
+        }
+        if ($scheduleState === 'closed') {
+            return 'Sesi sudah ditutup.';
+        }
+        if ($attemptsRemaining < 1) {
+            return 'Batas percobaan sudah tercapai.';
+        }
 
         return null;
     }
 
     private function scheduleState(?ExamSession $session): string
     {
-        if (! $session || $session->status !== ExamSession::STATUS_PUBLISHED) return 'not_published';
-        if ($session->opens_at?->gt(now())) return 'not_open';
-        if ($session->closes_at?->lte(now())) return 'closed';
+        if (! $session || $session->status !== ExamSession::STATUS_PUBLISHED) {
+            return 'not_published';
+        }
+        if ($session->opens_at?->gt(now())) {
+            return 'not_open';
+        }
+        if ($session->closes_at?->lte(now())) {
+            return 'closed';
+        }
 
         return 'open';
     }

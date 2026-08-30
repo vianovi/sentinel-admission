@@ -4,8 +4,8 @@ namespace App\Models;
 
 use App\Services\CandidateStatus\CandidateCompletionEvaluator;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Guardian extends Model
 {
@@ -47,63 +47,63 @@ class Guardian extends Model
     ];
 
     protected $casts = [
-        'father_date_of_birth'   => 'date',
-        'mother_date_of_birth'   => 'date',
+        'father_date_of_birth' => 'date',
+        'mother_date_of_birth' => 'date',
         'guardian_date_of_birth' => 'date',
-        'alamat_shared'          => 'boolean',
-        'family_dependents'      => 'integer',
+        'alamat_shared' => 'boolean',
+        'family_dependents' => 'integer',
     ];
 
     // ─── Label Maps (untuk display di Rangkuman) ──────────────────────────
 
     public static array $educationLabels = [
-        'tidak_sekolah'    => 'Tidak Sekolah',
-        'sd_sederajat'     => 'SD / Sederajat',
-        'smp_sederajat'    => 'SMP / Sederajat',
-        'sma_smk_sederajat'=> 'SMA / SMK / Sederajat',
-        'd1'               => 'D1',
-        'd2'               => 'D2',
-        'd3'               => 'D3',
-        'd4_s1'            => 'D4 / S1',
-        's2'               => 'S2',
-        's3'               => 'S3',
+        'tidak_sekolah' => 'Tidak Sekolah',
+        'sd_sederajat' => 'SD / Sederajat',
+        'smp_sederajat' => 'SMP / Sederajat',
+        'sma_smk_sederajat' => 'SMA / SMK / Sederajat',
+        'd1' => 'D1',
+        'd2' => 'D2',
+        'd3' => 'D3',
+        'd4_s1' => 'D4 / S1',
+        's2' => 'S2',
+        's3' => 'S3',
     ];
 
     public static array $incomeLabels = [
         'tidak_berpenghasilan' => 'Tidak Berpenghasilan',
         'tidak_ingin_memberitahu' => 'Tidak Ingin Memberitahu',
-        'di_bawah_1jt'        => '< Rp 1.000.000',
-        '1jt_2_5jt'           => 'Rp 1.000.000 – 2.500.000',
-        '2_5jt_3_5jt'         => 'Rp 2.500.000 – 3.500.000',
-        '3_5jt_5jt'           => 'Rp 3.500.000 – 5.000.000',
-        '5jt_10jt'            => 'Rp 5.000.000 – 10.000.000',
-        'di_atas_10jt'        => '> Rp 10.000.000',
+        'di_bawah_1jt' => '< Rp 1.000.000',
+        '1jt_2_5jt' => 'Rp 1.000.000 – 2.500.000',
+        '2_5jt_3_5jt' => 'Rp 2.500.000 – 3.500.000',
+        '3_5jt_5jt' => 'Rp 3.500.000 – 5.000.000',
+        '5jt_10jt' => 'Rp 5.000.000 – 10.000.000',
+        'di_atas_10jt' => '> Rp 10.000.000',
     ];
 
     public static array $statusLabels = [
-        'hidup'          => 'Hidup',
-        'meninggal'      => 'Meninggal',
-        'tidak_diketahui'=> 'Tidak Diketahui',
+        'hidup' => 'Hidup',
+        'meninggal' => 'Meninggal',
+        'tidak_diketahui' => 'Tidak Diketahui',
     ];
 
     public static array $maritalLabels = [
         'nikah_tercatat' => 'Nikah Tercatat',
-        'cerai_hidup'    => 'Cerai Hidup',
-        'cerai_mati'     => 'Cerai Mati',
+        'cerai_hidup' => 'Cerai Hidup',
+        'cerai_mati' => 'Cerai Mati',
     ];
 
     public static array $houseLabels = [
         'milik_sendiri' => 'Milik Sendiri',
-        'kontrak'       => 'Kontrak / Sewa',
-        'menumpang'     => 'Menumpang',
-        'rumah_dinas'   => 'Rumah Dinas',
+        'kontrak' => 'Kontrak / Sewa',
+        'menumpang' => 'Menumpang',
+        'rumah_dinas' => 'Rumah Dinas',
     ];
 
     public static array $vehicleLabels = [
-        'tidak_ada'      => 'Tidak Ada',
-        'motor'          => 'Motor',
-        'mobil'          => 'Mobil',
-        'motor_dan_mobil'=> 'Motor & Mobil',
+        'tidak_ada' => 'Tidak Ada',
+        'motor' => 'Motor',
+        'mobil' => 'Mobil',
+        'motor_dan_mobil' => 'Motor & Mobil',
     ];
 
     // ─── Progress Calculation ─────────────────────────────────────────────
@@ -164,9 +164,9 @@ class Guardian extends Model
         int $candidateId
     ): static {
         return static::create([
-            'candidate_id'   => $candidateId,
+            'candidate_id' => $candidateId,
             'candidate_code' => str_replace('REG-', 'CDT-', $draft->registration_code),
-            'mother_name'    => $draft->mother_name ?? '',
+            'mother_name' => $draft->mother_name ?? '',
         ]);
     }
 

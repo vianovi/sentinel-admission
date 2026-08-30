@@ -5,8 +5,8 @@ namespace App\Services\CandidateStatus;
 final class CandidateEvaluationResult
 {
     /**
-     * @param array<int, CandidateRequirement> $requirements
-     * @param array<int, CandidateRequirement> $missing
+     * @param  array<int, CandidateRequirement>  $requirements
+     * @param  array<int, CandidateRequirement>  $missing
      */
     public function __construct(
         private readonly array $requirements,

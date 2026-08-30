@@ -76,9 +76,9 @@ class ExamQuestionImportService
             }
 
             $storedPath = SentinelStoragePaths::examImportDirectory()
-                . '/'
-                . Str::uuid()
-                . '.xlsx';
+                .'/'
+                .Str::uuid()
+                .'.xlsx';
 
             Storage::disk('private')->put($storedPath, file_get_contents($file->getRealPath()));
 
@@ -108,7 +108,7 @@ class ExamQuestionImportService
                     'failure_report' => [[
                         'row' => 1,
                         'reasons' => array_values(array_filter([
-                            $missing !== [] ? 'Kolom wajib belum lengkap: ' . implode(', ', $missing) : null,
+                            $missing !== [] ? 'Kolom wajib belum lengkap: '.implode(', ', $missing) : null,
                             ...$configFailures,
                         ])),
                     ]],
@@ -173,6 +173,7 @@ class ExamQuestionImportService
                         'question_text' => Str::limit($mapped['question_text'] ?? '', 120),
                         'reasons' => $validation['reasons'],
                     ];
+
                     continue;
                 }
 
@@ -389,7 +390,7 @@ class ExamQuestionImportService
             $reasons[] = 'aktif wajib diisi dengan ya/tidak, true/false, yes/no, 1/0, aktif, atau nonaktif.';
         }
 
-        $hash = hash('sha256', Str::lower(trim($row['question_text'] ?? '')) . '|' . $package->id);
+        $hash = hash('sha256', Str::lower(trim($row['question_text'] ?? '')).'|'.$package->id);
 
         if (in_array($hash, $seenHashes, true)) {
             $reasons[] = 'Duplikat soal terdeteksi di file import.';

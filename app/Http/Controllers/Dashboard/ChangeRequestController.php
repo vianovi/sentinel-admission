@@ -117,7 +117,7 @@ class ChangeRequestController extends Controller
 
     private function resolveRouteName(Request $request): string
     {
-        return $this->resolveScope($request) . '.change-requests.index';
+        return $this->resolveScope($request).'.change-requests.index';
     }
 
     private function resolveBucket(Request $request): ?string

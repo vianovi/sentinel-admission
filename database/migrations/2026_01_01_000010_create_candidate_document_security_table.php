@@ -16,13 +16,13 @@ return new class extends Migration
             // 1-to-1 dengan candidate_documents
             // Cascade delete: hapus dokumen = hapus security record-nya
             $table->foreignId('document_id')
-                  ->unique()
-                  ->constrained('candidate_documents')
-                  ->onDelete('cascade');
+                ->unique()
+                ->constrained('candidate_documents')
+                ->onDelete('cascade');
 
             // ─── MAGIC BYTES VERIFICATION ────────────────────────────────
             $table->enum('magic_bytes_result', ['passed', 'suspicious', 'rejected'])
-                  ->default('passed');
+                ->default('passed');
             // passed     = header file sesuai mime_type yang diklaim
             // suspicious = header valid tapi ada konten mencurigakan (webshell)
             // rejected   = header tidak sesuai mime_type sama sekali

@@ -364,9 +364,9 @@ class ChangeRequestService
 
         return implode(', ', array_filter([
             $detail['jalan'] ?? '',
-            $rtRw ? 'RT/RW ' . $rtRw : null,
+            $rtRw ? 'RT/RW '.$rtRw : null,
             $detail['kelurahan'] ?? '',
-            ($detail['kecamatan'] ?? '') ? 'Kec. ' . $detail['kecamatan'] : null,
+            ($detail['kecamatan'] ?? '') ? 'Kec. '.$detail['kecamatan'] : null,
             $detail['kabupaten'] ?? '',
             $detail['provinsi'] ?? '',
         ]));

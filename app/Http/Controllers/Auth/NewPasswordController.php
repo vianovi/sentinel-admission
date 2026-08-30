@@ -32,21 +32,21 @@ class NewPasswordController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'token'    => ['required'],
-            'email'    => ['required', 'email:rfc', 'max:255'],
+            'token' => ['required'],
+            'email' => ['required', 'email:rfc', 'max:255'],
             'password' => ['required', 'confirmed', Rules\Password::min(8)],
         ], [
-            'email.required'     => 'Email wajib diisi.',
-            'password.required'  => 'Password baru wajib diisi.',
+            'email.required' => 'Email wajib diisi.',
+            'password.required' => 'Password baru wajib diisi.',
             'password.confirmed' => 'Konfirmasi password tidak cocok.',
-            'password.min'       => 'Password minimal 8 karakter.',
+            'password.min' => 'Password minimal 8 karakter.',
         ]);
 
         $status = Password::reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function ($user) use ($request) {
                 $user->forceFill([
-                    'password'       => Hash::make($request->password),
+                    'password' => Hash::make($request->password),
                     'remember_token' => Str::random(60),
                 ])->save();
 

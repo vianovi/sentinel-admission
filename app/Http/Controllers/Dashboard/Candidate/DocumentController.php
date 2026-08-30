@@ -34,7 +34,7 @@ class DocumentController extends Controller
 
     public function index(Request $request): Response
     {
-        $user      = $request->user();
+        $user = $request->user();
         $candidate = $user->candidate()->with('admissionWave')->firstOrFail();
         $this->statusService->syncAfterEvent($candidate, 'documents.index');
         $candidate->refresh();
@@ -42,12 +42,12 @@ class DocumentController extends Controller
         $documents = CandidateDocument::where('candidate_id', $candidate->id)
             ->whereNull('deleted_at')
             ->get(['id', 'doc_type', 'doc_group', 'original_filename',
-                   'status', 'rejection_reason', 'created_at', 'updated_at'])
+                'status', 'rejection_reason', 'created_at', 'updated_at'])
             ->keyBy('doc_type')
             ->toArray();
 
         $achievementTypes = CandidateDocument::MULTI_UPLOAD_TYPES;
-        $achievementDocs  = CandidateDocument::where('candidate_id', $candidate->id)
+        $achievementDocs = CandidateDocument::where('candidate_id', $candidate->id)
             ->whereIn('doc_type', $achievementTypes)
             ->whereNull('deleted_at')
             ->get(['id', 'doc_type', 'original_filename', 'status', 'rejection_reason', 'created_at'])
@@ -60,28 +60,28 @@ class DocumentController extends Controller
 
         return Inertia::render('Dashboard/Candidate/DataDokumen', [
             'user' => [
-                'name'       => $user->name,
+                'name' => $user->name,
                 'avatar_url' => $user->avatar_url,
-                'initials'   => $user->initials,
+                'initials' => $user->initials,
             ],
             'candidate' => [
-                'full_name'           => $candidate->full_name,
-                'nisn'                => $candidate->nisn,
-                'nik'                 => $candidate->nik,
-                'gender_label'        => $candidate->genderLabel(),
+                'full_name' => $candidate->full_name,
+                'nisn' => $candidate->nisn,
+                'nik' => $candidate->nik,
+                'gender_label' => $candidate->genderLabel(),
                 'date_of_birth_label' => $candidate->date_of_birth?->format('d F Y'),
-                'school_origin'       => $candidate->school_origin,
-                'status'              => $candidate->status,
-                'program_choice'      => $candidate->program_choice,
-                'admission_wave'      => $candidate->admissionWave
+                'school_origin' => $candidate->school_origin,
+                'status' => $candidate->status,
+                'program_choice' => $candidate->program_choice,
+                'admission_wave' => $candidate->admissionWave
                     ? ['title' => $candidate->admissionWave->title]
                     : null,
             ],
-            'documents'       => $documents,
+            'documents' => $documents,
             'achievementDocs' => $achievementDocs,
-            'isTransfer'      => (bool) $candidate->is_transfer,
-            'completion'      => $this->calculateCompletion($candidate->id),
-            'gate'            => $this->gateService->documents($candidate, $user),
+            'isTransfer' => (bool) $candidate->is_transfer,
+            'completion' => $this->calculateCompletion($candidate->id),
+            'gate' => $this->gateService->documents($candidate, $user),
         ]);
     }
 
@@ -94,15 +94,18 @@ class DocumentController extends Controller
         $isJson = $request->wantsJson();
 
         if (! CandidateDocument::isValidDocType($docType)) {
-            if ($isJson) return response()->json(['errors' => ['file' => 'Jenis dokumen tidak valid.']], 422);
+            if ($isJson) {
+                return response()->json(['errors' => ['file' => 'Jenis dokumen tidak valid.']], 422);
+            }
+
             return back()->withErrors(['file' => 'Jenis dokumen tidak valid.']);
         }
 
-        $user      = $request->user();
+        $user = $request->user();
         $candidate = $user->candidate()->firstOrFail();
         $this->statusService->syncAfterEvent($candidate, 'document.upload.gate_check');
         $candidate->refresh();
-        $gate      = $this->gateService->documents($candidate, $user);
+        $gate = $this->gateService->documents($candidate, $user);
 
         if (! $gate['allowed']) {
             return $this->lockedResponse($request, $gate['reason'] ?? 'Halaman dokumen masih terkunci.');
@@ -119,17 +122,17 @@ class DocumentController extends Controller
                 ],
             ],
             [
-                'file.required'   => 'File dokumen wajib diunggah.',
-                'file.file'       => 'Berkas yang diunggah tidak valid.',
-                'file.uploaded'   => 'Ukuran file terlalu besar. Maksimal yang diizinkan adalah 5MB. Pastikan ukuran file tidak melebihi batas yang ditentukan.',
-                'file.mimes'      => 'Format tidak didukung. Gunakan file JPEG, PNG, atau PDF.',
-                'file.mimetypes'  => 'Format tidak didukung. Gunakan file JPEG, PNG, atau PDF.',
-                'file.max'        => 'Ukuran file terlalu besar. Maksimal yang diizinkan adalah 5MB.',
+                'file.required' => 'File dokumen wajib diunggah.',
+                'file.file' => 'Berkas yang diunggah tidak valid.',
+                'file.uploaded' => 'Ukuran file terlalu besar. Maksimal yang diizinkan adalah 5MB. Pastikan ukuran file tidak melebihi batas yang ditentukan.',
+                'file.mimes' => 'Format tidak didukung. Gunakan file JPEG, PNG, atau PDF.',
+                'file.mimetypes' => 'Format tidak didukung. Gunakan file JPEG, PNG, atau PDF.',
+                'file.max' => 'Ukuran file terlalu besar. Maksimal yang diizinkan adalah 5MB.',
             ]
         );
 
-        $file      = $request->file('file');
-        $uploadIp  = $request->ip();
+        $file = $request->file('file');
+        $uploadIp = $request->ip();
         $userAgent = $request->userAgent() ?? '';
 
         $securityResult = $this->security->runAll($file, $uploadIp, $userAgent);
@@ -144,7 +147,10 @@ class DocumentController extends Controller
                 'polyglot_detail' => $securityResult['polyglot_detail'],
             ]);
             $msg = 'Berkas dokumen gagal diunggah karena tidak memenuhi standar format atau keamanan sistem kami.';
-            if ($isJson) return response()->json(['errors' => ['file' => $msg]], 422);
+            if ($isJson) {
+                return response()->json(['errors' => ['file' => $msg]], 422);
+            }
+
             return back()->withErrors(['file' => $msg]);
         }
 
@@ -183,16 +189,16 @@ class DocumentController extends Controller
             );
 
             $document = CandidateDocument::create([
-                'candidate_id'      => $candidate->id,
-                'candidate_code'    => $candidate->candidate_code,
-                'doc_type'          => $docType,
-                'doc_group'         => $docGroup,
+                'candidate_id' => $candidate->id,
+                'candidate_code' => $candidate->candidate_code,
+                'doc_type' => $docType,
+                'doc_group' => $docGroup,
                 'original_filename' => $file->getClientOriginalName(),
-                'stored_filename'   => $storedFilename,
-                'file_path'         => $storagePath,
-                'mime_type'         => $securityResult['detected_mime'],
-                'file_size_kb'      => (int) ceil($file->getSize() / 1024),
-                'status'            => 'pending',
+                'stored_filename' => $storedFilename,
+                'file_path' => $storagePath,
+                'mime_type' => $securityResult['detected_mime'],
+                'file_size_kb' => (int) ceil($file->getSize() / 1024),
+                'status' => 'pending',
             ]);
 
             CandidateDocumentSecurity::create(array_merge(
@@ -210,7 +216,10 @@ class DocumentController extends Controller
 
             $this->statusService->syncAfterEvent($candidate, 'document.uploaded');
 
-            if ($isJson) return response()->json(['message' => 'Dokumen berhasil diupload.'], 200);
+            if ($isJson) {
+                return response()->json(['message' => 'Dokumen berhasil diupload.'], 200);
+            }
+
             return back()->with('success', 'Dokumen berhasil diupload dan sedang menunggu verifikasi.');
 
         } catch (\Exception $e) {
@@ -218,14 +227,17 @@ class DocumentController extends Controller
             Storage::disk('private')->delete($storagePath);
 
             Log::error('DocumentController@store failed', [
-                'user_id'  => $user->id,
+                'user_id' => $user->id,
                 'doc_type' => $docType,
-                'error'    => $e->getMessage(),
-                'trace'    => $e->getTraceAsString(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
             $msg = 'Sistem sedang mengalami gangguan. Silakan coba beberapa saat lagi.';
-            if ($isJson) return response()->json(['errors' => ['file' => $msg]], 500);
+            if ($isJson) {
+                return response()->json(['errors' => ['file' => $msg]], 500);
+            }
+
             return back()->withErrors(['file' => $msg]);
         }
     }
@@ -236,11 +248,11 @@ class DocumentController extends Controller
 
     public function destroy(Request $request, int $documentId): RedirectResponse
     {
-        $user      = $request->user();
+        $user = $request->user();
         $candidate = $user->candidate()->firstOrFail();
         $this->statusService->syncAfterEvent($candidate, 'document.delete.gate_check');
         $candidate->refresh();
-        $gate      = $this->gateService->documents($candidate, $user);
+        $gate = $this->gateService->documents($candidate, $user);
 
         if (! $gate['allowed']) {
             return back()->withErrors(['gate' => $gate['reason'] ?? 'Halaman dokumen masih terkunci.']);
@@ -261,15 +273,17 @@ class DocumentController extends Controller
 
             DB::commit();
             $this->statusService->syncAfterEvent($candidate, 'document.deleted');
+
             return back()->with('success', 'Dokumen berhasil dihapus.');
 
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('DocumentController@destroy failed', [
-                'user_id'     => $user->id,
+                'user_id' => $user->id,
                 'document_id' => $documentId,
-                'error'       => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
+
             return back()->withErrors(['file' => 'Gagal menghapus dokumen. Silakan coba lagi.']);
         }
     }
@@ -294,9 +308,12 @@ class DocumentController extends Controller
 
         $allTypes = $this->verificationEvaluator->requiredDocumentTypes($candidate);
 
-        if (count($allTypes) === 0) return 0;
+        if (count($allTypes) === 0) {
+            return 0;
+        }
 
         $uploaded = count(array_intersect($uploadedTypes, $allTypes));
+
         return (int) round(($uploaded / count($allTypes)) * 100);
     }
 

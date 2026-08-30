@@ -21,18 +21,18 @@ class WelcomeController extends Controller
 
         return Inertia::render('Landing/Welcome', [
             'activeWave' => $activeWave ? [
-                'id'                  => $activeWave->id,
-                'title'               => $activeWave->title,
-                'academic_year'       => $activeWave->academic_year,
-                'registration_fee'    => $activeWave->registration_fee,
-                'quota_target'        => $activeWave->quota_target,
-                'candidates_count'    => $activeWave->candidates_count,
-                'start_date'          => $activeWave->start_date,
-                'end_date'            => $activeWave->end_date,
-                'exam_info'           => $activeWave->exam_info,
-                'announcement_info'   => $activeWave->announcement_info,
+                'id' => $activeWave->id,
+                'title' => $activeWave->title,
+                'academic_year' => $activeWave->academic_year,
+                'registration_fee' => $activeWave->registration_fee,
+                'quota_target' => $activeWave->quota_target,
+                'candidates_count' => $activeWave->candidates_count,
+                'start_date' => $activeWave->start_date,
+                'end_date' => $activeWave->end_date,
+                'exam_info' => $activeWave->exam_info,
+                'announcement_info' => $activeWave->announcement_info,
                 'reregistration_date' => $activeWave->reregistration_date,
-                'is_active'           => $activeWave->is_active,
+                'is_active' => $activeWave->is_active,
             ] : null,
         ]);
     }
@@ -55,7 +55,7 @@ class WelcomeController extends Controller
             abort(404);
         }
 
-        $relativePath = SentinelStoragePaths::cinematicShowcaseDirectory() . '/' . ltrim($filename, '/');
+        $relativePath = SentinelStoragePaths::cinematicShowcaseDirectory().'/'.ltrim($filename, '/');
 
         abort_if(! Storage::disk('private')->exists($relativePath), 404);
 
@@ -63,25 +63,25 @@ class WelcomeController extends Controller
 
         $mimeMap = [
             'webp' => 'image/webp',
-            'jpg'  => 'image/jpeg',
+            'jpg' => 'image/jpeg',
             'jpeg' => 'image/jpeg',
-            'png'  => 'image/png',
-            'mp4'  => 'video/mp4',
+            'png' => 'image/png',
+            'mp4' => 'video/mp4',
         ];
 
-        $ext      = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+        $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
         $mimeType = $mimeMap[$ext] ?? 'application/octet-stream';
 
         if ($ext === 'mp4') {
             return response()->file($path, [
-                'Content-Type'  => $mimeType,
+                'Content-Type' => $mimeType,
                 'Cache-Control' => 'public, max-age=86400',
                 'Accept-Ranges' => 'bytes',
             ]);
         }
 
         return response()->file($path, [
-            'Content-Type'  => $mimeType,
+            'Content-Type' => $mimeType,
             'Cache-Control' => 'public, max-age=86400',
         ]);
     }

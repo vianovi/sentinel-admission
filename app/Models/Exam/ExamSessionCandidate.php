@@ -11,7 +11,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class ExamSessionCandidate extends Model
 {
     public const STATUS_ELIGIBLE = 'eligible';
+
     public const STATUS_BLOCKED = 'blocked';
+
     public const STATUS_COMPLETED = 'completed';
 
     protected $fillable = [

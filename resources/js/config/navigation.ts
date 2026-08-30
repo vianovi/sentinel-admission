@@ -218,7 +218,7 @@ export const navigationConfig: Record<string, NavGroup[]> = {
             group: "MENU",
             items: [
                 { label: "Dashboard", href: "/dashboard/admin",            icon: "fa-solid fa-house",       exact: true },
-                { label: "Kalender SPMB", href: "/dashboard/admin/calendar", icon: "fa-solid fa-calendar-days", comingSoon: true },
+                { label: "Kalender SPMB", href: "/dashboard/admin/calendar", icon: "fa-solid fa-calendar-days" },
                 {
                     label: "Kandidat",
                     icon: "fa-solid fa-users",
@@ -339,14 +339,14 @@ export const navigationConfig: Record<string, NavGroup[]> = {
                         },
                     ],
                 },
-                { label: "Rekap / Laporan", href: "/dashboard/admin/reports", icon: "fa-solid fa-chart-line", comingSoon: true },
+                { label: "Rekap / Laporan", href: "/dashboard/admin/reports", icon: "fa-solid fa-chart-line" },
             ],
         },
         {
             group: "MANAJEMEN",
             items: [
                 { label: "Staff", href: "/dashboard/admin/staff-list", icon: "fa-solid fa-user-tie" },
-                { label: "Pengguna", href: "/dashboard/admin/users", icon: "fa-solid fa-users-gear", comingSoon: true },
+                { label: "Pengguna", href: "/dashboard/admin/users", icon: "fa-solid fa-users-gear" },
             ],
         },
         {

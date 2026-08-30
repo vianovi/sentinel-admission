@@ -9,7 +9,7 @@ use App\Http\Controllers\Dashboard\StatusPendaftaranController as InternalStatus
 use App\Http\Middleware\RoleMiddleware;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', RoleMiddleware::class . ':staff'])
+Route::middleware(['auth', RoleMiddleware::class.':staff'])
     ->prefix('dashboard/staff')
     ->name('staff.')
     ->group(function () {

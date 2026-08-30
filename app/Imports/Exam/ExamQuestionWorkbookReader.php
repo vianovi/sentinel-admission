@@ -12,7 +12,7 @@ class ExamQuestionWorkbookReader
      */
     public function readDataSheet(string $path, int $maxRows): array
     {
-        $reader = new Reader();
+        $reader = new Reader;
         $reader->open($path);
 
         try {
@@ -77,16 +77,19 @@ class ExamQuestionWorkbookReader
 
                 if (str_contains($firstCell, 'konfigurasi_paket')) {
                     $section = 'package';
+
                     continue;
                 }
 
                 if (str_contains($firstCell, 'konfigurasi_ujian')) {
                     $section = 'exam';
+
                     continue;
                 }
 
                 if (str_contains($firstCell, 'data_soal')) {
                     $section = null;
+
                     continue;
                 }
 
@@ -94,6 +97,7 @@ class ExamQuestionWorkbookReader
                     $headings = $stringValues;
                     $seenHeader = true;
                     $section = null;
+
                     continue;
                 }
 

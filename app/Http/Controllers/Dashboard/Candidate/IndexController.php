@@ -22,7 +22,7 @@ class IndexController extends Controller
 
     public function index(Request $request): Response
     {
-        $user      = $request->user();
+        $user = $request->user();
         $user->loadMissing('pendingEmailReviewer');
         $candidate = $user->candidate()
             ->with([
@@ -40,8 +40,8 @@ class IndexController extends Controller
 
         if (! $candidate) {
             return Inertia::render('Dashboard/Index', [
-                'candidate'      => null,
-                'dashboard'      => null,
+                'candidate' => null,
+                'dashboard' => null,
                 'email_verified' => $user->hasVerifiedEmail(),
                 'email_change_request' => $emailChangeRequest,
                 'data_change_request_result' => $dataChangeResult,

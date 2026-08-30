@@ -44,7 +44,7 @@ it('downloads a package specific XLSX template without raw placeholders', functi
     try {
         expect(file_get_contents($downloadPath, false, null, 0, 4))->toBe("PK\x03\x04");
 
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
         expect($zip->open($downloadPath))->toBeTrue();
 
         $workbook = $zip->getFromName('xl/workbook.xml');
@@ -186,7 +186,7 @@ it('preserves English import header compatibility', function () {
 
 function fillIndonesianExamTemplate(string $path): void
 {
-    $zip = new ZipArchive();
+    $zip = new ZipArchive;
     $zip->open($path);
     $xml = $zip->getFromName('xl/worksheets/sheet1.xml');
 
@@ -223,7 +223,7 @@ function createEnglishHeaderWorkbook(): string
     $path = $basePath.'.xlsx';
     @unlink($basePath);
 
-    $writer = new Writer();
+    $writer = new Writer;
     $writer->openToFile($path);
     $writer->addRow(Row::fromValues([
         'subject',

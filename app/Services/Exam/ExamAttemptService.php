@@ -6,7 +6,6 @@ use App\Exceptions\Exam\ExamAccessException;
 use App\Models\Candidate;
 use App\Models\Exam\ExamAttempt;
 use App\Models\Exam\ExamAttemptAnswer;
-use App\Models\Exam\ExamPackage;
 use App\Models\Exam\ExamQuestion;
 use App\Models\Exam\ExamSessionCandidate;
 use App\Models\Exam\ExamSessionToken;

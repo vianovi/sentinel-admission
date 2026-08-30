@@ -6,7 +6,6 @@ use App\Models\Exam\ExamQuestion;
 use App\Models\Exam\ExamSession;
 use App\Models\Exam\ExamSessionToken;
 use App\Models\Exam\ExamSubject;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);

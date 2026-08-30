@@ -42,10 +42,10 @@ class HealthRecord extends Model
     ];
 
     protected $casts = [
-        'height_cm'        => 'integer',
-        'weight_kg'        => 'integer',
-        'eye_right_value'  => 'float',
-        'eye_left_value'   => 'float',
+        'height_cm' => 'integer',
+        'weight_kg' => 'integer',
+        'eye_right_value' => 'float',
+        'eye_left_value' => 'float',
         'eye_condition_since' => 'integer',
     ];
 
@@ -68,8 +68,11 @@ class HealthRecord extends Model
      */
     public function getBmiAttribute(): ?float
     {
-        if (! $this->height_cm || ! $this->weight_kg) return null;
+        if (! $this->height_cm || ! $this->weight_kg) {
+            return null;
+        }
         $heightM = $this->height_cm / 100;
+
         return round($this->weight_kg / ($heightM * $heightM), 1);
     }
 
@@ -79,12 +82,15 @@ class HealthRecord extends Model
     public function getBmiCategoryAttribute(): ?string
     {
         $bmi = $this->bmi;
-        if (! $bmi) return null;
+        if (! $bmi) {
+            return null;
+        }
+
         return match (true) {
             $bmi < 18.5 => 'Kurus',
             $bmi < 25.0 => 'Normal',
             $bmi < 30.0 => 'Gemuk',
-            default     => 'Obesitas',
+            default => 'Obesitas',
         };
     }
 
@@ -99,8 +105,8 @@ class HealthRecord extends Model
     {
         return match ($this->blood_type) {
             'A', 'B', 'AB', 'O' => $this->blood_type,
-            'unknown'            => 'Belum pernah tes',
-            default              => 'Belum diisi',
+            'unknown' => 'Belum pernah tes',
+            default => 'Belum diisi',
         };
     }
 
@@ -112,8 +118,8 @@ class HealthRecord extends Model
         return match ($this->rhesus) {
             'positive' => 'Positif (+)',
             'negative' => 'Negatif (-)',
-            'unknown'  => 'Belum pernah tes',
-            default    => 'Belum diisi',
+            'unknown' => 'Belum pernah tes',
+            default => 'Belum diisi',
         };
     }
 
@@ -136,12 +142,12 @@ class HealthRecord extends Model
     private function formatEyeLabel(?string $type, ?float $value): string
     {
         return match ($type) {
-            'normal'   => 'Normal',
-            'unknown'  => 'Tidak diketahui',
-            'minus'    => $value ? "Minus ({$value})" : 'Minus',
-            'plus'     => $value ? "Plus (+{$value})" : 'Plus',
+            'normal' => 'Normal',
+            'unknown' => 'Tidak diketahui',
+            'minus' => $value ? "Minus ({$value})" : 'Minus',
+            'plus' => $value ? "Plus (+{$value})" : 'Plus',
             'silinder' => $value ? "Silinder ({$value})" : 'Silinder',
-            default    => 'Belum diisi',
+            default => 'Belum diisi',
         };
     }
 
@@ -200,7 +206,7 @@ class HealthRecord extends Model
         $required = array_keys(CandidateCompletionEvaluator::HEALTH_FIELDS);
 
         $filled = collect($required)
-            ->filter(fn($field) => ! empty($this->$field))
+            ->filter(fn ($field) => ! empty($this->$field))
             ->count();
 
         return (int) round(($filled / count($required)) * 100);
@@ -213,6 +219,7 @@ class HealthRecord extends Model
     public function eyeNeedsValue(string $side): bool
     {
         $type = $side === 'right' ? $this->eye_right_type : $this->eye_left_type;
+
         return in_array($type, ['minus', 'plus', 'silinder']);
     }
 }

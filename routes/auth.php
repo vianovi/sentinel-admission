@@ -1,10 +1,10 @@
 <?php
 
+use App\Http\Controllers\Admission\RegisterController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
-use App\Http\Controllers\Admission\RegisterController;
 use App\Http\Middleware\ValidateDraftToken;
 use Illuminate\Support\Facades\Route;
 
@@ -27,7 +27,7 @@ Route::middleware('guest')->group(function () {
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
 
     // ── Staff & Admin Login ───────────────────────────────────────────────────
-    Route::get('staff/login',  [AuthenticatedSessionController::class, 'createStaff'])
+    Route::get('staff/login', [AuthenticatedSessionController::class, 'createStaff'])
         ->name('staff.login');
     Route::post('staff/login', [AuthenticatedSessionController::class, 'storeStaff'])
         ->name('staff.login.post');

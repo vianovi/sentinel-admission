@@ -15,7 +15,6 @@ use App\Services\Exam\ExamAuditLogger;
 use App\Services\Exam\ExamSessionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
