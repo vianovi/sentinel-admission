@@ -182,17 +182,18 @@ docs/
 ├── panduan-ai/               # AI instructions, SOPs, security standards, release gates, skills
 │   ├── README.md & INDEX.md
 │   ├── auditor-charter.md, operating-rules.md, release-gates.md, security-standard.md
+│   ├── branching-and-promotion.md, documentation-policy.md, execution-runbook.md
+│   ├── CORE_CONTEXT.md, PACKAGE-MANIFEST.md, INSTALL.md, OFFICIAL-REFERENCES.md
 │   └── skills/ (ui-animation, frontend, backend, infra, architectural-lessons, build-rules)
 ├── persiapan-deploy/          # Production readiness, manifest, rollback, and human review checklist
-│   ├── HUMAN-REVIEW-CHECKLIST.md (ID)
-│   └── PRODUCTION-READINESS.md, PRODUCTION-MANIFEST.md, ROLLBACK-NOTES.md
+│   ├── HUMAN-REVIEW-CHECKLIST.md (ID - Manual human approval sheet)
+│   └── PRODUCTION-READINESS.md, PRODUCTION-MANIFEST.md, ROLLBACK-NOTES.md, PROMOTION-LEDGER.md
 ├── state-aktif/              # Active real-time audit state
 │   ├── CURRENT.md, QUEUE.md, BLOCKERS.md, DECISIONS.md, HANDOFF.md, CONTEXT-SUMMARY.md
 ├── task-audit/               # Master audit loop, slice tasks 01-11, templates
 │   └── master-production-audit.task.md, task-01..11, templates/
-├── laporan-audit/            # Active audit reports & verifiable evidence logs
-│   └── 01-public-shared-runtime/, evidence/
-└── siap-dihapus/             # Completed tasks, archived reports & old evidence staged for deletion
+└── laporan-audit/            # Active audit reports & verifiable evidence logs
+    └── 01-public-shared-runtime/, evidence/
 ```
 
 ---
