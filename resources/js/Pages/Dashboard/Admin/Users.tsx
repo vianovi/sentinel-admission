@@ -1,8 +1,6 @@
 import { Head, router, Link } from "@inertiajs/react";
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
-import { format } from "date-fns";
-import { id } from "date-fns/locale";
 
 type UserData = {
     id: number;
