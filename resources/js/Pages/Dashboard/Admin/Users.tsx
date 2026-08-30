@@ -1,91 +1,71 @@
-import { Head, usePage, router } from "@inertiajs/react";
-import DashboardLayout from "@/Layouts/DashboardLayout";
-import type { PageProps } from "@/types";
+import { Head, router, Link } from "@inertiajs/react";
 import { useState, useEffect } from "react";
+import DashboardLayout from "@/Layouts/DashboardLayout";
+import { format } from "date-fns";
+import { id } from "date-fns/locale";
 
-type UserRow = {
+type UserData = {
     id: number;
+    identifier: string;
     name: string;
     email: string;
     role: "admin" | "staff" | "candidate";
     whatsapp_number: string | null;
     is_active: boolean;
+    account_status: "aktif" | "nonaktif" | "menunggu_verifikasi";
+    program_choice: string | null;
     created_at: string;
-    avatar_url: string;
+    avatar_url: string | null;
     initials: string;
 };
 
-type PaginationLink = {
-    url: string | null;
-    label: string;
-    active: boolean;
-};
-
-type Paginated<T> = {
-    data: T[];
-    current_page: number;
-    last_page: number;
-    per_page: number;
-    total: number;
-    links: PaginationLink[];
-};
-
-type Stats = {
-    total: number;
-    active: number;
-    suspended: number;
-    admin: number;
-    staff: number;
-    candidate: number;
-};
-
 type Props = {
-    users: Paginated<UserRow>;
+    users: {
+        data: UserData[];
+        links: any[];
+        total: number;
+    };
     filters: {
         search?: string;
         role?: string;
         status?: string;
+        program_choice?: string;
+        sort?: string;
     };
-    stats: Stats;
+    programChoices: string[];
+    stats: {
+        total: number;
+        active: number;
+        suspended: number;
+        pending_verification: number;
+    };
+    flash?: { success?: string; error?: string };
 };
 
-export default function Users({ users, filters, stats }: Props) {
-    const { flash } = usePage<PageProps>().props;
+export default function Users({ users, filters, programChoices, stats, flash }: Props) {
     const [search, setSearch] = useState(filters.search || "");
-    const [role, setRole] = useState(filters.role || "");
-    const [status, setStatus] = useState(filters.status || "");
+    const [roleFilter, setRoleFilter] = useState(filters.role || "all");
+    const [statusFilter, setStatusFilter] = useState(filters.status || "all");
+    const [programFilter, setProgramFilter] = useState(filters.program_choice || "all");
+    const [sort, setSort] = useState(filters.sort || "terbaru");
+    
     const [processingId, setProcessingId] = useState<number | null>(null);
 
-    // Filter effect with debounce for search
     useEffect(() => {
-        const timeout = setTimeout(() => {
-            const rawQuery = { search, role, status };
-            const query = Object.fromEntries(
-                Object.entries(rawQuery).filter(([_, v]) => v !== "" && v !== undefined && v !== null)
+        const timer = setTimeout(() => {
+            router.get(
+                route("admin.users.index"),
+                { search, role: roleFilter, status: statusFilter, program_choice: programFilter, sort },
+                { preserveState: true, preserveScroll: true, replace: true }
             );
-            if (
-                search !== (filters.search || "") ||
-                role !== (filters.role || "") ||
-                status !== (filters.status || "")
-            ) {
-                router.get("/dashboard/admin/users", query, {
-                    preserveState: true,
-                    preserveScroll: true,
-                    replace: true,
-                });
-            }
         }, 300);
+        return () => clearTimeout(timer);
+    }, [search, roleFilter, statusFilter, programFilter, sort]);
 
-        return () => clearTimeout(timeout);
-    }, [search, role, status]);
-
-    const handleToggleStatus = (user: UserRow) => {
-        if (!confirm(`Apakah Anda yakin ingin ${user.is_active ? 'menangguhkan (suspend)' : 'mengaktifkan'} pengguna ${user.name}?`)) {
-            return;
-        }
-
+    const handleToggleStatus = (user: UserData) => {
+        if (!confirm(`Apakah Anda yakin ingin ${user.is_active ? 'menangguhkan' : 'mengaktifkan'} akun ${user.name}?`)) return;
         setProcessingId(user.id);
-        router.post(`/dashboard/admin/users/${user.id}/toggle-status`, {}, {
+        router.post(route("admin.users.toggle-status", user.id), {}, {
             preserveScroll: true,
             onFinish: () => setProcessingId(null)
         });
@@ -93,157 +73,148 @@ export default function Users({ users, filters, stats }: Props) {
 
     return (
         <>
-            <Head title="Manajemen Pengguna - Admin" />
+            <Head title="Manajemen Pengguna" />
 
-            <div className="flex flex-col gap-8 pb-12">
-                {/* Header Section */}
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/25">
-                            <i className="fa-solid fa-users-gear text-lg text-white" />
-                        </div>
-                        <div>
-                            <h1 className="text-2xl font-display font-bold leading-tight text-slate-800 dark:text-white">
-                                Manajemen Pengguna
-                            </h1>
-                            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                                Kelola seluruh akun yang terdaftar pada sistem Sentinel Admission.
-                            </p>
-                        </div>
+            <div className="mx-auto max-w-7xl space-y-6 sm:px-6 lg:px-8">
+                {/* Header & Stats */}
+                <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Manajemen Pengguna</h1>
+                        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                            Kelola semua akun, hak akses, dan status pendaftar, staf, maupun administrator.
+                        </p>
                     </div>
-                </div>
-
-                {/* Notifications */}
-                {flash.success && (
-                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-200 flex items-center gap-2">
-                        <i className="fa-solid fa-circle-check" /> {flash.success}
-                    </div>
-                )}
-                {flash.error && (
-                    <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-200 flex items-center gap-2">
-                        <i className="fa-solid fa-circle-exclamation" /> {flash.error}
-                    </div>
-                )}
-
-                {/* Stats Grid */}
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <div className="rounded-3xl border border-slate-200/60 bg-white p-5 shadow-sm dark:border-slate-700/60 dark:bg-slate-800/50">
-                        <div className="flex items-center justify-between">
-                            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Akun</p>
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-700">
-                                <i className="fa-solid fa-users text-xs text-slate-600 dark:text-slate-300"></i>
+                    
+                    <div className="flex flex-wrap items-center gap-3">
+                        {/* Summary Cards */}
+                        <div className="flex gap-4 p-4 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm">
+                            <div className="text-center px-4 border-r border-slate-200 dark:border-slate-700">
+                                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Total Akun</p>
+                                <p className="text-xl font-bold text-slate-800 dark:text-slate-100">{stats.total}</p>
+                            </div>
+                            <div className="text-center px-4 border-r border-slate-200 dark:border-slate-700">
+                                <p className="text-xs font-medium text-emerald-500">Aktif</p>
+                                <p className="text-xl font-bold text-slate-800 dark:text-slate-100">{stats.active}</p>
+                            </div>
+                            <div className="text-center px-4 border-r border-slate-200 dark:border-slate-700">
+                                <p className="text-xs font-medium text-amber-500">Menunggu</p>
+                                <p className="text-xl font-bold text-slate-800 dark:text-slate-100">{stats.pending_verification}</p>
+                            </div>
+                            <div className="text-center px-4">
+                                <p className="text-xs font-medium text-rose-500">Suspend</p>
+                                <p className="text-xl font-bold text-slate-800 dark:text-slate-100">{stats.suspended}</p>
                             </div>
                         </div>
-                        <p className="mt-2 text-2xl font-bold text-slate-800 dark:text-white">{stats.total}</p>
-                        <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                            {stats.admin} Admin &bull; {stats.staff} Staff
-                        </div>
-                    </div>
 
-                    <div className="rounded-3xl border border-emerald-200/60 bg-emerald-50/50 p-5 shadow-sm dark:border-emerald-700/30 dark:bg-emerald-900/10">
-                        <div className="flex items-center justify-between">
-                            <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400">Akun Aktif</p>
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/50">
-                                <i className="fa-solid fa-user-check text-xs text-emerald-600 dark:text-emerald-400"></i>
-                            </div>
-                        </div>
-                        <p className="mt-2 text-2xl font-bold text-emerald-700 dark:text-emerald-300">{stats.active}</p>
-                    </div>
-
-                    <div className="rounded-3xl border border-rose-200/60 bg-rose-50/50 p-5 shadow-sm dark:border-rose-700/30 dark:bg-rose-900/10">
-                        <div className="flex items-center justify-between">
-                            <p className="text-sm font-medium text-rose-600 dark:text-rose-400">Ditangguhkan</p>
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-900/50">
-                                <i className="fa-solid fa-user-slash text-xs text-rose-600 dark:text-rose-400"></i>
-                            </div>
-                        </div>
-                        <p className="mt-2 text-2xl font-bold text-rose-700 dark:text-rose-300">{stats.suspended}</p>
-                    </div>
-
-                    <div className="rounded-3xl border border-blue-200/60 bg-blue-50/50 p-5 shadow-sm dark:border-blue-700/30 dark:bg-blue-900/10">
-                        <div className="flex items-center justify-between">
-                            <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Kandidat</p>
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/50">
-                                <i className="fa-solid fa-graduation-cap text-xs text-blue-600 dark:text-blue-400"></i>
-                            </div>
-                        </div>
-                        <p className="mt-2 text-2xl font-bold text-blue-700 dark:text-blue-300">{stats.candidate}</p>
+                        {/* Action Tambah */}
+                        <button
+                            onClick={() => alert('Fitur Tambah Pengguna dalam pengembangan (Tahap 3)')}
+                            className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 transition-all"
+                        >
+                            <i className="fa-solid fa-plus" />
+                            <span>Tambah Pengguna</span>
+                        </button>
                     </div>
                 </div>
 
                 {/* Filters */}
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                <div className="flex flex-col gap-4 bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm lg:flex-row lg:items-center">
                     <div className="relative flex-1">
                         <i className="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                         <input
                             type="text"
-                            placeholder="Cari nama, email, atau no WhatsApp..."
+                            placeholder="Cari nama, email, ID, atau NIK..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="w-full rounded-2xl border-slate-200 bg-white py-2.5 pl-11 pr-4 text-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                            className="w-full rounded-xl border-slate-200 bg-slate-50 py-2.5 pl-11 pr-4 text-sm text-slate-800 focus:border-indigo-500 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-900/50 dark:text-slate-200"
                         />
                     </div>
-                    <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="flex flex-wrap gap-3">
                         <select
-                            value={role}
-                            onChange={(e) => setRole(e.target.value)}
-                            className="rounded-2xl border-slate-200 bg-white py-2.5 pl-4 pr-10 text-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                            value={roleFilter}
+                            onChange={(e) => setRoleFilter(e.target.value)}
+                            className="rounded-xl border-slate-200 bg-slate-50 py-2.5 pl-4 pr-10 text-sm text-slate-800 focus:border-indigo-500 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-900/50 dark:text-slate-200"
                         >
-                            <option value="">Semua Peran</option>
-                            <option value="admin">Admin</option>
+                            <option value="all">Semua Role</option>
+                            <option value="candidate">Candidate</option>
                             <option value="staff">Staff</option>
-                            <option value="candidate">Kandidat</option>
+                            <option value="admin">Admin</option>
                         </select>
                         <select
-                            value={status}
-                            onChange={(e) => setStatus(e.target.value)}
-                            className="rounded-2xl border-slate-200 bg-white py-2.5 pl-4 pr-10 text-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            className="rounded-xl border-slate-200 bg-slate-50 py-2.5 pl-4 pr-10 text-sm text-slate-800 focus:border-indigo-500 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-900/50 dark:text-slate-200"
                         >
-                            <option value="">Semua Status</option>
-                            <option value="active">Aktif</option>
-                            <option value="suspended">Ditangguhkan</option>
+                            <option value="all">Semua Status</option>
+                            <option value="aktif">Aktif</option>
+                            <option value="nonaktif">Nonaktif (Suspend)</option>
+                            <option value="menunggu_verifikasi">Menunggu Verifikasi</option>
+                        </select>
+                        {roleFilter === "candidate" && (
+                            <select
+                                value={programFilter}
+                                onChange={(e) => setProgramFilter(e.target.value)}
+                                className="rounded-xl border-slate-200 bg-slate-50 py-2.5 pl-4 pr-10 text-sm text-slate-800 focus:border-indigo-500 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-900/50 dark:text-slate-200"
+                            >
+                                <option value="all">Semua Program Studi</option>
+                                {programChoices.map(prog => (
+                                    <option key={prog} value={prog}>{prog}</option>
+                                ))}
+                            </select>
+                        )}
+                        <select
+                            value={sort}
+                            onChange={(e) => setSort(e.target.value)}
+                            className="rounded-xl border-slate-200 bg-slate-50 py-2.5 pl-4 pr-10 text-sm text-slate-800 focus:border-indigo-500 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-900/50 dark:text-slate-200"
+                        >
+                            <option value="terbaru">Pendaftar Terbaru</option>
+                            <option value="terlama">Pendaftar Terlama</option>
+                            <option value="abjad">Abjad (A-Z)</option>
                         </select>
                     </div>
                 </div>
 
                 {/* Table */}
-                <div className="overflow-hidden rounded-3xl border border-slate-200/60 bg-white shadow-sm dark:border-slate-700/60 dark:bg-slate-800/50">
+                <div className="overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-sm dark:border-slate-700/60 dark:bg-slate-800">
                     <div className="overflow-x-auto">
-                        <table className="w-full whitespace-nowrap text-left text-sm">
-                            <thead className="border-b border-slate-200/60 bg-slate-50/50 text-slate-500 dark:border-slate-700/60 dark:bg-slate-800/80 dark:text-slate-400">
+                        <table className="w-full text-left text-sm whitespace-nowrap">
+                            <thead className="border-b border-slate-200/60 bg-slate-50/50 dark:border-slate-700/60 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400">
                                 <tr>
-                                    <th className="px-6 py-4 font-semibold">Pengguna</th>
-                                    <th className="px-6 py-4 font-semibold">Peran</th>
-                                    <th className="px-6 py-4 font-semibold">Status</th>
-                                    <th className="px-6 py-4 font-semibold">Terdaftar</th>
-                                    <th className="px-6 py-4 font-semibold text-right">Aksi</th>
+                                    <th className="px-6 py-4 font-medium">Pengguna</th>
+                                    <th className="px-6 py-4 font-medium">Role / Prodi</th>
+                                    <th className="px-6 py-4 font-medium">Status</th>
+                                    <th className="px-6 py-4 font-medium text-right">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
+                            <tbody className="divide-y divide-slate-200/60 dark:divide-slate-700/60">
                                 {users.data.length === 0 ? (
                                     <tr>
-                                        <td colSpan={5} className="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
-                                            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 mb-3">
-                                                <i className="fa-solid fa-magnifying-glass text-slate-400"></i>
+                                        <td colSpan={4} className="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
+                                            <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 mb-3">
+                                                <i className="fa-solid fa-users-slash text-xl" />
                                             </div>
                                             <p>Tidak ada pengguna yang ditemukan.</p>
                                         </td>
                                     </tr>
                                 ) : (
                                     users.data.map((user) => (
-                                        <tr key={user.id} className="transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
+                                        <tr key={user.id} className="transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/50 group">
                                             <td className="px-6 py-4">
-                                                <div className="flex items-center gap-3">
+                                                <div className="flex items-center gap-4">
                                                     {user.avatar_url ? (
-                                                        <img src={user.avatar_url} alt={user.name} className="h-10 w-10 rounded-full object-cover" />
+                                                        <img src={user.avatar_url} alt="" className="h-10 w-10 rounded-full object-cover ring-2 ring-white dark:ring-slate-900 shadow-sm" />
                                                     ) : (
-                                                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300 font-bold">
+                                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-sm font-bold text-white shadow-sm ring-2 ring-white dark:ring-slate-900">
                                                             {user.initials}
                                                         </div>
                                                     )}
                                                     <div>
-                                                        <p className="font-semibold text-slate-800 dark:text-slate-200">{user.name}</p>
+                                                        <p className="font-semibold text-slate-800 dark:text-slate-200">
+                                                            {user.name}
+                                                        </p>
                                                         <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                                                            <span className="font-medium text-indigo-500 dark:text-indigo-400">{user.identifier}</span>
+                                                            <span>&bull;</span>
                                                             <span>{user.email}</span>
                                                             {user.whatsapp_number && (
                                                                 <>
@@ -256,45 +227,79 @@ export default function Users({ users, filters, stats }: Props) {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium border ${
-                                                    user.role === 'admin' ? 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-300' :
-                                                    user.role === 'staff' ? 'border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-500/20 dark:bg-purple-500/10 dark:text-purple-300' :
-                                                    'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-300'
-                                                }`}>
-                                                    {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-                                                </span>
+                                                <div className="flex flex-col gap-1 items-start">
+                                                    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium border ${
+                                                        user.role === 'admin' ? 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-300' :
+                                                        user.role === 'staff' ? 'border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-500/20 dark:bg-purple-500/10 dark:text-purple-300' :
+                                                        'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-300'
+                                                    }`}>
+                                                        {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                                                    </span>
+                                                    {user.program_choice && (
+                                                        <span className="text-xs text-slate-500 dark:text-slate-400 ml-1">
+                                                            {user.program_choice}
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium border ${
-                                                    user.is_active 
+                                                    user.account_status === 'aktif' 
                                                         ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300'
+                                                    : user.account_status === 'menunggu_verifikasi'
+                                                        ? 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300'
                                                         : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-300'
                                                 }`}>
-                                                    <i className={`fa-solid ${user.is_active ? 'fa-check-circle' : 'fa-ban'}`} />
-                                                    {user.is_active ? 'Aktif' : 'Suspended'}
+                                                    <i className={`fa-solid ${
+                                                        user.account_status === 'aktif' ? 'fa-check-circle' 
+                                                        : user.account_status === 'menunggu_verifikasi' ? 'fa-clock' 
+                                                        : 'fa-ban'
+                                                    }`} />
+                                                    {user.account_status === 'aktif' ? 'Aktif' 
+                                                     : user.account_status === 'menunggu_verifikasi' ? 'Menunggu Verifikasi' 
+                                                     : 'Nonaktif / Suspend'}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 text-slate-500 dark:text-slate-400">
-                                                {user.created_at}
-                                            </td>
                                             <td className="px-6 py-4 text-right">
-                                                <button
-                                                    onClick={() => handleToggleStatus(user)}
-                                                    disabled={processingId === user.id}
-                                                    className={`inline-flex h-9 items-center justify-center rounded-xl px-4 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 dark:focus:ring-offset-slate-900 ${
-                                                        user.is_active
-                                                            ? 'bg-rose-50 text-rose-600 hover:bg-rose-100 focus:ring-rose-500 dark:bg-rose-500/10 dark:text-rose-400 dark:hover:bg-rose-500/20'
-                                                            : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 focus:ring-emerald-500 dark:bg-emerald-500/10 dark:text-emerald-400 dark:hover:bg-emerald-500/20'
-                                                    } ${processingId === user.id ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                                    title={user.is_active ? "Tangguhkan (Suspend)" : "Aktifkan"}
-                                                >
-                                                    {processingId === user.id ? (
-                                                        <i className="fa-solid fa-spinner fa-spin" />
-                                                    ) : (
-                                                        <i className={`fa-solid ${user.is_active ? 'fa-user-slash' : 'fa-user-check'}`} />
-                                                    )}
-                                                    <span className="ml-2 hidden sm:inline">{user.is_active ? 'Suspend' : 'Aktifkan'}</span>
-                                                </button>
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <button 
+                                                        onClick={() => alert('Fitur Detail dalam pengembangan')}
+                                                        className="h-8 w-8 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors"
+                                                        title="Detail Pengguna"
+                                                    >
+                                                        <i className="fa-solid fa-eye" />
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => alert('Fitur Edit dalam pengembangan')}
+                                                        className="h-8 w-8 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-colors"
+                                                        title="Edit Pengguna"
+                                                    >
+                                                        <i className="fa-solid fa-pen-to-square" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleToggleStatus(user)}
+                                                        disabled={processingId === user.id}
+                                                        className={`h-8 w-8 inline-flex items-center justify-center rounded-lg transition-colors ${
+                                                            user.is_active
+                                                                ? 'text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10'
+                                                                : 'text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10'
+                                                        } ${processingId === user.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                        title={user.is_active ? "Tangguhkan (Suspend)" : "Aktifkan"}
+                                                    >
+                                                        {processingId === user.id ? (
+                                                            <i className="fa-solid fa-spinner fa-spin" />
+                                                        ) : (
+                                                            <i className={`fa-solid ${user.is_active ? 'fa-user-slash' : 'fa-user-check'}`} />
+                                                        )}
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => alert('Fitur Hapus dalam pengembangan')}
+                                                        className="h-8 w-8 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
+                                                        title="Hapus Pengguna"
+                                                    >
+                                                        <i className="fa-solid fa-trash-can" />
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))
