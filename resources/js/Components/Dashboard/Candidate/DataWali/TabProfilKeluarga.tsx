@@ -23,10 +23,10 @@ function inputCls(hasError = false) {
         'dark:text-slate-200 text-slate-800',
         'placeholder:dark:text-slate-600 placeholder:text-slate-400',
         'transition-colors duration-200',
-        'focus:outline-none focus:ring-2 dark:focus:ring-gold/40 focus:ring-amber-300/50',
+        'focus:outline-none focus:ring-2 dark:focus:ring-violet-500/40 focus:ring-violet-500/30',
         hasError
             ? 'border-red-500/60 focus:border-red-500'
-            : 'dark:border-content-border border-black/[0.10] dark:focus:border-gold/60 focus:border-amber-400/60',
+            : 'dark:border-content-border border-black/[0.10] dark:focus:border-violet-500/60 focus:border-violet-500/60',
     ].join(' ')
 }
 
@@ -48,7 +48,7 @@ export default function TabProfilKeluarga({ data, errors, onChange, candidateFam
     const isDark    = theme === 'dark'
 
     const portalProps = (hasError = false) => ({
-        styles:           makeSelectStyles(hasError, isDark),
+        styles:           makeSelectStyles(hasError, isDark, '#8b5cf6'),
         menuPortalTarget: typeof document !== 'undefined' ? document.body : undefined,
         menuPosition:     'fixed'  as const,
         menuPlacement:    'auto'   as const,
@@ -126,6 +126,7 @@ export default function TabProfilKeluarga({ data, errors, onChange, candidateFam
                     value={data.family_email ?? ''}
                     onChange={e => onChange('family_email', e.target.value)}
                     placeholder="contoh@gmail.com"
+                    maxLength={100}
                 />
                 {data.family_email && !data.family_email.endsWith('@gmail.com') && (
                     <p className="mt-1 text-xs text-amber-400">
@@ -170,7 +171,16 @@ export default function TabProfilKeluarga({ data, errors, onChange, candidateFam
                         type="number"
                         className={inputCls(!!errors.family_dependents)}
                         value={data.family_dependents ?? ''}
-                        onChange={e => onChange('family_dependents', e.target.value === '' ? null : parseInt(e.target.value))}
+                        onChange={e => {
+                            if (e.target.value === '') {
+                                onChange('family_dependents', null)
+                                return
+                            }
+                            const val = parseInt(e.target.value, 10)
+                            if (isNaN(val)) return
+                            const clamped = Math.max(0, Math.min(30, val))
+                            onChange('family_dependents', clamped)
+                        }}
                         placeholder="cth: 4"
                         min={0}
                         max={30}

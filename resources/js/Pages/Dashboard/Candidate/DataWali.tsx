@@ -171,12 +171,17 @@ interface Props {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function DataWali({ guardian, completion: initialCompletion, user, candidate }: Props) {
-    const { errors } = usePage().props as { errors: Record<string, string> }
+    const { errors: pageErrors } = usePage().props as { errors: Record<string, string> }
 
-    const [activeTab,  setActiveTab]  = useState(0)
-    const [form,       setForm]       = useState<GuardianData>(guardian)
-    const [submitting, setSubmitting] = useState(false)
-    const [completion, setCompletion] = useState(initialCompletion)
+    const [activeTab,   setActiveTab]   = useState(0)
+    const [form,        setForm]        = useState<GuardianData>(guardian)
+    const [localErrors, setLocalErrors] = useState<Record<string, string>>(pageErrors || {})
+    const [submitting,  setSubmitting]  = useState(false)
+    const [completion,  setCompletion]  = useState(initialCompletion)
+
+    useEffect(() => {
+        setLocalErrors(pageErrors || {})
+    }, [pageErrors])
 
     const contentRef     = useRef<HTMLDivElement>(null)
     const rangkumanIndex = TABS.length - 1
@@ -238,12 +243,22 @@ export default function DataWali({ guardian, completion: initialCompletion, user
     // ── Field change handler ──────────────────────────────────────────────────
     const handleChange = useCallback((field: string, value: unknown) => {
         setForm(prev => ({ ...prev, [field]: value }))
+        setLocalErrors(prev => {
+            if (!prev[field]) return prev
+            const copy = { ...prev }
+            delete copy[field]
+            return copy
+        })
     }, [])
 
     // ── Submit per-tab + auto next ────────────────────────────────────────────
     const handleSubmit = () => {
+        const currentTabKey = TABS[activeTab].key
         setSubmitting(true)
-        router.put(route('dashboard.data-wali.update'), form as unknown as Record<string, string>, {
+        router.put(route('dashboard.data-wali.update'), {
+            ...form,
+            tab: currentTabKey,
+        } as unknown as Record<string, string>, {
             preserveScroll: true,
             onSuccess: () => {
                 swalDark.fire({
@@ -260,7 +275,7 @@ export default function DataWali({ guardian, completion: initialCompletion, user
                 swalDark.fire({
                     toast: true, position: 'top-end', icon: 'warning',
                     title: 'Data belum terisi',
-                    text: 'Lengkapi field yang ditandai merah.',
+                    text: 'Lengkapi field yang ditandai merah pada tab ini.',
                     showConfirmButton: false, timer: 3000, timerProgressBar: true,
                 })
             },
@@ -281,7 +296,10 @@ export default function DataWali({ guardian, completion: initialCompletion, user
         if (!confirm.isConfirmed) return
 
         setSubmitting(true)
-        router.put(route('dashboard.data-wali.update'), form as unknown as Record<string, string>, {
+        router.put(route('dashboard.data-wali.update'), {
+            ...form,
+            tab: 'rangkuman',
+        } as unknown as Record<string, string>, {
             preserveScroll: true,
             onSuccess: () => {
                 swalDark.fire({
@@ -401,10 +419,10 @@ export default function DataWali({ guardian, completion: initialCompletion, user
                                dark:bg-content-surface bg-white
                                p-5 sm:p-6 min-h-[420px]"
                 >
-                    {activeTab === 0 && <TabIbu            data={form} errors={errors} onChange={handleChange} candidateAddr={candidate} />}
-                    {activeTab === 1 && <TabAyah          data={form} errors={errors} onChange={handleChange} candidateAddr={candidate} />}
-                    {activeTab === 2 && <TabWali           data={form} errors={errors} onChange={handleChange} candidateAddr={candidate} guardianRequired={guardianRequired} />}
-                    {activeTab === 3 && <TabProfilKeluarga data={form} errors={errors} onChange={handleChange} candidateFamilyCardNumber={candidate.family_card_number} />}
+                    {activeTab === 0 && <TabIbu            data={form} errors={localErrors} onChange={handleChange} candidateAddr={candidate} />}
+                    {activeTab === 1 && <TabAyah          data={form} errors={localErrors} onChange={handleChange} candidateAddr={candidate} />}
+                    {activeTab === 2 && <TabWali           data={form} errors={localErrors} onChange={handleChange} candidateAddr={candidate} guardianRequired={guardianRequired} />}
+                    {activeTab === 3 && <TabProfilKeluarga data={form} errors={localErrors} onChange={handleChange} candidateFamilyCardNumber={candidate.family_card_number} />}
                     {activeTab === 4 && (
                         <TabRangkuman
                             data={form}

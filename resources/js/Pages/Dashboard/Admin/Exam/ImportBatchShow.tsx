@@ -37,7 +37,7 @@ export default function ExamImportBatchShow({ batch }: Props) {
     const isSuccessful = batch.status === "completed" && !hasFailures;
 
     return (
-        <DashboardLayout>
+        <>
             <Head title={`Import ${batch.original_filename}`} />
 
             <ExamWorkspace active="packages">
@@ -158,6 +158,8 @@ export default function ExamImportBatchShow({ batch }: Props) {
                     )}
                 </section>
             </ExamWorkspace>
-        </DashboardLayout>
+        </>
     );
 }
+
+ExamImportBatchShow.layout = (page: any) => <DashboardLayout>{page}</DashboardLayout>;

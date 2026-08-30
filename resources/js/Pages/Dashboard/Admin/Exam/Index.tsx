@@ -64,7 +64,7 @@ function StatusPill({ value }: { value: string }) {
 
 export default function ExamAdminIndex({ stats, recent_imports, upcoming_sessions }: Props) {
     return (
-        <DashboardLayout>
+        <>
             <Head title="Ujian Seleksi" />
 
             <ExamWorkspace active="packages">
@@ -141,6 +141,8 @@ export default function ExamAdminIndex({ stats, recent_imports, upcoming_session
                     </section>
                 </div>
             </ExamWorkspace>
-        </DashboardLayout>
+        </>
     );
 }
+
+ExamAdminIndex.layout = (page: any) => <DashboardLayout>{page}</DashboardLayout>;

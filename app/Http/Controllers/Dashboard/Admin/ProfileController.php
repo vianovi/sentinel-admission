@@ -76,7 +76,6 @@ class ProfileController extends Controller
     private const AVATAR_SIGNATURES = [
         "\xFF\xD8\xFF"      => ['mime' => 'image/jpeg', 'ext' => 'jpg'],
         "\x89PNG\r\n\x1A\n" => ['mime' => 'image/png',  'ext' => 'png'],
-        "RIFF"              => ['mime' => 'image/webp',  'ext' => 'webp'],
     ];
 
     public function updateAvatar(Request $request)
@@ -84,10 +83,14 @@ class ProfileController extends Controller
         $request->validate([
             'avatar' => [
                 'required', 'file',
-                'mimes:jpg,jpeg,png,webp',
-                'mimetypes:image/jpeg,image/png,image/webp',
-                'max:1024',
+                'mimes:jpg,jpeg,png',
+                'mimetypes:image/jpeg,image/png',
+                'max:3072',
             ],
+        ], [
+            'avatar.mimes'     => 'Format avatar hanya boleh JPG atau PNG.',
+            'avatar.mimetypes' => 'Format avatar hanya boleh JPG atau PNG.',
+            'avatar.max'       => 'Ukuran foto maksimal adalah 3MB.',
         ]);
 
         $file   = $request->file('avatar');
@@ -97,22 +100,29 @@ class ProfileController extends Controller
 
         $detected = null;
         foreach (self::AVATAR_SIGNATURES as $signature => $meta) {
-            if (str_starts_with($header, $signature)) {
-                if ($signature === 'RIFF' && substr($header, 8, 4) !== 'WEBP') continue;
+            if (substr($header, 0, strlen($signature)) === $signature) {
                 $detected = $meta;
                 break;
             }
         }
 
         if (! $detected) {
-            return back()->withErrors(['avatar' => 'File tidak valid.']);
+            \Illuminate\Support\Facades\Log::warning('Avatar upload validation failed: Invalid magic bytes signature', [
+                'user_id' => $request->user()->id,
+                'header_hex' => bin2hex($header),
+            ]);
+            return back()->withErrors(['avatar' => 'Berkas gambar yang diunggah rusak atau formatnya tidak didukung.']);
         }
 
         $content   = file_get_contents($file->getRealPath());
-        $forbidden = ['<?php', '<?=', '<script', '<%', 'eval(', 'base64_decode(', 'system(', 'exec(', 'passthru(', 'shell_exec('];
+        $forbidden = ['<?php', '<?=', '<script'];
         foreach ($forbidden as $pattern) {
             if (stripos($content, $pattern) !== false) {
-                return back()->withErrors(['avatar' => 'File tidak valid.']);
+                \Illuminate\Support\Facades\Log::error('Avatar upload security alert: Forbidden pattern detected in content', [
+                    'user_id' => $request->user()->id,
+                    'detected_pattern' => $pattern,
+                ]);
+                return back()->withErrors(['avatar' => 'Berkas gambar tidak memenuhi standar keamanan sistem kami.']);
             }
         }
 
@@ -123,10 +133,16 @@ class ProfileController extends Controller
         $path = $directory . '/' . Str::uuid() . '.' . $detected['ext'];
 
         if (! Storage::disk('private')->put($path, file_get_contents($file->getRealPath()))) {
-            return back()->withErrors(['avatar' => 'Gagal menyimpan avatar. Silakan coba lagi.']);
+            \Illuminate\Support\Facades\Log::error('Avatar storage write error', [
+                'user_id' => $user->id,
+                'path' => $path,
+            ]);
+            return back()->withErrors(['avatar' => 'Gagal memperbarui foto profil karena kendala teknis internal. Silakan coba lagi.']);
         }
 
-        $user->update(['avatar' => $path]);
+        $user->avatar = $path;
+        $user->save();
+        $user->touch();
 
         if ($oldPath && $oldPath !== $path && Storage::disk('private')->exists($oldPath)) {
             Storage::disk('private')->delete($oldPath);
@@ -143,6 +159,10 @@ class ProfileController extends Controller
             abort(404);
         }
 
-        return Storage::disk('private')->response($user->avatar);
+        return Storage::disk('private')->response($user->avatar, null, [
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'Pragma'        => 'no-cache',
+            'Expires'       => '0',
+        ]);
     }
 }

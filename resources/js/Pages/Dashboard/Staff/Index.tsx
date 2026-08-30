@@ -1,7 +1,7 @@
 // resources/js/Pages/Dashboard/Staff/Index.tsx
 
 import { lazy, Suspense, useEffect } from "react";
-import { Head, usePage } from "@inertiajs/react";
+import { Head, usePage, usePoll } from "@inertiajs/react";
 import { animate, stagger } from "animejs";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import ResizableSplitGrid from "@/Components/Dashboard/Shared/ResizableSplitGrid";
@@ -62,6 +62,10 @@ function ChartSkeleton() {
 export default function StaffIndex({ stats, submission_trend, recent_submissions }: Props) {
     const { auth } = usePage<PageProps>().props;
 
+    usePoll(10000, {
+        only: ['stats', 'recent_submissions'],
+    });
+
     useEffect(() => {
         // Header entrance
         animate(".staff-index-header", {
@@ -81,7 +85,7 @@ export default function StaffIndex({ stats, submission_trend, recent_submissions
     }, []);
 
     return (
-        <DashboardLayout>
+        <>
             <Head title="Dashboard Staff" />
 
             <div className="flex flex-col gap-6 pb-8">
@@ -137,6 +141,7 @@ export default function StaffIndex({ stats, submission_trend, recent_submissions
                 </div>
 
             </div>
-        </DashboardLayout>
+        </>
     );
 }
+StaffIndex.layout = (page: any) => <DashboardLayout>{page}</DashboardLayout>;

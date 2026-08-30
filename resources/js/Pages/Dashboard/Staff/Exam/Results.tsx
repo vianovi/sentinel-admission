@@ -95,7 +95,7 @@ export default function StaffExamResults({ attempts, filters, sessions }: Props)
     };
 
     return (
-        <DashboardLayout>
+        <>
             <Head title="Hasil Ujian - Staff" />
 
             <div className="space-y-5 pb-8">
@@ -220,7 +220,7 @@ export default function StaffExamResults({ attempts, filters, sessions }: Props)
                     ) : null}
                 </section>
             </div>
-        </DashboardLayout>
+        </>
     );
 }
 
@@ -242,3 +242,5 @@ function decodePaginationLabel(label: string): string {
         .replace("Previous", "Sebelumnya")
         .replace("Next", "Berikutnya");
 }
+
+StaffExamResults.layout = (page: any) => <DashboardLayout>{page}</DashboardLayout>;

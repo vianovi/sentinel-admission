@@ -1,0 +1,187 @@
+- generic [ref=e73]:
+  - complementary [ref=e74]:
+    - img "Al-Muntaha School" [ref=e76]
+    - generic [ref=e77]:
+      - list [ref=e80]:
+        - listitem [ref=e81]:
+          - link "" [ref=e82] [cursor=pointer]:
+            - /url: /dashboard/admin
+        - listitem [ref=e85]:
+          - link "" [ref=e86] [cursor=pointer]:
+            - /url: /dashboard/admin/calendar
+        - listitem [ref=e88]:
+          - button "" [ref=e89] [cursor=pointer]
+        - listitem [ref=e91]:
+          - button "" [ref=e92] [cursor=pointer]
+        - listitem [ref=e94]:
+          - button "" [ref=e95] [cursor=pointer]
+        - listitem [ref=e97]:
+          - link "" [ref=e98] [cursor=pointer]:
+            - /url: /dashboard/admin/reports
+      - list [ref=e102]:
+        - listitem [ref=e103]:
+          - link "" [ref=e104] [cursor=pointer]:
+            - /url: /dashboard/admin/staff-list
+        - listitem [ref=e106]:
+          - link "" [ref=e107] [cursor=pointer]:
+            - /url: /dashboard/admin/users
+      - list [ref=e111]:
+        - listitem [ref=e112]:
+          - link "" [ref=e113] [cursor=pointer]:
+            - /url: /dashboard/admin/waves
+        - listitem [ref=e115]:
+          - link "" [ref=e116] [cursor=pointer]:
+            - /url: /dashboard/admin/programs
+        - listitem [ref=e118]:
+          - link "" [ref=e119] [cursor=pointer]:
+            - /url: /dashboard/admin/settings
+      - list [ref=e123]:
+        - listitem [ref=e124]:
+          - link "" [ref=e125] [cursor=pointer]:
+            - /url: /dashboard/admin/profile
+    - text: 
+  - generic [ref=e127]:
+    - banner [ref=e129]:
+      - button "Toggle sidebar" [ref=e130] [cursor=pointer]:
+        - generic [ref=e131]: 
+      - generic [ref=e132]:
+        - paragraph [ref=e133]: Good Afternoon, Admin SPMB
+        - paragraph [ref=e134]: Pusat kendali untuk pengaturan, monitoring, dan evaluasi Al-Muntaha School
+      - generic [ref=e135]:
+        - button "Open calendar" [ref=e137] [cursor=pointer]:
+          - generic [ref=e138]: 
+          - generic [ref=e140]: 08/23/2026
+        - generic [ref=e141]:
+          - generic [ref=e142]:
+            - button "Search" [ref=e143] [cursor=pointer]:
+              - generic [ref=e144]: 
+            - generic:
+              - searchbox "Search Here"
+          - text: 
+        - button "" [ref=e145] [cursor=pointer]
+        - button "Switch to dark mode" [ref=e147] [cursor=pointer]:
+          - generic [ref=e148]: 
+        - button "Notifications" [ref=e150] [cursor=pointer]:
+          - generic [ref=e151]: 
+        - button "AS Admin SPMB Admin " [ref=e155] [cursor=pointer]:
+          - generic [ref=e156]: AS
+          - generic [ref=e158]:
+            - paragraph [ref=e159]: Admin SPMB
+            - paragraph [ref=e160]: Admin
+          - generic [ref=e161]: 
+    - generic [ref=e165]:
+      - generic [ref=e166]:
+        - generic [ref=e167]:
+          - generic [ref=e168]: 
+          - generic [ref=e170]:
+            - heading "Dashboard Admin" [level=1] [ref=e171]
+            - paragraph [ref=e172]: Ringkasan sistem pendaftaran, Admin SPMB
+        - generic [ref=e173]:
+          - link " Kandidat" [ref=e174] [cursor=pointer]:
+            - /url: /dashboard/admin/candidates
+            - generic [ref=e175]: 
+            - text: Kandidat
+          - link " Staff" [ref=e176] [cursor=pointer]:
+            - /url: /dashboard/admin/staff-list
+            - generic [ref=e177]: 
+            - text: Staff
+      - generic [ref=e178]:
+        - generic [ref=e179]:
+          - generic [ref=e180]: 
+          - generic [ref=e182]:
+            - paragraph [ref=e183]: "2"
+            - paragraph [ref=e184]: Total Kandidat
+        - generic [ref=e185]:
+          - generic [ref=e186]: 
+          - generic [ref=e188]:
+            - paragraph [ref=e189]: "1"
+            - paragraph [ref=e190]: Staff Aktif
+        - generic [ref=e191]:
+          - generic [ref=e192]: 
+          - generic [ref=e194]:
+            - paragraph [ref=e195]: "2"
+            - paragraph [ref=e196]: Menunggu Verifikasi
+        - generic [ref=e197]:
+          - generic [ref=e198]: 
+          - generic [ref=e200]:
+            - paragraph [ref=e201]: "0"
+            - paragraph [ref=e202]: Diterima
+        - generic [ref=e203]:
+          - generic [ref=e204]: 
+          - generic [ref=e206]:
+            - paragraph [ref=e207]: "0"
+            - paragraph [ref=e208]: Ditolak
+      - generic [ref=e209]:
+        - generic [ref=e210]:
+          - generic [ref=e211]:
+            - generic [ref=e212]: 
+            - generic [ref=e214]:
+              - paragraph [ref=e215]: Gelombang Aktif
+              - paragraph [ref=e216]: Monitoring kuota pendaftaran
+          - generic [ref=e217]:
+            - generic [ref=e218]:
+              - paragraph [ref=e219]: Gelombang 2
+              - paragraph [ref=e220]: TA 2026/2027 · tutup 02 October 2026
+            - generic [ref=e221]:
+              - generic [ref=e222]:
+                - generic [ref=e223]: Kuota terisi
+                - generic [ref=e224]: 0/70
+              - paragraph [ref=e226]: 0% dari target kuota terpenuhi
+            - generic [ref=e227]:
+              - generic [ref=e228]:
+                - paragraph [ref=e229]: "0"
+                - paragraph [ref=e230]: Draft
+              - generic [ref=e231]:
+                - paragraph [ref=e232]: "2"
+                - paragraph [ref=e233]: Submit
+              - generic [ref=e234]:
+                - paragraph [ref=e235]: "0"
+                - paragraph [ref=e236]: Verified
+        - generic [ref=e237]:
+          - generic [ref=e238]:
+            - generic [ref=e239]:
+              - generic [ref=e240]: 
+              - generic [ref=e242]:
+                - paragraph [ref=e243]: Kandidat Terbaru
+                - paragraph [ref=e244]: Update terakhir pendaftar
+            - link "Lihat semua " [ref=e245] [cursor=pointer]:
+              - /url: /dashboard/admin/candidates
+              - text: Lihat semua
+              - generic [ref=e246]: 
+          - list [ref=e247]:
+            - listitem [ref=e248]:
+              - link "A Andre Alvin Polii NISN 1234567896 · 16 jam yang lalu Menunggu Verifikasi " [ref=e249] [cursor=pointer]:
+                - /url: /dashboard/admin/candidates/2
+                - generic [ref=e250]: A
+                - generic [ref=e252]:
+                  - paragraph [ref=e253]: Andre Alvin Polii
+                  - paragraph [ref=e254]: NISN 1234567896 · 16 jam yang lalu
+                - generic [ref=e255]: Menunggu Verifikasi
+                - generic [ref=e256]: 
+            - listitem [ref=e257]:
+              - link "S Silvia Dewi Noviana Putri NISN 0987654321 · 2 minggu yang lalu Menunggu Verifikasi " [ref=e258] [cursor=pointer]:
+                - /url: /dashboard/admin/candidates/1
+                - generic [ref=e259]: S
+                - generic [ref=e261]:
+                  - paragraph [ref=e262]: Silvia Dewi Noviana Putri
+                  - paragraph [ref=e263]: NISN 0987654321 · 2 minggu yang lalu
+                - generic [ref=e264]: Menunggu Verifikasi
+                - generic [ref=e265]: 
+      - generic [ref=e266]:
+        - generic [ref=e267]:
+          - generic [ref=e268]:
+            - generic [ref=e269]: 
+            - generic [ref=e271]:
+              - paragraph [ref=e272]: Staff Management
+              - paragraph [ref=e273]: Monitoring status akun staff
+          - link "Kelola staff " [ref=e274] [cursor=pointer]:
+            - /url: /dashboard/admin/staff-list
+            - text: Kelola staff
+            - generic [ref=e275]: 
+        - list [ref=e276]:
+          - listitem [ref=e277]:
+            - generic [ref=e278]: S
+            - generic [ref=e280]:
+              - paragraph [ref=e281]: Staff Verifikasi
+              - paragraph [ref=e282]: staff@spmb.com · dibuat 02 Aug 2026
+            - generic [ref=e283]: Aktif

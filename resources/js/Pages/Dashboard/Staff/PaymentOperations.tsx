@@ -364,7 +364,7 @@ export default function StaffPaymentOperations({
     const hasActiveFilter = Boolean(filters.search || filters.status || filters.channel || filters.wave || filters.program || filters.action);
 
     return (
-        <DashboardLayout>
+        <>
             <Head title="Payment Operations - Staff" />
 
             <div className="flex flex-col gap-5 pb-8">
@@ -567,7 +567,7 @@ export default function StaffPaymentOperations({
                     />
                 </div>
             </div>
-        </DashboardLayout>
+        </>
     );
 }
 
@@ -830,3 +830,5 @@ function PaymentPagination({ payments, filters }: { payments: Paginated<PaymentR
         </div>
     );
 }
+
+StaffPaymentOperations.layout = (page: any) => <DashboardLayout>{page}</DashboardLayout>;

@@ -31,7 +31,7 @@ export default function InternalStatusPendaftaran({ scope, base_path, status_sum
     const candidateBase = `${base_path}/candidates/${status_summary.identity.id}`;
 
     return (
-        <DashboardLayout>
+        <>
             <Head title={title} />
 
             <div className="flex flex-col gap-5 pb-8">
@@ -84,7 +84,7 @@ export default function InternalStatusPendaftaran({ scope, base_path, status_sum
 
                 <QuickLinks links={status_summary.quick_links} />
             </div>
-        </DashboardLayout>
+        </>
     );
 }
 
@@ -115,3 +115,5 @@ function QuickLinks({ links }: { links: QuickLink[] }) {
         </section>
     );
 }
+
+InternalStatusPendaftaran.layout = (page: any) => <DashboardLayout>{page}</DashboardLayout>;

@@ -22,7 +22,7 @@ export default function ExamPackages({ packages, subjects, editing_package, mode
     const totalQuestions = packages.reduce((total, item) => total + item.questions_count, 0);
 
     return (
-        <DashboardLayout>
+        <>
             <Head title="Paket Ujian" />
 
             <ExamWorkspace active="packages">
@@ -109,6 +109,8 @@ export default function ExamPackages({ packages, subjects, editing_package, mode
                     right={<PackageListCard packages={packages} />}
                 />
             </ExamWorkspace>
-        </DashboardLayout>
+        </>
     );
 }
+
+ExamPackages.layout = (page: any) => <DashboardLayout>{page}</DashboardLayout>;

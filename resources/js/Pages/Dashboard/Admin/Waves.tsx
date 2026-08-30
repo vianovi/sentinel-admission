@@ -218,7 +218,7 @@ export default function AdminWaves({ waves }: Props) {
     };
 
     return (
-        <DashboardLayout>
+        <>
             <Head title="Gelombang - Admin" />
 
             <div className="flex flex-col gap-6 pb-8">
@@ -407,7 +407,7 @@ export default function AdminWaves({ waves }: Props) {
                     </div>
                 )}
             </div>
-        </DashboardLayout>
+        </>
     );
 }
 
@@ -527,3 +527,5 @@ function InfoLine({ icon, label, value }: { icon: string; label: string; value: 
         </div>
     );
 }
+
+AdminWaves.layout = (page: any) => <DashboardLayout>{page}</DashboardLayout>;

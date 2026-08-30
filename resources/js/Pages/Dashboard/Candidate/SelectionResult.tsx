@@ -53,7 +53,7 @@ export default function CandidateSelectionResult({ selection_result }: Props) {
     }, []);
 
     return (
-        <DashboardLayout>
+        <>
             <Head title="Hasil Seleksi" />
 
             <div className="flex flex-col gap-5 pb-8">
@@ -145,7 +145,7 @@ export default function CandidateSelectionResult({ selection_result }: Props) {
                     </Link>
                 </section>
             </div>
-        </DashboardLayout>
+        </>
     );
 }
 
@@ -157,3 +157,5 @@ function Info({ label, value }: { label: string; value: string }) {
         </div>
     );
 }
+
+CandidateSelectionResult.layout = (page: any) => <DashboardLayout>{page}</DashboardLayout>;

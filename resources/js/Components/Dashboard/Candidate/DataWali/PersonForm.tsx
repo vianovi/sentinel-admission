@@ -35,10 +35,10 @@ function inputCls(hasError = false) {
         'dark:text-slate-200 text-slate-800',
         'placeholder:dark:text-slate-600 placeholder:text-slate-400',
         'transition-colors duration-200',
-        'focus:outline-none focus:ring-2 dark:focus:ring-gold/40 focus:ring-amber-300/50',
+        'focus:outline-none focus:ring-2 dark:focus:ring-violet-500/40 focus:ring-violet-500/30',
         hasError
             ? 'border-red-500/60 focus:border-red-500'
-            : 'dark:border-content-border border-black/[0.10] dark:focus:border-gold/60 focus:border-amber-400/60',
+            : 'dark:border-content-border border-black/[0.10] dark:focus:border-violet-500/60 focus:border-violet-500/60',
     ].join(' ')
 }
 
@@ -66,7 +66,7 @@ export default function PersonForm({
     const isDark    = theme === 'dark'
 
     const portalProps = (hasError = false) => ({
-        styles:           makeSelectStyles(hasError, isDark),
+        styles:           makeSelectStyles(hasError, isDark, '#8b5cf6'),
         menuPortalTarget: typeof document !== 'undefined' ? document.body : undefined,
         menuPosition:     'fixed'  as const,
         menuPlacement:    'auto'   as const,
@@ -128,6 +128,7 @@ export default function PersonForm({
                         value={(get('name') as string) ?? ''}
                         onChange={e => set('name', e.target.value)}
                         placeholder={`Nama lengkap ${label.toLowerCase()}`}
+                        maxLength={100}
                     />
                 </Field>
 
@@ -139,6 +140,7 @@ export default function PersonForm({
                             value={(get('relation') as string) ?? ''}
                             onChange={e => set('relation', e.target.value)}
                             placeholder="cth: Nenek, Paman, Bibi"
+                            maxLength={100}
                         />
                     </Field>
                 )}
@@ -161,6 +163,7 @@ export default function PersonForm({
                         value={(get('place_of_birth') as string) ?? ''}
                         onChange={e => set('place_of_birth', e.target.value)}
                         placeholder="Kota tempat lahir"
+                        maxLength={100}
                     />
                 </Field>
 
@@ -197,6 +200,7 @@ export default function PersonForm({
                             value={(get('phone') as string) ?? ''}
                             onChange={e => set('phone', e.target.value.replace(/\D/g, '').slice(0, 14))}
                             placeholder="08xxxxxxxxxx"
+                            maxLength={14}
                         />
                         {(prefix === 'father' || prefix === 'mother') && wizardPhone && (
                             <button
@@ -228,6 +232,7 @@ export default function PersonForm({
                         value={(get('job_ktp') as string) ?? ''}
                         onChange={e => set('job_ktp', e.target.value)}
                         placeholder="cth: Petani, Wiraswasta, PNS"
+                        maxLength={100}
                     />
                 </Field>
 
@@ -238,6 +243,7 @@ export default function PersonForm({
                         value={(get('job_actual') as string) ?? ''}
                         onChange={e => set('job_actual', e.target.value)}
                         placeholder="cth: Freelance, pedagang online"
+                        maxLength={100}
                     />
                 </Field>
 
@@ -319,8 +325,8 @@ function StatusRow({ prefix, label, get, set, err }: {
                             'flex items-center gap-2 rounded-lg border px-4 py-2.5',
                             'text-sm font-medium transition-all duration-200 min-h-[44px]',
                             get('status') === opt.value
-                                ? 'border-gold bg-gold/10 text-gold'
-                                : 'dark:border-content-border border-black/[0.10] dark:bg-content-card bg-slate-50 dark:text-slate-400 text-slate-500 dark:hover:border-gold/50 hover:border-amber-300 dark:hover:text-slate-300 hover:text-slate-700',
+                                ? 'border-violet-500 bg-violet-500/10 text-violet-500 dark:text-violet-400 font-semibold'
+                                : 'dark:border-content-border border-black/[0.10] dark:bg-content-card bg-slate-50 dark:text-slate-400 text-slate-500 dark:hover:border-violet-500/50 hover:border-violet-300 dark:hover:text-slate-300 hover:text-slate-700',
                         ].join(' ')}
                     >
                         <i className={[

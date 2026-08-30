@@ -68,7 +68,9 @@ class User extends Authenticatable implements MustVerifyEmail
             default => 'dashboard.profile.avatar',
         };
 
-        return route($routeName) . '?v=' . $this->updated_at->timestamp;
+        $version = $this->updated_at?->timestamp ?? time();
+
+        return route($routeName) . '?v=' . $version;
     }
 
     /**

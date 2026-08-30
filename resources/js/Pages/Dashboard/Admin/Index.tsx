@@ -1,7 +1,7 @@
 // resources/js/Pages/Dashboard/Admin/Index.tsx
 
 import { useEffect } from "react";
-import { Head, Link, usePage } from "@inertiajs/react";
+import { Head, Link, usePage, usePoll } from "@inertiajs/react";
 import { animate, stagger } from "animejs";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import { PageProps } from "@/types";
@@ -108,6 +108,10 @@ const statCards = (stats: Stats) => [
 export default function AdminIndex({ stats, active_wave, recent_candidates, staff_list }: Props) {
     const { auth } = usePage<PageProps>().props;
 
+    usePoll(10000, {
+        only: ['stats', 'recent_candidates'],
+    });
+
     useEffect(() => {
         animate(".admin-stat-card", {
             opacity: [0, 1],
@@ -132,7 +136,7 @@ export default function AdminIndex({ stats, active_wave, recent_candidates, staf
         : 0;
 
     return (
-        <DashboardLayout>
+        <>
             <Head title="Dashboard Admin" />
 
             <div className="flex flex-col gap-6">
@@ -390,6 +394,8 @@ export default function AdminIndex({ stats, active_wave, recent_candidates, staf
                 </section>
 
             </div>
-        </DashboardLayout>
+        </>
     );
 }
+
+AdminIndex.layout = (page: React.ReactNode) => <DashboardLayout>{page}</DashboardLayout>;

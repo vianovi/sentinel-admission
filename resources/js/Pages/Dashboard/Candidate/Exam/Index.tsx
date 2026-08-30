@@ -72,7 +72,7 @@ export default function CandidateExamIndex({ candidate, sessions, gate }: Props)
     const completedCount = sessions.filter((item) => ["submitted", "auto_submitted"].includes(item.latest_attempt?.status ?? "")).length;
 
     return (
-        <DashboardLayout>
+        <>
             <Head title="Ujian Seleksi" />
 
             <div className="space-y-5 pb-8">
@@ -161,7 +161,7 @@ export default function CandidateExamIndex({ candidate, sessions, gate }: Props)
                     </>
                 )}
             </div>
-        </DashboardLayout>
+        </>
     );
 }
 
@@ -240,3 +240,5 @@ function MiniMetric({ label, value }: { label: string; value: string | number })
         </div>
     );
 }
+
+CandidateExamIndex.layout = (page: any) => <DashboardLayout>{page}</DashboardLayout>;

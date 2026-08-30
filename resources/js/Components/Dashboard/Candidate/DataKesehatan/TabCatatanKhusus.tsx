@@ -173,26 +173,26 @@ function DocCard({
                 </div>
 
                 <div className="min-w-0 flex-1">
-                    <div className="mb-0.5 flex flex-wrap items-center gap-2">
-                        <p className="text-xs font-semibold dark:text-slate-200 text-slate-700">
+                    <div className="mb-1 flex flex-wrap items-center gap-2">
+                        <p className="text-sm font-bold dark:text-slate-100 text-slate-800">
                             {config.label}
                         </p>
                         {config.required && (
-                            <span className="rounded-md border border-amber-200 px-1.5 py-0.5 text-[10px] font-semibold text-amber-600 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-400">
+                            <span className="rounded-md border border-amber-300 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-400">
                                 wajib
                             </span>
                         )}
                     </div>
 
-                    <p className="text-[11px] leading-relaxed dark:text-slate-500 text-slate-400">
+                    <p className="text-xs leading-relaxed dark:text-slate-400 text-slate-600">
                         {config.desc}
                     </p>
 
                     {docState.localFile && (
-                        <p className="mt-1 flex items-center gap-1.5 text-[11px] dark:text-slate-500 text-slate-400">
-                            <i className="fa-solid fa-paperclip text-[9px]"></i>
+                        <p className="mt-1.5 flex items-center gap-1.5 text-xs font-medium dark:text-slate-400 text-slate-600">
+                            <i className="fa-solid fa-paperclip text-[10px]"></i>
                             <span className="max-w-[180px] truncate">{docState.localFile.name}</span>
-                            <span className="shrink-0 dark:text-slate-600 text-slate-300">·</span>
+                            <span className="shrink-0 dark:text-slate-500 text-slate-400">·</span>
                             <span className="shrink-0">{formatFileSize(docState.localFile.size)}</span>
                         </p>
                     )}
@@ -228,17 +228,17 @@ function DocCard({
                 </div>
             )}
 
-            <div className="flex items-center justify-between gap-3 border-t border-black/[0.05] px-4 py-3 dark:border-white/[0.05] dark:bg-white/[0.01] bg-slate-50/50">
+            <div className="flex items-center justify-between gap-3 border-t border-black/[0.08] px-4 py-3.5 dark:border-white/10 dark:bg-white/[0.02] bg-slate-50">
                 {!hasFile && !docState.uploading && (
-                    <p className="flex items-center gap-1.5 text-[11px] dark:text-slate-600 text-slate-400">
-                        <i className="fa-solid fa-arrow-up-from-bracket text-[10px]"></i>
+                    <p className="flex items-center gap-2 text-xs font-semibold dark:text-slate-300 text-slate-700">
+                        <i className="fa-solid fa-arrow-up-from-bracket text-xs text-cyan-600 dark:text-cyan-400"></i>
                         <span className="hidden sm:inline">Drag file ke sini atau klik pilih file</span>
                         <span className="sm:hidden">PDF, JPG, PNG, WebP · maks. 2MB</span>
                     </p>
                 )}
 
                 {hasFile && !docState.uploading && (
-                    <p className="text-[11px] dark:text-slate-500 text-slate-400">
+                    <p className="text-xs font-medium dark:text-slate-300 text-slate-600">
                         {config.hint}
                     </p>
                 )}

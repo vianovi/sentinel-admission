@@ -72,7 +72,7 @@ export default function CandidateHelp({ help_center }: Props) {
     }, []);
 
     return (
-        <DashboardLayout>
+        <>
             <Head title="Bantuan" />
 
             <div className="flex flex-col gap-5 pb-8">
@@ -163,6 +163,8 @@ export default function CandidateHelp({ help_center }: Props) {
                     </div>
                 </section>
             </div>
-        </DashboardLayout>
+        </>
     );
 }
+
+CandidateHelp.layout = (page: any) => <DashboardLayout>{page}</DashboardLayout>;

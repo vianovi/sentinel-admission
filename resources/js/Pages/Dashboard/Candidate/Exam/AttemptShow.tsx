@@ -113,7 +113,7 @@ export default function CandidateAttemptShow({ candidate, exam, attempt, questio
 
     if (!isRunning) {
         return (
-            <DashboardLayout>
+            <>
                 <Head title="Status Ujian" />
 
                 <div className="space-y-5 pb-8">
@@ -146,14 +146,14 @@ export default function CandidateAttemptShow({ candidate, exam, attempt, questio
                         </Link>
                     </section>
                 </div>
-            </DashboardLayout>
+            </>
         );
     }
 
     const activeAnswer = activeQuestion ? answerMap[activeQuestion.id] : null;
 
     return (
-        <DashboardLayout>
+        <>
             <Head title="Ruang Ujian" />
 
             <div className="space-y-4 pb-8">
@@ -317,7 +317,7 @@ export default function CandidateAttemptShow({ candidate, exam, attempt, questio
                     </aside>
                 </div>
             </div>
-        </DashboardLayout>
+        </>
     );
 }
 
@@ -340,3 +340,5 @@ function Info({ label, value }: { label: string; value: string }) {
         </div>
     );
 }
+
+CandidateAttemptShow.layout = (page: any) => <DashboardLayout>{page}</DashboardLayout>;

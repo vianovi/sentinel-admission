@@ -108,15 +108,25 @@ class DocumentController extends Controller
             return $this->lockedResponse($request, $gate['reason'] ?? 'Halaman dokumen masih terkunci.');
         }
 
-        $validated = $request->validate([
-            'file' => [
-                'required',
-                'file',
-                'mimes:jpeg,jpg,png,pdf',
-                'mimetypes:image/jpeg,image/png,application/pdf',
-                'max:5120',
+        $validated = $request->validate(
+            [
+                'file' => [
+                    'required',
+                    'file',
+                    'mimes:jpeg,jpg,png,pdf',
+                    'mimetypes:image/jpeg,image/png,application/pdf',
+                    'max:5120',
+                ],
             ],
-        ]);
+            [
+                'file.required'   => 'File dokumen wajib diunggah.',
+                'file.file'       => 'Berkas yang diunggah tidak valid.',
+                'file.uploaded'   => 'Ukuran file terlalu besar. Maksimal yang diizinkan adalah 5MB. Pastikan ukuran file tidak melebihi batas yang ditentukan.',
+                'file.mimes'      => 'Format tidak didukung. Gunakan file JPEG, PNG, atau PDF.',
+                'file.mimetypes'  => 'Format tidak didukung. Gunakan file JPEG, PNG, atau PDF.',
+                'file.max'        => 'Ukuran file terlalu besar. Maksimal yang diizinkan adalah 5MB.',
+            ]
+        );
 
         $file      = $request->file('file');
         $uploadIp  = $request->ip();
@@ -125,7 +135,15 @@ class DocumentController extends Controller
         $securityResult = $this->security->runAll($file, $uploadIp, $userAgent);
 
         if (! $this->security->isSafeToStore($securityResult)) {
-            $msg = 'Format file tidak didukung. Pastikan file berupa JPEG, PNG, atau PDF yang valid.';
+            Log::error('Document upload security check failed', [
+                'user_id' => $user->id,
+                'candidate_code' => $candidate->candidate_code,
+                'doc_type' => $docType,
+                'magic_bytes' => $securityResult['magic_bytes_result'],
+                'polyglot_clean' => $securityResult['polyglot_clean'],
+                'polyglot_detail' => $securityResult['polyglot_detail'],
+            ]);
+            $msg = 'Berkas dokumen gagal diunggah karena tidak memenuhi standar format atau keamanan sistem kami.';
             if ($isJson) return response()->json(['errors' => ['file' => $msg]], 422);
             return back()->withErrors(['file' => $msg]);
         }

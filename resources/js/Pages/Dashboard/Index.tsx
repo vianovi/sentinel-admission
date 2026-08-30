@@ -96,7 +96,7 @@ export default function CandidateDashboard({
 
     if (!candidate || !dashboard) {
         return (
-            <DashboardLayout>
+            <>
                 <Head title="Dashboard Pendaftar" />
                 <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 text-center">
                     <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-gold/20 bg-gold/10">
@@ -115,12 +115,12 @@ export default function CandidateDashboard({
                         Ke Halaman Utama
                     </Link>
                 </div>
-            </DashboardLayout>
+            </>
         );
     }
 
     return (
-        <DashboardLayout>
+        <>
             <Head title="Dashboard Pendaftar" />
 
             <div className="flex flex-col gap-5 px-4 py-5 sm:px-6 lg:gap-6">
@@ -154,7 +154,7 @@ export default function CandidateDashboard({
                         title={data_change_request_result.status === "approved" ? "Permintaan perubahan data disetujui" : "Permintaan perubahan data ditolak"}
                         description={
                             data_change_request_result.status === "approved"
-                                ? `Permintaan perubahan data ${data_change_request_result.field_label.toLowerCase()} disetujui oleh ${reviewedByLabel(data_change_request_result.reviewed_by_name)}. Data kamu sudah diperbarui.`
+                               ? `Permintaan perubahan data ${data_change_request_result.field_label.toLowerCase()} disetujui oleh ${reviewedByLabel(data_change_request_result.reviewed_by_name)}. Data kamu sudah diperbarui.`
                                 : `Permintaan perubahan data ditolak oleh ${reviewedByLabel(data_change_request_result.reviewed_by_name)}.${data_change_request_result.rejection_reason ? ` Alasan: ${data_change_request_result.rejection_reason}.` : ""}`
                         }
                         meta={data_change_request_result.reviewed_at ? `Ditinjau ${data_change_request_result.reviewed_at}` : null}
@@ -207,6 +207,8 @@ export default function CandidateDashboard({
                 <DocumentPaymentSummary documents={dashboard.documents_summary} payment={dashboard.payment_summary} />
                 <StatusTimeline status={dashboard.status_summary} />
             </div>
-        </DashboardLayout>
+        </>
     );
 }
+
+CandidateDashboard.layout = (page: React.ReactNode) => <DashboardLayout>{page}</DashboardLayout>;

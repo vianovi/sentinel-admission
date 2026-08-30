@@ -1197,7 +1197,7 @@ export default function StaffReports({ summary, charts, wave_reports, recent_can
     const activeTabDescription = reportTabs.find((tab) => tab.key === activeTab)?.description ?? "";
 
     return (
-        <DashboardLayout>
+        <>
             <Head title="Rekap / Laporan — Staff" />
 
             <div className="flex flex-col gap-6 pb-8">
@@ -1272,6 +1272,8 @@ export default function StaffReports({ summary, charts, wave_reports, recent_can
                     <WaveReportWorkspace rows={wave_reports} />
                 ) : null}
             </div>
-        </DashboardLayout>
+        </>
     );
 }
+
+StaffReports.layout = (page: any) => <DashboardLayout>{page}</DashboardLayout>;
