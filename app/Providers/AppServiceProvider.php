@@ -22,11 +22,16 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        if ($this->app->environment('local')) {
+            $this->app->register(\Laravel\Telescope\TelescopeServiceProvider::class);
+            $this->app->register(TelescopeServiceProvider::class);
+        }
     }
 
     public function boot(): void
     {
+        \Illuminate\Database\Eloquent\Model::shouldBeStrict(! $this->app->isProduction());
+
         RateLimiter::for('upload', function ($request) {
             return Limit::perMinute(10)->by($request->user()?->id);
         });

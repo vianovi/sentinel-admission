@@ -61,13 +61,17 @@ class IndexController extends Controller
     public function index(): Response
     {
         // ── Stats per status ─────────────────────────────────────────────────
+        $statusCounts = Candidate::select('status', \Illuminate\Support\Facades\DB::raw('count(*) as count'))
+            ->groupBy('status')
+            ->pluck('count', 'status');
+
         $stats = [
-            'total' => Candidate::count(),
-            'draft' => Candidate::where('status', 'draft')->count(),
-            'submitted' => Candidate::where('status', 'submitted')->count(),
-            'verified' => Candidate::where('status', 'verified')->count(),
-            'accepted' => Candidate::where('status', 'accepted')->count(),
-            'rejected' => Candidate::where('status', 'rejected')->count(),
+            'total' => $statusCounts->sum(),
+            'draft' => $statusCounts->get('draft', 0),
+            'submitted' => $statusCounts->get('submitted', 0),
+            'verified' => $statusCounts->get('verified', 0),
+            'accepted' => $statusCounts->get('accepted', 0),
+            'rejected' => $statusCounts->get('rejected', 0),
         ];
 
         // ── Submission trend 7 hari terakhir ─────────────────────────────────

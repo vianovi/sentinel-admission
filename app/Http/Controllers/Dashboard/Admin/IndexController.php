@@ -20,19 +20,23 @@ class IndexController extends Controller
     {
         $activeWave = AdmissionWave::where('is_active', true)->first();
 
+        $statusCounts = Candidate::select('status', \Illuminate\Support\Facades\DB::raw('count(*) as count'))
+            ->groupBy('status')
+            ->pluck('count', 'status');
+
         return Inertia::render('Dashboard/Admin/Index', [
             'stats' => [
-                'total_candidates' => Candidate::count(),
+                'total_candidates' => $statusCounts->sum(),
                 'total_staff' => User::where('role', 'staff')->count(),
                 'quota_target' => $activeWave?->quota_target ?? 0,
-                'quota_filled' => Candidate::where('status', 'accepted')->count(),
-                'pending_verify' => Candidate::where('status', 'submitted')->count(),
+                'quota_filled' => $statusCounts->get('accepted', 0),
+                'pending_verify' => $statusCounts->get('submitted', 0),
                 'by_status' => [
-                    'draft' => Candidate::where('status', 'draft')->count(),
-                    'submitted' => Candidate::where('status', 'submitted')->count(),
-                    'verified' => Candidate::where('status', 'verified')->count(),
-                    'accepted' => Candidate::where('status', 'accepted')->count(),
-                    'rejected' => Candidate::where('status', 'rejected')->count(),
+                    'draft' => $statusCounts->get('draft', 0),
+                    'submitted' => $statusCounts->get('submitted', 0),
+                    'verified' => $statusCounts->get('verified', 0),
+                    'accepted' => $statusCounts->get('accepted', 0),
+                    'rejected' => $statusCounts->get('rejected', 0),
                 ],
             ],
             'active_wave' => $activeWave ? [

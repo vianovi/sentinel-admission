@@ -13,17 +13,6 @@ class CandidatePaymentHistoryService
         $base = Payment::query()->where('candidate_id', $candidate->id);
 
         $latest = (clone $base)
-            ->select([
-                'id',
-                'order_id',
-                'payment_channel',
-                'final_amount',
-                'status',
-                'manual_status',
-                'paid_at',
-                'verified_at',
-                'updated_at',
-            ])
             ->latest()
             ->first();
 

@@ -91,34 +91,31 @@ class StaffPaymentOperationalService
 
     public function summary(): array
     {
-        $base = Payment::query();
-        $manualReview = Payment::query()
-            ->whereIn('payment_channel', [Payment::CHANNEL_TRANSFER, Payment::CHANNEL_CASH])
-            ->where('manual_status', Payment::MANUAL_PROOF_UPLOADED);
-        $gatewayPending = Payment::query()
-            ->where('payment_channel', Payment::CHANNEL_GATEWAY)
-            ->where('status', Payment::STATUS_PENDING);
-        $failedOrExpired = Payment::query()
-            ->where(function (Builder $query) {
-                $query
-                    ->whereIn('status', [
-                        Payment::STATUS_FAILED,
-                        Payment::STATUS_EXPIRED,
-                        Payment::STATUS_CANCELLED,
-                    ])
-                    ->orWhere('manual_status', Payment::MANUAL_REJECTED);
-            });
+        $aggregates = Payment::selectRaw('
+            COUNT(*) as total,
+            SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as paid,
+            SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as pending,
+            SUM(CASE WHEN payment_channel IN (?, ?) AND manual_status = ? THEN 1 ELSE 0 END) as manual_review,
+            SUM(CASE WHEN payment_channel = ? AND status = ? THEN 1 ELSE 0 END) as gateway_pending,
+            SUM(CASE WHEN status IN (?, ?, ?) OR manual_status = ? THEN 1 ELSE 0 END) as failed_or_expired,
+            SUM(CASE WHEN status = ? THEN final_amount ELSE 0 END) as paid_amount
+        ', [
+            Payment::STATUS_PAID,
+            Payment::STATUS_PENDING,
+            Payment::CHANNEL_TRANSFER, Payment::CHANNEL_CASH, Payment::MANUAL_PROOF_UPLOADED,
+            Payment::CHANNEL_GATEWAY, Payment::STATUS_PENDING,
+            Payment::STATUS_FAILED, Payment::STATUS_EXPIRED, Payment::STATUS_CANCELLED, Payment::MANUAL_REJECTED,
+            Payment::STATUS_PAID,
+        ])->first();
 
         return [
-            'total' => (clone $base)->count(),
-            'paid' => (clone $base)->where('status', Payment::STATUS_PAID)->count(),
-            'pending' => (clone $base)->where('status', Payment::STATUS_PENDING)->count(),
-            'manual_review' => $manualReview->count(),
-            'gateway_pending' => $gatewayPending->count(),
-            'failed_or_expired' => $failedOrExpired->count(),
-            'paid_amount' => (float) Payment::query()
-                ->where('status', Payment::STATUS_PAID)
-                ->sum('final_amount'),
+            'total' => (int) $aggregates->total,
+            'paid' => (int) $aggregates->paid,
+            'pending' => (int) $aggregates->pending,
+            'manual_review' => (int) $aggregates->manual_review,
+            'gateway_pending' => (int) $aggregates->gateway_pending,
+            'failed_or_expired' => (int) $aggregates->failed_or_expired,
+            'paid_amount' => (float) $aggregates->paid_amount,
         ];
     }
 

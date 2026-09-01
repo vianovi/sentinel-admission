@@ -23,6 +23,13 @@ class UserFactory extends Factory
             'role' => 'candidate',
             'whatsapp_number' => '628'.fake()->numerify('#########'),
             'avatar' => null,
+            'pending_email' => null,
+            'pending_email_token' => null,
+            'pending_email_status' => null,
+            'pending_email_reviewed_by' => null,
+            'pending_email_reviewed_at' => null,
+            'pending_email_rejection_reason' => null,
+            'pending_email_requested_at' => null,
             'is_active' => true,
             'remember_token' => Str::random(10),
         ];

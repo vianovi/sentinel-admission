@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Dashboard\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AdmissionWave;
-use App\Models\Candidate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -19,7 +18,12 @@ class WaveController extends Controller
 
     public function index(): Response
     {
-        $waves = AdmissionWave::withCount('candidates')
+        $waves = AdmissionWave::withCount([
+            'candidates',
+            'candidates as quota_filled' => function ($q) {
+                $q->where('status', 'accepted');
+            },
+        ])
             ->latest()
             ->get()
             ->map(fn ($w) => [
@@ -41,9 +45,7 @@ class WaveController extends Controller
                 'is_active' => $w->is_active,
                 'majors_enabled' => $w->majors_enabled,
                 'candidates_count' => $w->candidates_count,
-                'quota_filled' => Candidate::where('admission_wave_id', $w->id)
-                    ->where('status', 'accepted')
-                    ->count(),
+                'quota_filled' => $w->quota_filled,
             ]);
 
         return Inertia::render('Dashboard/Admin/Waves', [

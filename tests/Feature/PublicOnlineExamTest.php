@@ -56,7 +56,6 @@ test('public exam token validation and guest attempt execution flow', function (
         'type' => 'single_use',
         'max_uses' => 1,
         'used_count' => 0,
-        'is_active' => true,
     ]);
 
     // 3. Verify Public Landing Page with Token

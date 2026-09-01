@@ -91,8 +91,25 @@ class UserController extends Controller
         // Gather list of unique program choices for the filter dropdown
         $programChoices = Candidate::whereNotNull('program_choice')->distinct()->pluck('program_choice')->values()->toArray();
 
-        // Registration trend last 6 months (DB agnostic)
+        // Optimize stats queries into a single database aggregate where possible
+        $userAggregates = User::selectRaw("
+            COUNT(*) as total,
+            SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active,
+            SUM(CASE WHEN is_active = 0 THEN 1 ELSE 0 END) as suspended,
+            SUM(CASE WHEN role = 'candidate' THEN 1 ELSE 0 END) as candidate_count,
+            SUM(CASE WHEN role = 'student' THEN 1 ELSE 0 END) as student_count,
+            SUM(CASE WHEN role = 'staff' THEN 1 ELSE 0 END) as staff_count,
+            SUM(CASE WHEN role = 'admin' THEN 1 ELSE 0 END) as admin_count
+        ")->first();
+
+        // 1 separate query for pending verification due to relation
+        $pendingVerificationCount = Candidate::where('status', 'submitted')
+            ->whereHas('user', fn ($q) => $q->where('role', 'candidate')->where('is_active', true))
+            ->count();
+
+        // Registration trend last 6 months (optimized with select rather than eager fetch everything)
         $trendData = User::where('created_at', '>=', now()->subMonths(5)->startOfMonth())
+            ->select('id', 'created_at')
             ->get()
             ->groupBy(fn ($u) => $u->created_at->format('M Y'))
             ->map(fn ($g, $m) => ['month' => $m, 'total' => $g->count()])
@@ -104,15 +121,15 @@ class UserController extends Controller
             'filters' => (object) $request->only(['search', 'role', 'status', 'program_choice', 'sort']),
             'programChoices' => $programChoices,
             'stats' => [
-                'total' => User::count(),
-                'active' => User::where('is_active', true)->count(),
-                'suspended' => User::where('is_active', false)->count(),
-                'pending_verification' => User::where('role', 'candidate')->whereHas('candidate', fn ($c) => $c->where('status', 'submitted'))->count(),
+                'total' => (int) $userAggregates->total,
+                'active' => (int) $userAggregates->active,
+                'suspended' => (int) $userAggregates->suspended,
+                'pending_verification' => $pendingVerificationCount,
                 'role_distribution' => [
-                    'candidate' => User::where('role', 'candidate')->count(),
-                    'student' => User::where('role', 'student')->count(),
-                    'staff' => User::where('role', 'staff')->count(),
-                    'admin' => User::where('role', 'admin')->count(),
+                    'candidate' => (int) $userAggregates->candidate_count,
+                    'student' => (int) $userAggregates->student_count,
+                    'staff' => (int) $userAggregates->staff_count,
+                    'admin' => (int) $userAggregates->admin_count,
                 ],
                 'registration_trend' => $trendData,
             ],
