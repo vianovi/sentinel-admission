@@ -91,6 +91,14 @@ class UserController extends Controller
         // Gather list of unique program choices for the filter dropdown
         $programChoices = Candidate::whereNotNull('program_choice')->distinct()->pluck('program_choice')->values()->toArray();
 
+        // Registration trend last 6 months (DB agnostic)
+        $trendData = User::where('created_at', '>=', now()->subMonths(5)->startOfMonth())
+            ->get()
+            ->groupBy(fn ($u) => $u->created_at->format('M Y'))
+            ->map(fn ($g, $m) => ['month' => $m, 'total' => $g->count()])
+            ->values()
+            ->toArray();
+
         return Inertia::render('Dashboard/Admin/Users', [
             'users' => $users,
             'filters' => (object) $request->only(['search', 'role', 'status', 'program_choice', 'sort']),
@@ -100,6 +108,13 @@ class UserController extends Controller
                 'active' => User::where('is_active', true)->count(),
                 'suspended' => User::where('is_active', false)->count(),
                 'pending_verification' => User::where('role', 'candidate')->whereHas('candidate', fn ($c) => $c->where('status', 'submitted'))->count(),
+                'role_distribution' => [
+                    'candidate' => User::where('role', 'candidate')->count(),
+                    'student' => User::where('role', 'student')->count(),
+                    'staff' => User::where('role', 'staff')->count(),
+                    'admin' => User::where('role', 'admin')->count(),
+                ],
+                'registration_trend' => $trendData,
             ],
         ]);
     }
