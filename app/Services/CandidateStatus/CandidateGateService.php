@@ -62,7 +62,9 @@ class CandidateGateService
         } elseif ($candidate->status === 'draft') {
             $reasons[] = 'Lengkapi data pendaftaran terlebih dahulu.';
         } elseif ($candidate->status === 'submitted') {
-            $reasons[] = 'Dokumen dan pembayaran harus diverifikasi terlebih dahulu.';
+            if (! $candidate->examSessionCandidates()->exists()) {
+                $reasons[] = 'Dokumen dan pembayaran harus diverifikasi terlebih dahulu.';
+            }
         }
 
         if ($user && ! $user->hasVerifiedEmail()) {

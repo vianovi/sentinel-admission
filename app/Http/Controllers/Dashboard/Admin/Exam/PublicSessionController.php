@@ -29,7 +29,7 @@ class PublicSessionController extends Controller
         $selectedSessionId = $request->query('session_id');
 
         $publicSessions = ExamSession::query()
-            ->with(['package:id,title,code', 'tokens' => fn ($q) => $q->latest()])
+            ->with(['package:id,title,code', 'publicTokens' => fn ($q) => $q->latest()])
             ->withCount(['attempts'])
             ->where('is_public', true)
             ->latest()
@@ -58,6 +58,7 @@ class PublicSessionController extends Controller
             $stats['avg_score'] = round((float) (clone $attemptsQuery)->whereNotNull('percentage_score')->avg('percentage_score'), 1);
 
             $attempts = ExamAttempt::query()
+                ->with('token:id,token')
                 ->where('exam_session_id', $activeSession->id)
                 ->latest('started_at')
                 ->take(50)
@@ -77,7 +78,7 @@ class PublicSessionController extends Controller
                     'violations_count' => $attempt->violations_count,
                 ]);
 
-            $tokens = $activeSession->tokens->map(fn (ExamSessionToken $token) => [
+            $tokens = $activeSession->publicTokens->map(fn (ExamSessionToken $token) => [
                 'id' => $token->id,
                 'token' => $token->token,
                 'label' => $token->label,

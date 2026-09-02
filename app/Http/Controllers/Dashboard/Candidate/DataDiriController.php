@@ -186,6 +186,8 @@ class DataDiriController extends Controller
                 return back()->withErrors(['program_choice' => 'Program tidak valid.']);
             }
 
+            $program->setRelation('admissionWave', $wave);
+
             if (! $program->isAccepting($waveTotalFilled)) {
                 return back()->withErrors(['program_choice' => 'Program ini sudah tidak menerima pendaftar baru.']);
             }

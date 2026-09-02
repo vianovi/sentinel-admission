@@ -30,7 +30,9 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         // Single session: hapus semua session lain milik user ini
-        Auth::logoutOtherDevices($request->password);
+        // PERF BUG: Auth::logoutOtherDevices($request->password) menyebabkan re-hash password setiap login.
+        // Fitur ini juga membutuhkan middleware AuthenticateSession untuk bekerja.
+        // Auth::logoutOtherDevices($request->password);
 
         $request->session()->regenerate();
 
@@ -69,7 +71,9 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         // Single session: hapus semua session lain milik user ini
-        Auth::logoutOtherDevices($request->password);
+        // PERF BUG: Auth::logoutOtherDevices($request->password) menyebabkan re-hash password setiap login.
+        // Fitur ini juga membutuhkan middleware AuthenticateSession untuk bekerja.
+        // Auth::logoutOtherDevices($request->password);
 
         $request->session()->regenerate();
 

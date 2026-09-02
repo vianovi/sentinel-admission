@@ -43,3 +43,14 @@
 - Status: active for the email-design slice
 - Decision: Keep Laravel's `VerifyEmail` and `ResetPassword` notification classes, token generation, and routes. Customize only their `toMailUsing` presentation callbacks and render both HTML/plain-text views from `EmailDesignSystem`.
 - Reason: This preserves existing authentication behavior and test contracts while providing one reusable email design surface for future transactional notifications.
+
+## D-008 — Sequential Admission Pipeline & Exam Readiness Gate Architecture
+
+- Status: active
+- Decision: Adopt the "Document-First, Pay-to-Validate" admission funnel.
+  1. `health.bpjs_card_path` is strictly supplementary/optional (does not block `submitted` or `verified` status).
+  2. Uploading all mandatory documents unlocks the Payment gateway.
+  3. Candidate exam entry is strictly gated by `Payment::STATUS_PAID` + active admin session assignment (without waiting for manual staff document approval).
+  4. Manual staff document verification serves as the final qualification gateway for `accepted` status.
+- Reason: Eliminates friction for candidates without active BPJS, prevents premature exam blocking, and gives clear sequential progression from Form -> Documents -> Payment -> Exam -> Final Review.
+
