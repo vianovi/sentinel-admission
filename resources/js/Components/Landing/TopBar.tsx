@@ -15,7 +15,7 @@ interface SocialLink {
 
 // ── KONSTANTA INFORMASI ───────────────────────────────────────────────────────
 const EMAIL_ADDRESS = 'admin@almuntaha.sch.id';
-const PHONE_NUMBER = '+62 851-8500-1661';
+const PHONE_NUMBER = '+62 851-1122-3344';
 const DISCORD_USERNAME = 'noviana0515';
 const DISCORD_URL = 'https://discord.com/app';
 

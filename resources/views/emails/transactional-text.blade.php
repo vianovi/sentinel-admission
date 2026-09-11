@@ -35,7 +35,7 @@ Apabila tombol tidak dapat dibuka, salin tautan berikut ke browser:
 @endif
 
 Butuh bantuan?
-📧 {{ $brand['whatsapp'] ?? '085185001661 -> Admin SPMB' }}
+📧 {{ $brand['whatsapp'] ?? '085111223344 -> Admin SPMB' }}
 Email: {{ $brand['support_email'] ?? '[Support Email Placeholder]' }}
 🌐 {{ parse_url($brand['website'] ?? 'https://spmb.playground-ku.my.id', PHP_URL_HOST) ?: ($brand['website'] ?? 'https://spmb.playground-ku.my.id') }}
 

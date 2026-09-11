@@ -19,7 +19,7 @@ return [
         'academic_year' => env('EMAIL_ACADEMIC_YEAR', '2027/2028'),
         'copyright_year' => env('EMAIL_COPYRIGHT_YEAR', '2027'),
         'website' => env('EMAIL_WEBSITE_URL', 'https://spmb.playground-ku.my.id'),
-        'whatsapp' => env('EMAIL_WHATSAPP', '085185001661 -> Admin SPMB'),
+        'whatsapp' => env('EMAIL_WHATSAPP', '085111223344 -> Admin SPMB'),
         'support_email' => env('EMAIL_SUPPORT_ADDRESS', '[Support Email Placeholder]'),
     ],
 

@@ -7,7 +7,7 @@
                 <tr>
                     <td style="padding-bottom:18px; color:#5e6b82; font-size:12px; line-height:1.7;">
                         <strong style="color:#243454; font-size:12px;">Butuh bantuan?</strong><br>
-                        📧 {{ $brand['whatsapp'] ?? '085185001661 -> Admin SPMB' }}<br>
+                        📧 {{ $brand['whatsapp'] ?? '085111223344 -> Admin SPMB' }}<br>
                         Email &nbsp; {{ $brand['support_email'] ?? '[Support Email Placeholder]' }}<br>
                         🌐 <a href="{{ $brand['website'] ?? 'https://spmb.playground-ku.my.id' }}" style="color:#132f68; font-weight:700; text-decoration:none;">{{ parse_url($brand['website'] ?? 'https://spmb.playground-ku.my.id', PHP_URL_HOST) ?: ($brand['website'] ?? 'https://spmb.playground-ku.my.id') }}</a>
                     </td>

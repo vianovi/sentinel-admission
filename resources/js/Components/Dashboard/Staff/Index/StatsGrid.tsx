@@ -14,6 +14,8 @@ export type Stats = {
     verified:  number;
     accepted:  number;
     rejected:  number;
+    pending_transfers?: number;
+    exam_ready?: number;
 };
 
 type StatCard = {
@@ -40,7 +42,7 @@ function buildCards(stats: Stats): StatCard[] {
         {
             label:    "Total Kandidat",
             value:    stats.total,
-            growth:   "+41%",
+            growth:   `${stats.draft} draft`,
             growthUp: true,
             icon:     "fa-solid fa-users",
             gradient: "from-blue-500 to-cyan-500",
@@ -48,34 +50,34 @@ function buildCards(stats: Stats): StatCard[] {
             glow:     "rgba(59, 130, 246, 0.18)",
         },
         {
-            label:    "Menunggu Verifikasi",
+            label:    "Verifikasi Berkas",
             value:    stats.submitted,
-            growth:   "+12%",
-            growthUp: true,
-            icon:     "fa-solid fa-clock",
+            growth:   "Antrean dokumen",
+            growthUp: stats.submitted > 0,
+            icon:     "fa-solid fa-file-circle-check",
             gradient: "from-amber-500 to-orange-500",
             shadow:   "shadow-amber-500/25",
             glow:     "rgba(245, 158, 11, 0.18)",
         },
         {
-            label:    "Terverifikasi",
-            value:    stats.verified,
-            growth:   "+20%",
+            label:    "Verifikasi Transfer",
+            value:    stats.pending_transfers ?? 0,
+            growth:   "Bukti bayar masuk",
+            growthUp: (stats.pending_transfers ?? 0) > 0,
+            icon:     "fa-solid fa-money-bill-transfer",
+            gradient: "from-violet-500 to-indigo-500",
+            shadow:   "shadow-violet-500/25",
+            glow:     "rgba(139, 92, 246, 0.18)",
+        },
+        {
+            label:    "Siap Ujian Seleksi",
+            value:    stats.exam_ready ?? stats.verified,
+            growth:   `${stats.accepted} lulus`,
             growthUp: true,
-            icon:     "fa-solid fa-shield-check",
+            icon:     "fa-solid fa-graduation-cap",
             gradient: "from-emerald-500 to-teal-500",
             shadow:   "shadow-emerald-500/25",
             glow:     "rgba(16, 185, 129, 0.18)",
-        },
-        {
-            label:    "Diterima",
-            value:    stats.accepted,
-            growth:   stats.rejected > 0 ? "-5%" : "+35%",
-            growthUp: stats.rejected === 0,
-            icon:     "fa-solid fa-circle-check",
-            gradient: "from-violet-500 to-purple-500",
-            shadow:   "shadow-violet-500/25",
-            glow:     "rgba(139, 92, 246, 0.18)",
         },
     ];
 }

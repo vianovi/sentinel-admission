@@ -37,7 +37,7 @@ it('renders the verification notification through the shared email design system
         ->toContain('Apabila tombol tidak dapat dibuka')
         ->toContain('#132f68')
         ->toContain('#e0ad27')
-        ->toContain('085185001661 -&gt; Admin SPMB')
+        ->toContain('085111223344 -&gt; Admin SPMB')
         ->toContain('[Support Email Placeholder]')
         ->toContain('spmb.playground-ku.my.id')
         ->and($rendered['text'])

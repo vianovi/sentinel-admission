@@ -16,7 +16,16 @@ export default function GlobalProgressBar() {
     const startDelayRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const activeRef  = useRef(false)
 
-    const start = () => {
+    const start = (event?: any) => {
+        // Jangan tampilkan progress bar untuk background reload, silent reload, atau partial data updates
+        if (
+            event?.detail?.visit?.showProgress === false ||
+            event?.detail?.visit?.headers?.['X-Inertia-Partial-Data'] ||
+            (event?.detail?.visit?.only && event.detail.visit.only.length > 0)
+        ) {
+            return
+        }
+
         if (activeRef.current) return
 
         // Delay 250ms sebelum memunculkan bar.

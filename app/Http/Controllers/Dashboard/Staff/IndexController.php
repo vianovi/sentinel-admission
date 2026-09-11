@@ -65,6 +65,14 @@ class IndexController extends Controller
             ->groupBy('status')
             ->pluck('count', 'status');
 
+        $pendingTransferProofs = Payment::where('payment_channel', Payment::CHANNEL_TRANSFER)
+            ->where('manual_status', Payment::MANUAL_PROOF_UPLOADED)
+            ->count();
+
+        $examReadyCount = Candidate::whereHas('payments', fn ($q) => $q->where('status', Payment::STATUS_PAID))
+            ->whereHas('examSessionCandidates')
+            ->count();
+
         $stats = [
             'total' => $statusCounts->sum(),
             'draft' => $statusCounts->get('draft', 0),
@@ -72,6 +80,8 @@ class IndexController extends Controller
             'verified' => $statusCounts->get('verified', 0),
             'accepted' => $statusCounts->get('accepted', 0),
             'rejected' => $statusCounts->get('rejected', 0),
+            'pending_transfers' => $pendingTransferProofs,
+            'exam_ready' => $examReadyCount,
         ];
 
         // ── Submission trend 7 hari terakhir ─────────────────────────────────
@@ -102,7 +112,7 @@ class IndexController extends Controller
         $recentSubmissions = Candidate::with('admissionWave')
             ->where('status', 'submitted')
             ->latest()
-            ->take(5)
+            ->take(6)
             ->get()
             ->map(fn ($c) => [
                 'id' => $c->id,
@@ -117,6 +127,11 @@ class IndexController extends Controller
             'stats' => $stats,
             'submission_trend' => $trendFilled,
             'recent_submissions' => $recentSubmissions,
+            'workload' => [
+                'pending_documents' => $statusCounts->get('submitted', 0),
+                'pending_transfers' => $pendingTransferProofs,
+                'exam_ready' => $examReadyCount,
+            ],
         ]);
     }
 

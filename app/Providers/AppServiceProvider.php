@@ -5,9 +5,13 @@ namespace App\Providers;
 use App\Models\Candidate;
 use App\Models\Guardian;
 use App\Models\HealthRecord;
+use App\Models\Payment;
+use App\Models\User;
 use App\Observers\CandidateObserver;
 use App\Observers\GuardianObserver;
 use App\Observers\HealthRecordObserver;
+use App\Observers\PaymentObserver;
+use App\Observers\UserObserver;
 use App\Support\EmailDesignSystem;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
@@ -62,6 +66,8 @@ class AppServiceProvider extends ServiceProvider
         Candidate::observe(CandidateObserver::class);
         Guardian::observe(GuardianObserver::class);
         HealthRecord::observe(HealthRecordObserver::class);
+        Payment::observe(PaymentObserver::class);
+        User::observe(UserObserver::class);
 
         VerifyEmail::toMailUsing(
             static fn (object $notifiable, string $verificationUrl) => EmailDesignSystem::verification($notifiable, $verificationUrl)

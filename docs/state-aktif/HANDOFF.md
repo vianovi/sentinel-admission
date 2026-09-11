@@ -2,49 +2,52 @@
 
 ## Current position
 
-Working on `feature/candidate-lifecycle-gate-refactor`. Successfully implemented backend logic for Milestones 1, 2, and 3 to decouple BPJS from requirements, gate the payment page until mandatory documents are uploaded, and gate the exam page until payment is paid. Awaiting user review before committing and starting frontend UI changes.
+Starting new task on `feature/demo-traffic-injector`. Creating a Live Traffic Simulator (Artisan Command) to gradually inject dummy candidate data for testing and demo presentations.
 
 ## Completed
 
 - **Milestone 1:** Made `health.bpjs_card_path` explicitly optional across verification evaluators and checklist calculators.
-- **Milestone 2:** Unlocked the Payment menu based on completion of mandatory document uploads rather than waiting for manual staff approval.
-- **Milestone 3:** Updated `exam()` gate logic to allow access if payment status is `paid` (when assigned to an exam session).
-- **Testing:** Added robust tests to `CandidateFeatureGateTest` checking combinations of document upload status, payment status, and exam assignment.
-- **Verification:** All 92 feature tests passed (738 assertions).
+- **Milestone 2:** Unlocked the Payment menu based on completion of mandatory document uploads rather than waiting for manual staff approval. Added UX hints to `Pembayaran` page.
+- **Milestone 3:** Updated `exam()` gate logic to allow access if payment status is `paid`. Built Exam Readiness Checklist in frontend.
+- **Testing:** 92/92 feature tests passed (738 assertions). All code formatted with Pint.
+- **Commit:** Merged via `6bbc950` on `feature/candidate-lifecycle-gate-refactor`.
 
 ## In progress
 
-- Frontend UX updates for Payment page, Document page, and Exam Readiness checklist (Milestone 2 & 3).
+- Building the traffic simulator command (`php artisan demo:simulate-traffic`).
 
 ## Important decisions
 
-See `DECISIONS.md`. D-008 is active.
+See `DECISIONS.md`.
 
 ## Known blockers
 
-Awaiting human review of backend logic.
+None.
 
 ## Git state
 
-- Current branch: `feature/candidate-lifecycle-gate-refactor`.
+- Current branch: `feature/demo-traffic-injector`.
 - Current worktree: `/home/silinux/Documents/MyPlaygraund/Laravel-Project/sentinel-admission`.
+- Parent branch: `feature/candidate-lifecycle-gate-refactor` (`6bbc950`).
 
 ## Last verification
 
-Test suite run: 92 passed, 738 assertions. Laravel Pint ran successfully.
+Test suite run: 92 passed, 738 assertions. Laravel Pint: 219 files formatted. Vite production build passed without errors.
 
-## Uncommitted changes
+## Completed in this slice
 
-- `app/Services/CandidateStatus/CandidateGateService.php`
-- `app/Services/CandidateStatus/CandidateVerificationEvaluator.php`
-- `app/Services/CandidateVerificationChecklist.php`
-- `app/Services/StatusPendaftaranService.php`
-- `tests/Feature/CandidateFeatureGateTest.php`
-- `tests/Feature/CandidateVerificationChecklistTest.php`
+1. Installed and configured Laravel Reverb WebSocket broadcaster on port 8085 (`.env` and `config/reverb.php`).
+2. Added Reverb to `composer dev` concurrently script.
+3. Created `App\Events\DashboardMetricsUpdated` with safe broadcast fallback.
+4. Hooked `CandidateObserver`, `PaymentObserver`, and `UserObserver` to dispatch real-time events on create/update/delete.
+5. Replaced aggressive timer polling (`usePoll(10000)`) in `Admin/Index.tsx` and `Staff/Index.tsx` with event-driven `echo.channel('dashboard.metrics')`.
+6. Suppressed global progress bar and chart re-animations on background partial updates, preserving animations strictly for initial/manual page loads.
+7. Enhanced Admin Dashboard with 5 KPI Stat Cards ([`AdminStatCards.tsx`](file:///home/silinux/Documents/MyPlaygraund/Laravel-Project/sentinel-admission/resources/js/Components/Dashboard/Admin/Index/AdminStatCards.tsx)) featuring SVG sparklines, trend up/down pills, ambient gradient hover glow, and micro-elevation.
+8. Enhanced Staff Dashboard with operational queue cards, `StatsGrid` with pending transfer proofs and exam-ready metrics, and quick action buttons.
 
 ## Next exact action
 
-After the owner reviews the uncommitted backend logic, commit the changes and move on to update React components for the Candidate Dashboard.
+Await user approval of UI enhancements, then proceed to build the `php artisan demo:simulate-traffic` Artisan command to inject dummy data slowly.
 
 ## Resume warning
 

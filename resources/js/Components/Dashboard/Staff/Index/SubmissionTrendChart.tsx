@@ -1,5 +1,6 @@
 // resources/js/Components/Dashboard/Staff/Index/SubmissionTrendChart.tsx
 
+import { useEffect, useRef } from "react";
 import {
     XAxis,
     YAxis,
@@ -60,6 +61,11 @@ function CustomTooltip({ active, payload, label, isDark }: {
 export default function SubmissionTrendChart({ data }: Props) {
     const { theme } = useTheme();
     const isDark = theme === "dark";
+
+    const isFirstRender = useRef(true);
+    useEffect(() => {
+        isFirstRender.current = false;
+    }, []);
 
     const gridColor   = isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)";
     const axisColor   = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)";
@@ -172,7 +178,8 @@ export default function SubmissionTrendChart({ data }: Props) {
                                 stroke:      isDark ? "#0f172a" : "#ffffff",
                                 strokeWidth: 2,
                             }}
-                            animationDuration={1000}
+                            isAnimationActive={isFirstRender.current}
+                            animationDuration={600}
                             animationEasing="ease-out"
                         />
                     </AreaChart>

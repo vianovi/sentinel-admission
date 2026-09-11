@@ -1,9 +1,10 @@
 // resources/js/Pages/Dashboard/Staff/Index.tsx
 
 import { lazy, Suspense, useEffect } from "react";
-import { Head, usePage, usePoll } from "@inertiajs/react";
+import { Head, Link, router, usePage } from "@inertiajs/react";
 import { animate, stagger } from "animejs";
 import DashboardLayout from "@/Layouts/DashboardLayout";
+import echo from "@/echo";
 import ResizableSplitGrid from "@/Components/Dashboard/Shared/ResizableSplitGrid";
 import StatsGrid from "@/Components/Dashboard/Staff/Index/StatsGrid";
 import RecentSubmissionsList from "@/Components/Dashboard/Staff/Index/RecentSubmissionsList";
@@ -24,10 +25,17 @@ const SubmissionTrendChart = lazy(
 // TYPES
 // ─────────────────────────────────────────────────────────────────────────────
 
+type Workload = {
+    pending_documents: number;
+    pending_transfers: number;
+    exam_ready: number;
+};
+
 type Props = {
     stats:              Stats;
     submission_trend:   TrendItem[];
     recent_submissions: RecentSubmission[];
+    workload?:          Workload;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -59,12 +67,8 @@ function ChartSkeleton() {
 // PAGE
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function StaffIndex({ stats, submission_trend, recent_submissions }: Props) {
+export default function StaffIndex({ stats, submission_trend, recent_submissions, workload }: Props) {
     const { auth } = usePage<PageProps>().props;
-
-    usePoll(10000, {
-        only: ['stats', 'recent_submissions'],
-    });
 
     useEffect(() => {
         // Header entrance
@@ -82,6 +86,18 @@ export default function StaffIndex({ stats, submission_trend, recent_submissions
             delay:      stagger(90, { start: 450 }),
             ease:       "outExpo",
         });
+
+        // Listen for real-time database updates via WebSocket
+        const channel = echo.channel("dashboard.metrics");
+        channel.listen(".DashboardMetricsUpdated", () => {
+            router.reload({
+                only: ['stats', 'submission_trend', 'recent_submissions', 'workload'],
+            });
+        });
+
+        return () => {
+            echo.leaveChannel("dashboard.metrics");
+        };
     }, []);
 
     return (
@@ -91,21 +107,47 @@ export default function StaffIndex({ stats, submission_trend, recent_submissions
             <div className="flex flex-col gap-6 pb-8">
 
                 {/* ── Header ───────────────────────────────────────────────── */}
-                <div className="staff-index-header opacity-0 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl shrink-0
-                                    bg-gradient-to-br from-emerald-500 to-teal-500
-                                    flex items-center justify-center
-                                    shadow-lg shadow-emerald-500/25">
-                        <i className="fa-solid fa-gauge text-white text-sm" />
+                <div className="staff-index-header opacity-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-2xl shrink-0
+                                        bg-gradient-to-br from-emerald-500 to-teal-500
+                                        flex items-center justify-center
+                                        shadow-lg shadow-emerald-500/25">
+                            <i className="fa-solid fa-gauge text-white text-sm" />
+                        </div>
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <h1 className="text-xl font-display font-bold
+                                               text-slate-800 dark:text-white leading-tight">
+                                    Dashboard Staff
+                                </h1>
+                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    Live Stream
+                                </span>
+                            </div>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                Pusat operasional & antrean verifikasi, {auth.user.name}
+                            </p>
+                        </div>
                     </div>
-                    <div>
-                        <h1 className="text-xl font-display font-bold
-                                       text-slate-800 dark:text-white leading-tight">
-                            Dashboard Staff
-                        </h1>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                            Selamat datang, {auth.user.name}
-                        </p>
+
+                    {/* Action shortcuts */}
+                    <div className="flex items-center gap-2">
+                        <Link
+                            href="/dashboard/staff/candidates?status=submitted"
+                            className="h-9 px-3.5 rounded-xl text-xs font-semibold bg-amber-500 text-white hover:bg-amber-400 transition inline-flex items-center gap-1.5 shadow-sm"
+                        >
+                            <i className="fa-solid fa-file-circle-check text-xs"></i>
+                            Antrean Berkas ({stats.submitted})
+                        </Link>
+                        <Link
+                            href="/dashboard/staff/payment-operations?tab=transfer"
+                            className="h-9 px-3.5 rounded-xl text-xs font-semibold border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 hover:border-emerald-500 hover:text-emerald-500 transition inline-flex items-center gap-1.5"
+                        >
+                            <i className="fa-solid fa-receipt text-xs"></i>
+                            Cek Transfer ({stats.pending_transfers ?? 0})
+                        </Link>
                     </div>
                 </div>
 

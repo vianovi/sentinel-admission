@@ -1,6 +1,6 @@
 // resources/js/Components/Dashboard/Staff/Index/StatusDistributionChart.tsx
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import {
     BarChart,
     Bar,
@@ -80,6 +80,11 @@ export default function StatusDistributionChart({ stats }: Props) {
     const { theme } = useTheme();
     const isDark = theme === "dark";
 
+    const isFirstRender = useRef(true);
+    useEffect(() => {
+        isFirstRender.current = false;
+    }, []);
+
     const data = useMemo(() => buildChartData(stats), [stats]);
 
     const gridColor   = isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)";
@@ -143,7 +148,8 @@ export default function StatusDistributionChart({ stats }: Props) {
                         <Bar
                             dataKey="count"
                             radius={[8, 8, 0, 0]}
-                            animationDuration={900}
+                            isAnimationActive={isFirstRender.current}
+                            animationDuration={600}
                             animationEasing="ease-out"
                         >
                             {data.map((entry, index) => (

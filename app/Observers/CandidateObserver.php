@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Events\DashboardMetricsUpdated;
 use App\Models\Candidate;
 use App\Services\CandidateStatus\CandidateStatusService;
 use Illuminate\Support\Facades\Log;
@@ -27,6 +28,7 @@ class CandidateObserver
      * Saat candidate baru dibuat:
      * - Propagate candidate_code ke tabel terkait
      * - Trigger lifecycle sync
+     * - Broadcast dashboard metrics update
      */
     public function created(Candidate $candidate): void
     {
@@ -35,12 +37,14 @@ class CandidateObserver
         }
 
         $this->sync($candidate, 'candidate.created');
+        DashboardMetricsUpdated::dispatchSafely('candidate.created');
     }
 
     /**
      * Saat candidate diupdate:
      * - Propagate candidate_code kalau berubah
      * - Trigger lifecycle sync
+     * - Broadcast dashboard metrics update
      */
     public function updated(Candidate $candidate): void
     {
@@ -50,6 +54,16 @@ class CandidateObserver
         }
 
         $this->sync($candidate, 'candidate.updated');
+        DashboardMetricsUpdated::dispatchSafely('candidate.updated');
+    }
+
+    /**
+     * Saat candidate dihapus:
+     * - Broadcast dashboard metrics update
+     */
+    public function deleted(Candidate $candidate): void
+    {
+        DashboardMetricsUpdated::dispatchSafely('candidate.deleted');
     }
 
     // =========================================================================
