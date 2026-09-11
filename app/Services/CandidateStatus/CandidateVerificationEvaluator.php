@@ -20,11 +20,8 @@ class CandidateVerificationEvaluator
 
     public function evaluate(Candidate $candidate): CandidateEvaluationResult
     {
-        $candidate->load('healthRecord');
-
         $requirements = [
             ...$this->documentRequirements($candidate),
-            new CandidateRequirement('health.bpjs_card_path', 'Kartu BPJS / JKN', 'health_document'),
             new CandidateRequirement('payment.paid', 'Pembayaran pendaftaran lunas', 'payment'),
         ];
 
@@ -41,15 +38,11 @@ class CandidateVerificationEvaluator
 
         $missing = array_values(array_filter(
             $requirements,
-            function (CandidateRequirement $requirement) use ($candidate, $verifiedTypes, $hasPaidPayment): bool {
+            function (CandidateRequirement $requirement) use ($verifiedTypes, $hasPaidPayment): bool {
                 if ($requirement->group === 'document') {
                     $docType = str_replace('document.', '', $requirement->key);
 
                     return ! in_array($docType, $verifiedTypes, true);
-                }
-
-                if ($requirement->group === 'health_document') {
-                    return empty($candidate->healthRecord?->bpjs_card_path);
                 }
 
                 if ($requirement->group === 'payment') {
@@ -85,6 +78,19 @@ class CandidateVerificationEvaluator
         return collect($this->requiredDocumentTypes($candidate))
             ->mapWithKeys(fn (string $type) => [$type => CandidateDocument::DOC_TYPES[$type]['label'] ?? $type])
             ->all();
+    }
+
+    public function hasUploadedMandatoryDocuments(Candidate $candidate): bool
+    {
+        $uploadedTypes = $candidate->documents()
+            ->whereNull('deleted_at')
+            ->pluck('doc_type')
+            ->unique()
+            ->all();
+
+        return collect($this->requiredDocumentTypes($candidate))
+            ->diff($uploadedTypes)
+            ->isEmpty();
     }
 
     /**

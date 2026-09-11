@@ -7,6 +7,10 @@ use App\Models\User;
 
 class CandidateGateService
 {
+    public function __construct(
+        private readonly CandidateVerificationEvaluator $verificationEvaluator
+    ) {}
+
     public function coreData(Candidate $candidate, ?User $user = null): array
     {
         $allowed = ! $user || $candidate->user_id === $user->id;
@@ -44,13 +48,15 @@ class CandidateGateService
             $reasons[] = 'Status pendaftaran sudah final.';
         } elseif (! $this->isAtLeastSubmitted($candidate)) {
             $reasons[] = 'Lengkapi data pendaftaran terlebih dahulu sebelum melakukan pembayaran.';
+        } elseif (! $this->verificationEvaluator->hasUploadedMandatoryDocuments($candidate)) {
+            $reasons[] = 'Unggah semua dokumen wajib terlebih dahulu sebelum melakukan pembayaran.';
         }
 
         if ($user && ! $user->hasVerifiedEmail()) {
             $reasons[] = 'Verifikasi email terlebih dahulu sebelum melakukan pembayaran.';
         }
 
-        return $this->gate('payment', empty($reasons), $reasons, 'dashboard.data-diri');
+        return $this->gate('payment', empty($reasons), $reasons, 'dashboard.data-dokumen.index');
     }
 
     public function exam(Candidate $candidate, ?User $user = null): array
@@ -62,7 +68,12 @@ class CandidateGateService
         } elseif ($candidate->status === 'draft') {
             $reasons[] = 'Lengkapi data pendaftaran terlebih dahulu.';
         } elseif ($candidate->status === 'submitted') {
-            if (! $candidate->examSessionCandidates()->exists()) {
+            $hasSession = $candidate->examSessionCandidates()->exists();
+            $hasPaidPayment = $candidate->payments()->where('status', \App\Models\Payment::STATUS_PAID)->exists();
+
+            if ($hasSession && ! $hasPaidPayment) {
+                $reasons[] = 'Sesi ujian tersedia, silakan selesaikan pembayaran pendaftaran untuk memulai.';
+            } elseif (! $hasSession) {
                 $reasons[] = 'Dokumen dan pembayaran harus diverifikasi terlebih dahulu.';
             }
         }

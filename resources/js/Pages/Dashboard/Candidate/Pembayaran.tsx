@@ -711,6 +711,11 @@ export default function PembayaranPage({
                     <DraftGate
                         candidateName={candidate.full_name}
                         reason={gate.reason ?? undefined}
+                        steps={
+                            candidate.status === 'submitted'
+                                ? [{ label: 'Upload Dokumen Wajib', icon: 'fa-solid fa-file-arrow-up', href: '/dashboard/data-dokumen' }]
+                                : undefined
+                        }
                     />
                 )}
 

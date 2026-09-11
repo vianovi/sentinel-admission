@@ -52,10 +52,24 @@ class ExamController extends Controller
             return $this->assignmentPayload($assignment);
         })->values();
 
+        $checklist = null;
+        if ($candidate) {
+            $hasSession = $candidate->examSessionCandidates()->exists();
+            $hasPaidPayment = $candidate->payments()->where('status', \App\Models\Payment::STATUS_PAID)->exists();
+            $isSubmitted = in_array($candidate->status, ['submitted', 'verified', 'accepted']);
+            $checklist = [
+                'form_completed' => $isSubmitted,
+                'documents_completed' => $isSubmitted && app(\App\Services\CandidateStatus\CandidateVerificationEvaluator::class)->hasUploadedMandatoryDocuments($candidate),
+                'payment_completed' => $hasPaidPayment,
+                'session_assigned' => $hasSession,
+            ];
+        }
+
         return Inertia::render('Dashboard/Candidate/Exam/Index', [
             'candidate' => $candidate ? $this->candidatePayload($candidate) : null,
             'sessions' => $sessions,
             'gate' => $gate,
+            'checklist' => $checklist,
             'server_time' => now()->toISOString(),
         ]);
     }

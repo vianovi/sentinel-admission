@@ -28,11 +28,6 @@ class CandidateVerificationChecklist
         return $this->verificationEvaluator->missingRequiredDocumentTypes($candidate);
     }
 
-    public function hasRequiredHealthDocuments(Candidate $candidate): bool
-    {
-        return ! empty($candidate->healthRecord?->bpjs_card_path);
-    }
-
     public function hasVerifiedPayment(Candidate $candidate): bool
     {
         return ! in_array('payment.paid', $this->verificationEvaluator->evaluate($candidate)->missingKeys(), true);

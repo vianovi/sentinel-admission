@@ -20,13 +20,14 @@ const STEPS = [
 type Props = {
     candidateName: string
     reason?: string
+    steps?: Array<{ label: string; icon: string; href: string }>
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function DraftGate({ candidateName, reason }: Props) {
+export default function DraftGate({ candidateName, reason, steps = STEPS }: Props) {
     const containerRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
@@ -74,32 +75,34 @@ export default function DraftGate({ candidateName, reason }: Props) {
             </div>
 
             {/* Progress steps */}
-            <div className="space-y-2 mb-6">
-                {STEPS.map((step) => (
-                    <button
-                        key={step.label}
-                        onClick={() => router.visit(step.href)}
-                        className="gate-item opacity-0 w-full flex items-center gap-4 px-4 py-3.5 rounded-xl border
-                            dark:border-white/[0.07] border-black/[0.07]
-                            dark:bg-white/[0.02] bg-white
-                            dark:hover:bg-white/[0.05] hover:bg-slate-50
-                            transition-all duration-150 group text-left"
-                    >
-                        <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0
-                            dark:bg-white/[0.05] bg-slate-100 dark:text-slate-400 text-slate-500
-                            dark:group-hover:bg-orange-500/15 group-hover:bg-orange-50
-                            dark:group-hover:text-orange-400 group-hover:text-orange-600
-                            transition-all duration-150">
-                            <i className={`${step.icon} text-sm`} />
-                        </div>
-                        <p className="text-sm font-medium dark:text-slate-300 text-slate-700 flex-1">
-                            {step.label}
-                        </p>
-                        <i className="fa-solid fa-chevron-right text-[10px] dark:text-slate-600 text-slate-400
-                            group-hover:translate-x-0.5 transition-transform duration-150" />
-                    </button>
-                ))}
-            </div>
+            {steps.length > 0 && (
+                <div className="space-y-2 mb-6">
+                    {steps.map((step) => (
+                        <button
+                            key={step.label}
+                            onClick={() => router.visit(step.href)}
+                            className="gate-item opacity-0 w-full flex items-center gap-4 px-4 py-3.5 rounded-xl border
+                                dark:border-white/[0.07] border-black/[0.07]
+                                dark:bg-white/[0.02] bg-white
+                                dark:hover:bg-white/[0.05] hover:bg-slate-50
+                                transition-all duration-150 group text-left"
+                        >
+                            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0
+                                dark:bg-white/[0.05] bg-slate-100 dark:text-slate-400 text-slate-500
+                                dark:group-hover:bg-orange-500/15 group-hover:bg-orange-50
+                                dark:group-hover:text-orange-400 group-hover:text-orange-600
+                                transition-all duration-150">
+                                <i className={`${step.icon} text-sm`} />
+                            </div>
+                            <p className="text-sm font-medium dark:text-slate-300 text-slate-700 flex-1">
+                                {step.label}
+                            </p>
+                            <i className="fa-solid fa-chevron-right text-[10px] dark:text-slate-600 text-slate-400
+                                group-hover:translate-x-0.5 transition-transform duration-150" />
+                        </button>
+                    ))}
+                </div>
+            )}
 
             {/* Info note */}
             <div className="gate-item opacity-0 flex items-start gap-2 px-4 py-3 rounded-xl

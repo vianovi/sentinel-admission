@@ -2,48 +2,53 @@
 
 ## Current position
 
-Task 01 remains blocked by B-001 after a partial public/shared source audit. The current user-requested email work is isolated on `feature/email-design-system`.
+Working on `feature/candidate-lifecycle-gate-refactor`. Successfully implemented backend logic for Milestones 1, 2, and 3 to decouple BPJS from requirements, gate the payment page until mandatory documents are uploaded, and gate the exam page until payment is paid. Awaiting user review before committing and starting frontend UI changes.
 
 ## Completed
 
-- Mandatory instructions and initial durable state read.
-- Git root, clean baseline, ancestry, branches, remotes, and worktree verified.
-- Strategy A selected and `release/production-candidate` created at the baseline.
-- Misinstalled audit workspace relocated to `docs/ai-docs/` on the audit branch.
-- Application, routes, migrations, middleware, storage, integrations, tests, and deployment surfaces mapped.
-- Full baseline verification passed and evidence was written under `evidence/00-foundation/2026-07-14/`.
+- **Milestone 1:** Made `health.bpjs_card_path` explicitly optional across verification evaluators and checklist calculators.
+- **Milestone 2:** Unlocked the Payment menu based on completion of mandatory document uploads rather than waiting for manual staff approval.
+- **Milestone 3:** Updated `exam()` gate logic to allow access if payment status is `paid` (when assigned to an exam session).
+- **Testing:** Added robust tests to `CandidateFeatureGateTest` checking combinations of document upload status, payment status, and exam assignment.
+- **Verification:** All 92 feature tests passed (738 assertions).
 
 ## In progress
 
-- None; mandatory stop reached before source edits.
+- Frontend UX updates for Payment page, Document page, and Exam Readiness checklist (Milestone 2 & 3).
 
 ## Important decisions
 
-See `DECISIONS.md`.
+See `DECISIONS.md`. D-008 is active.
 
 ## Known blockers
 
-B-001 requires either verified owner-supplied public content or authority to remove/disable unverified showcase/contact/map/legal elements.
+Awaiting human review of backend logic.
 
 ## Git state
 
-- Baseline: `1113160ebee605ebad439f53f3322f9deb060711` from local `develop`.
-- Current branch: `feature/email-design-system`.
+- Current branch: `feature/candidate-lifecycle-gate-refactor`.
 - Current worktree: `/home/silinux/Documents/MyPlaygraund/Laravel-Project/sentinel-admission`.
-- `main` is the baseline ancestor; local `develop` has 188 reachable commits beyond `main` and 70 beyond `origin/develop`.
-- Release candidate remains `e4373dff71c86cafa516602ce093b9252b4dc443`; blocked Task 01 was not promoted.
 
 ## Last verification
 
-Task 00 baseline passed: 71 tests/580 assertions, 183 routes, frontend build, dependency advisories, temporary SQLite migrations, and synthetic production optimization.
+Test suite run: 92 passed, 738 assertions. Laravel Pint ran successfully.
 
 ## Uncommitted changes
 
-None. Sidebar Collapsed Menu changes and Email Design System refinement are fully committed. Blocked public audit content remains checkpointed in its historical audit commits.
+- `app/Services/CandidateStatus/CandidateGateService.php`
+- `app/Services/CandidateStatus/CandidateVerificationEvaluator.php`
+- `app/Services/CandidateVerificationChecklist.php`
+- `app/Services/StatusPendaftaranService.php`
+- `tests/Feature/CandidateFeatureGateTest.php`
+- `tests/Feature/CandidateVerificationChecklistTest.php`
 
 ## Next exact action
 
-After the owner resolves B-001, implement the chosen content boundary, then address PUB-003 through PUB-007 with focused tests and a production build.
+After the owner reviews the uncommitted backend logic, commit the changes and move on to update React components for the Candidate Dashboard.
+
+## Resume warning
+
+Do not trust this file if its Git state differs from the repository. Reconcile and update first.
 
 ## Parallel scoped email-design task
 

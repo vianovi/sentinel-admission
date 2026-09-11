@@ -237,7 +237,8 @@ it('locks payment creation while candidate is draft', function () {
 
 it('locks payment creation while email is unverified', function () {
     $user = gateUser(false);
-    gateSubmitCandidate($user);
+    $candidate = gateSubmitCandidate($user);
+    gateVerifiedRequiredDocuments($candidate);
 
     $this->actingAs($user)
         ->post('/dashboard/pembayaran', ['channel' => Payment::CHANNEL_TRANSFER])
@@ -245,9 +246,20 @@ it('locks payment creation while email is unverified', function () {
         ->assertSessionHasErrors(['gate' => 'Verifikasi email terlebih dahulu sebelum melakukan pembayaran.']);
 });
 
+it('locks payment creation when mandatory documents are not uploaded', function () {
+    $user = gateUser();
+    gateSubmitCandidate($user); // Documents not uploaded
+
+    $this->actingAs($user)
+        ->post('/dashboard/pembayaran', ['channel' => Payment::CHANNEL_TRANSFER])
+        ->assertRedirect()
+        ->assertSessionHasErrors(['gate' => 'Unggah semua dokumen wajib terlebih dahulu sebelum melakukan pembayaran.']);
+});
+
 it('allows payment creation when candidate is submitted and email verified', function () {
     $user = gateUser();
     $candidate = gateSubmitCandidate($user);
+    gateVerifiedRequiredDocuments($candidate);
 
     $this->actingAs($user)
         ->post('/dashboard/pembayaran', ['channel' => Payment::CHANNEL_TRANSFER])
@@ -265,6 +277,45 @@ it('shows a locked exam page until candidate is verified', function () {
         ->get('/dashboard/seleksi')
         ->assertOk()
         ->assertSee('Dokumen dan pembayaran harus diverifikasi terlebih dahulu.');
+});
+
+it('locks exam access with custom message if candidate has session but payment is not paid', function () {
+    $user = gateUser();
+    $candidate = gateSubmitCandidate($user);
+    $subject = \App\Models\Exam\ExamSubject::create(['code' => 'UMUM01', 'name' => 'Math']);
+    $package = \App\Models\Exam\ExamPackage::create(['exam_subject_id' => $subject->id, 'title' => 'Pkg', 'duration_minutes' => 60, 'passing_score' => 70, 'max_attempts' => 1, 'status' => 'published']);
+    $session = \App\Models\Exam\ExamSession::create(['exam_package_id' => $package->id, 'title' => 'S1', 'status' => 'published', 'opens_at' => now(), 'closes_at' => now()->addHour(), 'duration_minutes' => 60, 'passing_score' => 70, 'max_attempts' => 1, 'is_public' => false]);
+    \App\Models\Exam\ExamSessionCandidate::create([
+        'exam_session_id' => $session->id,
+        'candidate_id' => $candidate->id,
+        'status' => 'eligible',
+    ]);
+
+    $this->actingAs($user)
+        ->get('/dashboard/seleksi')
+        ->assertOk()
+        ->assertSee('Sesi ujian tersedia, silakan selesaikan pembayaran pendaftaran untuk memulai.');
+});
+
+it('allows exam access when candidate is submitted, has session, and payment is paid', function () {
+    $user = gateUser();
+    $candidate = gateSubmitCandidate($user);
+    gatePayment($candidate, \App\Models\Payment::STATUS_PAID, \App\Models\Payment::CHANNEL_TRANSFER);
+
+    $subject = \App\Models\Exam\ExamSubject::create(['code' => 'UMUM01', 'name' => 'Math']);
+    $package = \App\Models\Exam\ExamPackage::create(['exam_subject_id' => $subject->id, 'title' => 'Pkg', 'duration_minutes' => 60, 'passing_score' => 70, 'max_attempts' => 1, 'status' => 'published']);
+    $session = \App\Models\Exam\ExamSession::create(['exam_package_id' => $package->id, 'title' => 'S1', 'status' => 'published', 'opens_at' => now(), 'closes_at' => now()->addHour(), 'duration_minutes' => 60, 'passing_score' => 70, 'max_attempts' => 1, 'is_public' => false]);
+    \App\Models\Exam\ExamSessionCandidate::create([
+        'exam_session_id' => $session->id,
+        'candidate_id' => $candidate->id,
+        'status' => 'eligible',
+    ]);
+
+    $this->actingAs($user)
+        ->get('/dashboard/seleksi')
+        ->assertOk()
+        ->assertDontSee('Sesi ujian tersedia, silakan selesaikan pembayaran pendaftaran untuk memulai.')
+        ->assertDontSee('Dokumen dan pembayaran harus diverifikasi terlebih dahulu.');
 });
 
 it('shows a locked exam page while email is unverified', function () {

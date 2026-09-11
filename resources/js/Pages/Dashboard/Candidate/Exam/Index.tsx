@@ -61,10 +61,16 @@ type Props = {
     candidate: Candidate;
     sessions: Assignment[];
     gate: { allowed: boolean; locked: boolean; reason: string | null; reasons: string[] } | null;
+    checklist: {
+        form_completed: boolean;
+        documents_completed: boolean;
+        payment_completed: boolean;
+        session_assigned: boolean;
+    } | null;
     server_time: string;
 };
 
-export default function CandidateExamIndex({ candidate, sessions, gate }: Props) {
+export default function CandidateExamIndex({ candidate, sessions, gate, checklist }: Props) {
     const { flash } = usePage<PageProps>().props;
     const locked = !!gate?.locked;
     const activeCount = sessions.filter((item) => item.active_attempt_url).length;
@@ -105,11 +111,44 @@ export default function CandidateExamIndex({ candidate, sessions, gate }: Props)
                             </div>
                         </section>
 
-                        <EmptyState
-                            icon="fa-solid fa-lock"
-                            title="Ujian seleksi masih terkunci"
-                            description={gate?.reason ?? "Selesaikan tahapan pendaftaran sebelum mengakses ujian seleksi."}
-                        />
+                        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-6 dark:border-amber-500/20 dark:bg-amber-500/10 max-w-2xl mx-auto mt-8">
+                            <div className="flex items-center gap-4 mb-6">
+                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400">
+                                    <i className="fa-solid fa-lock text-xl" />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-black text-slate-900 dark:text-white">Ujian Seleksi Terkunci</h3>
+                                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                                        {gate?.reason ?? "Selesaikan persyaratan berikut untuk membuka akses ujian."}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {checklist && (
+                                <div className="space-y-3">
+                                    <ChecklistItem 
+                                        label="Formulir Pendaftaran Lengkap" 
+                                        isDone={checklist.form_completed} 
+                                        href="/dashboard/data-diri"
+                                    />
+                                    <ChecklistItem 
+                                        label="Berkas Wajib Diunggah" 
+                                        isDone={checklist.documents_completed} 
+                                        href="/dashboard/data-dokumen"
+                                    />
+                                    <ChecklistItem 
+                                        label="Pembayaran Pendaftaran Lunas" 
+                                        isDone={checklist.payment_completed} 
+                                        href="/dashboard/pembayaran"
+                                    />
+                                    <ChecklistItem 
+                                        label="Sesi Ujian Ditugaskan" 
+                                        isDone={checklist.session_assigned} 
+                                        note="Menunggu panitia menetapkan sesi ujian"
+                                    />
+                                </div>
+                            )}
+                        </div>
                     </>
                 ) : (
                     <>
@@ -237,6 +276,40 @@ function MiniMetric({ label, value }: { label: string; value: string | number })
         <div className="rounded-lg bg-slate-50 px-3 py-3 dark:bg-white/[0.03]">
             <p className="text-xs font-bold text-slate-900 dark:text-white">{typeof value === "number" ? value.toLocaleString("id-ID") : value}</p>
             <p className="mt-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400">{label}</p>
+        </div>
+    );
+}
+
+function ChecklistItem({ label, isDone, href, note }: { label: string; isDone: boolean; href?: string; note?: string }) {
+    return (
+        <div className={`flex items-center justify-between p-3.5 rounded-lg border transition-colors ${
+            isDone 
+                ? 'bg-green-50/50 border-green-200/50 dark:bg-green-500/5 dark:border-green-500/10' 
+                : 'bg-white border-slate-200 dark:bg-slate-900 dark:border-white/10'
+        }`}>
+            <div className="flex items-center gap-3">
+                <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs ${
+                    isDone 
+                        ? 'bg-green-100 text-green-600 dark:bg-green-500/20 dark:text-green-400' 
+                        : 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500'
+                }`}>
+                    <i className={`fa-solid ${isDone ? 'fa-check' : 'fa-minus'}`} />
+                </div>
+                <div>
+                    <p className={`text-sm font-semibold ${isDone ? 'text-green-800 dark:text-green-300' : 'text-slate-700 dark:text-slate-300'}`}>
+                        {label}
+                    </p>
+                    {note && !isDone && (
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{note}</p>
+                    )}
+                </div>
+            </div>
+            
+            {!isDone && href && (
+                <Link href={href} className="text-xs font-bold text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 bg-amber-50 hover:bg-amber-100 dark:bg-amber-500/10 dark:hover:bg-amber-500/20 px-3 py-1.5 rounded-md transition-colors">
+                    Lengkapi
+                </Link>
+            )}
         </div>
     );
 }

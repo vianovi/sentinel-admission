@@ -179,7 +179,7 @@ it('does not verify a candidate when only uploaded documents are verified', func
     expect($candidate->fresh()->status)->toBe('submitted');
 });
 
-it('verifies a candidate only after required documents health document and payment are complete', function () {
+it('verifies a candidate only after required documents and payment are complete', function () {
     $staff = verificationStaff();
     $candidate = verificationCandidate();
 

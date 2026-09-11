@@ -60,7 +60,7 @@ class StatusPendaftaranService
             $gates,
             $paths
         );
-        $nextActions = $this->nextActions($completionChecklist, $documentSummary, $paymentSummary, $selectionSummary, $candidate, $paths);
+        $nextActions = $this->nextActions($completionChecklist, $documentSummary, $paymentSummary, $selectionSummary, $candidate, $paths, $gates);
 
         return [
             'viewer' => [
@@ -396,15 +396,7 @@ class StatusPendaftaranService
                 'status_label' => $this->checklistStatusLabel($documentSummary['status']),
                 'description' => "{$documentSummary['verified_required']} dari {$documentSummary['required_total']} dokumen wajib sudah verified.",
             ],
-            [
-                'key' => 'bpjs-card',
-                'label' => 'Kartu BPJS / JKN',
-                'status' => empty($candidate->healthRecord?->bpjs_card_path) ? 'incomplete' : 'complete',
-                'status_label' => empty($candidate->healthRecord?->bpjs_card_path) ? 'Belum Lengkap' : 'Selesai',
-                'description' => empty($candidate->healthRecord?->bpjs_card_path)
-                    ? 'Berkas BPJS/JKN belum tersedia di data kesehatan.'
-                    : 'Berkas BPJS/JKN sudah tersedia.',
-            ],
+
             [
                 'key' => 'payment-paid',
                 'label' => 'Pembayaran pendaftaran',
@@ -454,7 +446,8 @@ class StatusPendaftaranService
         array $paymentSummary,
         array $selectionSummary,
         Candidate $candidate,
-        array $paths
+        array $paths,
+        array $gates
     ): array {
         $actions = [];
 
@@ -470,10 +463,12 @@ class StatusPendaftaranService
             $actions[] = $this->action('Upload dokumen wajib', 'Lengkapi dokumen wajib agar panitia bisa melanjutkan verifikasi.', $paths['dokumen'], 'fa-solid fa-file-arrow-up', 'primary');
         }
 
-        if ($paymentSummary['status'] === 'rejected') {
-            $actions[] = $this->action('Upload ulang bukti pembayaran', 'Bukti pembayaran terakhir ditolak. Periksa catatan sebelum mengunggah ulang.', $paths['pembayaran'], 'fa-solid fa-receipt', 'danger');
-        } elseif ($paymentSummary['status'] === 'incomplete' && $candidate->status !== 'draft') {
-            $actions[] = $this->action('Selesaikan pembayaran', 'Buat transaksi atau unggah bukti pembayaran agar status bisa diverifikasi.', $paths['pembayaran'], 'fa-solid fa-credit-card', 'primary');
+        if (! ($gates['payment']['locked'] ?? false)) {
+            if ($paymentSummary['status'] === 'rejected') {
+                $actions[] = $this->action('Upload ulang bukti pembayaran', 'Bukti pembayaran terakhir ditolak. Periksa catatan sebelum mengunggah ulang.', $paths['pembayaran'], 'fa-solid fa-receipt', 'danger');
+            } elseif ($paymentSummary['status'] === 'incomplete' && $candidate->status !== 'draft') {
+                $actions[] = $this->action('Selesaikan pembayaran', 'Buat transaksi atau unggah bukti pembayaran agar status bisa diverifikasi.', $paths['pembayaran'], 'fa-solid fa-credit-card', 'primary');
+            }
         }
 
         if ($selectionSummary['gate_allowed'] && in_array($selectionSummary['status'], ['incomplete', 'complete', 'pending_review'], true)) {
