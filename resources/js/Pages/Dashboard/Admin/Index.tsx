@@ -107,11 +107,17 @@ export default function AdminIndex({
 
         // Real-time WebSocket listener
         const channel = echo.channel("dashboard.metrics");
-        channel.listen(".DashboardMetricsUpdated", () => {
+        const onMetricsUpdate = (payload?: any) => {
+            console.log("[Sentinel Admin] Real-time metrics update received:", payload);
             router.reload({
                 only: ['stats', 'registration_trend', 'payment_stats', 'recent_candidates', 'staff_list'],
             });
-        });
+        };
+
+        channel
+            .listen(".DashboardMetricsUpdated", onMetricsUpdate)
+            .listen("DashboardMetricsUpdated", onMetricsUpdate)
+            .listen(".App\\Events\\DashboardMetricsUpdated", onMetricsUpdate);
 
         return () => {
             echo.leaveChannel("dashboard.metrics");

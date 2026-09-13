@@ -89,11 +89,17 @@ export default function StaffIndex({ stats, submission_trend, recent_submissions
 
         // Listen for real-time database updates via WebSocket
         const channel = echo.channel("dashboard.metrics");
-        channel.listen(".DashboardMetricsUpdated", () => {
+        const onMetricsUpdate = (payload?: any) => {
+            console.log("[Sentinel Staff] Real-time metrics update received:", payload);
             router.reload({
                 only: ['stats', 'submission_trend', 'recent_submissions', 'workload'],
             });
-        });
+        };
+
+        channel
+            .listen(".DashboardMetricsUpdated", onMetricsUpdate)
+            .listen("DashboardMetricsUpdated", onMetricsUpdate)
+            .listen(".App\\Events\\DashboardMetricsUpdated", onMetricsUpdate);
 
         return () => {
             echo.leaveChannel("dashboard.metrics");

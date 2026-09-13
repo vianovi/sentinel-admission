@@ -20,7 +20,8 @@ Concretely, this means:
 - **Prefer being slow and right over fast and plausible.** If a thorough check would take longer than you'd like, do it anyway and say so in your report, rather than skipping it silently.
 - **Silent scope-narrowing is a failure mode.** If you find a task too large to fully verify in this session, say so explicitly and record what was *not* checked — do not quietly check less and report as if you checked everything.
 - **Do not pattern-match a problem to a familiar one and reuse a familiar answer.** Every finding needs its own evidence from *this* repository, at *this* commit, not from what similar bugs usually look like.
-- **Prioritize MCP Tools over manual methods whenever relevant.** For UI, drag-drop, or styling changes, you MUST use the `playwright` MCP tool to navigate, interact, inspect browser console logs, and take screenshots rather than just assuming it works. For codebase querying, prioritize `graphify` nodes and community analysis.
+- **Enforce Ponytail Lazy Senior Dev Philosophy (MANDATORY):** Always pursue the shortest working solution (YAGNI). Reach for standard library/built-in platform features before code, existing codebase utilities before new functions, and existing dependencies before adding new packages. Prefer minimal diffs, zero unrequested abstractions, and code-first minimal responses (`.agents/rules/ponytail.md`).
+- **Prioritize MCP Tools over manual methods whenever relevant.** For UI, drag-drop, or styling changes, you MUST use the `playwright` MCP tool to navigate, interact, inspect browser console logs, and capture screenshots rather than just assuming it works. For codebase querying, prioritize `graphify` nodes and community analysis.
 
 If you notice yourself about to write "this should be fine" — stop, and either verify it or flag it as unverified. This single habit is the difference this file exists to enforce.
 

@@ -1,30 +1,30 @@
-# Graph Report - sentinel-admission  (2026-09-01)
+# Graph Report - sentinel-admission  (2026-09-13)
 
 ## Corpus Check
-- 540 files · ~400,993 words
+- 669 files · ~524,071 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 3969 nodes · 7251 edges · 328 communities (261 shown, 67 thin omitted)
-- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 166 edges (avg confidence: 0.78)
+- 4896 nodes · 8333 edges · 368 communities (297 shown, 71 thin omitted)
+- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 195 edges (avg confidence: 0.79)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `78b61a49`
+- Built from commit: `7653ac5d`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - ExamQuestionImportService
-- Candidate/Exam/AttemptShow.tsx
+- PackageShow.tsx
 - StatusPendaftaran/types.ts
 - Inertia\Response
-- Illuminate\Database\Eloquent\Relations\BelongsTo
+- component-cookbook.md
 - Candidate/Calendar.tsx
 - Staff/Reports.tsx
 - ExamAttempt
-- HandleInertiaRequests
-- ExamSession
+- AdmissionWave
+- Assets — sourcing canon for icons, logos, illustrations, photography, video
 - User
 - useTheme
 - PaymentHistory.tsx
@@ -32,9 +32,9 @@
 - FormWizard.tsx
 - DataWali.tsx
 - Candidate
-- Illuminate\Http\RedirectResponse
+- PaymentController
 - dependencies
-- Illuminate\Http\Request
+- SecureFileAccessService
 - DataKesehatan/TabRangkuman.tsx
 - ChangeRequests.tsx
 - PaymentConfig
@@ -44,7 +44,7 @@
 - Payment
 - CandidateEvaluationResult
 - CinematicShowcase.tsx
-- OnlineSelectionExamSecurityTest.php
+- Illuminate\Database\Eloquent\Relations\BelongsTo
 - Guardian
 - devDependencies
 - CandidateStatus.tsx
@@ -52,45 +52,45 @@
 - Staff/Candidates.tsx
 - TabKesehatan.tsx
 - CandidateTable.tsx
-- ExamSubject
+- Illuminate\Foundation\Http\FormRequest
 - IndexController
 - HealthRecord
 - DataDiri.tsx
 - DataKesehatan.tsx
-- StatusDistributionChart.tsx
-- CandidateRequestPresenter
-- .log
+- macrostructures.md
+- CandidateDocument
+- PaymentService
 - StaffPaymentOperationalService
 - .eslintrc.json
 - compilerOptions
 - Engineering Notes & Gotchas
-- ExamAdminUi.tsx
+- Admin/Exam/SessionShow.tsx
 - DashboardLayout.tsx
-- Show.tsx
+- Theme — Lumen
 - Topbar.tsx
 - Welcome.tsx
-- .response
+- Theme — Hum
 - Sidebar.tsx
 - ExamSessionCandidate
 - Admin/Reports.tsx
-- StaffCandidateOperationalService
+- Custom craft — how to hand-build hero artwork
 - CandidateSelectionCenterService
 - ManualCheckout.tsx
 - PaymentSidebar.tsx
-- DashboardSplitLayout
-- Sessions.tsx
+- Monitoring.tsx
+- ExamAdminUi.tsx
 - Staff/Index.tsx
 - ChannelSelection.tsx
 - Pembayaran.tsx
-- CalendarController
-- SentinelStoragePaths.php
+- RegistrationDraft
+- Illuminate\Http\Request
 - EmailDesignSystem
 - Dashboard/Index.tsx
 - TopBar.tsx
 - Waves.tsx
-- AdmissionWave
-- Candidate/Exam/Index.tsx
-- ExamMonitoringService
+- Illuminate\Database\Seeder
+- Candidate/Exam/AttemptShow.tsx
+- Design flow (default)
 - Build Rules & Performance Guidelines
 - GatewayCheckout.tsx
 - Infrastructure Skill — Laravel 12 + Docker
@@ -98,30 +98,30 @@
 - composer.json
 - scripts
 - PublicSessions.tsx
-- Packages.tsx
+- Custom theme — protocol
 - Staff/Profile.tsx
 - Livi — Frontend Skill (Token-Optimized)
 - Inertia React Development
 - Public and Shared Runtime Audit — Partial
-- Illuminate\Support\Collection
+- StaffCandidateOperationalService
 - DocumentPaymentSummary.tsx
 - Index/types.ts
-- LoginRequest
+- Design flow (default)
 - SentinelStoragePaths
 - setup
-- PackageShow.tsx
-- ResizableSplitGrid.tsx
-- TabDataDiri.tsx
+- Admin/Exam/ResultShow.tsx
+- HealthRecordController
+- hallmark/SKILL.md
 - Livi — Backend Skill (Token-Optimized)
 - WaveCard.tsx
 - Candidate/Profile.tsx
 - Staff/Exam/Results.tsx
-- AttemptController
+- Recipes
 - require
 - TrustCooperationSection.tsx
 - Admin/Exam/Results.tsx
 - Users.tsx
-- CandidateGateService
+- Study — extracting design DNA from a screenshot or URL
 - require-dev
 - Admin/Exam/Index.tsx
 - PaymentSuccess.tsx
@@ -129,24 +129,24 @@
 - landing.ts
 - TabCatatanKhusus.tsx
 - MonitoringDisplay.tsx
-- Admin/Index.tsx
-- CandidateStatusFlowTest.php
+- ThemeContext.tsx
+- Hero enrichment — when, what, and how much
 - <Slice> Audit Report
 - Pest Testing 4
-- PaymentController
+- Subjects.tsx
 - package.json
 - Index/StatusTimeline.tsx
-- Staff/Exam/ResultShow.tsx
-- WaveUpdated
+- DashboardSplitLayout
+- DashboardMetricsUpdated
 - UserFactory
 - TabDokumen.tsx
 - HeroSection.tsx
 - config
 - GallerySection.tsx
-- PackageController
+- ExamPackage
 - psr-4
 - 2026_07_04_000001_add_undisclosed_income_range_to_guardians_table.php
-- app.tsx
+- Theme — Carnival
 - Show/TabIdentitas.tsx
 - useLandingLenis
 - index.d.ts
@@ -158,7 +158,7 @@
 - auth-system/resources/js/Pages/Auth/ResetPassword.tsx
 - auth-system/resources/js/Pages/Auth/VerifyEmail.tsx
 - layout.blade.php
-- keywords
+- CandidateRequestPresenter
 - TestCase
 - Index/ProgressRing.tsx
 - UI/ProgressRing.tsx
@@ -172,30 +172,30 @@
 - axios
 - bootstrap/app.php
 - concurrently
-- eslint-config-prettier
+- DocumentSecurityService
 - @headlessui/react
-- laravel-vite-plugin
+- Interaction and states
 - prettier
 - prettier-plugin-organize-imports
 - react-dom
-- tailwindcss
-- @tailwindcss/forms
+- 2. Milestone Breakdown
+- TelescopeServiceProvider
 - @types/animejs
-- @types/react
+- 2026_09_01_174415_create_telescope_entries_table.php
 - @types/react-dom
 - @types/react-select
-- ExamAuditLogger
+- ExamSession
 - vite
 - @vitejs/plugin-react
 - ziggy.js
-- autoprefixer
+- extra
 - AGENTS.md — Production Auditor System Instructions
-- ExamPackage
+- Major (looks AI-generated)
 - Sentinel Admission - Project, Architecture & Environment
 - Audit Handoff
 - Slice procedure
 - Task XX — <Slice Name>
-- Calendar/types.ts
+- eslint-plugin-prettier
 - Mandatory domains
 - Detection Checklist
 - Process
@@ -203,17 +203,17 @@
 - laravel-best-practices/SKILL.md
 - Security Best Practices
 - Tailwind CSS Development
-- CalendarSidebar.tsx
+- eslint-plugin-react
 - Queue & Job Best Practices
-- ExamQuestionWorkbookReader
+- laravel-echo
 - ============================================================
 - Release Gates
 - Decision <ID> — <Title>
 - Advanced Query Patterns
 - Database Performance Best Practices
 - Events & Notifications Best Practices
-- QuestionImportController.php
-- TabPembayaran.tsx
+- postcss
+- pusher-js
 - AGENTS.md
 - Laravel Boost Guidelines
 - Caching Best Practices
@@ -242,7 +242,7 @@
 - LIVI - Core Identity, Workflow & Rules
 - Auditor Operating Rules
 - Rollback Notes
-- StaffSidebar.tsx
+- react
 - Do Things the Laravel Way
 - Branching & Promotion Policy
 - Documentation & Evidence Policy
@@ -265,7 +265,7 @@
 - Task 08 — Admin Operations and Configuration
 - Task 09 — Reporting and Export
 - Task 10 — Infrastructure and Deployment Readiness
-- CalendarWaveInfo.tsx
+- @types/canvas-confetti
 - Laravel 12
 - Navigation Truth
 - Database Schema - Current Core
@@ -285,17 +285,54 @@
 - PACKAGE-MANIFEST.md
 - PRODUCTION-MANIFEST.md
 - CURRENT.md
+- @typescript-eslint/eslint-plugin
+- Slop test — 58 gates + pre-emit self-critique
+- Copy
+- Critical (ships as slop)
+- Typography
+- Microinteraction tells
+- Archetype index — load ONLY the picks you need
+- Theme — Cobalt
+- Theme - Grid
+- SecureFileController
+- Responsive
+- The six axes
+- TabDataDiri.tsx
+- Show.tsx
+- Minor (small taste issues)
+- Genre — atmospheric
+- Genre — modern-minimal
+- Genre — playful
+- Imagery kit — curated abstract assets, hosted, ready
+- ExamQuestionWorkbookReader
+- Genre — editorial (default)
+- § Multi-page flow — design.md first, then redesign
+- ExamPackageTemplateService
+- TabPembayaran.tsx
+- Ponytail
+- Layout and space
+- Motion
+- Ponytail
+- design.md — opt-in portable design system
+- Export formats
+- Colour
+- Macrostructures
+- StaffSidebar.tsx
+- Floating nav on scroll — the cross-fade morph
+- Output contract & scope
+- .triggerCheck
+- .boot
 
 ## God Nodes (most connected - your core abstractions)
-1. `Candidate` - 201 edges
+1. `Candidate` - 205 edges
 2. `Controller` - 105 edges
-3. `Payment` - 90 edges
-4. `User` - 87 edges
+3. `Payment` - 99 edges
+4. `User` - 95 edges
 5. `ExamAttempt` - 73 edges
-6. `StatusPendaftaranService` - 57 edges
-7. `AdmissionWave` - 56 edges
-8. `CandidateStatusService` - 49 edges
-9. `ExamSession` - 45 edges
+6. `AdmissionWave` - 60 edges
+7. `StatusPendaftaranService` - 57 edges
+8. `CandidateStatusService` - 52 edges
+9. `ExamSession` - 46 edges
 10. `ExamPackage` - 42 edges
 
 ## Surprising Connections (you probably didn't know these)
@@ -305,19 +342,19 @@
   tests/Feature/OnlineSelectionExamSecurityTest.php → app/Models/CandidateDocument.php
 - `gateSubmitCandidate()` --calls--> `Guardian`  [INFERRED]
   tests/Feature/CandidateFeatureGateTest.php → app/Models/Guardian.php
+- `candidatePanelCandidate()` --calls--> `Guardian`  [INFERRED]
+  tests/Feature/CandidatePanelGoldFeatureTest.php → app/Models/Guardian.php
 - `verificationCandidate()` --calls--> `Guardian`  [INFERRED]
   tests/Feature/CandidateVerificationChecklistTest.php → app/Models/Guardian.php
-- `examSecurityCandidate()` --calls--> `Guardian`  [INFERRED]
-  tests/Feature/OnlineSelectionExamSecurityTest.php → app/Models/Guardian.php
 
 ## Import Cycles
 - None detected.
 
-## Communities (328 total, 67 thin omitted)
+## Communities (368 total, 71 thin omitted)
 
-### Community 1 - "Candidate/Exam/AttemptShow.tsx"
-Cohesion: 0.10
-Nodes (29): isDegreeWord(), Props, readExponent(), renderRichText(), RichExamText(), UNICODE_SUPERSCRIPTS, useExamNavigation(), UseExamNavigationOptions (+21 more)
+### Community 1 - "PackageShow.tsx"
+Cohesion: 0.09
+Nodes (32): inputClass, Props, QuestionBankTable, useExamNavigation(), UseExamNavigationOptions, UseExamNavigationReturn, calcClientRemaining(), useExamTimer() (+24 more)
 
 ### Community 2 - "StatusPendaftaran/types.ts"
 Cohesion: 0.07
@@ -325,35 +362,39 @@ Nodes (36): CandidateStatusSummaryCard(), Props, CompletionChecklist(), Props, L
 
 ### Community 3 - "Inertia\Response"
 Cohesion: 0.05
-Nodes (16): NewPasswordController, PasswordResetLinkController, Controller, CandidateController, StaffController, UserController, PaymentHistoryController, SelectionResultController (+8 more)
+Nodes (18): RegisterController, PasswordResetLinkController, Controller, CandidateController, StaffController, HelpController, IndexController, PaymentHistoryController (+10 more)
 
-### Community 4 - "Illuminate\Database\Eloquent\Relations\BelongsTo"
-Cohesion: 0.04
-Nodes (13): IndexController, CandidateDocumentSecurity, ExamAuditLog, ExamImportBatch, ExamQuestion, Illuminate\Contracts\Auth\MustVerifyEmail, Illuminate\Database\Eloquent\Factories\HasFactory, Illuminate\Database\Eloquent\Model (+5 more)
+### Community 4 - "component-cookbook.md"
+Cohesion: 0.02
+Nodes (48): C1 · Outlined chip, C2 · Inline form-as-CTA, C3 · Typographic link, C4 · Sticky bottom bar, F1 · Bento grid, F2 · Sticky-scroll stack, F3 · Tabular spec sheet, F4 · Step sequence (+40 more)
 
 ### Community 5 - "Candidate/Calendar.tsx"
-Cohesion: 0.19
-Nodes (17): AgendaFormModal(), CalendarHeader(), Props, CalendarSummaryGrid(), Props, SummaryCardTone, CalendarPageProps, DateMeta (+9 more)
+Cohesion: 0.07
+Nodes (46): AgendaFormModal(), Props, CalendarHeader(), Props, CalendarPanel(), Props, CalendarSidebar(), Props (+38 more)
 
 ### Community 6 - "Staff/Reports.tsx"
 Cohesion: 0.06
-Nodes (38): actionChartLabels, ActionLoadPanel(), AttentionPanel(), BucketStat, ChartTooltip(), ChartTooltipProps, dominantPoint(), DonutChartPanel() (+30 more)
+Nodes (39): actionChartLabels, ActionLoadPanel(), AttentionPanel(), BucketStat, ChartTooltip(), ChartTooltipProps, dominantPoint(), DonutChartPanel() (+31 more)
 
 ### Community 7 - "ExamAttempt"
-Cohesion: 0.08
-Nodes (11): SaveExamAnswer, StartExamAttempt, SubmitExamAttempt, ExamAccessException, PublicExamController, ExamAttempt, ExamAttemptAnswer, ExamAttemptService (+3 more)
+Cohesion: 0.06
+Nodes (15): SaveExamAnswer, StartExamAttempt, SubmitExamAttempt, ExamAccessException, MonitoringController, AttemptController, PublicExamController, ExamAttempt (+7 more)
 
-### Community 9 - "ExamSession"
-Cohesion: 0.20
-Nodes (3): SessionController, StoreExamSessionRequest, ExamSession
+### Community 8 - "AdmissionWave"
+Cohesion: 0.09
+Nodes (12): IndexController, WaveController, AdmissionWave, AdmissionWaveSeeder, candidatePanelCandidate(), candidatePanelUser(), candidatePanelWave(), guardianTestCandidate() (+4 more)
+
+### Community 9 - "Assets — sourcing canon for icons, logos, illustrations, photography, video"
+Cohesion: 0.05
+Nodes (44): Abstract backgrounds, App mockups / device frames, Assets — sourcing canon for icons, logos, illustrations, photography, video, Avoid, Avoid, Avoid, Avoid, Avoid (+36 more)
 
 ### Community 10 - "User"
-Cohesion: 0.08
-Nodes (13): User, Illuminate\Foundation\Auth\User, gateCandidate(), gateDocument(), gatePayment(), gateSubmitCandidate(), gateUser(), gateVerifiedCandidate() (+5 more)
+Cohesion: 0.07
+Nodes (14): User, CandidateHelpCenterService, CandidateGateService, Illuminate\Contracts\Auth\MustVerifyEmail, Illuminate\Foundation\Auth\User, Illuminate\Notifications\Notifiable, gateCandidate(), gateDocument() (+6 more)
 
 ### Community 11 - "useTheme"
-Cohesion: 0.09
-Nodes (35): AddressDetail, Props, TabAlamat(), DataChangeRequest, FIELD_LABELS, Props, RELIGION_OPTIONS, TabIdentitas() (+27 more)
+Cohesion: 0.10
+Nodes (33): AddressDetail, Props, TabAlamat(), DataChangeRequest, FIELD_LABELS, Props, RELIGION_OPTIONS, TabIdentitas() (+25 more)
 
 ### Community 12 - "PaymentHistory.tsx"
 Cohesion: 0.07
@@ -364,28 +405,20 @@ Cohesion: 0.09
 Nodes (34): MaskedData, ResumeModal(), ResumeModalProps, clearWizardStorage(), KEYS, readWizardStorage(), saveDraftId(), saveLastStep() (+26 more)
 
 ### Community 15 - "DataWali.tsx"
-Cohesion: 0.09
-Nodes (34): AddressForm(), inputCls(), Props, inputCls(), PersonForm(), PersonPrefix, PersonPrefix2, Props (+26 more)
+Cohesion: 0.10
+Nodes (32): AddressForm(), inputCls(), Props, inputCls(), PersonForm(), PersonPrefix, PersonPrefix2, Props (+24 more)
 
 ### Community 16 - "Candidate"
-Cohesion: 0.08
-Nodes (10): Candidate, CandidateObserver, CandidateStatusService, CandidateVerificationEvaluator, CandidateVerificationChecklist, paidTransferPayment(), verificationCandidate(), verificationDocument() (+2 more)
-
-### Community 17 - "Illuminate\Http\RedirectResponse"
-Cohesion: 0.14
-Nodes (6): EmailVerificationController, WaveController, ChangeRequestController, EmailVerificationController, Illuminate\Foundation\Auth\EmailVerificationRequest, Illuminate\Http\RedirectResponse
+Cohesion: 0.07
+Nodes (18): Candidate, CandidateObserver, CandidateVerificationEvaluator, CandidateVerificationChecklist, statusFlowCandidate(), statusFlowCompleteSubmittedCandidate(), statusFlowDocument(), statusFlowGuardian() (+10 more)
 
 ### Community 18 - "dependencies"
 Cohesion: 0.06
 Nodes (33): animejs, canvas-confetti, date-fns, flatpickr, @fullcalendar/daygrid, @fullcalendar/interaction, @fullcalendar/list, @fullcalendar/react (+25 more)
 
-### Community 19 - "Illuminate\Http\Request"
-Cohesion: 0.10
-Nodes (6): RegisterController, ProfileController, SecureFileController, CandidateDocument, SecureFileAccessService, Illuminate\Http\Request
-
 ### Community 20 - "DataKesehatan/TabRangkuman.tsx"
-Cohesion: 0.09
-Nodes (17): EmptyField, FormState, Props, TabId, EmptyField, FormState, HealthDocuments, Props (+9 more)
+Cohesion: 0.08
+Nodes (18): EmptyField, FormState, Props, TabId, TabRangkuman(), EmptyField, FormState, HealthDocuments (+10 more)
 
 ### Community 21 - "ChangeRequests.tsx"
 Cohesion: 0.09
@@ -396,36 +429,36 @@ Cohesion: 0.09
 Nodes (4): SystemSettingsController, AdmissionProgram, Extracurricular, PaymentConfig
 
 ### Community 23 - "DataWali/types.ts"
-Cohesion: 0.10
-Nodes (24): formatAlamat(), formatTTL(), TabRangkuman(), EDUCATION_LABELS, EducationLevel, HOUSE_LABELS, HouseOwnership, INCOME_LABELS (+16 more)
+Cohesion: 0.09
+Nodes (26): formatAlamat(), formatTTL(), Props, TabRangkuman(), EDUCATION_LABELS, EducationLevel, HOUSE_LABELS, HouseOwnership (+18 more)
 
 ### Community 24 - "DataDokumen.tsx"
-Cohesion: 0.10
-Nodes (19): DocumentCard(), mimeFromFilename(), Props, REQUIRED_CONFIG, RequiredLevel, STATUS_CONFIG, swalDark, TabAdministrasi (+11 more)
+Cohesion: 0.08
+Nodes (27): DocumentCard(), mimeFromFilename(), Props, REQUIRED_CONFIG, RequiredLevel, STATUS_CONFIG, swalDark, TabAdministrasi (+19 more)
 
 ### Community 25 - "SystemSettings.tsx"
 Cohesion: 0.07
 Nodes (16): blankExtra, blankPayment, blankProgram, currency(), ExtracurricularRow, ExtraForm, PaymentConfigRow, PaymentForm (+8 more)
 
 ### Community 27 - "CandidateEvaluationResult"
-Cohesion: 0.11
+Cohesion: 0.12
 Nodes (4): CandidateCompletionEvaluator, CandidateEvaluationResult, CandidateRequirement, CandidateStatusResult
 
 ### Community 28 - "CinematicShowcase.tsx"
 Cohesion: 0.10
 Nodes (22): AnimatedTextProps, CinematicShowcase(), externalMediaUrl(), FullSizePopupProps, img(), LightboxProps, MASTER_DATA, PLACEHOLDER_VIDEO_URLS (+14 more)
 
-### Community 29 - "OnlineSelectionExamSecurityTest.php"
-Cohesion: 0.19
-Nodes (7): Illuminate\Database\Eloquent\Relations\HasOne, examSecurityAssignment(), examSecurityAttempt(), examSecurityCandidate(), examSecurityPackage(), examSecuritySession(), examSecurityWave()
+### Community 29 - "Illuminate\Database\Eloquent\Relations\BelongsTo"
+Cohesion: 0.04
+Nodes (13): IndexController, SubjectController, CandidateCalendarEvent, ExamAuditLog, ExamImportBatch, ExamQuestion, ExamSubject, EmailDomainVerifier (+5 more)
 
 ### Community 30 - "Guardian"
-Cohesion: 0.08
-Nodes (14): GuardianController, RedirectResponse, Guardian, GuardianObserver, AppServiceProvider, Illuminate\Support\ServiceProvider, candidatePanelCandidate(), candidatePanelUser() (+6 more)
+Cohesion: 0.09
+Nodes (12): GuardianController, RedirectResponse, Guardian, static, GuardianObserver, examSecurityCandidate(), examSecurityWave(), statusCenterCandidate() (+4 more)
 
 ### Community 31 - "devDependencies"
 Cohesion: 0.07
-Nodes (27): eslint, eslint-plugin-prettier, eslint-plugin-react, eslint-plugin-react-hooks, @inertiajs/react, devDependencies, eslint, eslint-plugin-prettier (+19 more)
+Nodes (27): autoprefixer, eslint, eslint-config-prettier, eslint-plugin-react-hooks, @inertiajs/react, laravel-vite-plugin, devDependencies, autoprefixer (+19 more)
 
 ### Community 32 - "CandidateStatus.tsx"
 Cohesion: 0.10
@@ -447,32 +480,28 @@ Nodes (11): InfoField(), InfoFieldProps, Pill(), SectionTitle(), SectionTitlePro
 Cohesion: 0.13
 Nodes (20): CandidateOperational, CandidateRow, Props, TABLE_HEADERS, ActionNeeded, ActionNeededBadge(), LifecycleBadge(), MiniMeter() (+12 more)
 
-### Community 37 - "ExamSubject"
-Cohesion: 0.18
-Nodes (5): SubjectController, AssignExamCandidatesRequest, StoreExamSubjectRequest, ExamSubject, Illuminate\Foundation\Http\FormRequest
+### Community 37 - "Illuminate\Foundation\Http\FormRequest"
+Cohesion: 0.12
+Nodes (5): AssignExamCandidatesRequest, ImportExamQuestionsRequest, StoreExamPackageRequest, StoreExamSubjectRequest, Illuminate\Foundation\Http\FormRequest
 
 ### Community 40 - "DataDiri.tsx"
 Cohesion: 0.09
-Nodes (21): AdmissionWave, Program, Props, TabProgram(), TabRangkuman(), AddressDetail, AdmissionWave, CandidateData (+13 more)
+Nodes (20): AdmissionWave, Program, Props, TabProgram(), AddressDetail, AdmissionWave, CandidateData, DataChangeRequest (+12 more)
 
 ### Community 41 - "DataKesehatan.tsx"
 Cohesion: 0.11
 Nodes (19): TabTimKesehatan(), CandidateSidebar(), CandidateSnippet, DEFAULT_TIPS, pctColorDark(), pctColorLight(), progressBarCls(), Props (+11 more)
 
-### Community 42 - "StatusDistributionChart.tsx"
-Cohesion: 0.21
-Nodes (9): buildCards(), Props, StatCard, Stats, StatsGrid(), buildChartData(), ChartEntry, Props (+1 more)
+### Community 42 - "macrostructures.md"
+Cohesion: 0.05
+Nodes (21): 01 · Bento Grid, 02 · Long Document, 03 · Marquee Hero, 04 · Stat-Led, 05 · Workbench, 06 · Conversational FAQ, 07 · Manifesto, 08 · Photographic (+13 more)
 
-### Community 43 - "CandidateRequestPresenter"
-Cohesion: 0.09
-Nodes (4): DataDiriController, IndexController, ProfileController, CandidateRequestPresenter
-
-### Community 44 - ".log"
-Cohesion: 0.12
-Nodes (6): MidtransController, DocumentSecurityService, PaymentService, Illuminate\Http\UploadedFile, gatePdfUpload(), UploadedFile
+### Community 43 - "CandidateDocument"
+Cohesion: 0.16
+Nodes (3): DocumentController, CandidateDocument, Illuminate\Database\Eloquent\Relations\HasOne
 
 ### Community 45 - "StaffPaymentOperationalService"
-Cohesion: 0.16
+Cohesion: 0.15
 Nodes (3): StaffPaymentOperationalService, Illuminate\Contracts\Pagination\LengthAwarePaginator, Illuminate\Database\Eloquent\Builder
 
 ### Community 46 - ".eslintrc.json"
@@ -487,29 +516,29 @@ Nodes (20): resources/js/**/*.d.ts, resources/js/**/*.ts, resources/js/**/*.tsx,
 Cohesion: 0.04
 Nodes (47): 16 Document Types, 5 Groups, 4 Mandatory States (every page and component), Before Building Any Feature, Button Loading State, candidate_document_security Schema, candidate_documents Schema, CinematicShowcase, Debugging Protocol — 500 Errors (+39 more)
 
-### Community 49 - "ExamAdminUi.tsx"
-Cohesion: 0.09
-Nodes (28): cardClass, EmptyState(), ExamWorkspaceActive, inputClass, labelClass, primaryButtonClass, subtleCardClass, Assignment (+20 more)
+### Community 49 - "Admin/Exam/SessionShow.tsx"
+Cohesion: 0.15
+Nodes (15): EmptyState(), labelClass, Assignment, Props, SessionAssignedTable, AssignmentForm, CandidateRow, Props (+7 more)
 
 ### Community 50 - "DashboardLayout.tsx"
-Cohesion: 0.13
-Nodes (22): Backdrop(), CardSizeContext, CardSizeContextType, CardSizeProvider(), SidebarContext, SidebarContextType, SidebarProvider(), useSidebar() (+14 more)
+Cohesion: 0.20
+Nodes (16): Backdrop(), SidebarContext, SidebarContextType, SidebarProvider(), useSidebar(), ThemeProvider(), buildHtml(), formatTime() (+8 more)
 
-### Community 51 - "Show.tsx"
-Cohesion: 0.17
-Nodes (8): CANDIDATE_STATUS_CLASS, CANDIDATE_STATUS_LABEL, Props, SECTION_META, SectionId, swalDark, TabDokumen, TabPembayaran
+### Community 51 - "Theme — Lumen"
+Cohesion: 0.06
+Nodes (33): 1. Hand-built apparatus (no orb), 2. Lowercase headline with verb-landmark (no italics), 3. Mono eyebrow above every section, 4. Blueprint grid background (4% opacity), 5. Meter strip (below the hero), 6. Hairline cards with inner emission, 7. Three-stat row with Instrument Serif numerals + tabular-nums, Anti-patterns (theme-specific) (+25 more)
 
 ### Community 52 - "Topbar.tsx"
-Cohesion: 0.17
-Nodes (14): ResizableCard(), ResizableCardProps, buildCalendarDays(), CalendarDay, formatDateValue(), getGreeting(), isSameDay(), monthNames (+6 more)
+Cohesion: 0.15
+Nodes (17): ResizableCard(), ResizableCardProps, buildCalendarDays(), CalendarDay, formatDateValue(), getGreeting(), isSameDay(), monthNames (+9 more)
 
 ### Community 53 - "Welcome.tsx"
 Cohesion: 0.13
 Nodes (12): facilities, FacilitiesSection(), HighlightSection(), HowToRegisterSection(), steps, ProfileSection(), ProfileSectionProps, VideoModal() (+4 more)
 
-### Community 54 - ".response"
-Cohesion: 0.05
-Nodes (17): PruneExpiredDrafts, FormWizardController, HealthRecordController, UploadedFile, RoleMiddleware, ValidateDraftToken, self, static (+9 more)
+### Community 54 - "Theme — Hum"
+Cohesion: 0.06
+Nodes (32): 1. The button system — three variations, the press is the feedback, 2. Multi-accent section bands, 3. Color-shift card grid, 4. Streak / counter tick-up, 5. Character moment — one small reacting mark, 6. Big rounded everything, 7. Star-burst micro-celebration on success, Anti-patterns (theme-specific) (+24 more)
 
 ### Community 55 - "Sidebar.tsx"
 Cohesion: 0.18
@@ -517,7 +546,11 @@ Nodes (17): activeRuleMatches(), controlIdFor(), FlyoutState, itemKeyFor(), Pars
 
 ### Community 57 - "Admin/Reports.tsx"
 Cohesion: 0.06
-Nodes (38): actionChartLabels, ActionLoadPanel(), AdminReports(), AttentionPanel(), BucketStat, ChartTooltip(), ChartTooltipProps, dominantPoint() (+30 more)
+Nodes (39): actionChartLabels, ActionLoadPanel(), AdminReports(), AttentionPanel(), BucketStat, ChartTooltip(), ChartTooltipProps, dominantPoint() (+31 more)
+
+### Community 58 - "Custom craft — how to hand-build hero artwork"
+Cohesion: 0.07
+Nodes (30): A hand-built SVG with declarative animation, A worked example — the bakery loaf as a single div, Animation choices for SVG in 2026, Anti-patterns of CSS art, Anti-patterns of declarative animation, Anti-patterns of generated stills, Anti-patterns of hand-built SVG, Anti-patterns of Three.js / WebGL (+22 more)
 
 ### Community 60 - "ManualCheckout.tsx"
 Cohesion: 0.12
@@ -527,17 +560,17 @@ Nodes (9): BSIBankCard(), CandidateInfo, Config, formatRupiah(), ManualCheckout(
 Cohesion: 0.14
 Nodes (16): CHANNEL_LABEL, ConfigData, countdownBarCls(), countdownColorDark(), countdownColorLight(), CountdownSection(), formatRupiah(), formatWaveLabel() (+8 more)
 
-### Community 62 - "DashboardSplitLayout"
-Cohesion: 0.07
-Nodes (20): BackLink(), PageHeader(), StatCard(), DashboardSplitLayout(), Batch, FailureRow, Props, AttemptRow (+12 more)
+### Community 62 - "Monitoring.tsx"
+Cohesion: 0.20
+Nodes (6): AttemptRow, ExamMonitoring(), formatTime(), MonitoringSnapshot, Props, SessionRow
 
-### Community 63 - "Sessions.tsx"
-Cohesion: 0.17
-Nodes (11): dangerButtonClass, WorkflowRail(), PackageOption, Props, SessionForm, SessionFormCard, SessionRow, WaveOption (+3 more)
+### Community 63 - "ExamAdminUi.tsx"
+Cohesion: 0.08
+Nodes (29): cardClass, dangerButtonClass, ExamWorkspaceActive, PageHeader(), primaryButtonClass, secondaryButtonClass, StatCard(), subtleCardClass (+21 more)
 
 ### Community 64 - "Staff/Index.tsx"
-Cohesion: 0.16
-Nodes (9): Props, RecentSubmission, RecentSubmissionsList(), Props, SubmissionTrendChart(), TrendItem, Props, StatusDistributionChart (+1 more)
+Cohesion: 0.07
+Nodes (21): Props, RecentSubmission, RecentSubmissionsList(), buildCards(), Props, StatCard, Stats, StatsGrid() (+13 more)
 
 ### Community 65 - "ChannelSelection.tsx"
 Cohesion: 0.15
@@ -547,9 +580,13 @@ Nodes (13): calcFee(), CardProps, ChannelSelection(), Config, formatDisplayName(
 Cohesion: 0.12
 Nodes (13): DraftGate(), Props, STEPS, CandidateData, CHECKOUT_NARASI, ConfigData, PageState, PaymentData (+5 more)
 
-### Community 67 - "CalendarController"
-Cohesion: 0.12
-Nodes (7): CalendarController, Carbon, CalendarController, Carbon, CandidateCalendarEvent, NationalHolidayService, Carbon\Carbon
+### Community 67 - "RegistrationDraft"
+Cohesion: 0.05
+Nodes (17): FormWizardController, CalendarController, Carbon, CalendarController, Carbon, RoleMiddleware, ValidateDraftToken, self (+9 more)
+
+### Community 68 - "Illuminate\Http\Request"
+Cohesion: 0.05
+Nodes (18): AuthenticatedSessionController, EmailVerificationController, NewPasswordController, ProfileController, UserController, ChangeRequestController, ProfileController, HandleInertiaRequests (+10 more)
 
 ### Community 70 - "Dashboard/Index.tsx"
 Cohesion: 0.14
@@ -563,17 +600,17 @@ Nodes (12): HeroSectionProps, ScheduleModal(), ScheduleModalProps, buildTickerIt
 Cohesion: 0.16
 Nodes (10): AdminWaves(), blankForm, fromWave(), listToText(), Props, rupiah(), swalDark, textToList() (+2 more)
 
-### Community 73 - "AdmissionWave"
-Cohesion: 0.08
-Nodes (11): IndexController, AdmissionWave, AdmissionWaveSeeder, CandidateSeeder, DatabaseSeeder, ExtracurricularSeeder, PaymentConfigSeeder, UserSeeder (+3 more)
+### Community 73 - "Illuminate\Database\Seeder"
+Cohesion: 0.18
+Nodes (6): CandidateSeeder, DatabaseSeeder, ExtracurricularSeeder, PaymentConfigSeeder, UserSeeder, Illuminate\Database\Seeder
 
-### Community 74 - "Candidate/Exam/Index.tsx"
-Cohesion: 0.12
-Nodes (19): BackLink(), EmptyState(), FlashMessage(), inputClass, Metric(), PageHeader(), StatusPill(), AttemptSummary (+11 more)
+### Community 74 - "Candidate/Exam/AttemptShow.tsx"
+Cohesion: 0.10
+Nodes (21): BackLink(), EmptyState(), FlashMessage(), inputClass, Metric(), PageHeader(), StatusPill(), AttemptSummary (+13 more)
 
-### Community 75 - "ExamMonitoringService"
-Cohesion: 0.21
-Nodes (3): MonitoringController, ExamMonitoringService, Illuminate\Support\Carbon
+### Community 75 - "Design flow (default)"
+Cohesion: 0.07
+Nodes (28): 0. Pre-flight scan, 1. Design-context gate, 2.5. Check project memory, 2.6. Theme route — studied-DNA, catalog, or custom, 2. Pick a macrostructure FIRST, 3. Load the visual ruleset, 4. Decide on hero enrichment, 5. Preview (+20 more)
 
 ### Community 76 - "Build Rules & Performance Guidelines"
 Cohesion: 0.08
@@ -589,7 +626,7 @@ Nodes (23): 500 Error — Correct Order, Artisan & Composer Aliases (adapt to yo
 
 ### Community 80 - "composer.json"
 Cohesion: 0.14
-Nodes (13): autoload-dev, psr-4, description, extra, laravel, dont-discover, license, minimum-stability (+5 more)
+Nodes (13): autoload-dev, psr-4, description, keywords, license, minimum-stability, name, prefer-stable (+5 more)
 
 ### Community 81 - "scripts"
 Cohesion: 0.14
@@ -599,9 +636,9 @@ Nodes (14): scripts, dev, post-autoload-dump, post-update-cmd, pre-package-unins
 Cohesion: 0.23
 Nodes (12): FlashMessage(), ExamPackageShow(), formatToLocalDateTime(), Props, PublicAttemptItem, PublicSessionItem, PublicSessions(), PublicTokenItem (+4 more)
 
-### Community 83 - "Packages.tsx"
-Cohesion: 0.23
-Nodes (9): secondaryButtonClass, PackageForm, PackageFormCard, PackageRow, Props, SubjectOption, PackageListCard, Props (+1 more)
+### Community 83 - "Custom theme — protocol"
+Cohesion: 0.07
+Nodes (29): § A · The one follow-up question, B.1 · Anchor accent first, B.2 · Paper, B.3 · Ink, B.4 · Supporting greys, B.5 · Focus, B.6 · Accent-ink (overlay text colour on accent), B.7 · Verification (+21 more)
 
 ### Community 84 - "Staff/Profile.tsx"
 Cohesion: 0.18
@@ -619,6 +656,10 @@ Nodes (20): Basic Link Component, Basic Usage, Client-Side Navigation, Common Pi
 Cohesion: 0.10
 Nodes (20): Changes made, Classification, Confirmed findings, Critical, Dependency map, High, Informational, Low (+12 more)
 
+### Community 88 - "StaffCandidateOperationalService"
+Cohesion: 0.12
+Nodes (3): ChangeRequestService, StaffCandidateOperationalService, Illuminate\Support\Collection
+
 ### Community 89 - "DocumentPaymentSummary.tsx"
 Cohesion: 0.19
 Nodes (10): DocumentPaymentSummary(), Props, ProgressOverview(), ProgressRing, Props, DashboardProgress, DocumentsSummary, PaymentSummary (+2 more)
@@ -627,29 +668,21 @@ Nodes (10): DocumentPaymentSummary(), Props, ProgressOverview(), ProgressRing, P
 Cohesion: 0.19
 Nodes (10): Props, Props, ActionTone, AdmissionWave, DashboardIdentity, NextAction, ProgressSection, SectionState (+2 more)
 
-### Community 91 - "LoginRequest"
-Cohesion: 0.14
-Nodes (3): AuthenticatedSessionController, LoginRequest, AuthenticatedSessionController
-
-### Community 92 - "SentinelStoragePaths"
-Cohesion: 0.13
-Nodes (3): SentinelStoragePaths, Illuminate\Http\Response, Symfony\Component\HttpFoundation\BinaryFileResponse
+### Community 91 - "Design flow (default)"
+Cohesion: 0.07
+Nodes (28): 0. Pre-flight scan, 1. Design-context gate, 2.5. Check project memory, 2.6. Theme route — studied-DNA, catalog, or custom, 2. Pick a macrostructure FIRST, 3. Load the visual ruleset, 4. Decide on hero enrichment, 5. Preview (+20 more)
 
 ### Community 93 - "setup"
 Cohesion: 0.17
 Nodes (12): post-create-project-cmd, post-root-package-install, setup, composer install, npm install, npm run build, @php artisan key:generate, @php artisan key:generate --ansi (+4 more)
 
-### Community 94 - "PackageShow.tsx"
-Cohesion: 0.21
-Nodes (11): StatusPill(), Props, QuestionBankTable, ImportForm, Props, ExamCandidate, ExamImportPreview, ExamPackageDetail (+3 more)
+### Community 94 - "Admin/Exam/ResultShow.tsx"
+Cohesion: 0.16
+Nodes (11): BackLink(), isDegreeWord(), Props, readExponent(), renderRichText(), RichExamText(), UNICODE_SUPERSCRIPTS, AnswerReview (+3 more)
 
-### Community 95 - "ResizableSplitGrid.tsx"
-Cohesion: 0.20
-Nodes (9): ResizableSplitGrid(), ResizableSplitGridProps, ExportGroup, ExportState, groupIcon, groupTone, Props, ReportsExportSettings() (+1 more)
-
-### Community 96 - "TabDataDiri.tsx"
-Cohesion: 0.17
-Nodes (8): AdmissionWave, DataChangeRequest, FIELD_LABELS, Program, StaffCandidateData, TabDataDiri(), TabId, TABS
+### Community 96 - "hallmark/SKILL.md"
+Cohesion: 0.19
+Nodes (4): H7 · Demo Video — Clipped-by-viewport-edge, H9 · Custom Illustration Centerpiece, Preview-block worked examples, `hallmark audit`
 
 ### Community 97 - "Livi — Backend Skill (Token-Optimized)"
 Cohesion: 0.10
@@ -667,9 +700,13 @@ Nodes (11): AvatarCropperModal(), Props, CandidateData, DataChangeRequestResult,
 Cohesion: 0.18
 Nodes (10): AttemptRow, CandidateSummary, decodePaginationLabel(), Filters, Paginated, PaginationLink, Props, SessionOption (+2 more)
 
+### Community 101 - "Recipes"
+Cohesion: 0.07
+Nodes (27): Accessibility ground truth, Button press, Command palette navigation, Copy-to-clipboard, Drag handle, Dropdown / menu, Form validation, Hard rules for default-on motion (+19 more)
+
 ### Community 102 - "require"
-Cohesion: 0.18
-Nodes (11): require, ext-zip, guzzlehttp/guzzle, inertiajs/inertia-laravel, laravel/framework, laravel/sanctum, laravel/tinker, midtrans/midtrans-php (+3 more)
+Cohesion: 0.17
+Nodes (12): require, ext-zip, guzzlehttp/guzzle, inertiajs/inertia-laravel, laravel/framework, laravel/reverb, laravel/sanctum, laravel/tinker (+4 more)
 
 ### Community 103 - "TrustCooperationSection.tsx"
 Cohesion: 0.20
@@ -683,13 +720,13 @@ Nodes (10): AttemptRow, CandidateSummary, decodePaginationLabel(), ExamResults()
 Cohesion: 0.12
 Nodes (14): Props, UserCharts(), Props, UserFilters(), LinkData, UserPagination(), Stats, UserStatCards() (+6 more)
 
-### Community 106 - "CandidateGateService"
-Cohesion: 0.16
-Nodes (4): DocumentController, HelpController, CandidateHelpCenterService, CandidateGateService
+### Community 106 - "Study — extracting design DNA from a screenshot or URL"
+Cohesion: 0.08
+Nodes (26): After the file is written, Emitting a `design.md` from `study`, Image-mode template, Junk-or-blocked detection, Limits and disclaimers, Refusal — when not to study, Remote URL safety, Source mode — image or URL (+18 more)
 
 ### Community 107 - "require-dev"
-Cohesion: 0.18
-Nodes (11): require-dev, fakerphp/faker, laravel/boost, laravel/breeze, laravel/pail, laravel/pint, laravel/sail, mockery/mockery (+3 more)
+Cohesion: 0.17
+Nodes (12): require-dev, fakerphp/faker, laravel/boost, laravel/breeze, laravel/pail, laravel/pint, laravel/sail, laravel/telescope (+4 more)
 
 ### Community 108 - "Admin/Exam/Index.tsx"
 Cohesion: 0.22
@@ -708,20 +745,20 @@ Cohesion: 0.24
 Nodes (7): Footer(), FooterProps, NAV_LINKS, Navbar(), NavbarProps, NavState, WelcomeProps
 
 ### Community 112 - "TabCatatanKhusus.tsx"
-Cohesion: 0.14
-Nodes (19): ALLOWED_EXTENSIONS, ALLOWED_MIME_TYPES, createInitialDocState(), DOC_CONFIG, DocCard(), DocKey, DocState, formatFileSize() (+11 more)
+Cohesion: 0.23
+Nodes (11): ALLOWED_EXTENSIONS, ALLOWED_MIME_TYPES, createInitialDocState(), DOC_CONFIG, DocCard(), DocKey, DocState, formatFileSize() (+3 more)
 
 ### Community 113 - "MonitoringDisplay.tsx"
 Cohesion: 0.24
 Nodes (6): AttemptRow, formatTime(), MonitoringDisplay(), MonitoringSnapshot, Props, requestFullscreen()
 
-### Community 114 - "Admin/Index.tsx"
-Cohesion: 0.22
-Nodes (9): ActiveWave, AdminIndex(), Props, RecentCandidate, StaffMember, statCards(), Stats, statusConfig (+1 more)
+### Community 114 - "ThemeContext.tsx"
+Cohesion: 0.08
+Nodes (23): AdminStatCards(), CardData, formatRupiah(), Props, CHANNEL_COLORS, formatRupiah(), PaymentBreakdownChart(), Props (+15 more)
 
-### Community 115 - "CandidateStatusFlowTest.php"
-Cohesion: 0.33
-Nodes (9): statusFlowCandidate(), statusFlowCompleteSubmittedCandidate(), statusFlowDocument(), statusFlowGuardian(), statusFlowHealth(), statusFlowPaidPayment(), statusFlowUser(), statusFlowVerifiedRequiredDocuments() (+1 more)
+### Community 115 - "Hero enrichment — when, what, and how much"
+Cohesion: 0.09
+Nodes (23): Animation discipline (hero specifically), Common mistakes — and the fixes, E1 · Demo Video — Clipped-by-viewport-edge, E2 · Demo Video — Full-bleed muted loop with ghost overlay, E3 · Mock App Screenshot — Browser-framed split, E4 · Mock App Screenshot — Floating no-frame, E5 · Custom Illustration Centerpiece, E6 · Animated Loop — pure CSS / SVG / Motion (+15 more)
 
 ### Community 116 - "<Slice> Audit Report"
 Cohesion: 0.10
@@ -731,6 +768,10 @@ Nodes (19): Changes made, Classification, Critical, Data integrity review, Depen
 Cohesion: 0.11
 Nodes (17): Architecture Testing, Assertions, Basic Test Structure, Basic Usage, Browser Test Example, Common Pitfalls, Creating Tests, Datasets (+9 more)
 
+### Community 118 - "Subjects.tsx"
+Cohesion: 0.22
+Nodes (9): StatusPill(), emptyForm, Props, Subject, SubjectForm, SubjectFormCard, Props, SubjectTable (+1 more)
+
 ### Community 119 - "package.json"
 Cohesion: 0.22
 Nodes (8): private, $schema, scripts, build, dev, dev-mode, lint, type
@@ -739,13 +780,13 @@ Nodes (8): private, $schema, scripts, build, dev, dev-mode, lint, type
 Cohesion: 0.33
 Nodes (4): Props, stepClasses, StatusSummary, TimelineStep
 
-### Community 121 - "Staff/Exam/ResultShow.tsx"
-Cohesion: 0.22
-Nodes (4): AnswerReview, AttemptDetail, CandidateSummary, Props
+### Community 121 - "DashboardSplitLayout"
+Cohesion: 0.12
+Nodes (8): DashboardSplitLayout(), Props, StaffMember, swalDark, AnswerReview, AttemptDetail, CandidateSummary, Props
 
-### Community 122 - "WaveUpdated"
-Cohesion: 0.33
-Nodes (5): WaveUpdated, Illuminate\Broadcasting\InteractsWithSockets, Illuminate\Contracts\Broadcasting\ShouldBroadcastNow, Illuminate\Foundation\Events\Dispatchable, Illuminate\Queue\SerializesModels
+### Community 122 - "DashboardMetricsUpdated"
+Cohesion: 0.07
+Nodes (14): PruneExpiredDrafts, SimulateTrafficCommand, WipeDemoDataCommand, DashboardMetricsUpdated, WaveUpdated, CandidateDocumentSecurity, PaymentObserver, UserObserver (+6 more)
 
 ### Community 123 - "UserFactory"
 Cohesion: 0.39
@@ -767,9 +808,9 @@ Nodes (7): pestphp/pest-plugin, php-http/discovery, config, allow-plugins, optim
 Cohesion: 0.40
 Nodes (5): desktopHeightClass, desktopSpanClass, GallerySection(), loadAnime(), photos
 
-### Community 128 - "PackageController"
-Cohesion: 0.18
-Nodes (3): PackageController, Request, StoreExamPackageRequest
+### Community 128 - "ExamPackage"
+Cohesion: 0.21
+Nodes (3): PackageController, Request, ExamPackage
 
 ### Community 129 - "psr-4"
 Cohesion: 0.40
@@ -778,6 +819,10 @@ Nodes (5): autoload, psr-4, App\\, Database\\Factories\\, Database\\Seeders\\
 ### Community 130 - "2026_07_04_000001_add_undisclosed_income_range_to_guardians_table.php"
 Cohesion: 0.80
 Nodes (4): alterIncomeEnums(), down(), supportsEnumAlter(), up()
+
+### Community 131 - "Theme — Carnival"
+Cohesion: 0.09
+Nodes (22): Anti-patterns (theme-specific), Axes (diversification), Build hint, Drop 01 · Cold Snap *(default)*, Drop 02 · Citrus Riot, Drop 03 · Diner Sign, Drop 04 · Studio Night, Drop 05 · Aqua Park (+14 more)
 
 ### Community 133 - "useLandingLenis"
 Cohesion: 0.50
@@ -795,29 +840,49 @@ Nodes (15): 1A. Codebase Audit Checklist, 1B. Questions Livi Must Answer Before 
 Cohesion: 0.50
 Nodes (3): @inertiajs/core, PageProps, Window
 
-### Community 143 - "keywords"
-Cohesion: 0.67
-Nodes (3): keywords, framework, laravel
+### Community 143 - "CandidateRequestPresenter"
+Cohesion: 0.11
+Nodes (3): DataDiriController, ProfileController, CandidateRequestPresenter
 
-### Community 197 - "ExamAuditLogger"
-Cohesion: 0.08
-Nodes (7): PublicSessionController, ResultController, ResultController, ExamSessionToken, ExamAuditLogger, ExamResultPresenter, ExamSessionService
+### Community 185 - "DocumentSecurityService"
+Cohesion: 0.24
+Nodes (4): DocumentSecurityService, Illuminate\Http\UploadedFile, gatePdfUpload(), UploadedFile
+
+### Community 187 - "Interaction and states"
+Cohesion: 0.10
+Nodes (21): Bans, Computation, Contrast discipline, Don't, list, Dropdowns, tooltips, popovers, Focus rings, Forms, Heights and rhythm (+13 more)
+
+### Community 191 - "2. Milestone Breakdown"
+Cohesion: 0.22
+Nodes (8): 1. Executive Summary & Objective, 2. Milestone Breakdown, 3. Session Continuity & Documentation Protocol (MANDATORY), Milestone 1: Data Health & BPJS Decoupling, Milestone 2: Document-to-Payment Sequential Gate, Milestone 3: Exam Readiness Gate & Candidate Exam UX, Milestone 4: Full Regression, Telescope Profiling & State Checkpoint, Task: Candidate Lifecycle, Document Gate & Exam Readiness Refactor
+
+### Community 194 - "2026_09_01_174415_create_telescope_entries_table.php"
+Cohesion: 0.83
+Nodes (3): down(), getConnection(), up()
+
+### Community 197 - "ExamSession"
+Cohesion: 0.05
+Nodes (15): PublicSessionController, ResultController, SessionController, ResultController, StoreExamSessionRequest, ExamSession, ExamSessionToken, ExamAuditLogger (+7 more)
+
+### Community 231 - "extra"
+Cohesion: 0.67
+Nodes (3): extra, laravel, dont-discover
 
 ### Community 232 - "AGENTS.md — Production Auditor System Instructions"
 Cohesion: 0.13
 Nodes (15): 0. Operating Philosophy (Read This First, Every Session), 10. Production-Readiness Checklist (Minimum Audit Scope), 11. Reporting Style, 12. Changelog, 1.1 Tooling Protocol & Token Economy (Graphify, MCP & Native CLI First), 1. Role, Identity & User Interaction Protocol, 2. Context Management & Startup Protocol, 3. Non-Negotiable Safety Boundaries (+7 more)
 
-### Community 233 - "ExamPackage"
-Cohesion: 0.27
-Nodes (3): ExamPackage, ExamPackageTemplateService, ZipArchive
+### Community 233 - "Major (looks AI-generated)"
+Cohesion: 0.10
+Nodes (20): AI-illustration look, Animate-on-scroll on everything, Bounce and elastic easing, Centred everything, Eyebrow on every section, Generic emoji as feature icon, Glassmorphism without purpose, Hover-only affordances (+12 more)
 
 ### Community 234 - "Sentinel Admission - Project, Architecture & Environment"
 Cohesion: 0.14
 Nodes (14): Candidate Code System, Candidate Lifecycle, Controller Structure, Current Feature Status, Document Feature Policy, Form Wizard Flow, Frontend Structure, Git Branch Strategy (+6 more)
 
 ### Community 235 - "Audit Handoff"
-Cohesion: 0.14
-Nodes (13): Audit Handoff, Completed, Current position, Git state, Important decisions, In progress, Known blockers, Last verification (+5 more)
+Cohesion: 0.13
+Nodes (14): Audit Handoff, Completed, Completed in this slice, Current position, Git state, Important decisions, In progress, Known blockers (+6 more)
 
 ### Community 236 - "Slice procedure"
 Cohesion: 0.14
@@ -826,10 +891,6 @@ Nodes (13): Audit, Classify, Commit & Evidence, Establish scope, Fix, Master com
 ### Community 237 - "Task XX — <Slice Name>"
 Cohesion: 0.14
 Nodes (13): Allowed changes, Audit checklist, Classification, Dependency map, Evidence outputs, Goal, In scope, Mandatory stop conditions (+5 more)
-
-### Community 238 - "Calendar/types.ts"
-Cohesion: 0.26
-Nodes (9): Props, CalendarPanel(), Props, EVENT_TYPES, FORM_TYPES, STATUS_OPTIONS, CalendarEventType, CalendarStatus (+1 more)
 
 ### Community 239 - "Mandatory domains"
 Cohesion: 0.15
@@ -859,10 +920,6 @@ Nodes (11): Audit Dependencies, Authorize Every Action, CSRF Protection, Encrypt
 Cohesion: 0.17
 Nodes (11): Basic Usage, Common Patterns, Common Pitfalls, Dark Mode, Documentation, Flexbox Layout, Grid Layout, Spacing (+3 more)
 
-### Community 246 - "CalendarSidebar.tsx"
-Cohesion: 0.24
-Nodes (8): CalendarSidebar(), Props, statusLabel, typeTheme, EventDetailModal(), Props, CalendarEvent, formatReadableDate()
-
 ### Community 247 - "Queue & Job Best Practices"
 Cohesion: 0.18
 Nodes (10): Always Implement `failed()`, Batch Related Jobs, Implement `ShouldBeUnique`, Queue & Job Best Practices, Rate Limit External API Calls in Jobs, `retryUntil()` Needs `$tries = 0`, Set `retry_after` Greater Than `timeout`, Use Exponential Backoff (+2 more)
@@ -891,10 +948,6 @@ Nodes (9): Add Database Indexes, Always Eager Load Relationships, Chunk Large Da
 Cohesion: 0.20
 Nodes (9): Always Queue Notifications, Events & Notifications Best Practices, Implement `HasLocalePreference` on Notifiable Models, Rely on Event Discovery, Route Notification Channels to Dedicated Queues, Run `event:cache` in Production Deploy, Use `afterCommit()` on Notifications in Transactions, Use On-Demand Notifications for Non-User Recipients (+1 more)
 
-### Community 256 - "TabPembayaran.tsx"
-Cohesion: 0.24
-Nodes (9): EmptyState(), CHANNEL_LABEL, formatCurrency(), MANUAL_STATUS_LABEL, Props, StaffPayment, statusTone(), swalDark (+1 more)
-
 ### Community 257 - "AGENTS.md"
 Cohesion: 0.22
 Nodes (8): Deployment, Inertia, Inertia + React, Inertia v2, Laravel Pint Code Formatter, Pest, PHP, Test Enforcement
@@ -920,8 +973,8 @@ Cohesion: 0.22
 Nodes (8): 1.1 AI Engineering Skills & Standards (`docs/panduan-ai/skills/`), 1. AI Instructions & Guidelines (`docs/panduan-ai/`), 2. Deployment & Release Readiness (`docs/persiapan-deploy/`), 3. Real-Time Active State (`docs/state-aktif/`), 4. Audit Tasks & Checklists (`docs/task-audit/`), 5. Reports & Evidence (`docs/laporan-audit/`), 6. Deprecation & Cleanup Staging (`docs/siap-dihapus/`), Production Audit Documentation Index
 
 ### Community 263 - "Durable Audit Decisions"
-Cohesion: 0.22
-Nodes (8): D-001 — Main is human-controlled, D-002 — Visual approval is human-only, D-003 — No production data operations, D-004 — Evidence before claims, D-005 — Use Strategy A for the release candidate, D-006 — Correct the audit workspace installation path, D-007 — Preserve framework auth notifications and centralize email presentation, Durable Audit Decisions
+Cohesion: 0.20
+Nodes (9): D-001 — Main is human-controlled, D-002 — Visual approval is human-only, D-003 — No production data operations, D-004 — Evidence before claims, D-005 — Use Strategy A for the release candidate, D-006 — Correct the audit workspace installation path, D-007 — Preserve framework auth notifications and centralize email presentation, D-008 — Sequential Admission Pipeline & Exam Readiness Gate Architecture (+1 more)
 
 ### Community 264 - "Blocker <ID> — <Title>"
 Cohesion: 0.22
@@ -1002,10 +1055,6 @@ Nodes (6): 1. Pre-Audit Discipline, 2. Deep Audit Execution, 3. Patching & Code 
 ### Community 284 - "Rollback Notes"
 Cohesion: 0.29
 Nodes (6): Code rollback, Database rollback, Post-rollback verification, Release, Rollback Notes, Rollback triggers
-
-### Community 285 - "StaffSidebar.tsx"
-Cohesion: 0.29
-Nodes (5): Props, StaffSidebar(), StaffSidebarCandidate, statusClass, UserMini
 
 ### Community 286 - "Do Things the Laravel Way"
 Cohesion: 0.33
@@ -1095,10 +1144,6 @@ Nodes (4): Audit focus, General constraints, Scope, Task 09 — Reporting and Ex
 Cohesion: 0.40
 Nodes (4): Audit focus, General constraints, Scope, Task 10 — Infrastructure and Deployment Readiness
 
-### Community 308 - "CalendarWaveInfo.tsx"
-Cohesion: 0.40
-Nodes (3): CalendarWaveInfo(), Props, CalendarCandidate
-
 ### Community 309 - "Laravel 12"
 Cohesion: 0.50
 Nodes (4): Database, Laravel 12, Laravel 12 Structure, Models
@@ -1127,25 +1172,149 @@ Nodes (3): Candidate Data Change, Candidate Email Change, Change Request Workflo
 Cohesion: 0.67
 Nodes (3): Environment Reference, Known Fish Aliases, NPM Scripts
 
+### Community 332 - "Slop test — 58 gates + pre-emit self-critique"
+Cohesion: 0.11
+Nodes (19): Contrast & readability, Diversification gates, Hero enrichment gates, Honest copy · no fabricated content, Implementation gates, Input-state gate, Layout-safety gates, Microinteractions (+11 more)
+
+### Community 333 - "Copy"
+Cohesion: 0.11
+Nodes (17): Austere, Banned opening lines (anti-patterns), Brutalist, Buttons, Copy, Editorial, Empty states, Error messages (+9 more)
+
+### Community 334 - "Critical (ships as slop)"
+Cohesion: 0.12
+Nodes (17): Aurora-blob background, Card-in-card, Critical (ships as slop), Default-attractor sameness, Floating-orb decoration, Full-viewport centred hero, Inter-everywhere, Lazy-loaded LCP (+9 more)
+
+### Community 335 - "Typography"
+Cohesion: 0.12
+Nodes (17): Banned defaults, Bans, Body text rules, Free body faces, Free display faces, Free mono / outlier faces, Headings rules, Hero headline sizing — match size to copy length (+9 more)
+
+### Community 336 - "Microinteraction tells"
+Cohesion: 0.14
+Nodes (14): Animated hover gradients, Auto-rotating carousels with no pause, Bouncy overshoot easings on UI, Celebratory success toasts, Confirmation dialogs for reversible actions, Cursor follower dots, Focus rings that animate in, Microinteraction tells (+6 more)
+
+### Community 337 - "Archetype index — load ONLY the picks you need"
+Cohesion: 0.14
+Nodes (14): Archetype index — load ONLY the picks you need, Component cookbook, CTAs / signups, Feature blocks, Footers, Heroes, Mobile collapse — per archetype, Navigation (+6 more)
+
+### Community 338 - "Theme — Cobalt"
+Cohesion: 0.14
+Nodes (13): Anti-patterns, Axes (diversification), Build hint, How Cobalt differs from neighbouring themes, Macrostructure affinity, Macrostructure rejection, Motion, Reference register (+5 more)
+
+### Community 339 - "Theme - Grid"
+Cohesion: 0.14
+Nodes (13): Axes (diversification), Build hint, Do-nots (this theme's own failure modes), How Grid differs from its neighbours, Material, Motion, Reference register, The marks kit (+5 more)
+
+### Community 341 - "Responsive"
+Cohesion: 0.15
+Nodes (13): Bans, Breakpoints, Clickable text — never wraps, Fluid scaling, Images, Internationalisation, Mobile — non-negotiable, Pointer and hover queries (+5 more)
+
+### Community 342 - "The six axes"
+Cohesion: 0.15
+Nodes (13): 1. Section-heading placement, 2. Body composition, 3. Divider language, 4. Button voice, 5. Image treatment, 6. Reveal pattern, Anti-patterns of structural sameness, Domain → trio (offer these three; never default) (+5 more)
+
+### Community 343 - "TabDataDiri.tsx"
+Cohesion: 0.17
+Nodes (8): AdmissionWave, DataChangeRequest, FIELD_LABELS, Program, StaffCandidateData, TabDataDiri(), TabId, TABS
+
+### Community 344 - "Show.tsx"
+Cohesion: 0.17
+Nodes (8): CANDIDATE_STATUS_CLASS, CANDIDATE_STATUS_LABEL, Props, SECTION_META, SectionId, swalDark, TabDokumen, TabPembayaran
+
+### Community 345 - "Minor (small taste issues)"
+Cohesion: 0.18
+Nodes (11): 100vw widths, Anti-patterns — the named tells, Double-hyphen dashes, Every section padded the same, How `hallmark audit` should report, Minor (small taste issues), Placeholder names, Startup-cliché product names (+3 more)
+
+### Community 346 - "Genre — atmospheric"
+Cohesion: 0.18
+Nodes (10): Genre — atmospheric, Nav and footer voice, Reference register, Stamp signature, Themes that belong, Voice, Voice fixtures, What this genre allows (+2 more)
+
+### Community 347 - "Genre — modern-minimal"
+Cohesion: 0.18
+Nodes (10): Genre — modern-minimal, Nav and footer voice, Reference register (for the LLM, not credited to anyone), Stamp signature, Themes that belong, Voice, Voice fixtures, What this genre allows (+2 more)
+
+### Community 348 - "Genre — playful"
+Cohesion: 0.18
+Nodes (10): Genre — playful, Nav and footer voice, Reference register, Stamp signature, Themes that belong, Voice, Voice fixtures, What this genre allows (+2 more)
+
+### Community 349 - "Imagery kit — curated abstract assets, hosted, ready"
+Cohesion: 0.18
+Nodes (11): Anti-patterns, Categories, Decoration, Empty state, Generation pipeline (out-of-band, one-time), Imagery kit — curated abstract assets, hosted, ready, Layered hero composition (the masterclass move), Manifest (placeholder until generation pass ships) (+3 more)
+
+### Community 351 - "Genre — editorial (default)"
+Cohesion: 0.20
+Nodes (9): Genre — editorial (default), Nav and footer voice, Stamp signature, Themes that belong, Voice, Voice fixtures, What this genre allows, What this genre disallows (+1 more)
+
+### Community 352 - "§ Multi-page flow — design.md first, then redesign"
+Cohesion: 0.20
+Nodes (10): 1. Read the project, then pause, 2. Produce `design.md` at the project root, 3. Redesign each page reading from `design.md`, 4. Diversification rule — INVERTED for multi-page, 5. When to amend `design.md` instead of overriding, `hallmark redesign`, § Multi-page flow — design.md first, then redesign, Non-destructive implementation rule (+2 more)
+
+### Community 354 - "TabPembayaran.tsx"
+Cohesion: 0.24
+Nodes (9): EmptyState(), CHANNEL_LABEL, formatCurrency(), MANUAL_STATUS_LABEL, Props, StaffPayment, statusTone(), swalDark (+1 more)
+
+### Community 355 - "Ponytail"
+Cohesion: 0.22
+Nodes (8): Boundaries, Intensity, Output, Persistence, Ponytail, Rules, The ladder, When NOT to be lazy
+
+### Community 356 - "Layout and space"
+Cohesion: 0.22
+Nodes (9): Asymmetry techniques, Bans, Depth, Grids, Layout and space, Page-edge clipping, Principles, The spacing scale (+1 more)
+
+### Community 357 - "Motion"
+Cohesion: 0.22
+Nodes (9): Bans, Durations, Easings, Motion, Page-load orchestration, Principles, Reduced motion, Scroll-linked motion (+1 more)
+
+### Community 358 - "Ponytail"
+Cohesion: 0.22
+Nodes (8): Boundaries, Intensity, Output, Persistence, Ponytail, Rules, The ladder, When NOT to be lazy
+
+### Community 359 - "design.md — opt-in portable design system"
+Cohesion: 0.25
+Nodes (8): After the file is written, CTA — surface the offer in the Step 5 preview, design.md — opt-in portable design system, Format (the tight version), Scope, Triggers (phrase-only — no new verb), Two emission paths (default vs study), Why opt-in (not auto-emit)
+
+### Community 360 - "Export formats"
+Cohesion: 0.25
+Nodes (7): Export formats, Format 1 — `tokens.css`, Format 2 — Tailwind v4 `@theme`, Format 3 — DTCG `tokens.json`, Format 4 — shadcn/ui CSS variables, Output rule, Token taxonomy — Hallmark's source of truth
+
+### Community 361 - "Colour"
+Cohesion: 0.29
+Nodes (7): Bans, Colour, Contrast, Dark mode recipe, Palette construction, Principles, Use of the accent
+
+### Community 362 - "Macrostructures"
+Cohesion: 0.29
+Nodes (7): Diversification rule (mandatory), Hero polish patterns, How to pick, Macrostructures, Nav and footer voice, SaaS page sequence, The 21 macrostructures — index
+
+### Community 363 - "StaffSidebar.tsx"
+Cohesion: 0.29
+Nodes (5): Props, StaffSidebar(), StaffSidebarCandidate, statusClass, UserMini
+
+### Community 364 - "Floating nav on scroll — the cross-fade morph"
+Cohesion: 0.33
+Nodes (6): Anti-patterns Hallmark refuses, Floating nav on scroll — the cross-fade morph, The four laws — non-negotiable, The property morph (10 properties, one curve), The scroll handler, The structure
+
+### Community 365 - "Output contract & scope"
+Cohesion: 0.50
+Nodes (3): Output contract, Output contract & scope, Scope and limits
+
 ## Knowledge Gaps
-- **1369 isolated node(s):** `browser`, `node`, `eslint:recommended`, `plugin:@typescript-eslint/recommended`, `plugin:react/recommended` (+1364 more)
+- **2025 isolated node(s):** `browser`, `node`, `eslint:recommended`, `plugin:@typescript-eslint/recommended`, `plugin:react/recommended` (+2020 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **67 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **71 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Candidate` connect `Candidate` to `Inertia\Response`, `Illuminate\Database\Eloquent\Relations\BelongsTo`, `ExamAttempt`, `ExamSession`, `User`, `StatusPendaftaranService`, `ReportController`, `Illuminate\Http\RedirectResponse`, `Illuminate\Http\Request`, `PaymentConfig`, `Payment`, `CandidateEvaluationResult`, `OnlineSelectionExamSecurityTest.php`, `Guardian`, `IndexController`, `CandidateRequestPresenter`, `.log`, `StaffPaymentOperationalService`, `.response`, `ExamSessionCandidate`, `StaffCandidateOperationalService`, `CandidateSelectionCenterService`, `SentinelStoragePaths.php`, `ExamAuditLogger`, `AdmissionWave`, `CandidateDashboardData`, `Illuminate\Support\Collection`, `AttemptController`, `CandidateGateService`, `CandidateStatusFlowTest.php`, `PaymentController`?**
-  _High betweenness centrality (0.038) - this node is a cross-community bridge._
-- **Why does `devDependencies` connect `devDependencies` to `@tailwindcss/forms`, `@types/animejs`, `@types/react`, `@types/react-dom`, `@types/react-select`, `vite`, `autoprefixer`, `@vitejs/plugin-react`, `axios`, `package.json`, `concurrently`, `eslint-config-prettier`, `@headlessui/react`, `laravel-vite-plugin`, `prettier`, `prettier-plugin-organize-imports`, `react-dom`, `tailwindcss`?**
-  _High betweenness centrality (0.036) - this node is a cross-community bridge._
-- **Why does `vite` connect `vite` to `devDependencies`?**
-  _High betweenness centrality (0.034) - this node is a cross-community bridge._
-- **Are the 12 inferred relationships involving `Candidate` (e.g. with `.store()` and `.index()`) actually correct?**
-  _`Candidate` has 12 INFERRED edges - model-reasoned connections that need verification._
+- **Why does `devDependencies` connect `devDependencies` to `pusher-js`, `react`, `@types/canvas-confetti`, `axios`, `concurrently`, `@headlessui/react`, `prettier`, `prettier-plugin-organize-imports`, `react-dom`, `@types/animejs`, `@types/react-dom`, `@types/react-select`, `vite`, `@vitejs/plugin-react`, `@typescript-eslint/eslint-plugin`, `eslint-plugin-prettier`, `eslint-plugin-react`, `package.json`, `laravel-echo`, `postcss`?**
+  _High betweenness centrality (0.190) - this node is a cross-community bridge._
+- **Why does `dependencies` connect `dependencies` to `package.json`?**
+  _High betweenness centrality (0.186) - this node is a cross-community bridge._
+- **Why does `lenis` connect `dependencies` to `useLandingLenis`?**
+  _High betweenness centrality (0.184) - this node is a cross-community bridge._
+- **Are the 11 inferred relationships involving `Candidate` (e.g. with `.store()` and `.index()`) actually correct?**
+  _`Candidate` has 11 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 8 inferred relationships involving `Payment` (e.g. with `.index()` and `.paymentChannelBreakdown()`) actually correct?**
+  _`Payment` has 8 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `browser`, `node`, `eslint:recommended` to the rest of the system?**
-  _1369 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `Candidate/Exam/AttemptShow.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.09672830725462304 - nodes in this community are weakly interconnected._
-- **Should `StatusPendaftaran/types.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.07407407407407407 - nodes in this community are weakly interconnected._
+  _2025 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `ExamQuestionImportService` be split into smaller, more focused modules?**
+  _Cohesion score 0.13756613756613756 - nodes in this community are weakly interconnected._

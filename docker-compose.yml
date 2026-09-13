@@ -8,3 +8,16 @@ services:
     user: "1000:1000"
     extra_hosts:
       - "host.docker.internal:host-gateway"
+
+  reverb:
+    build: .
+    command: php artisan reverb:start --host=0.0.0.0 --port=8085
+    ports:
+      - "8085:8085"
+    volumes:
+      - .:/var/www/html:Z
+    working_dir: /var/www/html
+    user: "1000:1000"
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

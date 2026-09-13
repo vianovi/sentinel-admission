@@ -1,11 +1,12 @@
 FROM php:8.4-apache
 
-# Install extension untuk database MariaDB/MySQL dan pemrosesan XLSX.
+# Install extension untuk database MariaDB/MySQL, pemrosesan XLSX, dan pcntl (untuk Laravel Reverb).
 # XLSX adalah arsip ZIP; OpenSpout dan template generator membutuhkan ext-zip.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends libzip-dev \
-    && docker-php-ext-install pdo_mysql zip \
+    && docker-php-ext-install pdo_mysql zip pcntl \
     && php -m | grep -i '^zip$' \
+    && php -m | grep -i '^pcntl$' \
     && php -r 'exit(class_exists(ZipArchive::class) ? 0 : 1);' \
     && rm -rf /var/lib/apt/lists/*
 

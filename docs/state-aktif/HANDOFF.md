@@ -32,7 +32,7 @@ None.
 
 ## Last verification
 
-Test suite run: 92 passed, 738 assertions. Laravel Pint: 219 files formatted. Vite production build passed without errors.
+Test suite run: 99 passed, 773 assertions. Laravel Pint: 223 files formatted. MariaDB live simulator and wipe runs passed.
 
 ## Completed in this slice
 
@@ -44,10 +44,14 @@ Test suite run: 92 passed, 738 assertions. Laravel Pint: 219 files formatted. Vi
 6. Suppressed global progress bar and chart re-animations on background partial updates, preserving animations strictly for initial/manual page loads.
 7. Enhanced Admin Dashboard with 5 KPI Stat Cards ([`AdminStatCards.tsx`](file:///home/silinux/Documents/MyPlaygraund/Laravel-Project/sentinel-admission/resources/js/Components/Dashboard/Admin/Index/AdminStatCards.tsx)) featuring SVG sparklines, trend up/down pills, ambient gradient hover glow, and micro-elevation.
 8. Enhanced Staff Dashboard with operational queue cards, `StatsGrid` with pending transfer proofs and exam-ready metrics, and quick action buttons.
+9. Built [`TrafficSimulatorService.php`](file:///home/silinux/Documents/MyPlaygraund/Laravel-Project/sentinel-admission/app/Services/Demo/TrafficSimulatorService.php) supporting full lifecycle progression (draft -> submitted -> verified -> paid -> exam_ready), target status capping (`--status=...`), preset weight distributions (`--preset=backlog|financial|balanced`), and sample fixtures storage.
+10. Implemented [`SimulateTrafficCommand.php`](file:///home/silinux/Documents/MyPlaygraund/Laravel-Project/sentinel-admission/app/Console/Commands/SimulateTrafficCommand.php) (`php artisan demo:simulate-traffic`) with `stream`, `burst`, and `benchmark` modes.
+11. Implemented [`WipeDemoDataCommand.php`](file:///home/silinux/Documents/MyPlaygraund/Laravel-Project/sentinel-admission/app/Console/Commands/WipeDemoDataCommand.php) (`php artisan demo:wipe`) to safely wipe all `@demo.spmb.com` records and purge candidate storage files.
+12. Added automated feature tests in [`SimulateTrafficCommandTest.php`](file:///home/silinux/Documents/MyPlaygraund/Laravel-Project/sentinel-admission/tests/Feature/Console/SimulateTrafficCommandTest.php) covering all flags, modes, and wipe lifecycle.
 
 ## Next exact action
 
-Await user approval of UI enhancements, then proceed to build the `php artisan demo:simulate-traffic` Artisan command to inject dummy data slowly.
+Present demo commands to user for review and interactive testing.
 
 ## Resume warning
 

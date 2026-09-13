@@ -49,6 +49,10 @@
 
 - `01-public-shared-runtime/` — Active slice audit report & evidence
 
-## 6. Deprecation & Cleanup Staging (`docs/siap-dihapus/`)
+## 6. Fitur Operasional & Simulator Demo (`docs/`)
+
+- [`PANDUAN-SIMULATOR-TRAFFIC.md`](file:///home/silinux/Documents/MyPlaygraund/Laravel-Project/sentinel-admission/docs/PANDUAN-SIMULATOR-TRAFFIC.md) — Panduan lengkap simulasi traffic demo, live stream WebSockets, benchmark beban, dan pembersihan data demo (ID)
+
+## 7. Deprecation & Cleanup Staging (`docs/siap-dihapus/`)
 
 - `task-done/`, `laporan-selesai/`, `evidence-selesai/` — Completed milestones staged for review before deletion

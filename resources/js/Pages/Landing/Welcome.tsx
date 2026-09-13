@@ -1,7 +1,8 @@
 // resources/js/Pages/Landing/Welcome.tsx
 
-import { Head, usePage } from '@inertiajs/react'
+import { Head, usePage, router } from '@inertiajs/react'
 import { useEffect, useRef, useState, lazy, Suspense } from 'react'
+import echo from '@/echo'
 import { WelcomeProps } from '@/types/landing'
 import { PageProps } from '@/types'
 import TopBar from '@/Components/Landing/TopBar'
@@ -101,6 +102,23 @@ export default function Welcome({ activeWave, auth }: WelcomeProps) {
     const canonicalUrl = typeof window === 'undefined'
         ? undefined
         : `${window.location.origin}${window.location.pathname}`
+
+    // Real-time quota and wave updates on landing page
+    useEffect(() => {
+        const channel = echo.channel("dashboard.metrics");
+        const onMetricsUpdate = () => {
+            router.reload({ only: ['activeWave'] });
+        };
+
+        channel
+            .listen(".DashboardMetricsUpdated", onMetricsUpdate)
+            .listen("DashboardMetricsUpdated", onMetricsUpdate)
+            .listen(".App\\Events\\DashboardMetricsUpdated", onMetricsUpdate);
+
+        return () => {
+            echo.leaveChannel("dashboard.metrics");
+        };
+    }, []);
 
     return (
         <>
