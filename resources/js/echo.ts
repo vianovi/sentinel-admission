@@ -3,7 +3,7 @@ import Pusher from 'pusher-js';
 
 (window as any).Pusher = Pusher;
 
-const reverbKey = import.meta.env.VITE_REVERB_APP_KEY || 'izrzek6ll7undw2aihtx';
+const reverbKey = import.meta.env.VITE_REVERB_APP_KEY || '';
 
 const isBrowser = typeof window !== 'undefined';
 const isHttps = isBrowser && window.location.protocol === 'https:';

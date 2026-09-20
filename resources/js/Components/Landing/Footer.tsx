@@ -96,10 +96,10 @@ export default function Footer({ auth: _auth, app }: FooterProps) {
                             </div>
                             <div className="flex items-center gap-3">
                                 <i className="fa-solid fa-phone text-gold"></i>
-                                <span>+62 821-0000-1234</span>
+                                <span>+62 851-1122-3344</span>
                             </div>
                             <div className="pt-2">
-                                <a href="https://wa.me/6285185001661" target="_blank" rel="noopener noreferrer"
+                                <a href="https://wa.me/6285111223344" target="_blank" rel="noopener noreferrer"
                                     className="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-lg text-xs font-bold inline-flex items-center gap-2 transition shadow-lg">
                                     <i className="fa-brands fa-whatsapp text-lg"></i>
                                     Chat Sekretariat
