@@ -22,6 +22,8 @@ class ExamSessionToken extends Model
         'used_count',
         'expires_at',
         'created_by',
+        'created_at',
+        'updated_at',
     ];
 
     protected $casts = [

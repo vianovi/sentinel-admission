@@ -165,7 +165,6 @@ test('guest auto resume flow for active in progress session', function () {
         'type' => 'single_use',
         'max_uses' => 1,
         'used_count' => 0,
-        'is_active' => true,
     ]);
 
     // 1. Start initial attempt
