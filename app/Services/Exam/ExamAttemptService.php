@@ -61,6 +61,31 @@ class ExamAttemptService
                 throw new ExamAccessException('NO_QUESTIONS');
             }
 
+            // AUTO-RESUME: Check if guest already has an in-progress attempt for this session
+            $existingAttempt = ExamAttempt::query()
+                ->where('exam_session_id', $session->id)
+                ->where('guest_name', $guestName)
+                ->where('guest_school', $guestSchool)
+                ->where('status', ExamAttempt::STATUS_IN_PROGRESS)
+                ->latest('id')
+                ->first();
+
+            if ($existingAttempt) {
+                $freshAttempt = $this->syncExpired($existingAttempt, $request);
+
+                if ($freshAttempt->isInProgress()) {
+                    if ($guestEmail || $guestPhone) {
+                        $freshAttempt->update([
+                            'guest_email' => $guestEmail ?? $freshAttempt->guest_email,
+                            'guest_phone' => $guestPhone ?? $freshAttempt->guest_phone,
+                            'last_activity_at' => now(),
+                        ]);
+                    }
+
+                    return $freshAttempt->fresh(['session', 'package']);
+                }
+            }
+
             $questionIds = $questions->pluck('id')->values();
 
             if ($package->randomize_questions) {

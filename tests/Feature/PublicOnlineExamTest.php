@@ -120,3 +120,78 @@ test('public exam token validation and guest attempt execution flow', function (
     expect((float) $attempt->percentage_score)->toBe(100.0);
     expect($attempt->passed)->toBeTrue();
 });
+
+test('guest auto resume flow for active in progress session', function () {
+    $subject = ExamSubject::create([
+        'code' => 'UMUM02',
+        'name' => 'Matematika Dasar',
+    ]);
+
+    $package = ExamPackage::create([
+        'exam_subject_id' => $subject->id,
+        'title' => 'Paket Ujian Resumption',
+        'duration_minutes' => 60,
+        'passing_score' => 70,
+        'max_attempts' => 1,
+        'status' => 'published',
+    ]);
+
+    ExamQuestion::create([
+        'exam_subject_id' => $subject->id,
+        'exam_package_id' => $package->id,
+        'question_text' => 'Berapa hasil 2 + 2?',
+        'options' => ['A' => '2', 'B' => '4', 'C' => '6'],
+        'correct_answer' => 'B',
+        'point' => 10,
+        'difficulty' => 'easy',
+    ]);
+
+    $session = ExamSession::create([
+        'exam_package_id' => $package->id,
+        'title' => 'Sesi Ujian Auto Resume 2026',
+        'status' => 'published',
+        'opens_at' => now()->subHour(),
+        'closes_at' => now()->addHours(2),
+        'duration_minutes' => 60,
+        'passing_score' => 70,
+        'max_attempts' => 1,
+        'is_public' => true,
+        'public_access_type' => 'token_required',
+    ]);
+
+    $token = ExamSessionToken::create([
+        'exam_session_id' => $session->id,
+        'token' => 'RESUME1',
+        'type' => 'single_use',
+        'max_uses' => 1,
+        'used_count' => 0,
+        'is_active' => true,
+    ]);
+
+    // 1. Start initial attempt
+    $this->post(route('exam.public.start', ['token' => 'RESUME1']), [
+        'guest_name' => 'Budi Santoso',
+        'guest_school' => 'SMP Negeri 1 Surabaya',
+    ]);
+
+    $attempt = ExamAttempt::where('guest_name', 'Budi Santoso')->first();
+    expect($attempt)->not->toBeNull();
+    expect($attempt->status)->toBe('in_progress');
+
+    // 2. Resume active attempt via identity matching
+    $response = $this->post(route('exam.public.attempts.resume', ['attempt' => $attempt->id]), [
+        'guest_name' => 'Budi Santoso',
+        'guest_school' => 'SMP Negeri 1 Surabaya',
+    ]);
+
+    $response->assertRedirect(route('exam.public.attempts.show', ['attempt' => $attempt->id]));
+    $response->assertCookie('guest_exam_token');
+
+    // 3. Reject if identity mismatch
+    $badResponse = $this->post(route('exam.public.attempts.resume', ['attempt' => $attempt->id]), [
+        'guest_name' => 'Budi Mismatch',
+        'guest_school' => 'SMP Lain',
+    ]);
+
+    $badResponse->assertSessionHasErrors(['token']);
+});

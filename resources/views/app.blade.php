@@ -72,6 +72,20 @@
             ></script>
         @endif
 
+        <script>
+            (function() {
+                try {
+                    const saved = localStorage.getItem('sentinel-theme');
+                    const theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                    if (theme === 'dark') {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                } catch (e) {}
+            })();
+        </script>
+
         @routes
         @viteReactRefresh
         @vite(['resources/css/app.css', 'resources/js/app.tsx'])

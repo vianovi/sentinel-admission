@@ -38,12 +38,20 @@ export function useExamNavigation({
         return Object.fromEntries(entries);
     });
 
+    // Keep a ref in sync with state so patchAnswer can read the latest value synchronously
+    const answerMapRef = useRef<Record<number, ExamAnswerState>>({});
+
     const activeQuestion = questions[activeIndex] ?? null;
 
     const answeredCount = useMemo(
         () => questions.filter((q) => Boolean(answerMap[q.id]?.selected_option)).length,
         [answerMap, questions],
     );
+
+    // Keep ref in sync whenever state updates
+    useEffect(() => {
+        answerMapRef.current = answerMap;
+    }, [answerMap]);
 
     const goNext = useCallback(() => {
         setActiveIndex((i) => Math.min(questions.length - 1, i + 1));
@@ -58,24 +66,20 @@ export function useExamNavigation({
     }, []);
 
     const patchAnswer = useCallback((questionId: number, patch: Partial<ExamAnswerState>): ExamAnswerState => {
-        let nextAnswer: ExamAnswerState = {
+        // Read from ref so we always have the latest state (avoids stale closure)
+        const current = answerMapRef.current[questionId];
+        const nextAnswer: ExamAnswerState = {
             question_id: questionId,
-            selected_option: null,
-            is_marked_for_review: false,
-            saved_at: null,
+            selected_option: current?.selected_option ?? null,
+            is_marked_for_review: current?.is_marked_for_review ?? false,
+            saved_at: current?.saved_at ?? null,
+            ...patch,
         };
 
-        setAnswerMap((prev) => {
-            const current = prev[questionId];
-            nextAnswer = {
-                question_id: questionId,
-                selected_option: current?.selected_option ?? null,
-                is_marked_for_review: current?.is_marked_for_review ?? false,
-                saved_at: current?.saved_at ?? null,
-                ...patch,
-            };
-            return { ...prev, [questionId]: nextAnswer };
-        });
+        // Update ref immediately so subsequent calls in the same tick see the new value
+        answerMapRef.current = { ...answerMapRef.current, [questionId]: nextAnswer };
+
+        setAnswerMap((prev) => ({ ...prev, [questionId]: nextAnswer }));
 
         return nextAnswer;
     }, []);

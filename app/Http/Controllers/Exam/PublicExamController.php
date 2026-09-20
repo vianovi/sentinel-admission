@@ -100,6 +100,36 @@ class PublicExamController extends Controller
             ->with('success', 'Ujian publik berhasil dimulai.');
     }
 
+    public function resume(Request $request, ExamAttempt $attempt): RedirectResponse
+    {
+        abort_unless($attempt->isGuest() && $attempt->isInProgress(), 403, 'Sesi ujian tidak valid atau telah berakhir.');
+
+        $validated = $request->validate([
+            'guest_name' => ['required', 'string', 'max:255'],
+            'guest_school' => ['required', 'string', 'max:255'],
+        ]);
+
+        if (
+            strcasecmp(trim($attempt->guest_name ?? ''), trim($validated['guest_name'])) !== 0 ||
+            strcasecmp(trim($attempt->guest_school ?? ''), trim($validated['guest_school'])) !== 0
+        ) {
+            return back()->withErrors(['token' => 'Identitas tidak cocok dengan sesi ujian aktif ini.']);
+        }
+
+        $attempt = $this->attemptService->syncExpired($attempt, $request);
+
+        if (! $attempt->isInProgress()) {
+            return redirect()
+                ->route('exam.public.landing')
+                ->withErrors(['token' => 'Sesi ujian telah berakhir atau waktu pengerjaan habis.']);
+        }
+
+        return redirect()
+            ->route('exam.public.attempts.show', $attempt)
+            ->withCookie(cookie('guest_exam_token', $attempt->guest_session_token, 300))
+            ->with('success', 'Berhasil melanjutkan sesi ujian aktif Anda.');
+    }
+
     public function showAttempt(Request $request, ExamAttempt $attempt): Response
     {
         $this->authorizeGuestAccess($request, $attempt);

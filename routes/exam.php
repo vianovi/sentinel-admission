@@ -29,6 +29,7 @@ Route::prefix('exam')->name('exam.public.')->group(function () {
     Route::get('/p/{token?}', [PublicExamController::class, 'showLanding'])->name('landing');
     Route::post('/p/{token}/start', [PublicExamController::class, 'start'])->name('start')->middleware('throttle:10,1');
     Route::get('/attempts/{attempt}', [PublicExamController::class, 'showAttempt'])->name('attempts.show');
+    Route::post('/attempts/{attempt}/resume', [PublicExamController::class, 'resume'])->name('attempts.resume')->middleware('throttle:10,1');
     Route::post('/attempts/{attempt}/sync', [PublicExamController::class, 'sync'])->name('attempts.sync');
     Route::post('/attempts/{attempt}/save-answer', [PublicExamController::class, 'saveAnswer'])->name('attempts.save-answer')->middleware('throttle:60,1');
     Route::post('/attempts/{attempt}/violation', [PublicExamController::class, 'logViolation'])->name('attempts.violation');
@@ -91,9 +92,14 @@ Route::middleware(['auth', RoleMiddleware::class.':admin'])
 
         Route::get('/public-sessions', [AdminPublicExamSession::class, 'index'])->name('public-sessions.index');
         Route::post('/public-sessions', [AdminPublicExamSession::class, 'store'])->name('public-sessions.store');
+        Route::put('/public-sessions/{session}', [AdminPublicExamSession::class, 'update'])->name('public-sessions.update');
+        Route::delete('/public-sessions/{session}', [AdminPublicExamSession::class, 'destroy'])->name('public-sessions.destroy');
         Route::post('/public-sessions/{session}/toggle-results', [AdminPublicExamSession::class, 'toggleResultVisibility'])->name('public-sessions.toggle-results');
         Route::post('/public-sessions/{session}/tokens', [AdminPublicExamSession::class, 'generateToken'])->name('public-sessions.tokens.store');
         Route::post('/tokens/{token}/rotate', [AdminPublicExamSession::class, 'rotateToken'])->name('public-sessions.tokens.rotate');
+        Route::delete('/public-tokens/{token}', [AdminPublicExamSession::class, 'destroyToken'])->name('public-sessions.destroy-token');
+        Route::post('/public-sessions/attempts/{attempt}/force-submit', [AdminPublicExamSession::class, 'forceSubmitAttempt'])->name('public-sessions.attempts.force-submit');
+        Route::post('/public-sessions/attempts/{attempt}/reset-violations', [AdminPublicExamSession::class, 'resetAttemptViolations'])->name('public-sessions.attempts.reset-violations');
 
         Route::post('/sessions/{session}/candidates', [AdminExamSession::class, 'assignCandidates'])->name('sessions.candidates.assign');
         Route::post('/sessions/{session}/tokens', [AdminExamSession::class, 'generateToken'])->name('sessions.tokens.store');

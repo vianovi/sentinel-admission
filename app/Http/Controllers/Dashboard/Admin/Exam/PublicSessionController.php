@@ -9,6 +9,7 @@ use App\Models\Exam\ExamAttempt;
 use App\Models\Exam\ExamPackage;
 use App\Models\Exam\ExamSession;
 use App\Models\Exam\ExamSessionToken;
+use App\Services\Exam\ExamAttemptService;
 use App\Services\Exam\ExamAuditLogger;
 use App\Services\Exam\ExamSessionService;
 use Illuminate\Http\RedirectResponse;
@@ -21,7 +22,8 @@ class PublicSessionController extends Controller
 {
     public function __construct(
         private readonly ExamAuditLogger $audit,
-        private readonly ExamSessionService $sessionService
+        private readonly ExamSessionService $sessionService,
+        private readonly ExamAttemptService $attemptService
     ) {}
 
     public function index(Request $request): Response
@@ -111,6 +113,8 @@ class PublicSessionController extends Controller
                 'title' => $activeSession->title,
                 'description' => $activeSession->description,
                 'instructions' => $activeSession->instructions,
+                'exam_package_id' => $activeSession->exam_package_id,
+                'admission_wave_id' => $activeSession->admission_wave_id,
                 'package_title' => $activeSession->package?->title,
                 'status' => $activeSession->status,
                 'is_open' => $activeSession->isOpenForStart(),
@@ -118,8 +122,11 @@ class PublicSessionController extends Controller
                 'opens_at' => $activeSession->opens_at?->format('Y-m-d\TH:i'),
                 'closes_at' => $activeSession->closes_at?->format('Y-m-d\TH:i'),
                 'duration_minutes' => $activeSession->duration_minutes,
+                'passing_score' => (float) $activeSession->passing_score,
+                'max_attempts' => $activeSession->max_attempts,
+                'public_access_type' => $activeSession->public_access_type,
             ] : null,
-            'packages' => ExamPackage::where('status', ExamPackage::STATUS_PUBLISHED)->get(['id', 'title', 'code', 'duration_minutes']),
+            'packages' => ExamPackage::where('status', ExamPackage::STATUS_PUBLISHED)->get(['id', 'title', 'code', 'duration_minutes', 'passing_score']),
             'waves' => AdmissionWave::get(['id', 'title', 'academic_year']),
             'attempts' => $attempts,
             'tokens' => $tokens,
@@ -129,10 +136,12 @@ class PublicSessionController extends Controller
 
     public function store(StoreExamSessionRequest $request): RedirectResponse
     {
+        $validated = $request->validated();
+
         $session = ExamSession::create([
-            ...$request->validated(),
+            ...$validated,
             'is_public' => true,
-            'public_access_type' => 'token',
+            'public_access_type' => $validated['public_access_type'] ?? 'token_required',
             'created_by' => $request->user()?->id,
         ]);
 
@@ -155,6 +164,49 @@ class PublicSessionController extends Controller
         return redirect()
             ->route('admin.exams.public-sessions.index', ['session_id' => $session->id])
             ->with('success', 'Sesi Ujian Publik berhasil dibuat dengan Token Proctor perdana.');
+    }
+
+    public function update(StoreExamSessionRequest $request, ExamSession $session): RedirectResponse
+    {
+        $validated = $request->validated();
+
+        $session->update([
+            ...$validated,
+            'is_public' => true,
+        ]);
+
+        $this->audit->log('public_session_updated', [
+            'exam_session_id' => $session->id,
+        ], $request);
+
+        return redirect()
+            ->route('admin.exams.public-sessions.index', ['session_id' => $session->id])
+            ->with('success', 'Pengaturan Sesi Ujian Publik berhasil diperbarui.');
+    }
+
+    public function destroy(ExamSession $session, Request $request): RedirectResponse
+    {
+        $this->audit->log('public_session_deleted', [
+            'exam_session_id' => $session->id,
+        ], $request);
+
+        $session->delete();
+
+        return redirect()
+            ->route('admin.exams.public-sessions.index')
+            ->with('success', 'Sesi Ujian Publik berhasil dihapus.');
+    }
+
+    public function destroyToken(ExamSessionToken $token, Request $request): RedirectResponse
+    {
+        $tokenId = $token->id;
+        $token->delete();
+
+        $this->audit->log('proctor_token_deleted', [
+            'token_id' => $tokenId,
+        ], $request);
+
+        return back()->with('success', 'Token Proktor berhasil dihapus.');
     }
 
     public function toggleResultVisibility(ExamSession $session, Request $request): RedirectResponse
@@ -231,4 +283,36 @@ class PublicSessionController extends Controller
 
         return back()->with('success', "Token berhasil dirotasi ke token baru: {$newToken->token}");
     }
+
+    public function forceSubmitAttempt(ExamAttempt $attempt, Request $request): RedirectResponse
+    {
+        if (! $attempt->isInProgress()) {
+            return back()->with('error', 'Sesi peserta ini sudah selesai atau telah dikumpulkan.');
+        }
+
+        $this->attemptService->submit($attempt, true, $request);
+
+        $this->audit->log('proctor_force_submitted_attempt', [
+            'exam_attempt_id' => $attempt->id,
+            'guest_name' => $attempt->guest_name,
+            'exam_session_id' => $attempt->exam_session_id,
+        ], $request);
+
+        return back()->with('success', "Jawaban peserta {$attempt->guest_name} berhasil dikumpulkan secara paksa oleh proktor.");
+    }
+
+    public function resetAttemptViolations(ExamAttempt $attempt, Request $request): RedirectResponse
+    {
+        $oldViolations = $attempt->violations_count;
+        $attempt->update(['violations_count' => 0]);
+
+        $this->audit->log('proctor_reset_violations', [
+            'exam_attempt_id' => $attempt->id,
+            'guest_name' => $attempt->guest_name,
+            'previous_violations' => $oldViolations,
+        ], $request);
+
+        return back()->with('success', "Jumlah pelanggaran peserta {$attempt->guest_name} berhasil di-reset oleh proktor.");
+    }
 }
+

@@ -54,3 +54,8 @@
   4. Manual staff document verification serves as the final qualification gateway for `accepted` status.
 - Reason: Eliminates friction for candidates without active BPJS, prevents premature exam blocking, and gives clear sequential progression from Form -> Documents -> Payment -> Exam -> Final Review.
 
+## D-009 — Playwright Go / MCP Driver Local Cache Resolution
+
+- Status: active
+- Decision: Configured Playwright Go to use a locally packaged Playwright 1.57.0 driver in `~/.cache/ms-playwright-go/1.57.0/` pointing to Node and the system Chromium executable at `/usr/bin/chromium-browser`.
+- Reason: Microsoft CDN deprecated `playwright-1.57.0-linux.zip` returning a 404 error during automatic download. Packaging the core driver and bypassing the network fetch allows local tests and subagents to run reliably without internet requests.
