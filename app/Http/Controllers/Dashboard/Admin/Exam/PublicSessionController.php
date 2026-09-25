@@ -315,4 +315,3 @@ class PublicSessionController extends Controller
         return back()->with('success', "Jumlah pelanggaran peserta {$attempt->guest_name} berhasil di-reset oleh proktor.");
     }
 }
-

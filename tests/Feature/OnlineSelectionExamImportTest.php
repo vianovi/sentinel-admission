@@ -319,7 +319,7 @@ function createSuperscriptHeaderWorkbook(): string
     $path = $basePath.'.xlsx';
     @unlink($basePath);
 
-    $writer = new Writer();
+    $writer = new Writer;
     $writer->openToFile($path);
     $writer->addRow(Row::fromValues([
         'subject',
@@ -354,14 +354,14 @@ function createSuperscriptHeaderWorkbook(): string
     $writer->close();
 
     // Now open the zip and replace PLACEHOLDER_QUESTION_TEXT in xl/worksheets/sheet1.xml
-    $zip = new ZipArchive();
+    $zip = new ZipArchive;
     if ($zip->open($path) === true) {
         $xml = $zip->getFromName('xl/worksheets/sheet1.xml');
-        
+
         $richText = '<is><r><t xml:space="preserve">Hasil 7</t></r><r><rPr><vertAlign val="superscript"/></rPr><t>2</t></r><r><t xml:space="preserve"> adalah ...</t></r></is>';
-        
+
         $xml = str_replace('<is><t>PLACEHOLDER_QUESTION_TEXT</t></is>', $richText, $xml);
-        
+
         $zip->addFromString('xl/worksheets/sheet1.xml', $xml);
         $zip->close();
     }
@@ -428,7 +428,7 @@ function createSharedStringSuperscriptHeaderWorkbook(): string
     $path = $basePath.'.xlsx';
     @unlink($basePath);
 
-    $writer = new Writer();
+    $writer = new Writer;
     $writer->openToFile($path);
     $writer->addRow(Row::fromValues([
         'subject',
@@ -462,32 +462,32 @@ function createSharedStringSuperscriptHeaderWorkbook(): string
     ]));
     $writer->close();
 
-    $zip = new ZipArchive();
+    $zip = new ZipArchive;
     if ($zip->open($path) === true) {
         $xml = $zip->getFromName('xl/worksheets/sheet1.xml');
-        
+
         // Replace PLACEHOLDER_QUESTION_TEXT with a reference to a shared string (index 0)
         $xml = preg_replace('/<c r="([^"]+)" s="([^"]+)" t="inlineStr"><is><t>PLACEHOLDER_QUESTION_TEXT<\/t><\/is><\/c>/', '<c r="$1" s="$2" t="s"><v>0</v></c>', $xml);
-        
+
         $zip->addFromString('xl/worksheets/sheet1.xml', $xml);
-        
-        $sharedStringsXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . "\n"
-            . '<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="1" uniqueCount="1">'
-            . '<si><r><t xml:space="preserve">Hasil 7</t></r><r><rPr><vertAlign val="superscript"/></rPr><t>2</t></r><r><t xml:space="preserve"> adalah ...</t></r></si>'
-            . '</sst>';
+
+        $sharedStringsXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'."\n"
+            .'<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="1" uniqueCount="1">'
+            .'<si><r><t xml:space="preserve">Hasil 7</t></r><r><rPr><vertAlign val="superscript"/></rPr><t>2</t></r><r><t xml:space="preserve"> adalah ...</t></r></si>'
+            .'</sst>';
         $zip->addFromString('xl/sharedStrings.xml', $sharedStringsXml);
-        
+
         $rels = $zip->getFromName('xl/_rels/workbook.xml.rels');
         if (strpos($rels, 'sharedStrings') === false) {
             $newRel = '<Relationship Id="rId_sharedStrings" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/>';
-            $rels = str_replace('</Relationships>', $newRel . '</Relationships>', $rels);
+            $rels = str_replace('</Relationships>', $newRel.'</Relationships>', $rels);
             $zip->addFromString('xl/_rels/workbook.xml.rels', $rels);
         }
-        
+
         $contentTypes = $zip->getFromName('[Content_Types].xml');
         if (strpos($contentTypes, 'sharedStrings') === false) {
             $newType = '<Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>';
-            $contentTypes = str_replace('</Types>', $newType . '</Types>', $contentTypes);
+            $contentTypes = str_replace('</Types>', $newType.'</Types>', $contentTypes);
             $zip->addFromString('[Content_Types].xml', $contentTypes);
         }
 

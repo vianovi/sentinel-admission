@@ -10,4 +10,3 @@ Schedule::command('exam:rotate-tokens')->everyFifteenMinutes();
 
 // Sync and auto-submit candidate exam attempts whose time limit has expired every minute
 Schedule::command('exam:sync-expired')->everyMinute();
-

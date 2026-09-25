@@ -55,7 +55,7 @@ test('admin can create a public exam session with valid enum and token', functio
         ]);
 
     $response->assertRedirect();
-    
+
     $session = ExamSession::where('title', 'Sesi Tryout Publik 2026')->first();
     expect($session)->not->toBeNull();
     expect($session->is_public)->toBeTrue();
@@ -132,7 +132,7 @@ test('admin can toggle result visibility, rotate token, and delete public sessio
         ->post(route('admin.exams.public-sessions.tokens.rotate', $token))
         ->assertRedirect();
     expect($token->fresh()->isExpired())->toBeTrue();
-    
+
     $newToken = ExamSessionToken::where('exam_session_id', $session->id)->latest('id')->first();
     expect($newToken->id)->not->toBe($token->id);
 
@@ -246,4 +246,3 @@ test('proctor can force submit attempt and reset violations', function () {
         ->assertRedirect();
     expect($attempt->fresh()->status)->toBe(\App\Models\Exam\ExamAttempt::STATUS_AUTO_SUBMITTED);
 });
-

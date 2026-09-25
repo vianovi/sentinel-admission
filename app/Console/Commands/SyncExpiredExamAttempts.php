@@ -30,6 +30,7 @@ class SyncExpiredExamAttempts extends Command
 
         if ($expiredAttempts->isEmpty()) {
             $this->info('No expired in-progress exam attempts found.');
+
             return self::SUCCESS;
         }
 

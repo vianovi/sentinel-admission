@@ -40,6 +40,7 @@ class RotateExamTokens extends Command
 
         if ($sessions->isEmpty()) {
             $this->info('No active published public exam sessions found.');
+
             return self::SUCCESS;
         }
 
@@ -67,6 +68,7 @@ class RotateExamTokens extends Command
 
             if (! $needsRotation) {
                 $this->line("Session #{$session->id} [{$session->title}] token is still fresh ({$latestToken?->token}).");
+
                 continue;
             }
 
@@ -79,7 +81,7 @@ class RotateExamTokens extends Command
             $newToken = ExamSessionToken::create([
                 'exam_session_id' => $session->id,
                 'token' => $newTokenString,
-                'label' => 'Token Otomatis Proktor (' . now()->format('H:i') . ')',
+                'label' => 'Token Otomatis Proktor ('.now()->format('H:i').')',
                 'type' => ExamSessionToken::TYPE_MULTI_USE,
                 'max_uses' => 0,
                 'expires_at' => $session->closes_at,
@@ -93,7 +95,7 @@ class RotateExamTokens extends Command
                 'trigger' => $force ? 'forced_cli' : 'scheduled_cron',
             ]);
 
-            $this->info("Rotated Token for Session #{$session->id} [{$session->title}]: " . ($latestToken ? $latestToken->token : 'NONE') . " -> {$newToken->token}");
+            $this->info("Rotated Token for Session #{$session->id} [{$session->title}]: ".($latestToken ? $latestToken->token : 'NONE')." -> {$newToken->token}");
             $rotatedCount++;
         }
 

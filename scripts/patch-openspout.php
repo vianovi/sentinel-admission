@@ -4,14 +4,13 @@
  * Automates patching openspout to support rich text superscript/subscript.
  * This runs automatically post-autoload-dump.
  */
-
 $baseDir = dirname(__DIR__);
 
 // Patch 1: SharedStringsManager.php
-$sharedStringsFile = $baseDir . '/vendor/openspout/openspout/src/Reader/XLSX/Manager/SharedStringsManager.php';
+$sharedStringsFile = $baseDir.'/vendor/openspout/openspout/src/Reader/XLSX/Manager/SharedStringsManager.php';
 if (file_exists($sharedStringsFile)) {
     $content = file_get_contents($sharedStringsFile);
-    
+
     // Check if already patched
     if (strpos($content, 'vertAlignElements') === false) {
         $target = <<<'CODE'
@@ -77,10 +76,10 @@ CODE;
 }
 
 // Patch 2: CellValueFormatter.php
-$cellFormatterFile = $baseDir . '/vendor/openspout/openspout/src/Reader/XLSX/Helper/CellValueFormatter.php';
+$cellFormatterFile = $baseDir.'/vendor/openspout/openspout/src/Reader/XLSX/Helper/CellValueFormatter.php';
 if (file_exists($cellFormatterFile)) {
     $content = file_get_contents($cellFormatterFile);
-    
+
     // Check if already patched
     if (strpos($content, 'vertAlignElements') === false) {
         $target = <<<'CODE'
