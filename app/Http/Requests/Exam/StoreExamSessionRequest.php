@@ -24,7 +24,9 @@ class StoreExamSessionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'exam_package_id' => ['required', 'integer', 'exists:exam_packages,id'],
+            'exam_package_id' => ['nullable', 'integer', 'exists:exam_packages,id', 'required_without:package_ids'],
+            'package_ids' => ['nullable', 'array', 'min:1', 'max:5'],
+            'package_ids.*' => ['integer', 'exists:exam_packages,id', 'distinct'],
             'admission_wave_id' => ['nullable', 'integer', 'exists:admission_waves,id'],
             'title' => ['required', 'string', 'max:180'],
             'description' => ['nullable', 'string', 'max:1500'],
@@ -37,6 +39,7 @@ class StoreExamSessionRequest extends FormRequest
             'show_result_to_candidate' => ['sometimes', 'boolean'],
             'is_public' => ['sometimes', 'boolean'],
             'public_access_type' => ['sometimes', Rule::in(['token_required', 'open'])],
+            'package_order_type' => ['sometimes', Rule::in(['flexible', 'sequential'])],
             'status' => ['sometimes', Rule::in(['draft', 'published', 'closed', 'archived'])],
         ];
     }

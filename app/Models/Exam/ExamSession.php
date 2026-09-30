@@ -6,6 +6,7 @@ use App\Models\AdmissionWave;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ExamSession extends Model
@@ -33,6 +34,7 @@ class ExamSession extends Model
         'show_result_to_candidate',
         'is_public',
         'public_access_type',
+        'package_order_type',
         'status',
     ];
 
@@ -49,6 +51,14 @@ class ExamSession extends Model
     public function package(): BelongsTo
     {
         return $this->belongsTo(ExamPackage::class, 'exam_package_id');
+    }
+
+    public function packages(): BelongsToMany
+    {
+        return $this->belongsToMany(ExamPackage::class, 'exam_session_packages')
+            ->withPivot('sort_order')
+            ->orderByPivot('sort_order')
+            ->withTimestamps();
     }
 
     public function admissionWave(): BelongsTo

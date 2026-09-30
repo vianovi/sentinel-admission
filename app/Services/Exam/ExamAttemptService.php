@@ -49,10 +49,33 @@ class ExamAttemptService
                 throw new ExamAccessException('NOT_OPEN');
             }
 
-            $package = $session->package;
+            $packageId = $request?->input('package_id');
+            $package = $packageId ? $session->packages->firstWhere('id', $packageId) : $session->package;
 
             if (! $package || ! $package->isPublished()) {
                 throw new ExamAccessException('PACKAGE_NOT_READY');
+            }
+
+            if ($session->package_order_type === 'sequential') {
+                $previousCompleted = true;
+                foreach ($session->packages as $pkg) {
+                    if ($pkg->id === $package->id) {
+                        if (! $previousCompleted) {
+                            throw new ExamAccessException('SEQUENTIAL_LOCKED');
+                        }
+                        break;
+                    }
+                    $isCompleted = ExamAttempt::query()
+                        ->where('exam_session_id', $session->id)
+                        ->where('exam_package_id', $pkg->id)
+                        ->where('guest_name', $guestName)
+                        ->where('guest_school', $guestSchool)
+                        ->whereIn('status', [ExamAttempt::STATUS_SUBMITTED, ExamAttempt::STATUS_AUTO_SUBMITTED])
+                        ->exists();
+                    if (! $isCompleted) {
+                        $previousCompleted = false;
+                    }
+                }
             }
 
             $questions = $package->activeQuestions()->get(['id', 'point']);
@@ -64,6 +87,7 @@ class ExamAttemptService
             // AUTO-RESUME: Check if guest already has an in-progress attempt for this session
             $existingAttempt = ExamAttempt::query()
                 ->where('exam_session_id', $session->id)
+                ->where('exam_package_id', $package->id)
                 ->where('guest_name', $guestName)
                 ->where('guest_school', $guestSchool)
                 ->where('status', ExamAttempt::STATUS_IN_PROGRESS)
@@ -142,7 +166,7 @@ class ExamAttemptService
     {
         return DB::transaction(function () use ($assignment, $candidate, $request) {
             $assignment = ExamSessionCandidate::query()
-                ->with(['session.package.activeQuestions', 'attempts'])
+                ->with(['session.packages.activeQuestions', 'attempts'])
                 ->whereKey($assignment->id)
                 ->lockForUpdate()
                 ->firstOrFail();
@@ -160,7 +184,8 @@ class ExamAttemptService
             }
 
             $session = $assignment->session;
-            $package = $session->package;
+            $packageId = $request?->input('package_id');
+            $package = $packageId ? $session->packages->firstWhere('id', $packageId) : $session->package;
 
             if (! $session->isOpenForStart()) {
                 throw new ExamAccessException('NOT_OPEN');
@@ -171,6 +196,7 @@ class ExamAttemptService
             }
 
             $existingAttempt = $assignment->attempts
+                ->where('exam_package_id', $package->id)
                 ->where('status', ExamAttempt::STATUS_IN_PROGRESS)
                 ->sortByDesc('id')
                 ->first();
@@ -185,13 +211,15 @@ class ExamAttemptService
 
             $countedAttempts = ExamAttempt::query()
                 ->where('exam_session_candidate_id', $assignment->id)
+                ->where('exam_package_id', $package->id)
                 ->whereNotIn('status', [
                     ExamAttempt::STATUS_CANCELLED,
                     ExamAttempt::STATUS_INVALIDATED,
                 ])
                 ->count();
 
-            if ($countedAttempts >= $session->max_attempts) {
+            $maxAttempts = $package->max_attempts ?? 1;
+            if ($countedAttempts >= $maxAttempts) {
                 throw new ExamAccessException('MAX_ATTEMPTS');
             }
 

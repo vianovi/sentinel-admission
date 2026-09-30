@@ -60,7 +60,22 @@ it('downloads a package specific XLSX template without raw placeholders', functi
 
         $zip->close();
 
-        expect($sheetData)
+        $reader = new \OpenSpout\Reader\XLSX\Reader;
+        $reader->open($downloadPath);
+        $firstSheet = null;
+        foreach ($reader->getSheetIterator() as $sheet) {
+            $firstSheet = $sheet;
+            break;
+        }
+
+        $rows = iterator_to_array($firstSheet->getRowIterator());
+        $text = '';
+        foreach ($rows as $row) {
+            $text .= implode('|', $row->toArray())."\n";
+        }
+        $reader->close();
+
+        expect($text)
             ->toContain('Matematika')
             ->toContain('Tes Matematika Gelombang 1')
             ->toContain('MTK-GL1')
@@ -115,6 +130,7 @@ it('imports Indonesian template headers and updates package configuration', func
             ->post("/dashboard/admin/exams/packages/{$package->id}/imports", [
                 'file' => $upload,
             ])
+            ->assertSessionHasNoErrors()
             ->assertRedirect();
 
         $package->refresh();
@@ -239,23 +255,28 @@ function fillIndonesianExamTemplate(string $path): void
     $xml = $zip->getFromName('xl/worksheets/sheet1.xml');
 
     $replacements = [
-        '<x:c r="B14" s="46" />' => '<x:c r="B14" s="46" t="str"><x:v>45</x:v></x:c>',
-        '<x:c r="B15" s="46" />' => '<x:c r="B15" s="46" t="str"><x:v>65</x:v></x:c>',
-        '<x:c r="B16" s="46" t="str"><x:v>tidak</x:v></x:c>' => '<x:c r="B16" s="46" t="str"><x:v>ya</x:v></x:c>',
-        '<x:c r="B17" s="46" t="str"><x:v>tidak</x:v></x:c>' => '<x:c r="B17" s="46" t="str"><x:v>ya</x:v></x:c>',
-        '<x:c r="B21" s="42" />' => '<x:c r="B21" s="42" t="str"><x:v>Hasil dari 12 + 8 adalah ...</x:v></x:c>',
-        '<x:c r="C21" s="42" />' => '<x:c r="C21" s="42" t="str"><x:v>18</x:v></x:c>',
-        '<x:c r="D21" s="42" />' => '<x:c r="D21" s="42" t="str"><x:v>19</x:v></x:c>',
-        '<x:c r="E21" s="42" />' => '<x:c r="E21" s="42" t="str"><x:v>20</x:v></x:c>',
-        '<x:c r="F21" s="42" />' => '<x:c r="F21" s="42" t="str"><x:v>21</x:v></x:c>',
-        '<x:c r="G21" s="42" />' => '<x:c r="G21" s="42" t="str"><x:v>22</x:v></x:c>',
-        '<x:c r="H21" s="42" />' => '<x:c r="H21" s="42" t="str"><x:v>C</x:v></x:c>',
-        '<x:c r="I21" s="42" />' => '<x:c r="I21" s="42" t="str"><x:v>2</x:v></x:c>',
-        '<x:c r="J21" s="42" />' => '<x:c r="J21" s="42" t="str"><x:v>mudah</x:v></x:c>',
-        '<x:c r="K21" s="42" />' => '<x:c r="K21" s="42" t="str"><x:v>12 + 8 = 20</x:v></x:c>',
+        '/<c r="B14"[^>]*\/>|<c r="B14"[^>]*>.*?<\/c>/' => '<c r="B14" s="8" t="str"><v>45</v></c>',
+        '/<c r="B15"[^>]*\/>|<c r="B15"[^>]*>.*?<\/c>/' => '<c r="B15" s="8" t="str"><v>65</v></c>',
+        '/<c r="B16"[^>]*\/>|<c r="B16"[^>]*>.*?<\/c>/' => '<c r="B16" s="8" t="str"><v>ya</v></c>',
+        '/<c r="B17"[^>]*\/>|<c r="B17"[^>]*>.*?<\/c>/' => '<c r="B17" s="8" t="str"><v>ya</v></c>',
+        '/<c r="A21"[^>]*\/>|<c r="A21"[^>]*>.*?<\/c>/' => '<c r="A21" s="6" t="str"><v>1</v></c>',
+        '/<c r="B21"[^>]*\/>|<c r="B21"[^>]*>.*?<\/c>/' => '<c r="B21" s="6" t="str"><v>Hasil dari 12 + 8 adalah ...</v></c>',
+        '/<c r="C21"[^>]*\/>|<c r="C21"[^>]*>.*?<\/c>/' => '<c r="C21" s="6" t="str"><v>18</v></c>',
+        '/<c r="D21"[^>]*\/>|<c r="D21"[^>]*>.*?<\/c>/' => '<c r="D21" s="6" t="str"><v>19</v></c>',
+        '/<c r="E21"[^>]*\/>|<c r="E21"[^>]*>.*?<\/c>/' => '<c r="E21" s="6" t="str"><v>20</v></c>',
+        '/<c r="F21"[^>]*\/>|<c r="F21"[^>]*>.*?<\/c>/' => '<c r="F21" s="6" t="str"><v>21</v></c>',
+        '/<c r="G21"[^>]*\/>|<c r="G21"[^>]*>.*?<\/c>/' => '<c r="G21" s="6" t="str"><v>22</v></c>',
+        '/<c r="H21"[^>]*\/>|<c r="H21"[^>]*>.*?<\/c>/' => '<c r="H21" s="6" t="str"><v>C</v></c>',
+        '/<c r="I21"[^>]*\/>|<c r="I21"[^>]*>.*?<\/c>/' => '<c r="I21" s="6" t="str"><v>2</v></c>',
+        '/<c r="J21"[^>]*\/>|<c r="J21"[^>]*>.*?<\/c>/' => '<c r="J21" s="6" t="str"><v>mudah</v></c>',
+        '/<c r="K21"[^>]*\/>|<c r="K21"[^>]*>.*?<\/c>/' => '<c r="K21" s="6" t="str"><v>12 + 8 = 20</v></c>',
+        '/<c r="L21"[^>]*\/>|<c r="L21"[^>]*>.*?<\/c>/' => '<c r="L21" s="6" t="str"><v>ya</v></c>',
     ];
 
-    $xml = str_replace(array_keys($replacements), array_values($replacements), $xml);
+    foreach ($replacements as $pattern => $replace) {
+        $xml = preg_replace($pattern, $replace, $xml);
+    }
+
     $zip->addFromString('xl/worksheets/sheet1.xml', $xml);
     $zip->close();
 }

@@ -33,24 +33,31 @@ class PublicExamController extends Controller
 
         if ($inputToken) {
             $sessionToken = ExamSessionToken::query()
-                ->with(['session.package.subject'])
+                ->with(['session.packages.subject'])
                 ->where('token', $inputToken)
                 ->first();
 
             if ($sessionToken && $sessionToken->isValid() && $sessionToken->session?->is_public) {
                 $session = $sessionToken->session;
-                $package = $session->package;
+
+                $packages = $session->packages->map(fn ($pkg) => [
+                    'id' => $pkg->id,
+                    'title' => $pkg->title,
+                    'subject_name' => $pkg->subject?->name,
+                    'duration_minutes' => $pkg->duration_minutes,
+                ]);
 
                 $sessionPayload = [
                     'title' => $session->title,
                     'description' => $session->description,
                     'instructions' => $session->instructions,
-                    'subject_name' => $package?->subject?->name,
                     'duration_minutes' => $session->duration_minutes,
                     'opens_at' => $session->opens_at?->format('d M Y H:i'),
                     'closes_at' => $session->closes_at?->format('d M Y H:i'),
                     'token_label' => $sessionToken->label,
                     'is_open' => $session->isOpenForStart(),
+                    'package_order_type' => $session->package_order_type,
+                    'packages' => $packages,
                 ];
             }
         }
@@ -66,7 +73,7 @@ class PublicExamController extends Controller
     public function start(Request $request, string $token): RedirectResponse
     {
         $sessionToken = ExamSessionToken::query()
-            ->with(['session'])
+            ->with(['session.packages.activeQuestions'])
             ->where('token', $token)
             ->first();
 
@@ -79,6 +86,7 @@ class PublicExamController extends Controller
             'guest_school' => ['required', 'string', 'max:255'],
             'guest_email' => ['nullable', 'string', 'max:255'],
             'guest_phone' => ['nullable', 'string', 'max:30'],
+            'package_id' => ['required', 'integer', Rule::exists('exam_packages', 'id')],
         ]);
 
         try {
@@ -135,7 +143,7 @@ class PublicExamController extends Controller
         $this->authorizeGuestAccess($request, $attempt);
 
         $attempt = $this->attemptService->syncExpired($attempt, $request);
-        $attempt->loadMissing(['session.package.subject', 'package', 'answers']);
+        $attempt->loadMissing(['session', 'package.subject', 'answers']);
 
         $questionIds = collect($attempt->question_order ?? [])
             ->filter(fn ($id) => is_numeric($id))
@@ -176,7 +184,7 @@ class PublicExamController extends Controller
                 'session_id' => $attempt->exam_session_id,
                 'session_title' => $attempt->session?->title,
                 'package_title' => $attempt->package?->title,
-                'subject_name' => $attempt->session?->package?->subject?->name,
+                'subject_name' => $attempt->package?->subject?->name,
                 'duration_minutes' => $attempt->session?->duration_minutes,
                 'passing_score' => $attempt->passing_score !== null ? (float) $attempt->passing_score : null,
                 'show_result_to_candidate' => (bool) ($attempt->session?->show_result_to_candidate || $attempt->package?->show_result_to_candidate),

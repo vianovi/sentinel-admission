@@ -1,20 +1,23 @@
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useMemo, useState, useCallback } from "react";
 import { Link } from "@inertiajs/react";
 import SentinelSelect from "@/Components/Dashboard/Shared/SentinelSelect";
 import type { SessionFormReturn } from "@/Pages/Dashboard/Admin/Exam/PublicSessions";
+
+type PackageOption = { id: number; title: string; code: string; duration_minutes: number; passing_score?: number };
 
 type Props = {
     show: boolean;
     onClose: () => void;
     editingSessionId: number | null;
     sessionForm: SessionFormReturn;
-    packages: Array<{ id: number; title: string; code: string; duration_minutes: number; passing_score?: number }>;
+    packages: PackageOption[];
     waves: Array<{ id: number; title: string; academic_year: string }>;
     handlePackageChange: (packageId: number) => void;
     handleSaveSession: (e: FormEvent) => void;
     formatToLocalDateTime: (date: Date) => string;
 };
 
+const MAX_PACKAGES = 5;
 
 export default function PublicSessionFormModal({
     show,
@@ -23,27 +26,63 @@ export default function PublicSessionFormModal({
     sessionForm,
     packages,
     waves,
-    handlePackageChange,
     handleSaveSession,
     formatToLocalDateTime,
 }: Props) {
     const [showOpensQuick, setShowOpensQuick] = useState(false);
     const [showClosesQuick, setShowClosesQuick] = useState(false);
 
-    const selectedPackage = useMemo(
-        () => packages.find((p) => p.id === Number(sessionForm.data.exam_package_id)) || packages[0],
-        [packages, sessionForm.data.exam_package_id]
+    const selectedPackages = useMemo(
+        () => packages.filter((pkg) => sessionForm.data.package_ids?.includes(pkg.id)),
+        [packages, sessionForm.data.package_ids]
     );
 
-    const packageOptions = useMemo(
-        () =>
-            packages.map((pkg) => ({
-                value: pkg.id,
-                label: `${pkg.title} (${pkg.code})`,
-                description: `Durasi: ${pkg.duration_minutes}m | Passing Score: ${pkg.passing_score ?? 70}%`,
-                badge: `${pkg.duration_minutes}m`,
-            })),
-        [packages]
+    const availablePackages = useMemo(
+        () => packages.filter((pkg) => !sessionForm.data.package_ids?.includes(pkg.id)),
+        [packages, sessionForm.data.package_ids]
+    );
+
+    const togglePackage = useCallback(
+        (packageId: number) => {
+            const currentIds = sessionForm.data.package_ids || [];
+            const isSelected = currentIds.includes(packageId);
+
+            if (isSelected) {
+                if (currentIds.length <= 1) return;
+                const newIds = currentIds.filter((id) => id !== packageId);
+                const primaryPkg = packages.find((p) => p.id === newIds[0]);
+                sessionForm.setData((current) => ({
+                    ...current,
+                    package_ids: newIds,
+                    exam_package_id: newIds[0],
+                    duration_minutes: primaryPkg?.duration_minutes ?? current.duration_minutes,
+                    passing_score: primaryPkg?.passing_score ?? current.passing_score,
+                }));
+            } else {
+                if (currentIds.length >= MAX_PACKAGES) return;
+                const newIds = [...currentIds, packageId];
+                sessionForm.setData((current) => ({ ...current, package_ids: newIds }));
+            }
+        },
+        [packages, sessionForm]
+    );
+
+    const addPackage = useCallback(
+        (packageId: number) => {
+            const currentIds = sessionForm.data.package_ids || [];
+            if (currentIds.length >= MAX_PACKAGES) return;
+            const newIds = [...currentIds, packageId];
+            const primaryPkg = packages.find((p) => p.id === newIds[0]);
+
+            sessionForm.setData((current) => ({
+                ...current,
+                package_ids: newIds,
+                exam_package_id: newIds[0],
+                duration_minutes: primaryPkg?.duration_minutes ?? current.duration_minutes,
+                passing_score: primaryPkg?.passing_score ?? current.passing_score,
+            }));
+        },
+        [packages, sessionForm]
     );
 
     const waveOptions = useMemo(
@@ -62,6 +101,14 @@ export default function PublicSessionFormModal({
         () => [
             { value: "token_required", label: "Token Proktor Wajib", description: "Peserta wajib memasukkan token 6 karakter untuk masuk" },
             { value: "open", label: "Akses Terbuka Tanpa Token", description: "Peserta publik langsung mengerjakan tanpa input token" },
+        ],
+        []
+    );
+
+    const orderTypeOptions = useMemo(
+        () => [
+            { value: "flexible", label: "Fleksibel (Bebas Memilih)", description: "Peserta bebas memilih urutan pengerjaan paket" },
+            { value: "sequential", label: "Berurutan (Sekuensial)", description: "Peserta harus mengerjakan sesuai urutan" },
         ],
         []
     );
@@ -123,14 +170,107 @@ export default function PublicSessionFormModal({
                             {sessionForm.errors.title && <p className="text-[11px] text-red-400 mt-1">{sessionForm.errors.title}</p>}
                         </div>
 
+                        {/* Multi-Package Selector */}
+                        <div>
+                            <label className="block text-xs font-bold text-slate-300 mb-1">
+                                Paket Ujian Terpilih <span className="ml-1 text-[10px] text-amber-400 font-medium">({(sessionForm.data.package_ids || []).length}/{MAX_PACKAGES})</span>
+                            </label>
+
+                            {selectedPackages.length > 0 && (
+                                <div className="flex flex-wrap gap-1.5 mb-2 border border-slate-700/50 p-2 rounded-xl bg-slate-800/30">
+                                    {selectedPackages.map((pkg, index) => (
+                                        <div
+                                            key={pkg.id}
+                                            className="group flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1.5 text-xs transition-all"
+                                        >
+                                            <span className="flex h-4 w-4 items-center justify-center rounded bg-amber-500/20 text-[9px] font-black text-amber-400">
+                                                {index + 1}
+                                            </span>
+                                            <span className="font-semibold text-amber-300 max-w-[160px] truncate">{pkg.title}</span>
+                                            <span className="text-[10px] text-slate-400">{pkg.duration_minutes}m</span>
+                                            {selectedPackages.length > 1 && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => togglePackage(pkg.id)}
+                                                    className="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full text-slate-500 hover:bg-red-500/20 hover:text-red-400 transition-colors"
+                                                >
+                                                    <i className="fa-solid fa-xmark text-[9px]" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {availablePackages.length > 0 && (sessionForm.data.package_ids || []).length < MAX_PACKAGES && (
+                                <div className="relative">
+                                    <select
+                                        value=""
+                                        onChange={(event) => {
+                                            const val = Number(event.target.value);
+                                            if (val) addPackage(val);
+                                        }}
+                                        className="sentinel-field"
+                                    >
+                                        <option value="">
+                                            {(sessionForm.data.package_ids || []).length === 0
+                                                ? "Pilih Paket Ujian..."
+                                                : `+ Tambah Paket (sisa ${MAX_PACKAGES - (sessionForm.data.package_ids || []).length})`}
+                                        </option>
+                                        {availablePackages.map((pkg) => (
+                                            <option key={pkg.id} value={pkg.id}>
+                                                {pkg.title} ({pkg.duration_minutes}m, {pkg.passing_score}%)
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+                            {(sessionForm.errors as Record<string, string>).exam_package_id && <p className="text-[11px] text-red-400 mt-1">{(sessionForm.errors as Record<string, string>).exam_package_id}</p>}
+                        </div>
+
+                        {/* Package Inheritance Read-Only Badge Box */}
+                        {selectedPackages.length > 0 && (
+                            <div className="rounded-xl border border-amber-500/20 bg-slate-950/80 p-3.5 flex flex-col gap-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 font-bold shrink-0">
+                                        <i className="fa-solid fa-circle-info text-xs" />
+                                    </div>
+                                    <div>
+                                        <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider block">Konfigurasi per Paket</span>
+                                        <span className="text-xs text-slate-300">Durasi dan Passing Grade mengikuti pengaturan masing-masing paket</span>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 gap-2">
+                                    {selectedPackages.map((pkg, index) => (
+                                        <div key={pkg.id} className="flex items-center justify-between rounded-lg bg-slate-800/50 border border-white/5 px-3 py-2 text-xs">
+                                            <div className="flex items-center gap-2 min-w-0">
+                                                <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded bg-amber-500/20 text-[9px] font-black text-amber-400">
+                                                    {index + 1}
+                                                </span>
+                                                <span className="font-medium text-slate-300 truncate">{pkg.title}</span>
+                                            </div>
+                                            <div className="flex items-center gap-4 text-[11px] text-slate-400 shrink-0 ml-2">
+                                                <span><i className="fa-regular fa-clock mr-1" />{pkg.duration_minutes}m</span>
+                                                <span className="text-emerald-400"><i className="fa-solid fa-check-double mr-1" />{pkg.passing_score}%</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <SentinelSelect
-                                label="Paket Soal Ujian"
-                                icon="fa-solid fa-box"
-                                options={packageOptions}
-                                value={sessionForm.data.exam_package_id}
-                                onChange={(val) => handlePackageChange(Number(val))}
-                            />
+                            {(sessionForm.data.package_ids || []).length > 1 ? (
+                                <SentinelSelect
+                                    label="Urutan Pengerjaan Paket"
+                                    icon="fa-solid fa-arrow-down-1-9"
+                                    options={orderTypeOptions}
+                                    value={sessionForm.data.package_order_type}
+                                    onChange={(val) => sessionForm.setData("package_order_type", val)}
+                                />
+                            ) : (
+                                <div></div>
+                            )}
 
                             <SentinelSelect
                                 label="Gelombang SPMB (Opsional)"
@@ -139,33 +279,6 @@ export default function PublicSessionFormModal({
                                 value={sessionForm.data.admission_wave_id || 0}
                                 onChange={(val) => sessionForm.setData("admission_wave_id", val === 0 ? null : Number(val))}
                             />
-                        </div>
-
-                        {/* Package Inheritance Read-Only Badge Box */}
-                        <div className="rounded-xl border border-amber-500/20 bg-slate-950/80 p-3.5 flex items-center justify-between gap-4">
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 font-bold shrink-0">
-                                    <i className="fa-solid fa-circle-info text-xs" />
-                                </div>
-                                <div>
-                                    <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider block">Aturan Paket & Sesi</span>
-                                    <span className="text-xs text-slate-300">Konfigurasi diwarisi otomatis dari Paket Soal Ujian</span>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-4 text-xs">
-                                <div className="text-right">
-                                    <span className="text-[10px] text-slate-400 block">Durasi</span>
-                                    <strong className="text-white font-bold">{selectedPackage?.duration_minutes ?? 60} Menit</strong>
-                                </div>
-                                <div className="text-right border-l border-white/10 pl-4">
-                                    <span className="text-[10px] text-slate-400 block">Passing Grade</span>
-                                    <strong className="text-emerald-400 font-bold">{selectedPackage?.passing_score ?? 70}%</strong>
-                                </div>
-                                <div className="text-right border-l border-white/10 pl-4">
-                                    <span className="text-[10px] text-slate-400 block">Percobaan</span>
-                                    <strong className="text-amber-300 font-bold">1x Utama</strong>
-                                </div>
-                            </div>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

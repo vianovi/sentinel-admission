@@ -37,7 +37,6 @@ test('public exam token validation and guest attempt execution flow', function (
     ]);
 
     $session = ExamSession::create([
-        'exam_package_id' => $package->id,
         'title' => 'Sesi Ujian Publik 2026',
         'status' => 'published',
         'opens_at' => now()->subHour(),
@@ -48,6 +47,7 @@ test('public exam token validation and guest attempt execution flow', function (
         'is_public' => true,
         'public_access_type' => 'token_required',
     ]);
+    $session->packages()->attach($package->id);
 
     // 2. Generate Access Token
     $token = ExamSessionToken::create([
@@ -73,6 +73,7 @@ test('public exam token validation and guest attempt execution flow', function (
         'guest_school' => 'SMA N 1 Jakarta',
         'guest_email' => 'guest@example.com',
         'guest_phone' => '08123456789',
+        'package_id' => $package->id,
     ]);
 
     $response->assertRedirect();
@@ -147,7 +148,6 @@ test('guest auto resume flow for active in progress session', function () {
     ]);
 
     $session = ExamSession::create([
-        'exam_package_id' => $package->id,
         'title' => 'Sesi Ujian Auto Resume 2026',
         'status' => 'published',
         'opens_at' => now()->subHour(),
@@ -158,6 +158,7 @@ test('guest auto resume flow for active in progress session', function () {
         'is_public' => true,
         'public_access_type' => 'token_required',
     ]);
+    $session->packages()->attach($package->id);
 
     $token = ExamSessionToken::create([
         'exam_session_id' => $session->id,
@@ -171,6 +172,7 @@ test('guest auto resume flow for active in progress session', function () {
     $this->post(route('exam.public.start', ['token' => 'RESUME1']), [
         'guest_name' => 'Budi Santoso',
         'guest_school' => 'SMP Negeri 1 Surabaya',
+        'package_id' => $package->id,
     ]);
 
     $attempt = ExamAttempt::where('guest_name', 'Budi Santoso')->first();

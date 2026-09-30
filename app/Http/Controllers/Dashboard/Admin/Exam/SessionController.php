@@ -56,14 +56,20 @@ class SessionController extends Controller
 
     public function store(StoreExamSessionRequest $request): RedirectResponse
     {
+        $packageIds = $request->input('package_ids', []);
+        $primaryPackageId = $packageIds[0] ?? $request->input('exam_package_id');
+
         $session = ExamSession::create([
-            ...$request->validated(),
+            ...$request->safe()->except(['package_ids']),
+            'exam_package_id' => $primaryPackageId,
             'created_by' => $request->user()?->id,
             'show_result_to_candidate' => $request->boolean('show_result_to_candidate'),
             'is_public' => $request->boolean('is_public'),
             'public_access_type' => $request->input('public_access_type', 'token_required'),
             'status' => $request->input('status', ExamSession::STATUS_DRAFT),
         ]);
+
+        $this->syncPackages($session, $packageIds ?: [$primaryPackageId]);
 
         return redirect()
             ->route('admin.exams.sessions.show', $session)
@@ -73,6 +79,8 @@ class SessionController extends Controller
     public function show(ExamSession $session): Response
     {
         $session->load([
+            'packages:id,title,code,exam_subject_id,duration_minutes,passing_score,max_attempts',
+            'packages.subject:id,name,code',
             'package:id,title,exam_subject_id',
             'package.subject:id,name,code',
             'admissionWave:id,title,academic_year',
@@ -82,12 +90,25 @@ class SessionController extends Controller
 
         $assignedCandidateIds = $session->candidates->pluck('candidate_id')->all();
 
+        $sessionPackages = $session->packages->isNotEmpty()
+            ? $session->packages
+            : collect($session->package ? [$session->package] : []);
+
         return Inertia::render('Dashboard/Admin/Exam/SessionShow', [
             'session' => [
                 ...$this->sessionRow($session),
                 'description' => $session->description,
                 'instructions' => $session->instructions,
-                'package_subject' => $session->package?->subject?->name,
+                'package_subject' => $sessionPackages->first()?->subject?->name,
+                'packages' => $sessionPackages->map(fn (ExamPackage $pkg) => [
+                    'id' => $pkg->id,
+                    'title' => $pkg->title,
+                    'code' => $pkg->code ?? null,
+                    'subject' => $pkg->subject?->name,
+                    'duration_minutes' => $pkg->duration_minutes,
+                    'passing_score' => (float) $pkg->passing_score,
+                    'max_attempts' => $pkg->max_attempts,
+                ])->values(),
             ],
             'assigned_candidates' => $session->candidates->map(fn (ExamSessionCandidate $assignment) => [
                 'id' => $assignment->id,
@@ -133,6 +154,8 @@ class SessionController extends Controller
 
     public function edit(ExamSession $session): Response
     {
+        $session->load('packages:id');
+
         return Inertia::render('Dashboard/Admin/Exam/Sessions', [
             'sessions' => ExamSession::with(['package:id,title', 'admissionWave:id,title,academic_year'])
                 ->withCount(['candidates', 'attempts'])
@@ -144,6 +167,7 @@ class SessionController extends Controller
             'editing_session' => [
                 ...$this->sessionRow($session),
                 'exam_package_id' => $session->exam_package_id,
+                'package_ids' => $session->packages->pluck('id')->values()->all(),
                 'admission_wave_id' => $session->admission_wave_id,
                 'description' => $session->description,
                 'instructions' => $session->instructions,
@@ -152,6 +176,7 @@ class SessionController extends Controller
                 'show_result_to_candidate' => $session->show_result_to_candidate,
                 'is_public' => $session->is_public,
                 'public_access_type' => $session->public_access_type,
+                'package_order_type' => $session->package_order_type,
             ],
             'mode' => 'edit',
         ]);
@@ -165,12 +190,18 @@ class SessionController extends Controller
             ]);
         }
 
+        $packageIds = $request->input('package_ids', []);
+        $primaryPackageId = $packageIds[0] ?? $request->input('exam_package_id');
+
         $session->update([
-            ...$request->validated(),
+            ...$request->safe()->except(['package_ids']),
+            'exam_package_id' => $primaryPackageId,
             'show_result_to_candidate' => $request->boolean('show_result_to_candidate'),
             'is_public' => $request->boolean('is_public'),
             'public_access_type' => $request->input('public_access_type', 'token_required'),
         ]);
+
+        $this->syncPackages($session, $packageIds ?: [$primaryPackageId]);
 
         return redirect()
             ->route('admin.exams.sessions.show', $session)
@@ -228,10 +259,15 @@ class SessionController extends Controller
 
     private function sessionRow(ExamSession $session): array
     {
+        $packageTitles = $session->relationLoaded('packages') && $session->packages->isNotEmpty()
+            ? $session->packages->pluck('title')->implode(', ')
+            : $session->package?->title;
+
         return [
             'id' => $session->id,
             'exam_package_id' => $session->exam_package_id,
-            'package_title' => $session->package?->title,
+            'package_title' => $packageTitles,
+            'packages_count' => $session->relationLoaded('packages') ? $session->packages->count() : 1,
             'admission_wave_id' => $session->admission_wave_id,
             'admission_wave' => $session->admissionWave
                 ? "{$session->admissionWave->title} - {$session->admissionWave->academic_year}"
@@ -246,6 +282,7 @@ class SessionController extends Controller
             'show_result_to_candidate' => $session->show_result_to_candidate,
             'is_public' => (bool) $session->is_public,
             'public_access_type' => $session->public_access_type,
+            'package_order_type' => $session->package_order_type,
             'candidates_count' => $session->candidates_count ?? $session->candidates()->count(),
             'attempts_count' => $session->attempts_count ?? $session->attempts()->count(),
         ];
@@ -255,10 +292,11 @@ class SessionController extends Controller
     {
         return ExamPackage::whereIn('status', ['draft', 'published'])
             ->orderBy('title')
-            ->get(['id', 'title', 'duration_minutes', 'passing_score', 'max_attempts', 'show_result_to_candidate'])
+            ->get(['id', 'title', 'code', 'duration_minutes', 'passing_score', 'max_attempts', 'show_result_to_candidate'])
             ->map(fn (ExamPackage $package) => [
                 'id' => $package->id,
                 'title' => $package->title,
+                'code' => $package->code ?? null,
                 'duration_minutes' => $package->duration_minutes,
                 'passing_score' => (float) $package->passing_score,
                 'max_attempts' => $package->max_attempts,
@@ -276,5 +314,15 @@ class SessionController extends Controller
                 'title' => "{$wave->title} - {$wave->academic_year}",
             ])
             ->all();
+    }
+
+    private function syncPackages(ExamSession $session, array $packageIds): void
+    {
+        $syncData = [];
+        foreach (array_values(array_unique($packageIds)) as $index => $packageId) {
+            $syncData[$packageId] = ['sort_order' => $index];
+        }
+
+        $session->packages()->sync($syncData);
     }
 }

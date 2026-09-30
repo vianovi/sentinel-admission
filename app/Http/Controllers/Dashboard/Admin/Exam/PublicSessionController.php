@@ -137,13 +137,18 @@ class PublicSessionController extends Controller
     public function store(StoreExamSessionRequest $request): RedirectResponse
     {
         $validated = $request->validated();
+        $packageIds = $request->input('package_ids', []);
+        $primaryPackageId = $packageIds[0] ?? ($validated['exam_package_id'] ?? null);
 
         $session = ExamSession::create([
-            ...$validated,
+            ...\Arr::except($validated, ['package_ids']),
+            'exam_package_id' => $primaryPackageId,
             'is_public' => true,
             'public_access_type' => $validated['public_access_type'] ?? 'token_required',
             'created_by' => $request->user()?->id,
         ]);
+
+        $this->syncPackages($session, $packageIds ?: [$primaryPackageId]);
 
         // Automatically create initial proctor token
         ExamSessionToken::create([
@@ -158,7 +163,7 @@ class PublicSessionController extends Controller
 
         $this->audit->log('public_session_created', [
             'exam_session_id' => $session->id,
-            'exam_package_id' => $session->exam_package_id,
+            'exam_package_id' => $primaryPackageId,
         ], $request);
 
         return redirect()
@@ -169,11 +174,16 @@ class PublicSessionController extends Controller
     public function update(StoreExamSessionRequest $request, ExamSession $session): RedirectResponse
     {
         $validated = $request->validated();
+        $packageIds = $request->input('package_ids', []);
+        $primaryPackageId = $packageIds[0] ?? ($validated['exam_package_id'] ?? $session->exam_package_id);
 
         $session->update([
-            ...$validated,
+            ...\Arr::except($validated, ['package_ids']),
+            'exam_package_id' => $primaryPackageId,
             'is_public' => true,
         ]);
+
+        $this->syncPackages($session, $packageIds ?: [$primaryPackageId]);
 
         $this->audit->log('public_session_updated', [
             'exam_session_id' => $session->id,
@@ -313,5 +323,15 @@ class PublicSessionController extends Controller
         ], $request);
 
         return back()->with('success', "Jumlah pelanggaran peserta {$attempt->guest_name} berhasil di-reset oleh proktor.");
+    }
+
+    private function syncPackages(ExamSession $session, array $packageIds): void
+    {
+        $syncData = [];
+        foreach (array_values(array_unique($packageIds)) as $index => $packageId) {
+            $syncData[$packageId] = ['sort_order' => $index];
+        }
+
+        $session->packages()->sync($syncData);
     }
 }

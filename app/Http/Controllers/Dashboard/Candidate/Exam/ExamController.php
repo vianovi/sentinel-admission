@@ -130,29 +130,72 @@ class ExamController extends Controller
     private function assignmentPayload(ExamSessionCandidate $assignment): array
     {
         $session = $assignment->session;
-        $package = $session?->package;
         $attempts = $assignment->attempts;
-        $latestAttempt = $attempts->sortByDesc('id')->first();
-        $inProgressAttempt = $attempts->first(fn (ExamAttempt $attempt) => $attempt->isInProgress());
-        $countedAttempts = $attempts
-            ->whereNotIn('status', [ExamAttempt::STATUS_CANCELLED, ExamAttempt::STATUS_INVALIDATED])
-            ->count();
-        $attemptsRemaining = max(0, (int) ($session?->max_attempts ?? 0) - $countedAttempts);
         $scheduleState = $this->scheduleState($session);
-        $canStart = $assignment->isEligible()
-            && $scheduleState === 'open'
-            && $package?->isPublished()
-            && $attemptsRemaining > 0
-            && ! $inProgressAttempt;
+
+        $packages = [];
+        $isSequential = $session?->package_order_type === 'sequential';
+        $previousCompleted = true; // For sequential logic
+
+        foreach ($session?->packages ?? [] as $package) {
+            $packageAttempts = $attempts->where('exam_package_id', $package->id);
+            $latestAttempt = $packageAttempts->sortByDesc('id')->first();
+            $inProgressAttempt = $packageAttempts->first(fn ($a) => $a->isInProgress());
+
+            $countedAttempts = $packageAttempts
+                ->whereNotIn('status', [ExamAttempt::STATUS_CANCELLED, ExamAttempt::STATUS_INVALIDATED])
+                ->count();
+
+            $attemptsRemaining = max(0, (int) ($package->max_attempts ?? 1) - $countedAttempts);
+            $isCompleted = $packageAttempts->contains(fn ($a) => in_array($a->status, [ExamAttempt::STATUS_SUBMITTED, ExamAttempt::STATUS_AUTO_SUBMITTED]));
+
+            $blockReason = $this->blockReason(
+                $assignment,
+                $scheduleState,
+                $package->isPublished(),
+                $attemptsRemaining,
+                (bool) $inProgressAttempt
+            );
+
+            // Sequential lock
+            if ($isSequential && ! $previousCompleted && ! $inProgressAttempt && ! $isCompleted) {
+                $canStart = false;
+                $blockReason = 'Harus menyelesaikan paket sebelumnya terlebih dahulu.';
+            } else {
+                $canStart = $assignment->isEligible()
+                    && $scheduleState === 'open'
+                    && $package->isPublished()
+                    && $attemptsRemaining > 0
+                    && ! $inProgressAttempt
+                    && $blockReason === null;
+            }
+
+            if (! $isCompleted) {
+                $previousCompleted = false;
+            }
+
+            $packages[] = [
+                'id' => $package->id,
+                'title' => $package->title,
+                'subject_name' => $package->subject?->name,
+                'duration_minutes' => $package->duration_minutes,
+                'passing_score' => $package->passing_score !== null ? (float) $package->passing_score : null,
+                'max_attempts' => $package->max_attempts,
+                'status' => $package->status,
+                'can_start' => $canStart,
+                'block_reason' => $blockReason,
+                'attempts_remaining' => $attemptsRemaining,
+                'latest_attempt' => $latestAttempt ? $this->attemptPayload($latestAttempt, false) : null,
+                'active_attempt_url' => $inProgressAttempt ? route('dashboard.exam.attempts.show', $inProgressAttempt) : null,
+            ];
+        }
+
+        $globalInProgress = $attempts->first(fn ($a) => $a->isInProgress());
 
         return [
             'id' => $assignment->id,
             'status' => $assignment->status,
-            'can_start' => $canStart,
-            'block_reason' => $this->blockReason($assignment, $scheduleState, $package?->isPublished() ?? false, $attemptsRemaining, (bool) $inProgressAttempt),
-            'attempts_remaining' => $attemptsRemaining,
-            'latest_attempt' => $latestAttempt ? $this->attemptPayload($latestAttempt, false) : null,
-            'active_attempt_url' => $inProgressAttempt ? route('dashboard.exam.attempts.show', $inProgressAttempt) : null,
+            'has_active_attempt' => (bool) $globalInProgress,
             'session' => [
                 'id' => $session?->id,
                 'title' => $session?->title,
@@ -162,22 +205,9 @@ class ExamController extends Controller
                 'schedule_state' => $scheduleState,
                 'opens_at' => $session?->opens_at?->format('d M Y H:i'),
                 'closes_at' => $session?->closes_at?->format('d M Y H:i'),
-                'opens_at_iso' => $session?->opens_at?->toISOString(),
-                'closes_at_iso' => $session?->closes_at?->toISOString(),
-                'duration_minutes' => $session?->duration_minutes,
-                'passing_score' => $session?->passing_score !== null ? (float) $session->passing_score : null,
-                'max_attempts' => $session?->max_attempts,
-                'show_result_to_candidate' => (bool) ($session?->show_result_to_candidate || $package?->show_result_to_candidate),
+                'package_order_type' => $session?->package_order_type,
             ],
-            'package' => [
-                'id' => $package?->id,
-                'title' => $package?->title,
-                'subject_name' => $package?->subject?->name,
-                'duration_minutes' => $package?->duration_minutes,
-                'passing_score' => $package?->passing_score !== null ? (float) $package->passing_score : null,
-                'max_attempts' => $package?->max_attempts,
-                'status' => $package?->status,
-            ],
+            'packages' => $packages,
         ];
     }
 

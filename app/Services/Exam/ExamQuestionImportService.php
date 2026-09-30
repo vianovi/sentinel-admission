@@ -22,7 +22,6 @@ class ExamQuestionImportService
         'option_a',
         'option_b',
         'option_c',
-        'option_d',
         'correct_answer',
         'point',
         'is_active',
@@ -282,7 +281,6 @@ class ExamQuestionImportService
             'opsi_a',
             'opsi_b',
             'opsi_c',
-            'opsi_d',
             'opsi_e',
             'jawaban_benar',
             'poin',
@@ -372,6 +370,10 @@ class ExamQuestionImportService
         $correct = $row['correct_answer'] ?? '';
         if (! in_array($correct, ['A', 'B', 'C', 'D', 'E'], true)) {
             $reasons[] = 'correct_answer harus A, B, C, D, atau E.';
+        }
+
+        if ($correct === 'D' && ($row['option_d'] ?? '') === '') {
+            $reasons[] = 'option_d wajib diisi jika jawaban benar adalah D.';
         }
 
         if ($correct === 'E' && ($row['option_e'] ?? '') === '') {

@@ -23,6 +23,7 @@ class ExamAccessException extends RuntimeException
         return match ($this->reason) {
             'NOT_ELIGIBLE' => 'Kamu belum memiliki akses untuk sesi ujian ini.',
             'BLOCKED' => 'Akses ujian kamu sedang dibatasi. Hubungi panitia.',
+            'SEQUENTIAL_LOCKED' => 'Harus menyelesaikan paket ujian sebelumnya terlebih dahulu.',
             'NOT_OPEN' => 'Sesi ujian belum dibuka atau sudah ditutup.',
             'PACKAGE_NOT_READY' => 'Paket ujian belum siap digunakan.',
             'NO_QUESTIONS' => 'Paket ujian belum memiliki soal aktif.',

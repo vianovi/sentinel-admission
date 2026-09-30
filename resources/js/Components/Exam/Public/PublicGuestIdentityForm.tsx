@@ -1,16 +1,24 @@
 import { FormEvent, memo } from "react";
 import { useForm } from "@inertiajs/react";
 
+export type PackagePayload = {
+    id: number;
+    title: string;
+    subject_name: string | null;
+    duration_minutes: number;
+};
+
 export type SessionPayload = {
     title: string;
     description: string | null;
     instructions: string | null;
-    subject_name: string | null;
     duration_minutes: number;
     opens_at: string | null;
     closes_at: string | null;
     token_label: string | null;
     is_open: boolean;
+    package_order_type: string | null;
+    packages: PackagePayload[];
 };
 
 type Props = {
@@ -25,6 +33,7 @@ export const PublicGuestIdentityForm = memo(function PublicGuestIdentityForm({ t
         guest_school: "",
         guest_email: "",
         guest_phone: "",
+        package_id: session.packages?.[0]?.id ?? "",
     });
 
     const isDark = themeMode === "dark";
@@ -48,7 +57,7 @@ export const PublicGuestIdentityForm = memo(function PublicGuestIdentityForm({ t
                     }`}>
                         <div>
                             <span className="text-xs font-bold uppercase tracking-wider text-amber-500">
-                                {session.subject_name ?? "Ujian Online"}
+                                Ujian Publik
                             </span>
                             <h2 className={`text-xl font-black mt-0.5 ${isDark ? "text-white" : "text-slate-950"}`}>{session.title}</h2>
                         </div>
@@ -65,24 +74,20 @@ export const PublicGuestIdentityForm = memo(function PublicGuestIdentityForm({ t
                         <p className={`mt-4 text-xs leading-relaxed ${isDark ? "text-slate-300" : "text-slate-600"}`}>{session.description}</p>
                     )}
 
-                    <div className={`mt-6 grid grid-cols-2 gap-4 rounded-xl p-4 border transition-colors ${
+                    <div className={`mt-6 grid grid-cols-2 md:grid-cols-3 gap-4 rounded-xl p-4 border transition-colors ${
                         isDark ? "bg-slate-950/60 border-white/5" : "bg-slate-50 border-slate-200"
                     }`}>
-                        <div>
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Durasi Pengerjaan</span>
-                            <p className={`text-sm font-bold mt-0.5 ${isDark ? "text-white" : "text-slate-900"}`}>{session.duration_minutes} Menit</p>
-                        </div>
                         <div>
                             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Status Token</span>
                             <p className="text-sm font-bold text-amber-500 mt-0.5">Token Aktif</p>
                         </div>
                         <div>
                             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Waktu Buka</span>
-                            <p className={`text-xs font-semibold mt-0.5 ${isDark ? "text-slate-300" : "text-slate-700"}`}>{session.opens_at ?? "-"}</p>
+                            <p className={`text-sm font-bold mt-0.5 ${isDark ? "text-white" : "text-slate-900"}`}>{session.opens_at ?? "-"}</p>
                         </div>
                         <div>
                             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Waktu Tutup</span>
-                            <p className={`text-xs font-semibold mt-0.5 ${isDark ? "text-slate-300" : "text-slate-700"}`}>{session.closes_at ?? "-"}</p>
+                            <p className={`text-sm font-bold mt-0.5 ${isDark ? "text-white" : "text-slate-900"}`}>{session.closes_at ?? "-"}</p>
                         </div>
                     </div>
 
@@ -153,6 +158,44 @@ export const PublicGuestIdentityForm = memo(function PublicGuestIdentityForm({ t
                             />
                             {errors.guest_school && <p className="mt-1 text-[11px] text-red-500">{errors.guest_school}</p>}
                         </div>
+                        
+                        {session.packages && session.packages.length > 0 && (
+                            <div>
+                                <label className={`block text-xs font-bold mb-2 ${isDark ? "text-slate-300" : "text-slate-700"}`}>
+                                    Pilih Paket Ujian <span className="text-red-500">*</span>
+                                </label>
+                                <div className="space-y-2">
+                                    {session.packages.map((pkg) => (
+                                        <button
+                                            key={pkg.id}
+                                            type="button"
+                                            onClick={() => setData("package_id", pkg.id)}
+                                            className={`w-full flex items-center justify-between p-3 rounded-xl border text-left transition-all ${
+                                                data.package_id === pkg.id
+                                                    ? "border-amber-500 bg-amber-500/10 ring-1 ring-amber-500/50"
+                                                    : isDark
+                                                    ? "border-white/10 bg-slate-950/50 hover:bg-slate-900 text-slate-300"
+                                                    : "border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700"
+                                            }`}
+                                        >
+                                            <div>
+                                                <div className={`text-sm font-bold ${data.package_id === pkg.id ? "text-amber-500" : ""}`}>
+                                                    {pkg.title}
+                                                </div>
+                                                <div className="text-[10px] mt-1 flex items-center gap-2 opacity-80">
+                                                    <span><i className="fa-solid fa-book mr-1" />{pkg.subject_name}</span>
+                                                    <span><i className="fa-solid fa-clock mr-1" />{pkg.duration_minutes} Menit</span>
+                                                </div>
+                                            </div>
+                                            {data.package_id === pkg.id && (
+                                                <i className="fa-solid fa-circle-check text-amber-500 text-lg" />
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
+                                {errors.package_id && <p className="mt-1 text-[11px] text-red-500">{errors.package_id}</p>}
+                            </div>
+                        )}
 
                         <div>
                             <label htmlFor="guest_email" className={`block text-xs font-bold ${isDark ? "text-slate-300" : "text-slate-700"}`}>
@@ -195,7 +238,7 @@ export const PublicGuestIdentityForm = memo(function PublicGuestIdentityForm({ t
                         <div className="pt-2">
                             <button
                                 type="submit"
-                                disabled={processing || !session.is_open}
+                                disabled={processing || !session.is_open || !data.package_id}
                                 className="w-full inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-5 text-sm font-bold text-white hover:from-emerald-400 hover:to-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/35 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <i className="fa-solid fa-play text-xs" /> {processing ? "Menyiapkan Ujian..." : "Mulai Kerjakan Ujian"}

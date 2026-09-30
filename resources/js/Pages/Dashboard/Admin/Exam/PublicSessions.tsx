@@ -51,6 +51,7 @@ export type PublicTokenItem = {
 };
 
 export type SessionFormData = {
+    package_ids: number[];
     exam_package_id: number;
     admission_wave_id: number | null;
     title: string;
@@ -63,6 +64,7 @@ export type SessionFormData = {
     max_attempts: number;
     show_result_to_candidate: boolean;
     public_access_type: string;
+    package_order_type: string;
     status: string;
 };
 
@@ -84,6 +86,7 @@ type Props = {
         title: string;
         description: string | null;
         instructions: string | null;
+        package_ids: number[];
         exam_package_id: number;
         admission_wave_id: number | null;
         package_title: string | null;
@@ -96,6 +99,9 @@ type Props = {
         passing_score: number;
         max_attempts: number;
         public_access_type: string;
+        package_order_type: string;
+        opens_at_input: string | null;
+        closes_at_input: string | null;
     } | null;
     packages: Array<{ id: number; title: string; code: string; duration_minutes: number; passing_score?: number }>;
     waves: Array<{ id: number; title: string; academic_year: string }>;
@@ -142,6 +148,7 @@ export default function PublicSessions({
     }, [flash]);
 
     const sessionForm = useForm({
+        package_ids: packages[0] ? [packages[0].id] : [],
         exam_package_id: packages[0]?.id || 0,
         admission_wave_id: waves[0]?.id || (null as number | null),
         title: "",
@@ -154,6 +161,7 @@ export default function PublicSessions({
         max_attempts: 1,
         show_result_to_candidate: false,
         public_access_type: "token_required",
+        package_order_type: "flexible",
         status: "published",
     });
 
@@ -206,18 +214,20 @@ export default function PublicSessions({
         if (!active_session) return;
         setEditingSessionId(active_session.id);
         sessionForm.setData({
+            package_ids: active_session.package_ids || [active_session.exam_package_id],
             exam_package_id: active_session.exam_package_id,
             admission_wave_id: active_session.admission_wave_id,
             title: active_session.title || "",
             description: active_session.description || "",
             instructions: active_session.instructions || "",
-            opens_at: active_session.opens_at || "",
-            closes_at: active_session.closes_at || "",
+            opens_at: active_session.opens_at_input || "",
+            closes_at: active_session.closes_at_input || "",
             duration_minutes: active_session.duration_minutes || 60,
             passing_score: active_session.passing_score || 70,
             max_attempts: active_session.max_attempts || 1,
             show_result_to_candidate: active_session.show_result_to_candidate || false,
             public_access_type: active_session.public_access_type || "token_required",
+            package_order_type: active_session.package_order_type || "flexible",
             status: active_session.status || "published",
         });
         setShowFormModal(true);

@@ -42,6 +42,10 @@ class AttemptController extends Controller
             return back()->withErrors(['exam' => $gate['reason'] ?? 'Ujian seleksi masih terkunci.']);
         }
 
+        $request->validate([
+            'package_id' => ['required', 'integer', Rule::exists('exam_packages', 'id')],
+        ]);
+
         $assignment = ExamSessionCandidate::query()
             ->where('exam_session_id', $session->id)
             ->where('candidate_id', $candidate->id)
@@ -70,7 +74,7 @@ class AttemptController extends Controller
 
         $attempt = $this->ownedAttempt($attempt, $candidate);
         $attempt = $this->attemptService->syncExpired($attempt, $request);
-        $attempt->loadMissing(['session.package.subject', 'package', 'answers']);
+        $attempt->loadMissing(['session', 'package.subject', 'answers']);
 
         $questionIds = collect($attempt->question_order ?? [])
             ->filter(fn ($id) => is_numeric($id))
@@ -106,7 +110,7 @@ class AttemptController extends Controller
                 'session_id' => $attempt->exam_session_id,
                 'session_title' => $attempt->session?->title,
                 'package_title' => $attempt->package?->title,
-                'subject_name' => $attempt->session?->package?->subject?->name,
+                'subject_name' => $attempt->package?->subject?->name,
                 'duration_minutes' => $attempt->session?->duration_minutes,
                 'passing_score' => $attempt->passing_score !== null ? (float) $attempt->passing_score : null,
                 'show_result_to_candidate' => (bool) ($attempt->session?->show_result_to_candidate || $attempt->package?->show_result_to_candidate),
