@@ -60,6 +60,30 @@ function renderRichText(text: string): ReactNode[] {
             }
         }
 
+        // Custom Image Tag [GAMBAR: filename.ext] or [IMG: filename.ext]
+        const isGambarTag = text.slice(index).toUpperCase().startsWith("[GAMBAR:");
+        const isImgTag = !isGambarTag && text.slice(index).toUpperCase().startsWith("[IMG:");
+        
+        if (isGambarTag || isImgTag) {
+            const tagLength = isGambarTag ? 8 : 5;
+            const closeIndex = text.indexOf("]", index + tagLength);
+            if (closeIndex > index + tagLength) {
+                flush();
+                const filename = text.slice(index + tagLength, closeIndex).trim();
+                nodes.push(
+                    <img 
+                        key={`img-${index}`} 
+                        src={`/storage/exam/images/${filename}`} 
+                        alt="Ilustrasi Soal" 
+                        className="max-w-full h-auto my-3 rounded-md border border-gray-200"
+                        loading="lazy"
+                    />
+                );
+                index = closeIndex + 1;
+                continue;
+            }
+        }
+
         // Extended Unicode superscripts
         if (UNICODE_SUPERSCRIPTS[char]) {
             flush();
