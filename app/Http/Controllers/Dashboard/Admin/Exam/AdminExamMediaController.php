@@ -26,7 +26,7 @@ class AdminExamMediaController extends Controller
             ->map(function ($file) {
                 return [
                     'name' => basename($file),
-                    'url' => Storage::disk($this->disk)->url($file),
+                    'url' => '/storage/' . ltrim($file, '/'),
                     'size' => Storage::disk($this->disk)->size($file),
                     'last_modified' => Storage::disk($this->disk)->lastModified($file),
                 ];
@@ -74,7 +74,6 @@ class AdminExamMediaController extends Controller
         $oldName = basename($request->old_name);
         $newName = basename($request->new_name);
 
-        // Ensure extension is kept or valid
         $ext = pathinfo($newName, PATHINFO_EXTENSION);
         if (!$ext) {
             $newName .= '.' . pathinfo($oldName, PATHINFO_EXTENSION);
@@ -126,7 +125,6 @@ class AdminExamMediaController extends Controller
             $zip->extractTo($tempDir);
             $zip->close();
 
-            // Recursively find all images and move them to public/exam/images (flattening folders)
             $allFiles = File::allFiles($tempDir);
             foreach ($allFiles as $file) {
                 $ext = strtolower($file->getExtension());

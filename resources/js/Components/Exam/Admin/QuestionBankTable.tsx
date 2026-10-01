@@ -1,4 +1,5 @@
 import { memo, useMemo, useState } from "react";
+import { Link } from "@inertiajs/react";
 import RichExamText from "@/Components/Exam/Shared/RichExamText";
 import { EmptyState, StatusPill, inputClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
 import type { ExamQuestionPreview } from "@/types/exam";
@@ -40,12 +41,19 @@ function QuestionBankTableInner({ questions }: Props) {
                         <i className="fa-solid fa-table-list text-amber-500" /> Tabel Bank Soal ({filteredQuestions.length} Soal)
                     </h2>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        Format ekspresi matematika (misal: 7², 5², 90°) dirender presisi dengan komponen RichExamText.
+                        Format ekspresi matematika (misal: 7², 5², 90°) dan gambar tag <code className="text-amber-500 font-mono">[GAMBAR: ...]</code> dirender presisi dengan komponen RichExamText.
                     </p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
-                    <div className="relative min-w-[220px]">
+                    <Link
+                        href="/dashboard/admin/exams/media"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs font-bold text-amber-600 hover:bg-amber-500/20 transition-all dark:text-amber-400"
+                    >
+                        <i className="fa-solid fa-photo-film text-xs" /> Kelola Gambar
+                    </Link>
+
+                    <div className="relative min-w-[200px]">
                         <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400" />
                         <input
                             type="text"

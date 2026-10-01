@@ -1,13 +1,22 @@
-import { useState } from "react";
-import { Head, useForm, router } from "@inertiajs/react";
+import { useState, useMemo, FormEvent } from "react";
+import { Head, Link, useForm, router, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
-
-// Minimal SVG Icons
-const PhotoIcon = ({ className }: { className?: string }) => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}><path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>;
-const TrashIcon = ({ className }: { className?: string }) => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}><path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>;
-const PencilSquareIcon = ({ className }: { className?: string }) => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}><path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" /></svg>;
-const ClipboardDocumentIcon = ({ className }: { className?: string }) => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}><path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0 0 13.566 2.25h-3.132a2.25 2.25 0 0 0-2.1 1.638m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0 1 1.927-.184m7.332 0V5.25c0 .621-.504 1.125-1.125 1.125h-3.132c-.621 0-1.125-.504-1.125-1.125V3.888m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0 1 1.927-.184m7.332 0V5.25c0 .621-.504 1.125-1.125 1.125h-3.132c-.621 0-1.125-.504-1.125-1.125V3.888" /></svg>;
-const ArchiveBoxArrowDownIcon = ({ className }: { className?: string }) => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 0 0 .75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 0 0-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0 1 12 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 0 1-.673-.38m0 0A2.18 2.18 0 0 1 3 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 0 1 3.413-.387m7.5 0V5.25A2.25 2.25 0 0 0 13.5 3h-3a2.25 2.25 0 0 0-2.25 2.25v.894m7.5 0a48.667 48.667 0 0 0-7.5 0M12 12.75h.008v.008H12v-.008Z" /></svg>;
+import {
+    ExamWorkspace,
+    PageHeader,
+    FlashMessage,
+    StatCard,
+    WorkflowRail,
+    EmptyState,
+    primaryButtonClass,
+    secondaryButtonClass,
+    dangerButtonClass,
+    inputClass,
+    labelClass,
+    cardClass,
+} from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
+import { swalDark, showSuccessToast, showErrorToast, confirmAction } from "@/utils/swal";
+import type { PageProps } from "@/types";
 
 type MediaFile = {
     name: string;
@@ -16,46 +25,77 @@ type MediaFile = {
     last_modified: number;
 };
 
-export default function MediaManager({ media }: { media: MediaFile[] }) {
-    const [uploading, setUploading] = useState(false);
-    
-    // File upload logic
-    const { data, setData, post, progress } = useForm({
-        files: [] as File[],
+type Props = {
+    media: MediaFile[];
+};
+
+export default function MediaManager({ media }: Props) {
+    const { flash, errors: pageErrors } = usePage<PageProps & { errors: Record<string, string> }>().props;
+    const [searchQuery, setSearchQuery] = useState("");
+    const [selectedPreview, setSelectedPreview] = useState<MediaFile | null>(null);
+    const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+
+    // Upload form
+    const form = useForm<{ files: File[] }>({
+        files: [],
     });
 
-    const handleUpload = (e: React.FormEvent) => {
+    const handleUpload = (e: FormEvent) => {
         e.preventDefault();
-        if (data.files.length === 0) return;
-        
-        setUploading(true);
-        post(route("admin.exams.media.store"), {
-            onSuccess: () => {
-                setData("files", []);
-                setUploading(false);
-            },
-            onError: () => setUploading(false),
+        if (form.data.files.length === 0) return;
+
+        form.post(route("admin.exams.media.store"), {
+            forceFormData: true,
             preserveScroll: true,
+            onSuccess: () => {
+                form.reset("files");
+            },
         });
     };
 
     const copyTag = (filename: string) => {
-        navigator.clipboard.writeText(`[GAMBAR: ${filename}]`);
-        alert(`Tag [GAMBAR: ${filename}] berhasil disalin!`);
+        const tag = `[GAMBAR: ${filename}]`;
+        navigator.clipboard.writeText(tag);
+        showSuccessToast(`Tag ${tag} disalin ke clipboard!`);
     };
 
-    const renameFile = (oldName: string) => {
-        const newName = prompt("Masukkan nama file baru (tanpa ekstensi tidak apa-apa):", oldName);
-        if (newName && newName !== oldName) {
-            router.put(route("admin.exams.media.rename"), {
-                old_name: oldName,
-                new_name: newName,
-            }, { preserveScroll: true });
+    const handleRename = async (oldName: string) => {
+        const { value: newName, isConfirmed } = await swalDark.fire({
+            title: "Ubah Nama File",
+            text: "Nama file baru akan disesuaikan dengan tag [GAMBAR: ...] pada soal ujian Anda.",
+            input: "text",
+            inputValue: oldName,
+            showCancelButton: true,
+            confirmButtonText: "Simpan Nama Baru",
+            cancelButtonText: "Batal",
+            inputValidator: (val) => {
+                if (!val || !val.trim()) {
+                    return "Nama file tidak boleh kosong!";
+                }
+                return null;
+            },
+        });
+
+        if (isConfirmed && newName && newName !== oldName) {
+            router.put(
+                route("admin.exams.media.rename"),
+                {
+                    old_name: oldName,
+                    new_name: newName.trim(),
+                },
+                { preserveScroll: true }
+            );
         }
     };
 
-    const deleteFile = (filename: string) => {
-        if (confirm(`Yakin ingin menghapus ${filename}?`)) {
+    const handleDelete = async (filename: string) => {
+        const confirmed = await confirmAction(
+            "Hapus Gambar?",
+            `Apakah Anda yakin ingin menghapus "${filename}"? Tag pada soal yang memuat gambar ini tidak akan lagi menampilkan gambar.`,
+            "Ya, Hapus Gambar"
+        );
+
+        if (confirmed) {
             router.delete(route("admin.exams.media.destroy"), {
                 data: { name: filename },
                 preserveScroll: true,
@@ -63,114 +103,401 @@ export default function MediaManager({ media }: { media: MediaFile[] }) {
         }
     };
 
+    const filteredMedia = useMemo(() => {
+        if (!searchQuery.trim()) return media;
+        const q = searchQuery.toLowerCase();
+        return media.filter((item) => item.name.toLowerCase().includes(q));
+    }, [media, searchQuery]);
+
+    const totalBytes = useMemo(() => {
+        return media.reduce((acc, curr) => acc + (curr.size || 0), 0);
+    }, [media]);
+
+    const formatBytes = (bytes: number) => {
+        if (bytes === 0) return "0 Byte";
+        const k = 1024;
+        const sizes = ["Bytes", "KB", "MB", "GB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+    };
+
     return (
-        <DashboardLayout>
-            <Head title="Bank Media Ujian" />
-            
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-                
-                {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Bank Media Ujian</h1>
-                        <p className="mt-2 text-sm text-slate-500 max-w-2xl">
-                            Kelola seluruh gambar yang akan disisipkan ke dalam soal ujian. Anda dapat mengunggah file gambar satuan ataupun file <code className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-mono text-xs">.zip</code> untuk upload massal secara instan.
-                        </p>
-                    </div>
-                </div>
+        <>
+            <Head title="Bank Media & Gambar Soal - Panel Ujian" />
 
-                {/* Upload Section */}
-                <div className="bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 p-6 md:p-8">
-                    <form onSubmit={handleUpload} className="max-w-3xl mx-auto">
-                        <label className="group relative flex flex-col items-center justify-center w-full p-12 border-2 border-dashed border-slate-300 rounded-2xl cursor-pointer bg-slate-50 hover:bg-blue-50 hover:border-blue-400 transition-colors">
-                            <div className="flex flex-col items-center justify-center text-center">
-                                <div className="p-4 bg-white rounded-full shadow-sm ring-1 ring-slate-900/5 mb-4 group-hover:scale-110 transition-transform">
-                                    <ArchiveBoxArrowDownIcon className="w-8 h-8 text-blue-500" />
-                                </div>
-                                <h3 className="mb-1 text-lg font-semibold text-slate-700 group-hover:text-blue-700">
-                                    Pilih file atau tarik ke sini
-                                </h3>
-                                <p className="text-sm text-slate-500">Mendukung format PNG, JPG, WEBP, atau file ZIP.</p>
-                            </div>
-                            <input 
-                                type="file" 
-                                className="hidden" 
-                                multiple 
-                                accept=".jpg,.jpeg,.png,.webp,.gif,.svg,.zip"
-                                onChange={(e) => setData("files", Array.from(e.target.files || []))}
-                            />
-                        </label>
-
-                        {data.files.length > 0 && (
-                            <div className="mt-6 bg-slate-50 rounded-xl p-4 flex items-center justify-between ring-1 ring-slate-900/5">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
-                                        {data.files.length}
-                                    </div>
-                                    <span className="text-sm font-medium text-slate-700">File siap diunggah</span>
-                                </div>
-                                <button
-                                    type="submit"
-                                    disabled={uploading}
-                                    className="px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-colors"
-                                >
-                                    {uploading ? 'Memproses Upload...' : 'Mulai Upload'}
-                                </button>
-                            </div>
-                        )}
-                        
-                        {progress && (
-                            <div className="w-full mt-4 bg-slate-100 rounded-full h-3 overflow-hidden">
-                                <div className="bg-blue-500 h-full rounded-full transition-all duration-300 ease-out" style={{ width: `${progress.percentage}%` }}></div>
-                            </div>
-                        )}
-                    </form>
-                </div>
-
-                {/* Media Grid */}
-                <div className="space-y-4">
-                    <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                        <PhotoIcon className="w-5 h-5 text-slate-400" />
-                        Koleksi Gambar ({media.length})
-                    </h2>
-                    
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
-                        {media.map((file) => (
-                            <div key={file.name} className="bg-white rounded-xl shadow-sm ring-1 ring-slate-900/5 overflow-hidden group hover:shadow-md transition-shadow flex flex-col">
-                                <div className="aspect-square bg-slate-100 relative overflow-hidden flex-shrink-0">
-                                    <img src={file.url} alt={file.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                </div>
-                                <div className="p-3.5 flex flex-col flex-1 justify-between">
-                                    <p className="text-xs font-semibold text-slate-700 truncate" title={file.name}>{file.name}</p>
-                                    
-                                    <div className="mt-3 grid grid-cols-3 gap-1">
-                                        <button onClick={() => copyTag(file.name)} title="Salin Tag [GAMBAR:...]" className="flex items-center justify-center p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-                                            <ClipboardDocumentIcon className="w-4 h-4" />
-                                        </button>
-                                        <button onClick={() => renameFile(file.name)} title="Ganti Nama" className="flex items-center justify-center p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors">
-                                            <PencilSquareIcon className="w-4 h-4" />
-                                        </button>
-                                        <button onClick={() => deleteFile(file.name)} title="Hapus File" className="flex items-center justify-center p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                                            <TrashIcon className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                    
-                    {media.length === 0 && (
-                        <div className="bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 py-24 text-center">
-                            <div className="mx-auto w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 ring-1 ring-slate-100">
-                                <PhotoIcon className="w-8 h-8 text-slate-300" />
-                            </div>
-                            <h3 className="text-sm font-semibold text-slate-900">Belum ada gambar</h3>
-                            <p className="mt-1 text-sm text-slate-500">Gambar yang diunggah akan tampil di sini.</p>
+            <ExamWorkspace active="packages">
+                <PageHeader
+                    title="Bank Media & Ilustrasi Soal"
+                    badge="ASSET MANAGER: SELEKSI & UJIAN"
+                    description="Penyimpanan terpusat gambar soal ujian. Unggah satuan atau arsip ZIP untuk otomatis diekstrak dan diberi tag [GAMBAR: nama_file]."
+                    icon="fa-solid fa-photo-film"
+                    actions={
+                        <div className="flex items-center gap-2">
+                            <Link
+                                href="/dashboard/admin/exams/packages"
+                                className={secondaryButtonClass}
+                            >
+                                <i className="fa-solid fa-box-archive text-xs" /> Kelola Paket Soal
+                            </Link>
                         </div>
-                    )}
+                    }
+                />
+
+                <FlashMessage value={flash.success} type="success" />
+                <FlashMessage value={flash.error ?? pageErrors.files ?? pageErrors.name} />
+
+                {/* Workflow Rail / Guide */}
+                <WorkflowRail
+                    items={[
+                        {
+                            label: "Langkah 1",
+                            title: "Unggah Media / ZIP",
+                            description: "Unggah gambar satu-per-satu atau kompresi satu folder menjadi .ZIP untuk ekstrak otomatis.",
+                            icon: "fa-solid fa-cloud-arrow-up",
+                            state: media.length > 0 ? "done" : "active",
+                        },
+                        {
+                            label: "Langkah 2",
+                            title: "Sesuaikan Nama (Rename)",
+                            description: "Ubah nama file acak kamera/WhatsApp (misal: soal_1.jpg) langsung dari tombol aksi kartu gambar.",
+                            icon: "fa-solid fa-signature",
+                            state: media.length > 0 ? "done" : "idle",
+                        },
+                        {
+                            label: "Langkah 3",
+                            title: "Salin Tag ke Excel",
+                            description: "Klik ikon salin untuk menempelkan tag [GAMBAR: nama_file.jpg] ke dalam kolom teks soal XLSX.",
+                            icon: "fa-solid fa-copy",
+                            state: "idle",
+                        },
+                    ]}
+                />
+
+                {/* Stat Cards */}
+                <div className="grid gap-3 md:grid-cols-4">
+                    <StatCard
+                        label="Total Gambar Tersimpan"
+                        value={media.length}
+                        icon="fa-solid fa-images"
+                        tone="text-amber-500"
+                    />
+                    <StatCard
+                        label="Total Ukuran Penyimpanan"
+                        value={formatBytes(totalBytes)}
+                        icon="fa-solid fa-hard-drive"
+                        tone="text-blue-500"
+                    />
+                    <StatCard
+                        label="Format Didukung"
+                        value="JPG, PNG, WEBP, ZIP"
+                        icon="fa-solid fa-file-zipper"
+                        tone="text-emerald-500"
+                    />
+                    <StatCard
+                        label="Sintaks Excel"
+                        value="[GAMBAR: file.ext]"
+                        icon="fa-solid fa-code"
+                        tone="text-violet-500"
+                    />
                 </div>
-            </div>
-        </DashboardLayout>
+
+                {/* Upload Section & Gallery Container */}
+                <div className="grid gap-5 xl:grid-cols-[380px_1fr] items-start">
+                    
+                    {/* Left Panel: Upload Form */}
+                    <section className={`${cardClass} space-y-4`}>
+                        <div className="border-b border-slate-200 dark:border-white/10 pb-3">
+                            <h2 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                                <i className="fa-solid fa-upload text-amber-500" /> Unggah Gambar Soal
+                            </h2>
+                            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                                Seret file langsung ke area ini atau klik tombol pilih file.
+                            </p>
+                        </div>
+
+                        <form onSubmit={handleUpload} className="space-y-4">
+                            <label className="group relative flex flex-col items-center justify-center w-full p-8 border-2 border-dashed border-slate-300 dark:border-white/20 rounded-xl cursor-pointer bg-slate-50 dark:bg-white/[0.02] hover:bg-amber-500/5 hover:border-amber-400 dark:hover:border-amber-400 transition-all">
+                                <div className="flex flex-col items-center justify-center text-center">
+                                    <div className="w-12 h-12 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 text-amber-500 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                        <i className="fa-solid fa-cloud-arrow-up text-xl" />
+                                    </div>
+                                    <p className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-amber-500 transition-colors">
+                                        Klik untuk pilih file atau Drag & Drop
+                                    </p>
+                                    <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                                        Maks 50MB · JPG, PNG, WEBP, atau ZIP
+                                    </p>
+                                </div>
+                                <input
+                                    type="file"
+                                    multiple
+                                    accept=".jpg,.jpeg,.png,.webp,.gif,.svg,.zip"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                        if (e.target.files) {
+                                            form.setData("files", Array.from(e.target.files));
+                                        }
+                                    }}
+                                />
+                            </label>
+
+                            {/* Selected Files Preview */}
+                            {form.data.files.length > 0 && (
+                                <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
+                                    <div className="flex items-center justify-between text-xs font-bold text-amber-600 dark:text-amber-400">
+                                        <span>
+                                            <i className="fa-solid fa-file-circle-check mr-1.5" />
+                                            {form.data.files.length} file dipilih
+                                        </span>
+                                        <button
+                                            type="button"
+                                            onClick={() => form.setData("files", [])}
+                                            className="text-slate-500 hover:text-red-500 text-[11px]"
+                                        >
+                                            Reset
+                                        </button>
+                                    </div>
+                                    <div className="mt-2 max-h-28 overflow-y-auto space-y-1 text-[11px] text-slate-600 dark:text-slate-300">
+                                        {form.data.files.slice(0, 5).map((f, idx) => (
+                                            <div key={idx} className="truncate flex items-center gap-1.5">
+                                                <i className={f.name.endsWith(".zip") ? "fa-solid fa-file-zipper text-amber-500" : "fa-solid fa-image text-blue-500"} />
+                                                <span className="truncate">{f.name}</span>
+                                            </div>
+                                        ))}
+                                        {form.data.files.length > 5 && (
+                                            <p className="text-[10px] text-slate-400 italic">
+                                                ...dan {form.data.files.length - 5} file lainnya
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Progress bar */}
+                            {form.progress && (
+                                <div className="space-y-1">
+                                    <div className="flex justify-between text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+                                        <span>Mengunggah...</span>
+                                        <span>{form.progress.percentage}%</span>
+                                    </div>
+                                    <div className="w-full bg-slate-200 dark:bg-white/10 rounded-full h-2 overflow-hidden">
+                                        <div
+                                            className="bg-gradient-to-r from-amber-500 to-amber-600 h-full rounded-full transition-all duration-300"
+                                            style={{ width: `${form.progress.percentage}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            <button
+                                type="submit"
+                                disabled={form.processing || form.data.files.length === 0}
+                                className={`${primaryButtonClass} w-full min-h-11`}
+                            >
+                                {form.processing ? (
+                                    <>
+                                        <i className="fa-solid fa-spinner fa-spin text-xs" />
+                                        Mengekstrak & Mengunggah...
+                                    </>
+                                ) : (
+                                    <>
+                                        <i className="fa-solid fa-arrow-up-from-bracket text-xs" />
+                                        Mulai Unggah ({form.data.files.length} File)
+                                    </>
+                                )}
+                            </button>
+                        </form>
+
+                        {/* Tips Note */}
+                        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-white/10 dark:bg-white/[0.02] text-xs text-slate-600 dark:text-slate-300 space-y-1.5">
+                            <p className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                                <i className="fa-solid fa-circle-question text-amber-500" /> Petunjuk Tag Excel
+                            </p>
+                            <p className="text-[11px] leading-relaxed">
+                                Tuliskan <code className="px-1 py-0.5 rounded bg-slate-200 dark:bg-white/10 text-amber-600 dark:text-amber-400 font-mono">[GAMBAR: nama_file.ext]</code> di kolom <b>Teks Soal</b> atau kolom opsi jawaban pada template Excel.
+                            </p>
+                        </div>
+                    </section>
+
+                    {/* Right Panel: Media Gallery */}
+                    <section className={`${cardClass} space-y-4`}>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-white/10 pb-4">
+                            <div>
+                                <h2 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                                    <i className="fa-solid fa-layer-group text-amber-500" /> Koleksi Media ({filteredMedia.length})
+                                </h2>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                    Daftar seluruh gambar yang aktif dan dapat dipakai di semua paket ujian.
+                                </p>
+                            </div>
+
+                            {/* Search bar */}
+                            <div className="relative min-w-[240px]">
+                                <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400" />
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    placeholder="Cari nama gambar..."
+                                    className={`${inputClass} pl-8 text-xs py-2`}
+                                />
+                                {searchQuery && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setSearchQuery("")}
+                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600"
+                                    >
+                                        <i className="fa-solid fa-xmark" />
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Gallery Grid */}
+                        {filteredMedia.length === 0 ? (
+                            <EmptyState
+                                icon="fa-solid fa-images"
+                                title={searchQuery ? "Gambar Tidak Ditemukan" : "Belum Ada Gambar di Bank Media"}
+                                description={
+                                    searchQuery
+                                        ? `Tidak ada file yang cocok dengan kata kunci "${searchQuery}".`
+                                        : "Silakan unggah file gambar atau arsip ZIP melalui formulir di sebelah kiri."
+                                }
+                            />
+                        ) : (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5">
+                                {filteredMedia.map((item) => (
+                                    <div
+                                        key={item.name}
+                                        className="group rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.02] hover:border-amber-500/50 hover:shadow-md transition-all overflow-hidden flex flex-col justify-between"
+                                    >
+                                        {/* Image Box */}
+                                        <div
+                                            className="relative aspect-square bg-slate-900/5 dark:bg-black/20 overflow-hidden cursor-pointer"
+                                            onClick={() => !imageErrors[item.name] && setSelectedPreview(item)}
+                                            title="Klik untuk pratinjau besar"
+                                        >
+                                            {imageErrors[item.name] ? (
+                                                <div className="w-full h-full flex flex-col items-center justify-center bg-slate-100 dark:bg-white/5 text-slate-400 p-2 text-center">
+                                                    <i className="fa-solid fa-triangle-exclamation text-amber-500 mb-1" />
+                                                    <span className="text-[10px]">Gambar belum dimuat</span>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <img
+                                                        src={item.url}
+                                                        alt={item.name}
+                                                        onError={() => setImageErrors((prev) => ({ ...prev, [item.name]: true }))}
+                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                        loading="lazy"
+                                                    />
+                                                    <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                        <span className="w-8 h-8 rounded-full bg-white/90 text-slate-900 flex items-center justify-center text-xs shadow-lg">
+                                                            <i className="fa-solid fa-expand" />
+                                                        </span>
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+
+                                        {/* Info & Actions */}
+                                        <div className="p-2.5 space-y-2">
+                                            <div>
+                                                <p
+                                                    className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate"
+                                                    title={item.name}
+                                                >
+                                                    {item.name}
+                                                </p>
+                                                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                                                    {formatBytes(item.size)}
+                                                </p>
+                                            </div>
+
+                                            {/* Action Buttons */}
+                                            <div className="grid grid-cols-3 gap-1 pt-1 border-t border-slate-200/60 dark:border-white/5">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => copyTag(item.name)}
+                                                    title="Salin Tag [GAMBAR:...]"
+                                                    className="inline-flex items-center justify-center p-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-amber-500 hover:bg-amber-500/10 transition-colors"
+                                                >
+                                                    <i className="fa-solid fa-copy text-xs" />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleRename(item.name)}
+                                                    title="Ganti Nama File"
+                                                    className="inline-flex items-center justify-center p-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-blue-500 hover:bg-blue-500/10 transition-colors"
+                                                >
+                                                    <i className="fa-solid fa-pen text-xs" />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleDelete(item.name)}
+                                                    title="Hapus Gambar"
+                                                    className="inline-flex items-center justify-center p-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                                                >
+                                                    <i className="fa-solid fa-trash text-xs" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </section>
+                </div>
+
+                {/* Lightbox / Preview Modal */}
+                {selectedPreview && (
+                    <div
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4"
+                        onClick={() => setSelectedPreview(null)}
+                    >
+                        <div
+                            className="relative max-w-3xl w-full bg-slate-900 rounded-2xl border border-amber-500/30 overflow-hidden shadow-2xl p-4 space-y-3"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                                <div>
+                                    <h3 className="text-sm font-bold text-white truncate max-w-md">
+                                        {selectedPreview.name}
+                                    </h3>
+                                    <p className="text-xs text-slate-400">
+                                        Ukuran: {formatBytes(selectedPreview.size)}
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => copyTag(selectedPreview.name)}
+                                        className="inline-flex items-center gap-1.5 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950 hover:bg-amber-400 transition-colors"
+                                    >
+                                        <i className="fa-solid fa-copy text-xs" /> Salin Tag
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedPreview(null)}
+                                        className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-white/10 text-white hover:bg-white/20 transition-colors"
+                                    >
+                                        <i className="fa-solid fa-xmark" />
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="flex items-center justify-center max-h-[70vh] overflow-hidden bg-black/40 rounded-xl p-2">
+                                <img
+                                    src={selectedPreview.url}
+                                    alt={selectedPreview.name}
+                                    className="max-h-[65vh] max-w-full object-contain rounded-lg"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </ExamWorkspace>
+        </>
     );
 }
+
+MediaManager.layout = (page: any) => <DashboardLayout>{page}</DashboardLayout>;

@@ -56,6 +56,9 @@ export default function ExamPackageShow({ package: examPackage, questions, sessi
                     actions={
                         <>
                             <BackLink href="/dashboard/admin/exams/packages" label="Kembali ke Pengaturan Paket" />
+                            <Link href="/dashboard/admin/exams/media" className={secondaryButtonClass}>
+                                <i className="fa-solid fa-photo-film text-xs text-amber-500" /> Bank Media
+                            </Link>
                             <Link href={`/dashboard/admin/exams/packages/${examPackage.id}/edit`} className={secondaryButtonClass}>
                                 <i className="fa-solid fa-pen text-xs" /> Edit
                             </Link>

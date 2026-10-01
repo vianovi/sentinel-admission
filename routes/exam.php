@@ -22,6 +22,17 @@ use App\Http\Middleware\RoleMiddleware;
 use Illuminate\Support\Facades\Route;
 
 // ─────────────────────────────────────────────────────────────────────────────
+// EXAM IMAGE SERVING (Works with or without symlink, tunnel, or domain mismatch)
+// ─────────────────────────────────────────────────────────────────────────────
+Route::get('/storage/exam/images/{filename}', function (string $filename) {
+    $path = 'exam/images/' . basename($filename);
+    if (!\Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
+        abort(404);
+    }
+    return response()->file(\Illuminate\Support\Facades\Storage::disk('public')->path($path));
+})->where('filename', '[a-zA-Z0-9_\-\.]+')->name('exam.images.serve');
+
+// ─────────────────────────────────────────────────────────────────────────────
 // PUBLIC EXAM — Guest access via token (Cloudflare Tunnel compatible)
 // ─────────────────────────────────────────────────────────────────────────────
 
