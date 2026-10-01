@@ -22,7 +22,7 @@ export default function CandidateExamSessionShow({ candidate, assignment, attemp
             <div className="space-y-5 pb-8">
                 <PageHeader
                     title={assignment.session.title}
-                    description={`${assignment.package.subject_name ?? "-"} · ${assignment.package.title ?? "-"}`}
+                    description={`${assignment.packages.length} Paket Ujian`}
                     icon="fa-solid fa-file-pen"
                     actions={<BackLink href="/dashboard/seleksi" />}
                 />

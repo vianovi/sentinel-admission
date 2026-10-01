@@ -40,6 +40,7 @@ export type SessionRow = {
     show_result_to_candidate: boolean;
     is_public: boolean;
     public_access_type: string;
+    package_order_type?: string;
     candidates_count: number;
     attempts_count: number;
 };
