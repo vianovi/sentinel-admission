@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import { InlineMath, BlockMath } from "react-katex";
+import "katex/dist/katex.min.css";
 
 type Props = {
     text: string | null | undefined;
@@ -34,6 +36,30 @@ function renderRichText(text: string): ReactNode[] {
             nodes.push(<br key={`br-${index}`} />);
             index += 1;
             continue;
+        }
+
+        // KaTeX Block Math ($$ ... $$)
+        if (text.slice(index).startsWith("$$")) {
+            const closeIndex = text.indexOf("$$", index + 2);
+            if (closeIndex > index + 2) {
+                flush();
+                const content = text.slice(index + 2, closeIndex);
+                nodes.push(<BlockMath key={`math-blk-${index}`} math={content} />);
+                index = closeIndex + 2;
+                continue;
+            }
+        }
+
+        // KaTeX Inline Math (\( ... \))
+        if (text.slice(index).startsWith("\\(")) {
+            const closeIndex = text.indexOf("\\)", index + 2);
+            if (closeIndex > index + 2) {
+                flush();
+                const content = text.slice(index + 2, closeIndex);
+                nodes.push(<InlineMath key={`math-inl-${index}`} math={content} />);
+                index = closeIndex + 2;
+                continue;
+            }
         }
 
         // HTML <sup> tag parsing
