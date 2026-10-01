@@ -78,6 +78,12 @@ Route::middleware(['auth', RoleMiddleware::class.':admin'])
         Route::get('/monitoring/feed', [AdminExamMonitoring::class, 'feed'])->name('monitoring.feed');
         Route::get('/monitoring/display', [AdminExamMonitoring::class, 'display'])->name('monitoring.display');
 
+        // MEDIA MANAGER
+        Route::get('/media', [\App\Http\Controllers\Dashboard\Admin\Exam\AdminExamMediaController::class, 'index'])->name('media.index');
+        Route::post('/media', [\App\Http\Controllers\Dashboard\Admin\Exam\AdminExamMediaController::class, 'store'])->name('media.store');
+        Route::put('/media/rename', [\App\Http\Controllers\Dashboard\Admin\Exam\AdminExamMediaController::class, 'rename'])->name('media.rename');
+        Route::delete('/media', [\App\Http\Controllers\Dashboard\Admin\Exam\AdminExamMediaController::class, 'destroy'])->name('media.destroy');
+
         Route::resource('subjects', AdminExamSubject::class)
             ->only(['index', 'store', 'update', 'destroy']);
 

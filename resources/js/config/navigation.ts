@@ -295,6 +295,14 @@ export const navigationConfig: Record<string, NavGroup[]> = {
                     activeRules: [{ path: "/dashboard/admin/exams" }],
                     children: [
                         {
+                            label: "Bank Media Ujian",
+                            href: "/dashboard/admin/exams/media",
+                            icon: "fa-solid fa-photo-film",
+                            activePrefixes: [
+                                "/dashboard/admin/exams/media",
+                            ],
+                        },
+                        {
                             label: "Kategori Ujian",
                             href: "/dashboard/admin/exams/subjects",
                             icon: "fa-solid fa-layer-group",
