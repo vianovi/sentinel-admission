@@ -1,5 +1,6 @@
-import { useState, useMemo, FormEvent } from "react";
+import { useState, useMemo, useEffect, FormEvent } from "react";
 import { Head, Link, useForm, router, usePage } from "@inertiajs/react";
+import axios from "axios";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import {
     ExamWorkspace,
@@ -25,6 +26,19 @@ type MediaFile = {
     last_modified: number;
 };
 
+type ExamPackage = {
+    id: number;
+    title: string;
+    code: string;
+};
+
+type ExamQuestion = {
+    id: number;
+    sort_order: number;
+    preview: string;
+    has_image: boolean;
+};
+
 type Props = {
     media: MediaFile[];
 };
@@ -35,10 +49,49 @@ export default function MediaManager({ media }: Props) {
     const [selectedPreview, setSelectedPreview] = useState<MediaFile | null>(null);
     const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 
+    // Assign modal state
+    const [assignTarget, setAssignTarget] = useState<MediaFile | null>(null);
+    const [packages, setPackages] = useState<ExamPackage[]>([]);
+    const [selectedPackageId, setSelectedPackageId] = useState<number | null>(null);
+    const [questions, setQuestions] = useState<ExamQuestion[]>([]);
+    const [loadingPackages, setLoadingPackages] = useState(false);
+    const [loadingQuestions, setLoadingQuestions] = useState(false);
+    const [assignPosition, setAssignPosition] = useState<"prepend" | "append">("append");
+    const [assigningId, setAssigningId] = useState<number | null>(null);
+
     // Upload form
     const form = useForm<{ files: File[] }>({
         files: [],
     });
+
+    // Load packages when assign modal opens
+    useEffect(() => {
+        if (!assignTarget) return;
+        setLoadingPackages(true);
+        setPackages([]);
+        setSelectedPackageId(null);
+        setQuestions([]);
+        axios
+            .get(route("admin.exams.media.packages"))
+            .then((res) => setPackages(res.data))
+            .catch(() => showErrorToast("Gagal memuat daftar paket soal."))
+            .finally(() => setLoadingPackages(false));
+    }, [assignTarget]);
+
+    // Load questions when package selected
+    useEffect(() => {
+        if (!selectedPackageId) {
+            setQuestions([]);
+            return;
+        }
+        setLoadingQuestions(true);
+        setQuestions([]);
+        axios
+            .get(route("admin.exams.media.questions", { packageId: selectedPackageId }))
+            .then((res) => setQuestions(res.data))
+            .catch(() => showErrorToast("Gagal memuat daftar soal."))
+            .finally(() => setLoadingQuestions(false));
+    }, [selectedPackageId]);
 
     const handleUpload = (e: FormEvent) => {
         e.preventDefault();
@@ -100,6 +153,34 @@ export default function MediaManager({ media }: Props) {
                 data: { name: filename },
                 preserveScroll: true,
             });
+        }
+    };
+
+    const handleAssign = async (questionId: number) => {
+        if (!assignTarget) return;
+        setAssigningId(questionId);
+        try {
+            const res = await axios.post(route("admin.exams.media.assign"), {
+                filename: assignTarget.name,
+                question_id: questionId,
+                position: assignPosition,
+            });
+            const data = res.data;
+            if (data.already_exists) {
+                showErrorToast("Tag gambar ini sudah ada di soal tersebut.");
+            } else {
+                showSuccessToast(data.message);
+                // Refresh question list to update has_image indicator
+                if (selectedPackageId) {
+                    axios
+                        .get(route("admin.exams.media.questions", { packageId: selectedPackageId }))
+                        .then((r) => setQuestions(r.data));
+                }
+            }
+        } catch {
+            showErrorToast("Gagal menghubungkan gambar ke soal. Coba lagi.");
+        } finally {
+            setAssigningId(null);
         }
     };
 
@@ -165,9 +246,9 @@ export default function MediaManager({ media }: Props) {
                         },
                         {
                             label: "Langkah 3",
-                            title: "Salin Tag ke Excel",
-                            description: "Klik ikon salin untuk menempelkan tag [GAMBAR: nama_file.jpg] ke dalam kolom teks soal XLSX.",
-                            icon: "fa-solid fa-copy",
+                            title: "Hubungkan ke Soal",
+                            description: "Klik ikon link di kartu gambar, pilih paket & soal, sistem otomatis menyisipkan tag [GAMBAR: ...].",
+                            icon: "fa-solid fa-link",
                             state: "idle",
                         },
                     ]}
@@ -203,7 +284,7 @@ export default function MediaManager({ media }: Props) {
 
                 {/* Upload Section & Gallery Container */}
                 <div className="grid gap-5 xl:grid-cols-[380px_1fr] items-start">
-                    
+
                     {/* Left Panel: Upload Form */}
                     <section className={`${cardClass} space-y-4`}>
                         <div className="border-b border-slate-200 dark:border-white/10 pb-3">
@@ -314,7 +395,7 @@ export default function MediaManager({ media }: Props) {
                                 <i className="fa-solid fa-circle-question text-amber-500" /> Petunjuk Tag Excel
                             </p>
                             <p className="text-[11px] leading-relaxed">
-                                Tuliskan <code className="px-1 py-0.5 rounded bg-slate-200 dark:bg-white/10 text-amber-600 dark:text-amber-400 font-mono">[GAMBAR: nama_file.ext]</code> di kolom <b>Teks Soal</b> atau kolom opsi jawaban pada template Excel.
+                                Tuliskan <code className="px-1 py-0.5 rounded bg-slate-200 dark:bg-white/10 text-amber-600 dark:text-amber-400 font-mono">[GAMBAR: nama_file.ext]</code> di kolom <b>Teks Soal</b> atau klik tombol <i className="fa-solid fa-link" /> di kartu gambar untuk sisipkan otomatis.
                             </p>
                         </div>
                     </section>
@@ -365,22 +446,22 @@ export default function MediaManager({ media }: Props) {
                                 }
                             />
                         ) : (
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                                 {filteredMedia.map((item) => (
                                     <div
                                         key={item.name}
-                                        className="group rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.02] hover:border-amber-500/50 hover:shadow-md transition-all overflow-hidden flex flex-col justify-between"
+                                        className="group rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.02] hover:border-amber-500/50 hover:shadow-lg transition-all overflow-hidden flex flex-col justify-between"
                                     >
                                         {/* Image Box */}
                                         <div
-                                            className="relative aspect-square bg-slate-900/5 dark:bg-black/20 overflow-hidden cursor-pointer"
+                                            className="relative aspect-[4/3] bg-slate-900/5 dark:bg-black/30 overflow-hidden cursor-pointer"
                                             onClick={() => !imageErrors[item.name] && setSelectedPreview(item)}
                                             title="Klik untuk pratinjau besar"
                                         >
                                             {imageErrors[item.name] ? (
-                                                <div className="w-full h-full flex flex-col items-center justify-center bg-slate-100 dark:bg-white/5 text-slate-400 p-2 text-center">
-                                                    <i className="fa-solid fa-triangle-exclamation text-amber-500 mb-1" />
-                                                    <span className="text-[10px]">Gambar belum dimuat</span>
+                                                <div className="w-full h-full flex flex-col items-center justify-center bg-slate-100 dark:bg-white/5 text-slate-400 p-3 text-center">
+                                                    <i className="fa-solid fa-triangle-exclamation text-amber-500 mb-1.5 text-base" />
+                                                    <span className="text-xs">Gambar belum dimuat</span>
                                                 </div>
                                             ) : (
                                                 <>
@@ -392,7 +473,7 @@ export default function MediaManager({ media }: Props) {
                                                         loading="lazy"
                                                     />
                                                     <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                        <span className="w-8 h-8 rounded-full bg-white/90 text-slate-900 flex items-center justify-center text-xs shadow-lg">
+                                                        <span className="w-9 h-9 rounded-full bg-white/90 text-slate-900 flex items-center justify-center text-sm shadow-lg">
                                                             <i className="fa-solid fa-expand" />
                                                         </span>
                                                     </div>
@@ -401,44 +482,56 @@ export default function MediaManager({ media }: Props) {
                                         </div>
 
                                         {/* Info & Actions */}
-                                        <div className="p-2.5 space-y-2">
+                                        <div className="p-3.5 space-y-3">
                                             <div>
                                                 <p
-                                                    className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate"
+                                                    className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate"
                                                     title={item.name}
                                                 >
                                                     {item.name}
                                                 </p>
-                                                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                                                     {formatBytes(item.size)}
                                                 </p>
                                             </div>
 
-                                            {/* Action Buttons */}
-                                            <div className="grid grid-cols-3 gap-1 pt-1 border-t border-slate-200/60 dark:border-white/5">
+                                            {/* Action Buttons — 4 cols */}
+                                            <div className="grid grid-cols-4 gap-1.5 pt-2 border-t border-slate-200/80 dark:border-white/10">
+                                                {/* Assign to question */}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setAssignTarget(item)}
+                                                    title="Hubungkan ke Soal"
+                                                    className="inline-flex items-center justify-center p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-indigo-500 hover:bg-indigo-500/15 transition-colors"
+                                                >
+                                                    <i className="fa-solid fa-link text-sm" />
+                                                </button>
+                                                {/* Copy tag */}
                                                 <button
                                                     type="button"
                                                     onClick={() => copyTag(item.name)}
                                                     title="Salin Tag [GAMBAR:...]"
-                                                    className="inline-flex items-center justify-center p-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-amber-500 hover:bg-amber-500/10 transition-colors"
+                                                    className="inline-flex items-center justify-center p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-amber-500 hover:bg-amber-500/15 transition-colors"
                                                 >
-                                                    <i className="fa-solid fa-copy text-xs" />
+                                                    <i className="fa-solid fa-copy text-sm" />
                                                 </button>
+                                                {/* Rename */}
                                                 <button
                                                     type="button"
                                                     onClick={() => handleRename(item.name)}
                                                     title="Ganti Nama File"
-                                                    className="inline-flex items-center justify-center p-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-blue-500 hover:bg-blue-500/10 transition-colors"
+                                                    className="inline-flex items-center justify-center p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-blue-500 hover:bg-blue-500/15 transition-colors"
                                                 >
-                                                    <i className="fa-solid fa-pen text-xs" />
+                                                    <i className="fa-solid fa-pen text-sm" />
                                                 </button>
+                                                {/* Delete */}
                                                 <button
                                                     type="button"
                                                     onClick={() => handleDelete(item.name)}
                                                     title="Hapus Gambar"
-                                                    className="inline-flex items-center justify-center p-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                                                    className="inline-flex items-center justify-center p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-red-500 hover:bg-red-500/15 transition-colors"
                                                 >
-                                                    <i className="fa-solid fa-trash text-xs" />
+                                                    <i className="fa-solid fa-trash text-sm" />
                                                 </button>
                                             </div>
                                         </div>
@@ -471,6 +564,16 @@ export default function MediaManager({ media }: Props) {
                                 <div className="flex items-center gap-2">
                                     <button
                                         type="button"
+                                        onClick={() => {
+                                            setSelectedPreview(null);
+                                            setAssignTarget(selectedPreview);
+                                        }}
+                                        className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-indigo-500 transition-colors"
+                                    >
+                                        <i className="fa-solid fa-link text-xs" /> Hubungkan ke Soal
+                                    </button>
+                                    <button
+                                        type="button"
                                         onClick={() => copyTag(selectedPreview.name)}
                                         className="inline-flex items-center gap-1.5 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950 hover:bg-amber-400 transition-colors"
                                     >
@@ -491,6 +594,174 @@ export default function MediaManager({ media }: Props) {
                                     alt={selectedPreview.name}
                                     className="max-h-[65vh] max-w-full object-contain rounded-lg"
                                 />
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* ── Assign to Question Modal ── */}
+                {assignTarget && (
+                    <div
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4"
+                        onClick={() => setAssignTarget(null)}
+                    >
+                        <div
+                            className="relative w-full max-w-2xl bg-slate-900 rounded-2xl border border-indigo-500/30 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {/* Modal Header */}
+                            <div className="flex items-start justify-between gap-3 p-5 border-b border-white/10">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center flex-shrink-0">
+                                        <i className="fa-solid fa-link" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-sm font-black text-white">
+                                            Hubungkan Gambar ke Soal
+                                        </h3>
+                                        <p className="text-[11px] text-slate-400 mt-0.5 font-mono truncate max-w-xs">
+                                            {assignTarget.name}
+                                        </p>
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setAssignTarget(null)}
+                                    className="flex-shrink-0 w-7 h-7 rounded-lg bg-white/10 text-white hover:bg-white/20 transition-colors flex items-center justify-center text-xs"
+                                >
+                                    <i className="fa-solid fa-xmark" />
+                                </button>
+                            </div>
+
+                            {/* Modal Body */}
+                            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+                                {/* Posisi tag */}
+                                <div>
+                                    <p className={`${labelClass} mb-2`}>Posisi Tag Gambar</p>
+                                    <div className="flex gap-2">
+                                        {(["prepend", "append"] as const).map((pos) => (
+                                            <button
+                                                key={pos}
+                                                type="button"
+                                                onClick={() => setAssignPosition(pos)}
+                                                className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-all ${
+                                                    assignPosition === pos
+                                                        ? "bg-indigo-600 border-indigo-500 text-white"
+                                                        : "bg-white/5 border-white/10 text-slate-400 hover:border-indigo-500/50"
+                                                }`}
+                                            >
+                                                {pos === "prepend" ? (
+                                                    <><i className="fa-solid fa-arrow-up mr-1.5" />Di Awal Soal</>
+                                                ) : (
+                                                    <><i className="fa-solid fa-arrow-down mr-1.5" />Di Akhir Soal</>
+                                                )}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Pilih Paket */}
+                                <div>
+                                    <label className={`${labelClass} mb-1.5 block`}>
+                                        <i className="fa-solid fa-box-archive mr-1.5 text-indigo-400" />
+                                        Pilih Paket Soal
+                                    </label>
+                                    {loadingPackages ? (
+                                        <div className="flex items-center gap-2 text-xs text-slate-400 py-2">
+                                            <i className="fa-solid fa-spinner fa-spin" /> Memuat paket...
+                                        </div>
+                                    ) : (
+                                        <select
+                                            className={`${inputClass} w-full`}
+                                            value={selectedPackageId ?? ""}
+                                            onChange={(e) => setSelectedPackageId(e.target.value ? Number(e.target.value) : null)}
+                                        >
+                                            <option value="">-- Pilih Paket --</option>
+                                            {packages.map((pkg) => (
+                                                <option key={pkg.id} value={pkg.id}>
+                                                    [{pkg.code}] {pkg.title}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    )}
+                                </div>
+
+                                {/* Daftar Soal */}
+                                {selectedPackageId && (
+                                    <div>
+                                        <p className={`${labelClass} mb-2`}>
+                                            <i className="fa-solid fa-list-ol mr-1.5 text-indigo-400" />
+                                            Pilih Soal &mdash; Klik tombol <i className="fa-solid fa-link" /> untuk menghubungkan
+                                        </p>
+
+                                        {loadingQuestions ? (
+                                            <div className="flex items-center justify-center gap-2 text-xs text-slate-400 py-6">
+                                                <i className="fa-solid fa-spinner fa-spin" /> Memuat soal...
+                                            </div>
+                                        ) : questions.length === 0 ? (
+                                            <div className="text-center py-6 text-xs text-slate-500">
+                                                <i className="fa-solid fa-inbox text-2xl mb-2 block" />
+                                                Paket ini belum memiliki soal.
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
+                                                {questions.map((q) => (
+                                                    <div
+                                                        key={q.id}
+                                                        className="flex items-center gap-3 p-2.5 rounded-xl border border-white/10 bg-white/[0.02] hover:border-indigo-500/40 hover:bg-indigo-500/5 transition-all"
+                                                    >
+                                                        {/* No soal */}
+                                                        <span className="flex-shrink-0 w-7 h-7 rounded-lg bg-indigo-500/20 text-indigo-300 text-xs font-black flex items-center justify-center">
+                                                            {q.sort_order}
+                                                        </span>
+
+                                                        {/* Preview */}
+                                                        <p className="flex-1 text-xs text-slate-300 truncate" title={q.preview}>
+                                                            {q.preview || <em className="text-slate-500">Soal tanpa teks</em>}
+                                                        </p>
+
+                                                        {/* Already has image badge */}
+                                                        {q.has_image && (
+                                                            <span className="flex-shrink-0 flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold">
+                                                                <i className="fa-solid fa-image" /> Ada
+                                                            </span>
+                                                        )}
+
+                                                        {/* Assign button */}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleAssign(q.id)}
+                                                            disabled={assigningId === q.id}
+                                                            title={`Hubungkan ${assignTarget.name} ke soal #${q.sort_order}`}
+                                                            className="flex-shrink-0 flex items-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-bold px-2.5 py-1.5 transition-colors disabled:opacity-60 disabled:cursor-wait"
+                                                        >
+                                                            {assigningId === q.id ? (
+                                                                <i className="fa-solid fa-spinner fa-spin" />
+                                                            ) : (
+                                                                <i className="fa-solid fa-link" />
+                                                            )}
+                                                            Sisipkan
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Modal Footer */}
+                            <div className="p-4 border-t border-white/10 flex items-center justify-between">
+                                <p className="text-[11px] text-slate-500">
+                                    Tag <code className="text-indigo-400 font-mono">[GAMBAR: {assignTarget.name}]</code> akan disisipkan otomatis.
+                                </p>
+                                <button
+                                    type="button"
+                                    onClick={() => setAssignTarget(null)}
+                                    className={secondaryButtonClass}
+                                >
+                                    Tutup
+                                </button>
                             </div>
                         </div>
                     </div>

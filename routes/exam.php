@@ -22,13 +22,14 @@ use App\Http\Middleware\RoleMiddleware;
 use Illuminate\Support\Facades\Route;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// EXAM IMAGE SERVING (Works with or without symlink, tunnel, or domain mismatch)
+// EXAM IMAGE SERVING — /exam-media/ bypasses Cloudflare WAF (blocks /storage/ with 403)
 // ─────────────────────────────────────────────────────────────────────────────
-Route::get('/storage/exam/images/{filename}', function (string $filename) {
-    $path = 'exam/images/' . basename($filename);
-    if (!\Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
+Route::get('/exam-media/{filename}', function (string $filename) {
+    $path = 'exam/images/'.basename($filename);
+    if (! \Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
         abort(404);
     }
+
     return response()->file(\Illuminate\Support\Facades\Storage::disk('public')->path($path));
 })->where('filename', '[a-zA-Z0-9_\-\.]+')->name('exam.images.serve');
 
@@ -94,6 +95,9 @@ Route::middleware(['auth', RoleMiddleware::class.':admin'])
         Route::post('/media', [\App\Http\Controllers\Dashboard\Admin\Exam\AdminExamMediaController::class, 'store'])->name('media.store');
         Route::put('/media/rename', [\App\Http\Controllers\Dashboard\Admin\Exam\AdminExamMediaController::class, 'rename'])->name('media.rename');
         Route::delete('/media', [\App\Http\Controllers\Dashboard\Admin\Exam\AdminExamMediaController::class, 'destroy'])->name('media.destroy');
+        Route::get('/media/packages', [\App\Http\Controllers\Dashboard\Admin\Exam\AdminExamMediaController::class, 'packages'])->name('media.packages');
+        Route::get('/media/packages/{packageId}/questions', [\App\Http\Controllers\Dashboard\Admin\Exam\AdminExamMediaController::class, 'questions'])->name('media.questions');
+        Route::post('/media/assign', [\App\Http\Controllers\Dashboard\Admin\Exam\AdminExamMediaController::class, 'assign'])->name('media.assign');
 
         Route::resource('subjects', AdminExamSubject::class)
             ->only(['index', 'store', 'update', 'destroy']);
@@ -101,11 +105,14 @@ Route::middleware(['auth', RoleMiddleware::class.':admin'])
         Route::post('/packages/{package}/publish', [AdminExamPackage::class, 'publish'])->name('packages.publish');
         Route::post('/packages/{package}/close', [AdminExamPackage::class, 'close'])->name('packages.close');
         Route::get('/packages/{package}/template', [AdminExamPackage::class, 'downloadTemplate'])->name('packages.template.download');
+        Route::delete('/packages/{package}/questions', [AdminExamPackage::class, 'clearQuestions'])->name('packages.questions.clear');
+        Route::delete('/questions/{question}', [AdminExamPackage::class, 'destroyQuestion'])->name('questions.destroy');
         Route::resource('packages', AdminExamPackage::class);
 
         Route::get('/packages/{package}/imports', [AdminExamImport::class, 'index'])->name('packages.imports.index');
         Route::post('/packages/{package}/imports', [AdminExamImport::class, 'store'])->middleware('throttle:upload')->name('packages.imports.store');
         Route::get('/imports/{batch}', [AdminExamImport::class, 'show'])->name('imports.show');
+        Route::delete('/imports/{batch}/questions', [AdminExamImport::class, 'destroyQuestions'])->name('imports.questions.destroy');
 
         Route::get('/public-sessions', [AdminPublicExamSession::class, 'index'])->name('public-sessions.index');
         Route::post('/public-sessions', [AdminPublicExamSession::class, 'store'])->name('public-sessions.store');

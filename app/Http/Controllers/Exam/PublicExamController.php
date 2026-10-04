@@ -99,7 +99,11 @@ class PublicExamController extends Controller
                 $request
             );
         } catch (ExamAccessException $exception) {
-            return back()->withErrors(['token' => $exception->userMessage()]);
+            $errorKey = in_array($exception->reason(), ['NAME_ALREADY_SUBMITTED', 'MAX_ATTEMPTS'], true)
+                ? 'guest_name'
+                : 'token';
+
+            return back()->withInput()->withErrors([$errorKey => $exception->userMessage()]);
         }
 
         return redirect()

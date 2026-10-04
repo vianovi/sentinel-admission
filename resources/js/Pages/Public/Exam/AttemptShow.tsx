@@ -4,6 +4,7 @@ import { Head, Link, router, usePage } from "@inertiajs/react";
 import { useExamTimer, useFullscreenEnforcement, useExamNavigation } from "@/hooks/exam";
 import PublicQuestionPalette from "@/Components/Exam/Public/PublicQuestionPalette";
 import PublicExamQuestionWorkspace from "@/Components/Exam/Public/PublicExamQuestionWorkspace";
+import { confirmExamSubmission } from "@/utils/swal";
 import type { ExamAttemptState, ExamAnswerState, ExamQuestion, ExamParticipant, ExamMeta, ExamSaveState, ExamSaveResponse } from "@/types/exam";
 import type { PageProps } from "@/types";
 
@@ -142,8 +143,12 @@ export default function PublicAttemptShow({ participant, exam, attempt, question
         }, 400);
     };
 
-    const submitAttempt = () => {
-        if (!window.confirm("Kumpulkan jawaban ujian sekarang? Jawaban yang tersimpan akan dikirimkan dan tidak bisa diubah.")) return;
+    const submitAttempt = async () => {
+        const confirmed = await confirmExamSubmission({
+            answeredCount,
+            totalQuestions: questions.length,
+        });
+        if (!confirmed) return;
 
         router.post(route("exam.public.attempts.submit", { attempt: attempt.id }), {}, {
             preserveScroll: true,
@@ -170,28 +175,31 @@ export default function PublicAttemptShow({ participant, exam, attempt, question
             }`}>
                 <Head title="Status Ujian Publik" />
 
-                <div className={`w-full max-w-lg rounded-2xl border p-8 text-center shadow-2xl backdrop-blur-xl ${
+                <div className={`w-full max-w-lg rounded-3xl border p-8 text-center shadow-2xl backdrop-blur-xl ${
                     themeMode === "dark" ? "border-white/10 bg-slate-900/90" : "border-slate-300 bg-white"
                 }`}>
-                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                        <i className="fa-solid fa-lock text-2xl" />
+                    <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-white/10 dark:bg-white/5 border border-amber-500/30 p-2 shadow-lg shadow-amber-500/10">
+                        <img src="/assets/icons/brand/exam-logo.png" alt="Logo Pondok" className="h-full w-full object-contain" />
                     </div>
 
-                    <h1 className={`mt-5 text-xl font-black ${themeMode === "dark" ? "text-white" : "text-slate-900"}`}>
+                    <h1 className={`mt-4 text-xl sm:text-2xl font-black ${themeMode === "dark" ? "text-white" : "text-slate-900"}`}>
                         Sesi Ujian Selesai
                     </h1>
-                    <p className={`mt-2 text-xs ${themeMode === "dark" ? "text-slate-400" : "text-slate-600"}`}>
-                        Peserta: <span className={`font-bold ${themeMode === "dark" ? "text-slate-200" : "text-slate-900"}`}>{participant.name}</span>
+                    <p className={`mt-1.5 text-xs sm:text-sm ${themeMode === "dark" ? "text-slate-300" : "text-slate-600"}`}>
+                        Pondok Modern Sabilurrosyad Muhammadiyah Banjarnegara
+                    </p>
+                    <p className={`mt-2 text-xs sm:text-sm ${themeMode === "dark" ? "text-slate-400" : "text-slate-600"}`}>
+                        Santri: <span className={`font-bold ${themeMode === "dark" ? "text-slate-200" : "text-slate-900"}`}>{participant.name}</span>
                         {participant.school && <span className="text-amber-500 font-semibold ml-1">({participant.school})</span>}
                     </p>
                     <p className="mt-1 text-xs text-slate-500">Status saat ini: {attemptState.status.replaceAll("_", " ")}.</p>
 
                     {attemptState.score_visible ? (
-                        <div className={`mx-auto mt-6 max-w-sm rounded-xl p-4 border ${
+                        <div className={`mx-auto mt-6 max-w-sm rounded-2xl p-5 border ${
                             themeMode === "dark" ? "bg-slate-950/80 border-white/10" : "bg-slate-50 border-slate-200"
                         }`}>
-                            <p className="text-2xl font-black text-amber-500">{attemptState.percentage_score ?? 0}%</p>
-                            <p className={`mt-1 text-xs ${themeMode === "dark" ? "text-slate-400" : "text-slate-600"}`}>
+                            <p className="text-3xl font-black text-amber-500">{attemptState.percentage_score ?? 0}%</p>
+                            <p className={`mt-1 text-xs sm:text-sm ${themeMode === "dark" ? "text-slate-400" : "text-slate-600"}`}>
                                 Ambang Lulus {attemptState.passing_score ?? exam.passing_score ?? 0}% ·{" "}
                                 <span className={`font-bold ${attemptState.passed ? "text-emerald-500" : "text-red-500"}`}>
                                     {attemptState.passed ? "LULUS" : "BELUM LULUS"}
@@ -199,17 +207,17 @@ export default function PublicAttemptShow({ participant, exam, attempt, question
                             </p>
                         </div>
                     ) : (
-                        <p className={`mt-4 text-xs p-3 rounded-xl border ${
-                            themeMode === "dark" ? "bg-slate-950/40 text-slate-400 border-white/5" : "bg-slate-50 text-slate-600 border-slate-200"
+                        <p className={`mt-4 text-xs sm:text-sm p-4 rounded-2xl border ${
+                            themeMode === "dark" ? "bg-slate-950/40 text-slate-300 border-white/5" : "bg-slate-50 text-slate-600 border-slate-200"
                         }`}>
-                            Hasil jawaban telah tersimpan dengan aman di server Sentinel.
+                            Alhamdulillah, seluruh jawaban Anda telah tersimpan dengan aman di server Pondok Modern Sabilurrosyad.
                         </p>
                     )}
 
                     <div className="mt-8 flex justify-center gap-3">
                         <Link
                             href={route("exam.public.landing")}
-                            className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-amber-500 px-5 text-xs font-bold text-slate-950 hover:bg-amber-400 transition shadow-lg shadow-amber-500/20"
+                            className="inline-flex min-h-12 items-center gap-2 rounded-2xl bg-amber-500 px-6 text-xs sm:text-sm font-bold text-slate-950 hover:bg-amber-400 transition shadow-lg shadow-amber-500/20"
                         >
                             <i className="fa-solid fa-house text-xs" /> Kembali ke Portal Ujian
                         </Link>
@@ -225,7 +233,7 @@ export default function PublicAttemptShow({ participant, exam, attempt, question
         <div className={`min-h-screen transition-colors ${
             themeMode === "dark" ? "bg-slate-950 text-slate-100 selection:bg-amber-500 selection:text-white" : "bg-slate-100 text-slate-900 selection:bg-amber-500 selection:text-slate-950"
         }`}>
-            <Head title={`Ruang Ujian - ${exam.session_title ?? "Public Exam"}`} />
+            <Head title={`Ruang Ujian - ${exam.session_title ?? "Ujian Masuk Santri"} - Pondok Modern Sabilurrosyad`} />
 
             {/* INITIAL Fullscreen Overlay */}
             {needsInitialFullscreen && isRunning && (
@@ -254,26 +262,26 @@ export default function PublicAttemptShow({ participant, exam, attempt, question
                 themeMode === "dark" ? "border-white/10 bg-slate-900/90 text-white" : "border-slate-200 bg-white/90 text-slate-900 shadow-sm"
             }`}>
                 <div className="mx-auto flex max-w-7xl flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                            <span className="rounded bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-500 border border-amber-500/20">
-                                PUBLIC SESSION
+                    <div className="flex items-center gap-3 min-w-0">
+                        <img
+                            src="/assets/icons/brand/exam-logo.png"
+                            alt="Logo Pondok"
+                            className="h-11 w-11 shrink-0 object-contain rounded-xl p-0.5 bg-white/10 dark:bg-white/5 border border-amber-500/30 shadow-sm"
+                        />
+                        <div className="min-w-0">
+                            <span className="font-extrabold text-xs sm:text-sm tracking-wide bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 bg-clip-text text-transparent block truncate max-w-xs sm:max-w-md md:max-w-xl">
+                                Pondok Modern Sabilurrosyad Muhammadiyah Banjarnegara
                             </span>
-                            <span className="rounded bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-500 border border-emerald-500/20">
-                                {saveState === "idle" ? "AUTOSAVE READY" : saveState.toUpperCase()}
-                            </span>
-                            {violationsCount > 0 && (
-                                <span className="rounded bg-red-500/10 px-2 py-0.5 text-[10px] font-bold text-red-500 border border-red-500/20 animate-pulse">
-                                    <i className="fa-solid fa-triangle-exclamation mr-1" />
-                                    {violationsCount} PELANGGARAN DETEKSI
+                            <div className="flex flex-wrap items-center gap-2 mt-0.5">
+                                <h1 className="text-xs sm:text-sm font-black truncate">
+                                    {exam.session_title ?? "Ujian Online"}
+                                </h1>
+                                <span className={`text-[11px] truncate ${themeMode === "dark" ? "text-slate-400" : "text-slate-600"}`}>
+                                    · Santri: <strong className="text-amber-400">{participant.name}</strong>
+                                    {exam.subject_name ? ` (${exam.subject_name})` : ""}
                                 </span>
-                            )}
+                            </div>
                         </div>
-                        <h1 className="mt-1 text-base font-black truncate">{exam.session_title ?? "Ujian Online"}</h1>
-                        <p className={`text-xs truncate ${themeMode === "dark" ? "text-slate-400" : "text-slate-600"}`}>
-                            Peserta: <span className="font-semibold">{participant.name}</span>
-                            {exam.subject_name ? ` · ${exam.subject_name}` : ""}
-                        </p>
                     </div>
 
                     <div className="flex items-center justify-between lg:justify-end gap-3">

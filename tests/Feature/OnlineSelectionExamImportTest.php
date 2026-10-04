@@ -1,7 +1,11 @@
 <?php
 
+use App\Models\Exam\ExamAttempt;
+use App\Models\Exam\ExamAuditLog;
+use App\Models\Exam\ExamImportBatch;
 use App\Models\Exam\ExamPackage;
 use App\Models\Exam\ExamQuestion;
+use App\Models\Exam\ExamSession;
 use App\Models\Exam\ExamSubject;
 use App\Models\User;
 use App\Services\Exam\ExamPackageTemplateService;
@@ -517,3 +521,258 @@ function createSharedStringSuperscriptHeaderWorkbook(): string
 
     return $path;
 }
+
+it('clears all questions in bank soal for a package while preserving import batch history and audit logs', function () {
+    $admin = User::factory()->admin()->create();
+    $subject = ExamSubject::create([
+        'name' => 'Fisika',
+        'code' => 'FSK',
+        'is_active' => true,
+    ]);
+    $package = ExamPackage::create([
+        'exam_subject_id' => $subject->id,
+        'created_by' => $admin->id,
+        'title' => 'Fisika Dasar',
+        'code' => 'FSK-01',
+        'duration_minutes' => 60,
+        'passing_score' => 75,
+        'max_attempts' => 1,
+        'status' => ExamPackage::STATUS_PUBLISHED,
+    ]);
+
+    $batch = ExamImportBatch::create([
+        'exam_subject_id' => $subject->id,
+        'exam_package_id' => $package->id,
+        'uploaded_by' => $admin->id,
+        'original_filename' => 'soal_fisika.xlsx',
+        'status' => ExamImportBatch::STATUS_COMPLETED,
+        'total_rows' => 2,
+        'imported_rows' => 2,
+        'failed_rows' => 0,
+        'started_at' => now(),
+        'finished_at' => now(),
+    ]);
+
+    $q1 = ExamQuestion::create([
+        'exam_subject_id' => $subject->id,
+        'exam_package_id' => $package->id,
+        'exam_import_batch_id' => $batch->id,
+        'question_text' => 'Berapa gravitasi bumi?',
+        'options' => ['A' => '9.8 m/s²', 'B' => '10 m/s²', 'C' => '8 m/s²', 'D' => '12 m/s²'],
+        'correct_answer' => 'A',
+        'point' => 1,
+        'difficulty' => 'easy',
+        'is_active' => true,
+    ]);
+
+    $q2 = ExamQuestion::create([
+        'exam_subject_id' => $subject->id,
+        'exam_package_id' => $package->id,
+        'exam_import_batch_id' => $batch->id,
+        'question_text' => 'Rumus kecepatan?',
+        'options' => ['A' => 'v = s / t', 'B' => 'v = s * t', 'C' => 'v = m * a', 'D' => 'v = f * lambda'],
+        'correct_answer' => 'A',
+        'point' => 1,
+        'difficulty' => 'easy',
+        'is_active' => true,
+    ]);
+
+    expect($package->questions()->count())->toBe(2);
+
+    $response = $this->actingAs($admin)
+        ->delete("/dashboard/admin/exams/packages/{$package->id}/questions");
+
+    $response->assertRedirect();
+    $response->assertSessionHas('success');
+
+    // Questions are soft-deleted from active bank soal
+    expect($package->fresh()->questions()->count())->toBe(0);
+    expect(ExamQuestion::withTrashed()->where('exam_package_id', $package->id)->count())->toBe(2);
+
+    // Published package reverts to draft because 0 questions remain
+    expect($package->fresh()->status)->toBe(ExamPackage::STATUS_DRAFT);
+
+    // Import batch history remains completely intact!
+    $freshBatch = $batch->fresh();
+    expect($freshBatch)->not->toBeNull();
+    expect($freshBatch->original_filename)->toBe('soal_fisika.xlsx');
+    expect($freshBatch->imported_rows)->toBe(2);
+    expect($freshBatch->questions()->count())->toBe(0);
+
+    // Audit log was recorded
+    expect(ExamAuditLog::where('event_type', 'exam_question_bank_cleared')->exists())->toBeTrue();
+});
+
+it('deletes questions from a specific import batch while preserving the batch record', function () {
+    $admin = User::factory()->admin()->create();
+    $subject = ExamSubject::create([
+        'name' => 'Biologi',
+        'code' => 'BIO',
+        'is_active' => true,
+    ]);
+    $package = ExamPackage::create([
+        'exam_subject_id' => $subject->id,
+        'created_by' => $admin->id,
+        'title' => 'Biologi Sel',
+        'code' => 'BIO-01',
+        'duration_minutes' => 45,
+        'passing_score' => 60,
+        'max_attempts' => 1,
+        'status' => ExamPackage::STATUS_DRAFT,
+    ]);
+
+    $batch1 = ExamImportBatch::create([
+        'exam_subject_id' => $subject->id,
+        'exam_package_id' => $package->id,
+        'uploaded_by' => $admin->id,
+        'original_filename' => 'batch1_salah.xlsx',
+        'status' => ExamImportBatch::STATUS_COMPLETED,
+        'total_rows' => 1,
+        'imported_rows' => 1,
+        'failed_rows' => 0,
+    ]);
+
+    $q1 = ExamQuestion::create([
+        'exam_subject_id' => $subject->id,
+        'exam_package_id' => $package->id,
+        'exam_import_batch_id' => $batch1->id,
+        'question_text' => 'Soal dari batch 1',
+        'options' => ['A' => 'A', 'B' => 'B', 'C' => 'C', 'D' => 'D'],
+        'correct_answer' => 'A',
+        'point' => 1,
+        'is_active' => true,
+    ]);
+
+    $batch2 = ExamImportBatch::create([
+        'exam_subject_id' => $subject->id,
+        'exam_package_id' => $package->id,
+        'uploaded_by' => $admin->id,
+        'original_filename' => 'batch2_benar.xlsx',
+        'status' => ExamImportBatch::STATUS_COMPLETED,
+        'total_rows' => 1,
+        'imported_rows' => 1,
+        'failed_rows' => 0,
+    ]);
+
+    $q2 = ExamQuestion::create([
+        'exam_subject_id' => $subject->id,
+        'exam_package_id' => $package->id,
+        'exam_import_batch_id' => $batch2->id,
+        'question_text' => 'Soal dari batch 2',
+        'options' => ['A' => 'A', 'B' => 'B', 'C' => 'C', 'D' => 'D'],
+        'correct_answer' => 'B',
+        'point' => 1,
+        'is_active' => true,
+    ]);
+
+    expect($package->questions()->count())->toBe(2);
+
+    // Delete only batch 1 questions
+    $response = $this->actingAs($admin)
+        ->delete("/dashboard/admin/exams/imports/{$batch1->id}/questions");
+
+    $response->assertRedirect();
+    $response->assertSessionHas('success');
+
+    // Batch 1 questions are deleted, batch 2 questions remain
+    expect($batch1->fresh()->questions()->count())->toBe(0);
+    expect($batch2->fresh()->questions()->count())->toBe(1);
+    expect($package->fresh()->questions()->count())->toBe(1);
+
+    // Both import batch records still exist!
+    expect(ExamImportBatch::count())->toBe(2);
+    expect(ExamAuditLog::where('event_type', 'exam_import_batch_questions_deleted')->exists())->toBeTrue();
+});
+
+it('deletes an individual question from bank soal', function () {
+    $admin = User::factory()->admin()->create();
+    $subject = ExamSubject::create([
+        'name' => 'Kimia',
+        'code' => 'KIM',
+        'is_active' => true,
+    ]);
+    $package = ExamPackage::create([
+        'exam_subject_id' => $subject->id,
+        'created_by' => $admin->id,
+        'title' => 'Kimia Dasar',
+        'code' => 'KIM-01',
+        'duration_minutes' => 60,
+        'passing_score' => 70,
+        'max_attempts' => 1,
+        'status' => ExamPackage::STATUS_DRAFT,
+    ]);
+
+    $question = ExamQuestion::create([
+        'exam_subject_id' => $subject->id,
+        'exam_package_id' => $package->id,
+        'question_text' => 'Lambang emas?',
+        'options' => ['A' => 'Au', 'B' => 'Ag', 'C' => 'Fe', 'D' => 'Cu'],
+        'correct_answer' => 'A',
+        'point' => 1,
+        'is_active' => true,
+    ]);
+
+    $response = $this->actingAs($admin)
+        ->delete("/dashboard/admin/exams/questions/{$question->id}");
+
+    $response->assertRedirect();
+    $response->assertSessionHas('success');
+
+    expect($question->fresh()->trashed())->toBeTrue();
+    expect($package->fresh()->questions()->count())->toBe(0);
+    expect(ExamAuditLog::where('event_type', 'exam_question_deleted')->exists())->toBeTrue();
+});
+
+it('prevents clearing bank soal when there are active in-progress attempts', function () {
+    $admin = User::factory()->admin()->create();
+    $subject = ExamSubject::create([
+        'name' => 'Sejarah',
+        'code' => 'SJR',
+        'is_active' => true,
+    ]);
+    $package = ExamPackage::create([
+        'exam_subject_id' => $subject->id,
+        'created_by' => $admin->id,
+        'title' => 'Sejarah Indonesia',
+        'code' => 'SJR-01',
+        'duration_minutes' => 60,
+        'passing_score' => 70,
+        'max_attempts' => 1,
+        'status' => ExamPackage::STATUS_PUBLISHED,
+    ]);
+
+    $question = ExamQuestion::create([
+        'exam_subject_id' => $subject->id,
+        'exam_package_id' => $package->id,
+        'question_text' => 'Tahun kemerdekaan RI?',
+        'options' => ['A' => '1945', 'B' => '1944', 'C' => '1946', 'D' => '1947'],
+        'correct_answer' => 'A',
+        'point' => 1,
+        'is_active' => true,
+    ]);
+
+    $session = ExamSession::create([
+        'exam_package_id' => $package->id,
+        'title' => 'Sesi Ujian Sejarah',
+        'opens_at' => now()->subHour(),
+        'closes_at' => now()->addHour(),
+        'duration_minutes' => 60,
+        'passing_score' => 70,
+        'status' => ExamSession::STATUS_PUBLISHED,
+    ]);
+
+    // Active in-progress attempt
+    ExamAttempt::create([
+        'exam_session_id' => $session->id,
+        'exam_package_id' => $package->id,
+        'status' => ExamAttempt::STATUS_IN_PROGRESS,
+        'attempt_number' => 1,
+        'started_at' => now(),
+    ]);
+
+    $response = $this->actingAs($admin)
+        ->delete("/dashboard/admin/exams/packages/{$package->id}/questions");
+
+    $response->assertSessionHasErrors('package');
+    expect($package->fresh()->questions()->count())->toBe(1);
+});

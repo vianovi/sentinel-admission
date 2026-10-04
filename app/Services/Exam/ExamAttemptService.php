@@ -29,6 +29,11 @@ class ExamAttemptService
         ?Request $request = null
     ): ExamAttempt {
         return DB::transaction(function () use ($token, $guestName, $guestSchool, $guestEmail, $guestPhone, $request) {
+            $cleanGuestName = trim((string) preg_replace('/\s+/', ' ', $guestName));
+            $cleanGuestSchool = trim((string) preg_replace('/\s+/', ' ', $guestSchool));
+            $lowerGuestName = Str::lower($cleanGuestName);
+            $lowerGuestSchool = Str::lower($cleanGuestSchool);
+
             $token = ExamSessionToken::query()
                 ->with(['session.package.activeQuestions'])
                 ->whereKey($token->id)
@@ -68,8 +73,7 @@ class ExamAttemptService
                     $isCompleted = ExamAttempt::query()
                         ->where('exam_session_id', $session->id)
                         ->where('exam_package_id', $pkg->id)
-                        ->where('guest_name', $guestName)
-                        ->where('guest_school', $guestSchool)
+                        ->whereRaw('LOWER(TRIM(guest_name)) = ?', [$lowerGuestName])
                         ->whereIn('status', [ExamAttempt::STATUS_SUBMITTED, ExamAttempt::STATUS_AUTO_SUBMITTED])
                         ->exists();
                     if (! $isCompleted) {
@@ -88,8 +92,7 @@ class ExamAttemptService
             $existingAttempt = ExamAttempt::query()
                 ->where('exam_session_id', $session->id)
                 ->where('exam_package_id', $package->id)
-                ->where('guest_name', $guestName)
-                ->where('guest_school', $guestSchool)
+                ->whereRaw('LOWER(TRIM(guest_name)) = ?', [$lowerGuestName])
                 ->where('status', ExamAttempt::STATUS_IN_PROGRESS)
                 ->latest('id')
                 ->first();
@@ -110,6 +113,27 @@ class ExamAttemptService
                 }
             }
 
+            // ANTI-DUPLIKASI / PREVENT MULTIPLE SUBMISSIONS
+            $completedAttemptsCount = ExamAttempt::query()
+                ->where('exam_session_id', $session->id)
+                ->where('exam_package_id', $package->id)
+                ->whereRaw('LOWER(TRIM(guest_name)) = ?', [$lowerGuestName])
+                ->whereIn('status', [
+                    ExamAttempt::STATUS_SUBMITTED,
+                    ExamAttempt::STATUS_AUTO_SUBMITTED,
+                    ExamAttempt::STATUS_EXPIRED,
+                ])
+                ->count();
+
+            $maxAllowedAttempts = max(1, (int) ($session->max_attempts ?? $package->max_attempts ?? 1));
+
+            if ($completedAttemptsCount >= $maxAllowedAttempts) {
+                throw new ExamAccessException(
+                    'NAME_ALREADY_SUBMITTED',
+                    'Peserta dengan nama "'.$cleanGuestName.'" sudah pernah menyelesaikan ujian pada sesi ini. Pengerjaan ulang tidak diperbolehkan demi menjaga integritas seleksi.'
+                );
+            }
+
             $questionIds = $questions->pluck('id')->values();
 
             if ($package->randomize_questions) {
@@ -127,12 +151,12 @@ class ExamAttemptService
                 'exam_package_id' => $package->id,
                 'candidate_id' => null,
                 'exam_session_token_id' => $token->id,
-                'guest_name' => $guestName,
-                'guest_school' => $guestSchool,
+                'guest_name' => $cleanGuestName,
+                'guest_school' => $cleanGuestSchool,
                 'guest_email' => $guestEmail,
                 'guest_phone' => $guestPhone,
                 'guest_session_token' => $guestSessionToken,
-                'attempt_number' => 1,
+                'attempt_number' => $completedAttemptsCount + 1,
                 'status' => ExamAttempt::STATUS_IN_PROGRESS,
                 'started_at' => $startedAt,
                 'expires_at' => $expiresAt,

@@ -120,7 +120,7 @@ export default function PublicExamLanding({ token: initialToken, token_valid, se
                 ? "bg-slate-950 text-slate-100 selection:bg-amber-500 selection:text-white" 
                 : "bg-slate-50 text-slate-900 selection:bg-amber-500 selection:text-slate-950"
         }`}>
-            <Head title="Portal Ujian Publik" />
+            <Head title="Portal Ujian - Pondok Modern Sabilurrosyad Muhammadiyah Banjarnegara" />
 
             {/* Cyber Grid Pattern Background */}
             <div className="absolute inset-0 pointer-events-none opacity-20 dark:opacity-30"
@@ -140,24 +140,26 @@ export default function PublicExamLanding({ token: initialToken, token_valid, se
             {/* Top Bar with Glassmorphic design */}
             <header className={`sticky top-0 z-50 border-b backdrop-blur-md transition-all duration-300 ${
                 isDark 
-                    ? "border-white/10 bg-slate-900/60 shadow-2xl shadow-slate-950/20" 
-                    : "border-slate-200/80 bg-white/70 shadow-sm"
+                    ? "border-white/10 bg-slate-900/80 shadow-2xl shadow-slate-950/20" 
+                    : "border-slate-200/80 bg-white/85 shadow-sm"
             }`}>
-                <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
+                <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3.5 sm:px-6">
                     <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 font-black text-lg shadow-lg shadow-amber-500/20 ring-1 ring-white/20">
-                            S
-                        </div>
-                        <div>
-                            <span className="font-extrabold text-base tracking-wider bg-gradient-to-r from-amber-500 to-amber-600 bg-clip-text text-transparent">
-                                SENTINEL
+                        <img
+                            src="/assets/icons/brand/exam-logo.png"
+                            alt="Logo Pondok Modern Sabilurrosyad"
+                            className="h-12 w-12 object-contain rounded-xl p-0.5 bg-white/10 dark:bg-white/5 border border-amber-500/30 shadow-md shadow-amber-500/10"
+                        />
+                        <div className="min-w-0">
+                            <span className="font-extrabold text-sm sm:text-base tracking-wide bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 bg-clip-text text-transparent block leading-tight truncate max-w-xs sm:max-w-md md:max-w-xl">
+                                Pondok Modern Sabilurrosyad Muhammadiyah Banjarnegara
                             </span>
-                            <span className={`ml-2 rounded px-2 py-0.5 text-[10px] font-bold border transition-colors ${
+                            <span className={`inline-block mt-0.5 rounded-md px-2 py-0.5 text-[11px] font-bold border transition-colors ${
                                 isDark 
                                     ? "bg-amber-500/10 text-amber-400 border-amber-500/20" 
                                     : "bg-amber-500/5 text-amber-700 border-amber-500/30"
                             }`}>
-                                EXAM ENGINE
+                                Portal Ujian Masuk Santri Baru (SPMB)
                             </span>
                         </div>
                     </div>
@@ -165,9 +167,9 @@ export default function PublicExamLanding({ token: initialToken, token_valid, se
                     <div className="flex items-center gap-4">
                         <div className="text-right hidden md:block">
                             <span className={`text-xs font-bold tracking-wide block ${isDark ? "text-slate-200" : "text-slate-800"}`}>
-                                Public Access Portal
+                                Waktu Server SPMB
                             </span>
-                            <span className={`text-[10px] font-mono font-medium block mt-0.5 ${isDark ? "text-amber-400" : "text-amber-600"}`}>
+                            <span className={`text-[11px] font-mono font-medium block mt-0.5 ${isDark ? "text-amber-400" : "text-amber-600"}`}>
                                 <i className="fa-regular fa-clock mr-1 animate-pulse" /> {clientTime || "Memuat..."}
                             </span>
                         </div>
@@ -190,24 +192,24 @@ export default function PublicExamLanding({ token: initialToken, token_valid, se
             </header>
 
             {/* Main Content container */}
-            <main className="relative z-10 mx-auto max-w-5xl px-4 py-12 sm:px-6 space-y-12">
-                <div className="text-center space-y-4">
-                    <span className={`inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-bold border transition-colors ${
+            <main className="relative z-10 mx-auto max-w-5xl px-4 py-10 sm:px-6 space-y-10">
+                <div className="text-center space-y-3.5">
+                    <span className={`inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs sm:text-sm font-bold border transition-colors ${
                         isDark 
                             ? "bg-amber-500/10 text-amber-400 border-amber-500/20" 
                             : "bg-amber-500/5 text-amber-700 border-amber-500/30"
                     }`}>
-                        <i className="fa-solid fa-shield-halved text-xs animate-pulse text-amber-500" /> Portal Ujian Mandiri Resmi
+                        <i className="fa-solid fa-graduation-cap text-sm text-amber-500" /> Ujian Seleksi Masuk Santri Baru
                     </span>
-                    <h1 className={`text-3xl font-black sm:text-5xl tracking-tight leading-none ${
+                    <h1 className={`text-3xl font-black sm:text-5xl tracking-tight leading-tight ${
                         isDark ? "text-white" : "text-slate-950"
                     }`}>
-                        Akses Portal <span className="bg-gradient-to-r from-amber-500 to-amber-600 bg-clip-text text-transparent">Ujian Publik</span>
+                        Ruang Ujian <span className="bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 bg-clip-text text-transparent">Online Santri</span>
                     </h1>
-                    <p className={`mx-auto max-w-2xl text-xs sm:text-sm leading-relaxed ${
-                        isDark ? "text-slate-400" : "text-slate-600"
+                    <p className={`mx-auto max-w-2xl text-sm sm:text-base leading-relaxed ${
+                        isDark ? "text-slate-300" : "text-slate-600"
                     }`}>
-                        Selamat datang di portal pengerjaan ujian mandiri Sentinel. Silakan masukkan token unik ujian Anda yang valid untuk mendaftarkan identitas dan memulai sesi pengerjaan.
+                        Selamat datang di ruang ujian seleksi Pondok Modern Sabilurrosyad Muhammadiyah Banjarnegara. Masukkan kode token dari pengawas ujian untuk memulai. Kerjakan dengan tenang, teliti, dan penuh kejujuran ya!
                     </p>
                 </div>
 

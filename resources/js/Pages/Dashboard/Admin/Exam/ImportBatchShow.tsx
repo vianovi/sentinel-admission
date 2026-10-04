@@ -1,6 +1,7 @@
-import { Head, Link } from "@inertiajs/react";
+import { Head, Link, router } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import { BackLink, EmptyState, ExamWorkspace, PageHeader, StatCard, StatusPill, primaryButtonClass, secondaryButtonClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
+import { confirmAction } from "@/utils/swal";
 
 type FailureRow = {
     row: number | null;
@@ -20,6 +21,7 @@ type Batch = {
     total_rows: number;
     imported_rows: number;
     failed_rows: number;
+    active_questions_count?: number;
     missing_columns: string[];
     failure_report: FailureRow[];
     started_at: string | null;
@@ -35,6 +37,19 @@ export default function ExamImportBatchShow({ batch }: Props) {
     const rowFailures = batch.failure_report.filter((item) => item.type !== "summary");
     const hasFailures = batch.failed_rows > 0 || rowFailures.length > 0 || batch.missing_columns.length > 0;
     const isSuccessful = batch.status === "completed" && !hasFailures;
+
+    const handleDeleteBatchQuestions = async () => {
+        const confirmed = await confirmAction(
+            "Hapus Soal dari Batch Ini?",
+            `Apakah Anda yakin ingin menghapus ${batch.active_questions_count ?? batch.imported_rows} butir soal hasil import file "${batch.original_filename}"? Laporan baris, catatan kegagalan, dan riwayat import ini tetap tersimpan secara aman.`,
+            "Ya, Hapus Soal Batch"
+        );
+        if (!confirmed) return;
+
+        router.delete(`/dashboard/admin/exams/imports/${batch.id}/questions`, {
+            preserveScroll: true,
+        });
+    };
 
     return (
         <>
@@ -64,6 +79,15 @@ export default function ExamImportBatchShow({ batch }: Props) {
                             <div className="mb-2 flex flex-wrap items-center gap-2">
                                 <StatusPill value={batch.status} />
                                 <StatusPill value={batch.subject_name ?? "tanpa subject"} />
+                                {batch.active_questions_count !== undefined && batch.active_questions_count > 0 ? (
+                                    <span className="inline-flex items-center gap-1 rounded bg-blue-500/10 px-2 py-0.5 text-xs font-bold text-blue-600 dark:text-blue-400">
+                                        <i className="fa-solid fa-check-circle text-[10px]" /> {batch.active_questions_count} Soal Aktif di Bank Soal
+                                    </span>
+                                ) : batch.imported_rows > 0 ? (
+                                    <span className="inline-flex items-center gap-1 rounded bg-rose-500/10 px-2 py-0.5 text-xs font-bold text-rose-600 dark:text-rose-400">
+                                        <i className="fa-solid fa-rotate-left text-[10px]" /> Soal Ditarik (Riwayat Tersimpan)
+                                    </span>
+                                ) : null}
                             </div>
                             <h2 className="text-base font-black text-slate-900 dark:text-white">
                                 {isSuccessful ? "Import selesai tanpa kegagalan" : hasFailures ? "Import selesai dengan catatan" : "Import sedang/baru diproses"}
@@ -76,8 +100,24 @@ export default function ExamImportBatchShow({ batch }: Props) {
                                     ? "Langkah berikutnya: buka paket untuk preview soal, lalu publish paket jika bank soal sudah siap dipakai."
                                     : "Perbaiki baris yang gagal dengan pesan di bawah, simpan sebagai XLSX, lalu import ulang file yang sudah diperbaiki."}
                             </p>
+
+                            {batch.active_questions_count !== undefined && batch.active_questions_count === 0 && batch.imported_rows > 0 && (
+                                <div className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs font-semibold text-amber-800 dark:text-amber-300 flex items-center gap-2">
+                                    <i className="fa-solid fa-circle-info text-amber-500 text-sm shrink-0" />
+                                    <span>Soal-soal hasil import ini telah dihapus dari bank soal. Riwayat dan laporan baris di bawah ini tetap tersimpan sebagai arsip.</span>
+                                </div>
+                            )}
                         </div>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                            {batch.active_questions_count !== undefined && batch.active_questions_count > 0 && (
+                                <button
+                                    type="button"
+                                    onClick={handleDeleteBatchQuestions}
+                                    className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 text-sm font-bold text-rose-600 hover:bg-rose-500/20 transition-all dark:text-rose-400"
+                                >
+                                    <i className="fa-solid fa-trash-can text-xs" /> Hapus Soal dari Batch Ini
+                                </button>
+                            )}
                             <Link href={`/dashboard/admin/exams/packages/${batch.package_id}`} className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-slate-900 px-3 text-sm font-bold text-white hover:bg-slate-700 dark:bg-white dark:text-slate-950">
                                 <i className="fa-solid fa-box-archive text-xs" /> Buka Paket
                             </Link>

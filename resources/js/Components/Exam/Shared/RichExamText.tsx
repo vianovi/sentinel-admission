@@ -97,13 +97,17 @@ function renderRichText(text: string): ReactNode[] {
                 flush();
                 const filename = text.slice(index + tagLength, closeIndex).trim();
                 nodes.push(
-                    <img 
-                        key={`img-${index}`} 
-                        src={`/storage/exam/images/${filename}`} 
-                        alt="Ilustrasi Soal" 
-                        className="max-w-full h-auto my-3 rounded-md border border-gray-200"
-                        loading="lazy"
-                    />
+                    <span key={`img-wrap-${index}`} className="block my-2.5">
+                        <img 
+                            src={`/exam-media/${filename}`} 
+                            alt="Ilustrasi Soal" 
+                            className="max-h-44 sm:max-h-48 md:max-h-52 max-w-full sm:max-w-sm md:max-w-md w-auto h-auto rounded-xl border border-slate-200/90 dark:border-white/10 shadow-sm object-contain bg-slate-50/60 dark:bg-black/20"
+                            loading="lazy"
+                            onError={(e) => {
+                                (e.target as HTMLElement).style.display = 'none';
+                            }}
+                        />
+                    </span>
                 );
                 index = closeIndex + 1;
                 continue;

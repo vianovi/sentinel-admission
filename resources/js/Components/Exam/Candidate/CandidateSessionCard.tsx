@@ -1,6 +1,7 @@
 import { memo, useState } from "react";
 import { Link, router } from "@inertiajs/react";
 import { Metric, StatusPill } from "@/Components/Dashboard/Candidate/Exam/ExamCandidateUi";
+import { confirmAction } from "@/utils/swal";
 
 export type CandidateMeta = {
     id: number;
@@ -52,10 +53,14 @@ type Props = {
 export const CandidateSessionCard = memo(function CandidateSessionCard({ candidate, assignment }: Props) {
     const [processingPackage, setProcessingPackage] = useState<number | null>(null);
 
-    const startExam = (pkg: PackageAssignment) => {
+    const startExam = async (pkg: PackageAssignment) => {
         if (!pkg.can_start || processingPackage !== null || assignment.has_active_attempt) return;
 
-        const confirmed = window.confirm(`Mulai ujian paket "${pkg.title}" sekarang? Timer akan berjalan berdasarkan waktu server.`);
+        const confirmed = await confirmAction(
+            "Mulai Ujian?",
+            `Mulai ujian paket "${pkg.title}" sekarang? Timer akan berjalan berdasarkan waktu server.`,
+            "Ya, Mulai Ujian"
+        );
         if (!confirmed) return;
 
         setProcessingPackage(pkg.id);

@@ -132,5 +132,6 @@ export type ExamImportPreview = {
     total_rows: number;
     imported_rows: number;
     failed_rows: number;
+    active_questions_count?: number;
     created_at: string | null;
 };

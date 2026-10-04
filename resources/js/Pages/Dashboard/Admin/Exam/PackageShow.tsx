@@ -44,6 +44,21 @@ export default function ExamPackageShow({ package: examPackage, questions, sessi
         router.post(`/dashboard/admin/exams/packages/${examPackage.id}/close`, {}, { preserveScroll: true });
     };
 
+    const deleteBatchQuestions = async (e: React.MouseEvent, batchId: number, filename: string, count: number) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const confirmed = await confirmAction(
+            "Hapus Soal dari Batch Ini?",
+            `Apakah Anda yakin ingin menghapus ${count} soal dari file "${filename}"? Riwayat upload dan laporan import akan tetap tersimpan secara aman.`,
+            "Ya, Hapus Soal Batch"
+        );
+        if (!confirmed) return;
+
+        router.delete(`/dashboard/admin/exams/imports/${batchId}/questions`, {
+            preserveScroll: true,
+        });
+    };
+
     return (
         <>
             <Head title={`${examPackage.title} - Paket Ujian`} />
@@ -203,15 +218,41 @@ export default function ExamPackageShow({ package: examPackage, questions, sessi
                         ) : (
                             <div className="grid max-h-[300px] gap-2 overflow-y-auto pr-1">
                                 {imports.map((item) => (
-                                    <Link key={item.id} href={`/dashboard/admin/exams/imports/${item.id}`} className="rounded-lg border border-slate-200 bg-white p-2.5 hover:border-gold/60 dark:border-white/10 dark:bg-slate-900">
-                                        <div className="flex items-start justify-between gap-2">
-                                            <div className="min-w-0">
-                                                <p className="truncate text-xs font-bold text-slate-900 dark:text-white">{item.original_filename}</p>
-                                                <p className="mt-1 text-[11px] text-slate-500">{item.imported_rows} berhasil · {item.failed_rows} gagal</p>
+                                    <div key={item.id} className="relative rounded-lg border border-slate-200 bg-white p-2.5 transition hover:border-gold/60 dark:border-white/10 dark:bg-slate-900">
+                                        <Link href={`/dashboard/admin/exams/imports/${item.id}`} className="block">
+                                            <div className="flex items-start justify-between gap-2">
+                                                <div className="min-w-0 pr-6">
+                                                    <p className="truncate text-xs font-bold text-slate-900 dark:text-white">{item.original_filename}</p>
+                                                    <p className="mt-1 text-[11px] text-slate-500">
+                                                        {item.imported_rows} berhasil · {item.failed_rows} gagal
+                                                    </p>
+                                                    <div className="mt-1 flex items-center gap-1.5">
+                                                        {item.active_questions_count !== undefined && item.active_questions_count > 0 ? (
+                                                            <span className="inline-flex items-center gap-1 rounded bg-blue-500/10 px-1.5 py-0.5 text-[10px] font-bold text-blue-600 dark:text-blue-400">
+                                                                <i className="fa-solid fa-check-circle text-[9px]" /> {item.active_questions_count} aktif
+                                                            </span>
+                                                        ) : item.imported_rows > 0 ? (
+                                                            <span className="inline-flex items-center gap-1 rounded bg-rose-500/10 px-1.5 py-0.5 text-[10px] font-bold text-rose-600 dark:text-rose-400">
+                                                                <i className="fa-solid fa-rotate-left text-[9px]" /> Soal ditarik
+                                                            </span>
+                                                        ) : null}
+                                                    </div>
+                                                </div>
+                                                <StatusPill value={item.status} />
                                             </div>
-                                            <StatusPill value={item.status} />
-                                        </div>
-                                    </Link>
+                                        </Link>
+
+                                        {item.active_questions_count !== undefined && item.active_questions_count > 0 && (
+                                            <button
+                                                type="button"
+                                                onClick={(e) => deleteBatchQuestions(e, item.id, item.original_filename, item.active_questions_count!)}
+                                                title="Hapus soal hasil import ini dari bank soal"
+                                                className="absolute right-2.5 bottom-2.5 inline-flex h-6 w-6 items-center justify-center rounded text-slate-400 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 dark:hover:text-rose-400 transition"
+                                            >
+                                                <i className="fa-solid fa-trash-can text-[11px]" />
+                                            </button>
+                                        )}
+                                    </div>
                                 ))}
                             </div>
                         )}
@@ -219,7 +260,7 @@ export default function ExamPackageShow({ package: examPackage, questions, sessi
                 </div>
 
                 {/* Bank Soal Table Section */}
-                <QuestionBankTable questions={questions} />
+                <QuestionBankTable questions={questions} packageId={examPackage.id} />
             </ExamWorkspace>
         </>
     );

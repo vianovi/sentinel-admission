@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Dashboard\Admin\Exam;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Exam\StoreExamPackageRequest;
+use App\Models\Exam\ExamAttempt;
 use App\Models\Exam\ExamPackage;
+use App\Models\Exam\ExamQuestion;
 use App\Models\Exam\ExamSubject;
 use App\Services\Exam\ExamAuditLogger;
 use App\Services\Exam\ExamPackageTemplateService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -72,7 +75,12 @@ class PackageController extends Controller
 
     public function show(ExamPackage $package): Response
     {
-        $package->load(['subject:id,name,code', 'questions' => fn ($query) => $query->latest(), 'sessions' => fn ($query) => $query->latest()->take(10), 'importBatches' => fn ($query) => $query->latest()->take(10)]);
+        $package->load([
+            'subject:id,name,code',
+            'questions' => fn ($query) => $query->latest(),
+            'sessions' => fn ($query) => $query->latest()->take(10),
+            'importBatches' => fn ($query) => $query->withCount('questions')->latest()->take(10),
+        ]);
 
         return Inertia::render('Dashboard/Admin/Exam/PackageShow', [
             'package' => [
@@ -106,6 +114,7 @@ class PackageController extends Controller
                 'total_rows' => $batch->total_rows,
                 'imported_rows' => $batch->imported_rows,
                 'failed_rows' => $batch->failed_rows,
+                'active_questions_count' => $batch->questions_count,
                 'created_at' => $batch->created_at?->format('d M Y H:i'),
             ]),
             'required_columns' => \App\Services\Exam\ExamQuestionImportService::requiredColumns(),
@@ -215,6 +224,75 @@ class PackageController extends Controller
         $package->update(['status' => ExamPackage::STATUS_CLOSED]);
 
         return back()->with('success', 'Paket ujian berhasil ditutup.');
+    }
+
+    public function clearQuestions(ExamPackage $package, Request $request): RedirectResponse
+    {
+        $hasActiveAttempts = ExamAttempt::query()
+            ->where('exam_package_id', $package->id)
+            ->where('status', ExamAttempt::STATUS_IN_PROGRESS)
+            ->exists();
+
+        if ($hasActiveAttempts) {
+            return back()->withErrors([
+                'package' => 'Tidak dapat mengosongkan bank soal karena saat ini terdapat sesi ujian aktif yang sedang dikerjakan peserta.',
+            ]);
+        }
+
+        $count = $package->questions()->count();
+
+        if ($count === 0) {
+            return back()->with('info', 'Bank soal pada paket ini sudah kosong.');
+        }
+
+        $package->questions()->delete();
+
+        if ($package->status === ExamPackage::STATUS_PUBLISHED) {
+            $package->update(['status' => ExamPackage::STATUS_DRAFT]);
+        }
+
+        $this->audit->log('exam_question_bank_cleared', [
+            'exam_package_id' => $package->id,
+            'metadata' => [
+                'package_title' => $package->title,
+                'questions_deleted' => $count,
+            ],
+        ], $request);
+
+        return back()->with('success', "Bank soal berhasil dikosongkan ({$count} butir soal dihapus). Riwayat import tetap tersimpan.");
+    }
+
+    public function destroyQuestion(ExamQuestion $question, Request $request): RedirectResponse
+    {
+        $package = $question->package;
+
+        if ($package) {
+            $hasActiveAttempts = ExamAttempt::query()
+                ->where('exam_package_id', $package->id)
+                ->where('status', ExamAttempt::STATUS_IN_PROGRESS)
+                ->exists();
+
+            if ($hasActiveAttempts) {
+                return back()->withErrors([
+                    'package' => 'Tidak dapat menghapus soal karena saat ini terdapat sesi ujian aktif yang sedang dikerjakan peserta.',
+                ]);
+            }
+        }
+
+        $question->delete();
+
+        if ($package && $package->status === ExamPackage::STATUS_PUBLISHED && ! $package->questions()->where('is_active', true)->exists()) {
+            $package->update(['status' => ExamPackage::STATUS_DRAFT]);
+        }
+
+        $this->audit->log('exam_question_deleted', [
+            'exam_package_id' => $question->exam_package_id,
+            'metadata' => [
+                'question_id' => $question->id,
+            ],
+        ], $request);
+
+        return back()->with('success', 'Soal berhasil dihapus dari bank soal.');
     }
 
     private function packageRow(ExamPackage $package): array

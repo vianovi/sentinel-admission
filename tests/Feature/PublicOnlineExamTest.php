@@ -196,3 +196,95 @@ test('guest auto resume flow for active in progress session', function () {
 
     $badResponse->assertSessionHasErrors(['token']);
 });
+
+test('public exam prevents multiple submissions with same guest name', function () {
+    $subject = ExamSubject::create([
+        'code' => 'UMUM02',
+        'name' => 'Pengetahuan Umum 2',
+    ]);
+
+    $package = ExamPackage::create([
+        'exam_subject_id' => $subject->id,
+        'title' => 'Paket Ujian Anti Cheat',
+        'duration_minutes' => 60,
+        'passing_score' => 70,
+        'max_attempts' => 1,
+        'status' => 'published',
+    ]);
+
+    ExamQuestion::create([
+        'exam_subject_id' => $subject->id,
+        'exam_package_id' => $package->id,
+        'question_text' => 'Berapa 2 + 2?',
+        'options' => ['A' => '2', 'B' => '4'],
+        'correct_answer' => 'B',
+        'point' => 10,
+        'difficulty' => 'easy',
+    ]);
+
+    $session = ExamSession::create([
+        'title' => 'Sesi Ujian Anti Cheat Multi Use',
+        'status' => 'published',
+        'opens_at' => now()->subHour(),
+        'closes_at' => now()->addHours(2),
+        'duration_minutes' => 60,
+        'passing_score' => 70,
+        'max_attempts' => 1,
+        'is_public' => true,
+        'public_access_type' => 'token_required',
+    ]);
+    $session->packages()->attach($package->id);
+
+    // Multi-use token for a whole exam room
+    $token = ExamSessionToken::create([
+        'exam_session_id' => $session->id,
+        'token' => 'ROOM101',
+        'type' => 'multi_use',
+        'max_uses' => 50,
+        'used_count' => 0,
+    ]);
+
+    // 1. First attempt starts and completes/submits
+    $this->post(route('exam.public.start', ['token' => 'ROOM101']), [
+        'guest_name' => 'Ahmad Fauzi',
+        'guest_school' => 'SMP Muhammadiyah 1',
+        'package_id' => $package->id,
+    ])->assertRedirect();
+
+    $attempt = ExamAttempt::where('guest_name', 'Ahmad Fauzi')->first();
+    expect($attempt)->not->toBeNull();
+
+    // Mark as submitted
+    $attempt->update([
+        'status' => ExamAttempt::STATUS_SUBMITTED,
+        'submitted_at' => now(),
+    ]);
+
+    // 2. Candidate tries to start a second attempt with exact same name -> MUST BE REJECTED
+    $secondTry = $this->post(route('exam.public.start', ['token' => 'ROOM101']), [
+        'guest_name' => 'Ahmad Fauzi',
+        'guest_school' => 'SMP Muhammadiyah 1',
+        'package_id' => $package->id,
+    ]);
+
+    $secondTry->assertSessionHasErrors(['guest_name']);
+
+    // 3. Candidate tries to bypass by using lowercase and irregular spacing -> MUST BE REJECTED
+    $thirdTry = $this->post(route('exam.public.start', ['token' => 'ROOM101']), [
+        'guest_name' => '  ahmad   fauzi  ',
+        'guest_school' => 'smp muhammadiyah 1',
+        'package_id' => $package->id,
+    ]);
+
+    $thirdTry->assertSessionHasErrors(['guest_name']);
+
+    // 4. Other student with different name can start successfully
+    $otherStudent = $this->post(route('exam.public.start', ['token' => 'ROOM101']), [
+        'guest_name' => 'Fatimah Az-Zahra',
+        'guest_school' => 'MTs Negeri 1',
+        'package_id' => $package->id,
+    ]);
+
+    $otherStudent->assertRedirect();
+    expect(ExamAttempt::where('guest_name', 'Fatimah Az-Zahra')->exists())->toBeTrue();
+});

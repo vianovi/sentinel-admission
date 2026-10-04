@@ -1,22 +1,51 @@
 import { memo, useMemo, useState } from "react";
-import { Link } from "@inertiajs/react";
+import { Link, router } from "@inertiajs/react";
 import RichExamText from "@/Components/Exam/Shared/RichExamText";
 import { EmptyState, StatusPill, inputClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
+import { confirmAction } from "@/utils/swal";
 import type { ExamQuestionPreview } from "@/types/exam";
 
 type Props = {
     questions: ExamQuestionPreview[];
+    packageId?: number;
 };
 
 /**
  * Paginated, searchable question bank table with RichExamText rendering.
  * Extracted from PackageShow to keep the page lean and memoized for performance.
  */
-function QuestionBankTableInner({ questions }: Props) {
+function QuestionBankTableInner({ questions, packageId }: Props) {
     const [searchQuery, setSearchQuery] = useState("");
     const [perPage, setPerPage] = useState<number>(50);
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [expandedQuestionId, setExpandedQuestionId] = useState<number | null>(null);
+
+    const handleClearQuestionBank = async () => {
+        if (!packageId) return;
+        const confirmed = await confirmAction(
+            "Kosongkan Bank Soal?",
+            `Apakah Anda yakin ingin menghapus seluruh ${questions.length} butir soal dari bank soal paket ini? Seluruh riwayat upload dan catatan import tetap tersimpan secara aman.`,
+            "Ya, Kosongkan Bank Soal"
+        );
+        if (!confirmed) return;
+
+        router.delete(`/dashboard/admin/exams/packages/${packageId}/questions`, {
+            preserveScroll: true,
+        });
+    };
+
+    const handleDeleteQuestion = async (questionId: number, index: number) => {
+        const confirmed = await confirmAction(
+            "Hapus Soal Ini?",
+            `Apakah Anda yakin ingin menghapus soal nomor ${index} dari bank soal?`,
+            "Ya, Hapus Soal"
+        );
+        if (!confirmed) return;
+
+        router.delete(`/dashboard/admin/exams/questions/${questionId}`, {
+            preserveScroll: true,
+        });
+    };
 
     const filteredQuestions = useMemo(() => {
         if (!searchQuery.trim()) return questions;
@@ -46,6 +75,16 @@ function QuestionBankTableInner({ questions }: Props) {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
+                    {packageId && questions.length > 0 && (
+                        <button
+                            type="button"
+                            onClick={handleClearQuestionBank}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-500/20 transition-all dark:text-rose-400"
+                        >
+                            <i className="fa-solid fa-trash-can text-xs" /> Kosongkan Bank Soal
+                        </button>
+                    )}
+
                     <Link
                         href="/dashboard/admin/exams/media"
                         className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs font-bold text-amber-600 hover:bg-amber-500/20 transition-all dark:text-amber-400"
@@ -102,6 +141,7 @@ function QuestionBankTableInner({ questions }: Props) {
                                     <th className="px-3 py-3 w-24 text-center">Poin</th>
                                     <th className="px-3 py-3 w-28 text-center">Tingkat</th>
                                     <th className="px-3 py-3 w-24 text-center">Status</th>
+                                    <th className="px-3 py-3 w-16 text-center">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-200 dark:divide-white/10">
@@ -161,6 +201,16 @@ function QuestionBankTableInner({ questions }: Props) {
                                             </td>
                                             <td className="px-3 py-3 text-center align-top">
                                                 <StatusPill value={question.is_active ? "aktif" : "nonaktif"} />
+                                            </td>
+                                            <td className="px-3 py-3 text-center align-top">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleDeleteQuestion(question.id, globalIndex)}
+                                                    title="Hapus butir soal ini"
+                                                    className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 hover:bg-rose-500/10 hover:text-rose-600 dark:hover:bg-rose-500/20 dark:hover:text-rose-400 transition"
+                                                >
+                                                    <i className="fa-solid fa-trash-can text-xs" />
+                                                </button>
                                             </td>
                                         </tr>
                                     );

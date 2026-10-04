@@ -7,6 +7,7 @@ import { useExamTimer, useExamNavigation } from "@/hooks/exam";
 import { useTheme } from "@/context/ThemeContext";
 import QuestionPaletteNavigator from "@/Components/Exam/Candidate/QuestionPaletteNavigator";
 import CandidateQuestionWorkspace from "@/Components/Exam/Candidate/CandidateQuestionWorkspace";
+import { confirmExamSubmission } from "@/utils/swal";
 import type { ExamAttemptState, ExamAnswerState, ExamQuestion, ExamCandidate, ExamMeta, ExamSaveState, ExamSaveResponse } from "@/types/exam";
 import type { PageProps } from "@/types";
 
@@ -106,8 +107,12 @@ export default function CandidateAttemptShow({ candidate, exam, attempt, questio
         }, 500);
     };
 
-    const submitAttempt = () => {
-        if (!window.confirm("Kumpulkan jawaban sekarang? Setelah dikumpulkan, jawaban tidak bisa diubah.")) return;
+    const submitAttempt = async () => {
+        const confirmed = await confirmExamSubmission({
+            answeredCount,
+            totalQuestions: questions.length,
+        });
+        if (!confirmed) return;
 
         router.post(`/dashboard/seleksi/attempts/${attempt.id}/submit`, {}, {
             preserveScroll: true,
@@ -162,18 +167,22 @@ export default function CandidateAttemptShow({ candidate, exam, attempt, questio
             <div className="space-y-4 pb-8">
                 <section className="sticky top-0 z-10 -mx-4 border-b border-slate-200 bg-light px-4 py-2.5 dark:border-white/10 dark:bg-slate-950 sm:-mx-6 sm:px-6">
                     <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:justify-between">
-                        <div className="min-w-0 flex items-center justify-between lg:block">
+                        <div className="min-w-0 flex items-center gap-3">
+                            <img
+                                src="/assets/icons/brand/exam-logo.png"
+                                alt="Logo Pondok"
+                                className="h-10 w-10 shrink-0 object-contain rounded-xl p-0.5 bg-white/10 dark:bg-white/5 border border-amber-500/30 shadow-sm"
+                            />
                             <div>
-                                <h1 className="text-sm font-black leading-tight text-slate-900 dark:text-white sm:text-lg sm:truncate">
+                                <span className="font-extrabold text-xs sm:text-sm tracking-wide bg-gradient-to-r from-amber-500 to-amber-600 bg-clip-text text-transparent block leading-tight">
+                                    Pondok Modern Sabilurrosyad Muhammadiyah Banjarnegara
+                                </span>
+                                <h1 className="text-sm font-black leading-tight text-slate-900 dark:text-white sm:text-base sm:truncate mt-0.5">
                                     {exam.session_title ?? "Ujian Seleksi"}
                                 </h1>
-                                <p className="hidden sm:block mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                                    {candidate.full_name ?? "-"} · {candidate.candidate_code ?? "-"}
+                                <p className="hidden sm:block text-xs text-slate-500 dark:text-slate-400">
+                                    Santri: <strong>{candidate.full_name ?? "-"}</strong> · Kode: {candidate.candidate_code ?? "-"}
                                 </p>
-                            </div>
-                            <div className="flex items-center gap-1.5 lg:hidden">
-                                <StatusPill value={attemptState.status} />
-                                <StatusPill value={saveState === "idle" ? "autosave siap" : saveState} />
                             </div>
                         </div>
                         <div className="flex flex-wrap items-center justify-between gap-2 sm:justify-end">
