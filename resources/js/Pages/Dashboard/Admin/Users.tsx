@@ -6,6 +6,7 @@ import UserStatCards from "@/Components/Dashboard/Admin/Users/UserStatCards";
 import UserCharts from "@/Components/Dashboard/Admin/Users/UserCharts";
 import UserFilters from "@/Components/Dashboard/Admin/Users/UserFilters";
 import UserTable from "@/Components/Dashboard/Admin/Users/UserTable";
+import { useSessionState } from "@/hooks/useSessionState";
 
 type UserData = {
     id: number;
@@ -45,11 +46,11 @@ type Props = {
 };
 
 export default function Users({ users, filters = {}, programChoices, stats, flash }: Props) {
-    const [search, setSearch] = useState(filters.search || "");
-    const [roleFilter, setRoleFilter] = useState(filters.role || "all");
-    const [statusFilter, setStatusFilter] = useState(filters.status || "all");
-    const [programFilter, setProgramFilter] = useState(filters.program_choice || "all");
-    const [sort, setSort] = useState(typeof filters.sort === 'string' ? filters.sort : "terbaru");
+    const [search, setSearch] = useSessionState("admin:users:search", filters.search || "");
+    const [roleFilter, setRoleFilter] = useSessionState("admin:users:role", filters.role || "all");
+    const [statusFilter, setStatusFilter] = useSessionState("admin:users:status", filters.status || "all");
+    const [programFilter, setProgramFilter] = useSessionState("admin:users:program", filters.program_choice || "all");
+    const [sort, setSort] = useSessionState("admin:users:sort", typeof filters.sort === 'string' ? filters.sort : "terbaru");
     const [processingId, setProcessingId] = useState<number | null>(null);
 
     useEffect(() => {

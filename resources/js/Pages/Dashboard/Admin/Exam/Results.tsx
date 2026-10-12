@@ -1,7 +1,8 @@
-import { FormEvent, useState } from "react";
+import { FormEvent } from "react";
 import { Head, Link, router } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import { BackLink, EmptyState, ExamWorkspace, PageHeader, StatusPill, inputClass, labelClass, primaryButtonClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
+import { useSessionState } from "@/hooks/useSessionState";
 
 type CandidateSummary = {
     id: number | null;
@@ -75,10 +76,10 @@ const statusOptions = [
 ];
 
 export default function ExamResults({ attempts, filters, sessions }: Props) {
-    const [search, setSearch] = useState(filters.search ?? "");
-    const [status, setStatus] = useState(filters.status ?? "");
-    const [passed, setPassed] = useState(filters.passed ?? "");
-    const [session, setSession] = useState(filters.session ?? "");
+    const [search, setSearch] = useSessionState("admin:exams:results:search", filters.search ?? "");
+    const [status, setStatus] = useSessionState("admin:exams:results:status", filters.status ?? "");
+    const [passed, setPassed] = useSessionState("admin:exams:results:passed", filters.passed ?? "");
+    const [session, setSession] = useSessionState("admin:exams:results:session", filters.session ?? "");
 
     const applyFilters = (event: FormEvent) => {
         event.preventDefault();

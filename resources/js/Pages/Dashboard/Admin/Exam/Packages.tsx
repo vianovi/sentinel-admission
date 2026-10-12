@@ -1,9 +1,10 @@
+import { useState } from "react";
 import { Head, Link, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
-import { ExamWorkspace, FlashMessage, PageHeader, WorkflowRail, primaryButtonClass, secondaryButtonClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
-import PackageFormCard, { PackageRow, SubjectOption } from "@/Components/Exam/Admin/PackageFormCard";
+import { ExamWorkspace, FlashMessage, PageHeader, WorkflowRail } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
+import type { PackageRow, SubjectOption } from "@/Components/Exam/Admin/PackageFormCard";
 import PackageListCard from "@/Components/Exam/Admin/PackageListCard";
-import ResizableSplitGrid from "@/Components/Dashboard/Shared/ResizableSplitGrid";
+import PackageFormModal from "@/Components/Exam/Admin/PackageFormModal";
 import type { PageProps } from "@/types";
 
 type Props = {
@@ -15,6 +16,24 @@ type Props = {
 
 export default function ExamPackages({ packages, subjects, editing_package, mode }: Props) {
     const { flash, errors: pageErrors } = usePage<PageProps & { errors: Record<string, string> }>().props;
+
+    const [editingPackage, setEditingPackage] = useState<PackageRow | null>(editing_package);
+    const [isModalOpen, setIsModalOpen] = useState(Boolean(editing_package || mode === "create"));
+
+    const handleCreateNew = () => {
+        setEditingPackage(null);
+        setIsModalOpen(true);
+    };
+
+    const handleEdit = (pkg: PackageRow) => {
+        setEditingPackage(pkg);
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setEditingPackage(null);
+    };
 
     const packagesWithQuestions = packages.filter((item) => item.questions_count > 0).length;
     const readyPackages = packages.filter((item) => item.status === "published" && item.questions_count > 0).length;
@@ -32,21 +51,30 @@ export default function ExamPackages({ packages, subjects, editing_package, mode
                     description="Kelola paket soal, unduh template resmi XLSX, import bank soal, dan persiapkan materi ujian."
                     icon="fa-solid fa-box-archive"
                     actions={
-                        subjects.length === 0 ? (
-                            <Link
-                                href="/dashboard/admin/exams/subjects"
-                                className="inline-flex items-center gap-2 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 px-4 py-2.5 text-xs font-extrabold hover:bg-amber-500/30 transition-all shadow-lg shadow-amber-500/10"
-                            >
-                                <i className="fa-solid fa-layer-group" /> Buat Kategori Ujian Dahulu
-                            </Link>
-                        ) : (
+                        <div className="flex items-center gap-2.5">
+                            {subjects.length === 0 ? (
+                                <Link
+                                    href="/dashboard/admin/exams/subjects"
+                                    className="inline-flex items-center gap-2 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 px-4 py-2.5 text-xs font-extrabold hover:bg-amber-500/30 transition-all shadow-lg shadow-amber-500/10"
+                                >
+                                    <i className="fa-solid fa-layer-group" /> Buat Kategori Ujian Dahulu
+                                </Link>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={handleCreateNew}
+                                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-4 py-2.5 text-xs font-black text-slate-950 hover:from-amber-400 hover:to-amber-500 transition-all shadow-lg shadow-amber-500/20"
+                                >
+                                    <i className="fa-solid fa-plus text-xs" /> Buat Paket Baru
+                                </button>
+                            )}
                             <Link
                                 href="/dashboard/admin/exams/sessions"
-                                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-4 py-2.5 text-xs font-black text-slate-950 hover:from-amber-400 hover:to-amber-500 transition-all shadow-lg shadow-amber-500/20"
+                                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-white/10 px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
                             >
                                 Lanjut ke Sesi Ujian <i className="fa-solid fa-arrow-right text-xs" />
                             </Link>
-                        )
+                        </div>
                     }
                 />
 
@@ -100,13 +128,20 @@ export default function ExamPackages({ packages, subjects, editing_package, mode
                     ]}
                 />
 
-                <ResizableSplitGrid
-                    storageKey="packages"
-                    initialLeftWidth={420}
-                    minLeftWidth={300}
-                    maxLeftWidth={700}
-                    left={<PackageFormCard subjects={subjects} editingPackage={editing_package} mode={mode} />}
-                    right={<PackageListCard packages={packages} />}
+                {/* Focused Single Column List */}
+                <PackageListCard
+                    packages={packages}
+                    subjects={subjects}
+                    onEdit={handleEdit}
+                    onCreateNew={handleCreateNew}
+                />
+
+                {/* Modal Form */}
+                <PackageFormModal
+                    show={isModalOpen}
+                    onClose={handleCloseModal}
+                    subjects={subjects}
+                    editingPackage={editingPackage}
                 />
             </ExamWorkspace>
         </>

@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Head, router, usePage } from "@inertiajs/react";
 import { animate, stagger } from "animejs";
 import Swal from "sweetalert2";
 import DashboardLayout from "@/Layouts/DashboardLayout";
+import { useSessionState } from "@/hooks/useSessionState";
 import type { PageProps } from "@/types";
 
 type StaffMember = {
@@ -20,6 +21,9 @@ type Props = {
     total: number;
 };
 
+type SortOption = "name_asc" | "newest" | "oldest";
+type StatusFilter = "all" | "active" | "suspended";
+
 const swalDark = Swal.mixin({
     background: "#0f172a",
     color: "#e2e8f0",
@@ -34,8 +38,33 @@ const swalDark = Swal.mixin({
 
 export default function AdminStaff({ staff_list, total_active, total }: Props) {
     const { flash } = usePage<PageProps>().props;
+    const [search, setSearch] = useSessionState("admin:staff:search", "");
+    const [statusFilter, setStatusFilter] = useSessionState<StatusFilter>("admin:staff:status", "all");
+    const [sortBy, setSortBy] = useSessionState<SortOption>("admin:staff:sort", "name_asc");
     const [processingId, setProcessingId] = useState<number | null>(null);
     const inactive = total - total_active;
+
+    const filteredStaff = useMemo(() => {
+        let result = [...staff_list];
+        if (search.trim()) {
+            const q = search.toLowerCase().trim();
+            result = result.filter(
+                (s) =>
+                    s.name.toLowerCase().includes(q) ||
+                    s.email.toLowerCase().includes(q) ||
+                    (s.whatsapp_number && s.whatsapp_number.toLowerCase().includes(q))
+            );
+        }
+        if (statusFilter === "active") result = result.filter((s) => s.is_active);
+        if (statusFilter === "suspended") result = result.filter((s) => !s.is_active);
+
+        result.sort((a, b) => {
+            if (sortBy === "newest") return b.id - a.id;
+            if (sortBy === "oldest") return a.id - b.id;
+            return a.name.localeCompare(b.name, "id");
+        });
+        return result;
+    }, [staff_list, search, statusFilter, sortBy]);
 
     useEffect(() => {
         animate(".admin-staff-item", {
@@ -45,7 +74,7 @@ export default function AdminStaff({ staff_list, total_active, total }: Props) {
             delay: stagger(45),
             ease: "outExpo",
         });
-    }, [staff_list]);
+    }, [filteredStaff]);
 
     useEffect(() => {
         if (flash.success) {
@@ -107,6 +136,67 @@ export default function AdminStaff({ staff_list, total_active, total }: Props) {
                     <SummaryCard label="Suspend" value={inactive} icon="fa-solid fa-user-lock" tone="text-amber-500 border-amber-500/20 bg-amber-500/10" />
                 </div>
 
+                {/* Search & Filter Bar */}
+                <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 p-4 shadow-sm">
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                        <div className="flex flex-1 flex-wrap items-center gap-2.5">
+                            <div className="relative min-w-[220px] flex-1 max-w-sm">
+                                <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400" />
+                                <input
+                                    type="search"
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    placeholder="Cari nama, email, atau WhatsApp..."
+                                    className="w-full h-9 pl-8 pr-7 text-xs rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-rose-500"
+                                />
+                                {search && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setSearch("")}
+                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
+                                    >
+                                        <i className="fa-solid fa-xmark" />
+                                    </button>
+                                )}
+                            </div>
+
+                            <select
+                                value={statusFilter}
+                                onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+                                className="h-9 px-3 text-xs rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 focus:outline-none focus:border-rose-500"
+                            >
+                                <option value="all">Semua Status</option>
+                                <option value="active">Aktif</option>
+                                <option value="suspended">Suspend</option>
+                            </select>
+
+                            <select
+                                value={sortBy}
+                                onChange={(e) => setSortBy(e.target.value as SortOption)}
+                                className="h-9 px-3 text-xs rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 focus:outline-none focus:border-rose-500"
+                            >
+                                <option value="name_asc">Nama (A-Z)</option>
+                                <option value="newest">Terbaru</option>
+                                <option value="oldest">Terlama</option>
+                            </select>
+                        </div>
+
+                        {(search || statusFilter !== "all" || sortBy !== "name_asc") && (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setSearch("");
+                                    setStatusFilter("all");
+                                    setSortBy("name_asc");
+                                }}
+                                className="text-xs text-rose-500 hover:text-rose-600 font-semibold self-start lg:self-auto"
+                            >
+                                Reset Filter
+                            </button>
+                        )}
+                    </div>
+                </div>
+
                 <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-soft dark:border-white/5 dark:bg-slate-900">
                     <div className="hidden grid-cols-[1fr_160px_130px_120px] border-b border-slate-100 bg-slate-50 px-5 py-3.5 dark:border-white/5 dark:bg-white/[0.02] lg:grid">
                         {["Staff", "WhatsApp", "Status", "Aksi"].map((header) => (
@@ -116,19 +206,21 @@ export default function AdminStaff({ staff_list, total_active, total }: Props) {
                         ))}
                     </div>
 
-                    {staff_list.length === 0 ? (
+                    {filteredStaff.length === 0 ? (
                         <div className="flex flex-col items-center justify-center px-6 py-14 text-center">
                             <i className="fa-solid fa-user-slash text-3xl text-slate-300 dark:text-slate-600" />
                             <p className="mt-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
-                                Belum ada akun staff
+                                {search || statusFilter !== "all" ? "Tidak ada staff yang cocok" : "Belum ada akun staff"}
                             </p>
                             <p className="mt-1 text-xs text-slate-400">
-                                Akun staff akan muncul setelah dibuat di sistem.
+                                {search || statusFilter !== "all"
+                                    ? "Coba sesuaikan kata kunci pencarian atau filter status Anda."
+                                    : "Akun staff akan muncul setelah dibuat di sistem."}
                             </p>
                         </div>
                     ) : (
                         <ul className="divide-y divide-slate-100 dark:divide-white/5">
-                            {staff_list.map((member) => (
+                            {filteredStaff.map((member) => (
                                 <li
                                     key={member.id}
                                     className="admin-staff-item grid gap-3 px-5 py-4 opacity-0 transition hover:bg-slate-50 dark:hover:bg-white/[0.03] lg:grid-cols-[1fr_160px_130px_120px] lg:items-center"
