@@ -111,7 +111,7 @@ export default function StaffExamResultShow({ attempt }: Props) {
                 <div className="grid gap-3 md:grid-cols-5">
                     <Metric label="Skor" value={attempt.percentage_score === null ? "-" : `${attempt.percentage_score}%`} />
                     <Metric label="Raw Score" value={`${attempt.raw_score}/${attempt.max_score}`} />
-                    <Metric label="Terjawab" value={`${attempt.answered_questions}/${attempt.total_questions}`} />
+                    <Metric label="Terjawab" value={`${attempt.answered_questions} dari ${attempt.total_questions}`} />
                     <Metric label="Benar" value={attempt.correct_answers} />
                     <Metric label="Salah" value={attempt.wrong_answers} />
                 </div>

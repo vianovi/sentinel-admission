@@ -123,7 +123,7 @@ export default function CandidateSelectionResult({ selection_result }: Props) {
                                     </div>
 
                                     <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                                        <Info label="Soal Terjawab" value={`${result.answered_questions ?? 0}/${result.total_questions ?? 0}`} />
+                                        <Info label="Soal Terjawab" value={`${result.answered_questions ?? 0} dari ${result.total_questions ?? 0}`} />
                                         <Info label="Finalisasi" value={result.finalized_at ?? "-"} />
                                         <Info label="Keputusan Ujian" value={result.score_visible ? (result.passed ? "Lulus" : "Belum Lulus") : "Belum dibuka"} />
                                     </div>

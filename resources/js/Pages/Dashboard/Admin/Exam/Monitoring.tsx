@@ -188,7 +188,7 @@ export default function ExamMonitoring({ snapshot, feed_url, display_url }: Prop
                                         </Td>
                                         <Td><StatusPill value={attempt.status} /></Td>
                                         <Td>
-                                            <p className="font-bold">{attempt.answered_questions}/{attempt.total_questions}</p>
+                                            <p className="font-bold">{attempt.answered_questions} dari {attempt.total_questions}</p>
                                             <div className="mt-2 h-2 w-28 overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
                                                 <div className="h-full rounded-full bg-gold" style={{ width: `${attempt.progress_percentage}%` }} />
                                             </div>

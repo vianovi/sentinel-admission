@@ -98,7 +98,7 @@ export default function MonitoringDisplay({ snapshot, feed_url }: Props) {
                         <div className="mt-4 grid grid-cols-3 gap-2">
                             <CompactMetric label="Status" value={attempt.status.replaceAll("_", " ")} />
                             <CompactMetric label="Sisa" value={formatTime(attempt.remaining_seconds)} mono />
-                            <CompactMetric label="Soal" value={`${attempt.answered_questions}/${attempt.total_questions}`} />
+                            <CompactMetric label="Soal" value={`${attempt.answered_questions} dari ${attempt.total_questions}`} />
                         </div>
 
                         <div className="mt-4">

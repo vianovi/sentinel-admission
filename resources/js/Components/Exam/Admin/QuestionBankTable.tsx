@@ -179,7 +179,7 @@ function QuestionBankTableInner({ questions, packageId }: Props) {
                                                                     }`}
                                                                 >
                                                                     <span className="font-black shrink-0">{key}.</span>
-                                                                    <RichExamText text={value} />
+                                                                    <RichExamText text={value} imageSize="sm" />
                                                                 </div>
                                                             ) : null)}
                                                         </div>

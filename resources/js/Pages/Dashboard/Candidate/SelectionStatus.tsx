@@ -177,7 +177,7 @@ export default function CandidateSelectionStatus({ selection_status }: Props) {
                                             #{session.latest_attempt.attempt_number} - {session.latest_attempt.status_label}
                                         </p>
                                         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                                            {session.latest_attempt.answered_questions ?? 0}/{session.latest_attempt.total_questions ?? 0} soal terjawab
+                                            {session.latest_attempt.answered_questions ?? 0} dari {session.latest_attempt.total_questions ?? 0} soal terjawab
                                             {session.latest_attempt.submitted_at ? ` - Submit ${session.latest_attempt.submitted_at}` : ""}
                                         </p>
                                     </div>

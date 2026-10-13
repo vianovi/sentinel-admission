@@ -5,6 +5,8 @@ import "katex/dist/katex.min.css";
 type Props = {
     text: string | null | undefined;
     className?: string;
+    /** Controls the rendered image size. "sm" = compact (in-table admin preview), "md" = default (exam workspace), "lg" = large (lightbox/detail view) */
+    imageSize?: "sm" | "md" | "lg";
 };
 
 const UNICODE_SUPERSCRIPTS: Record<string, string> = {
@@ -13,11 +15,11 @@ const UNICODE_SUPERSCRIPTS: Record<string, string> = {
     "⁺": "+", "⁻": "-", "ⁿ": "n", "ˣ": "x", "ʸ": "y",
 };
 
-export default function RichExamText({ text, className }: Props) {
-    return <span className={className}>{renderRichText(text ?? "")}</span>;
+export default function RichExamText({ text, className, imageSize = "md" }: Props) {
+    return <span className={className}>{renderRichText(text ?? "", imageSize)}</span>;
 }
 
-function renderRichText(text: string): ReactNode[] {
+function renderRichText(text: string, imageSize: "sm" | "md" | "lg" = "md"): ReactNode[] {
     const nodes: ReactNode[] = [];
     let buffer = "";
     let index = 0;
@@ -68,7 +70,7 @@ function renderRichText(text: string): ReactNode[] {
             if (closeIndex > index + 5) {
                 flush();
                 const content = text.slice(index + 5, closeIndex);
-                nodes.push(<sup key={`html-sup-${index}`} className="align-super text-[0.72em] leading-none">{renderRichText(content)}</sup>);
+                nodes.push(<sup key={`html-sup-${index}`} className="align-super text-[0.72em] leading-none">{renderRichText(content, imageSize)}</sup>);
                 index = closeIndex + 6;
                 continue;
             }
@@ -80,7 +82,7 @@ function renderRichText(text: string): ReactNode[] {
             if (closeIndex > index + 5) {
                 flush();
                 const content = text.slice(index + 5, closeIndex);
-                nodes.push(<sub key={`html-sub-${index}`} className="align-sub text-[0.72em] leading-none">{renderRichText(content)}</sub>);
+                nodes.push(<sub key={`html-sub-${index}`} className="align-sub text-[0.72em] leading-none">{renderRichText(content, imageSize)}</sub>);
                 index = closeIndex + 6;
                 continue;
             }
@@ -96,12 +98,21 @@ function renderRichText(text: string): ReactNode[] {
             if (closeIndex > index + tagLength) {
                 flush();
                 const filename = text.slice(index + tagLength, closeIndex).trim();
+                // Image sizing classes per context:
+                // sm  — compact, table/admin preview rows
+                // md  — default, exam question workspace
+                // lg  — large, lightbox / detail view
+                const imgClass = imageSize === "sm"
+                    ? "max-h-48 max-w-sm"
+                    : imageSize === "lg"
+                        ? "max-h-[70vh] max-w-full"
+                        : "max-h-64 sm:max-h-80 md:max-h-96 max-w-full sm:max-w-lg md:max-w-2xl";
                 nodes.push(
-                    <span key={`img-wrap-${index}`} className="block my-2.5">
+                    <span key={`img-wrap-${index}`} className="block my-3">
                         <img 
                             src={`/exam-media/${filename}`} 
                             alt="Ilustrasi Soal" 
-                            className="max-h-44 sm:max-h-48 md:max-h-52 max-w-full sm:max-w-sm md:max-w-md w-auto h-auto rounded-xl border border-slate-200/90 dark:border-white/10 shadow-sm object-contain bg-slate-50/60 dark:bg-black/20"
+                            className={`${imgClass} w-auto h-auto rounded-xl border border-slate-200/90 dark:border-white/10 shadow-sm object-contain bg-slate-50/60 dark:bg-black/20`}
                             loading="lazy"
                             onError={(e) => {
                                 (e.target as HTMLElement).style.display = 'none';

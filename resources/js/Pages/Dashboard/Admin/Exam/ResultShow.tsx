@@ -107,7 +107,7 @@ export default function ExamResultShow({ attempt }: Props) {
                 <div className="grid gap-3 md:grid-cols-5">
                     <StatCard label="Skor" value={attempt.percentage_score === null ? "-" : `${attempt.percentage_score}%`} icon="fa-solid fa-bullseye" tone="text-emerald-500" />
                     <StatCard label="Raw Score" value={`${attempt.raw_score}/${attempt.max_score}`} icon="fa-solid fa-calculator" tone="text-blue-500" />
-                    <StatCard label="Terjawab" value={`${attempt.answered_questions}/${attempt.total_questions}`} icon="fa-solid fa-list-check" tone="text-violet-500" />
+                    <StatCard label="Terjawab" value={`${attempt.answered_questions} dari ${attempt.total_questions}`} icon="fa-solid fa-list-check" tone="text-violet-500" />
                     <StatCard label="Benar" value={attempt.correct_answers} icon="fa-solid fa-circle-check" tone="text-emerald-500" />
                     <StatCard label="Salah" value={attempt.wrong_answers} icon="fa-solid fa-circle-xmark" tone="text-red-500" />
                 </div>

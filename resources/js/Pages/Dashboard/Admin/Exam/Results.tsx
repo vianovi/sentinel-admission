@@ -191,7 +191,7 @@ export default function ExamResults({ attempts, filters, sessions }: Props) {
                                                 <p className="font-black text-slate-900 dark:text-white">{attempt.percentage_score === null ? "-" : `${attempt.percentage_score}%`}</p>
                                                 <p className="mt-1 text-xs text-slate-500">{attempt.raw_score}/{attempt.max_score}</p>
                                             </td>
-                                            <td className="px-4 py-3 text-right font-semibold text-slate-700 dark:text-slate-200">{attempt.correct_answers}/{attempt.total_questions}</td>
+                                            <td className="px-4 py-3 text-right font-semibold text-slate-700 dark:text-slate-200">{attempt.correct_answers} <span className="font-normal text-slate-400 dark:text-slate-500">dari</span> {attempt.total_questions}</td>
                                             <td className="px-4 py-3 text-right">
                                                 <Link href={`/dashboard/admin/exams/results/${attempt.id}`} className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-200 px-3 text-xs font-bold text-slate-700 hover:border-gold/60 hover:text-gold dark:border-white/10 dark:text-slate-200">
                                                     <i className="fa-solid fa-eye" /> Detail

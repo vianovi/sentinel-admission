@@ -95,7 +95,11 @@ export default function PublicAttemptShow({ participant, exam, attempt, question
     });
 
     const persistAnswer = useCallback(async (answer: ExamAnswerState) => {
-        setSaveState("saving");
+        // Guard: skip stale timers that fired after exam was locked/submitted
+        setSaveState((current) => {
+            if (current === "locked") return current;
+            return "saving";
+        });
         setSaveMessage("Menyimpan jawaban...");
 
         try {
@@ -139,6 +143,8 @@ export default function PublicAttemptShow({ participant, exam, attempt, question
         }
 
         saveTimers.current[questionId] = window.setTimeout(() => {
+            // Re-check isRunning at fire time to drop stale timers
+            if (attemptState.status !== "in_progress" || attemptState.is_locked) return;
             void persistAnswer(next);
         }, 400);
     };

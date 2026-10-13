@@ -45,7 +45,7 @@ export const CandidateAttemptHistory = memo(function CandidateAttemptHistory({ a
                                         <StatusPill value={attempt.status} />
                                     </div>
                                     <p className="mt-1 text-xs text-slate-500">Mulai {attempt.started_at ?? "-"} · Submit {attempt.submitted_at ?? "-"}</p>
-                                    <p className="mt-1 text-xs text-slate-500">Terjawab {attempt.answered_questions}/{attempt.total_questions}</p>
+                                    <p className="mt-1 text-xs text-slate-500">Terjawab {attempt.answered_questions} dari {attempt.total_questions}</p>
                                 </div>
                                 <div className="flex flex-wrap items-center gap-2">
                                     {attempt.score_visible ? (
