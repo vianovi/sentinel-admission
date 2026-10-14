@@ -37,49 +37,10 @@ Never sacrifice security for convenience.
 
 ---
 
-## File Upload Security — 4 Layers
-Never skip these layers for candidate documents.
+## File Upload Security
+Seluruh implementasi upload berkas kandidat wajib mengikuti 4 lapisan validasi (Browser UX, Network Rate-limiting, Backend MIME/Magic-byte/Polyglot scan, Private UUID Storage).
 
-```txt
-1. Browser: UX-only type/size/hash check; never trusted.
-2. Network: auth + CSRF + HTTPS + rate limit, e.g. 10 uploads/min/user.
-3. Backend: Laravel validation + magic bytes + polyglot scan.
-4. Storage: UUID filename + private disk + controlled download route.
-```
-
-### Backend Validation
-- Use allowlist only: jpeg/png/pdf unless project explicitly expands it.
-- Validate extension + MIME + max size.
-- Do not trust original filename, client MIME, or extension.
-
-Example rule:
-```php
-'file' => 'required|file|mimes:jpeg,png,pdf|mimetypes:image/jpeg,image/png,application/pdf|max:5120'
-```
-
-### Magic Bytes
-Read first bytes from file contents and compare to allowed signatures.
-Do not rely only on `$file->getMimeType()`.
-
-```txt
-jpeg: ffd8ff
-png:  89504e47
-pdf:  25504446
-```
-
-### Polyglot Scan
-Scan content for executable/server-side patterns such as:
-`<?php`, `<?=`, `eval(`, `system(`, `exec(`, `passthru(`, `shell_exec(`, `base64_decode(`.
-
-Security note:
-- Polyglot scan is a defense layer, not a full malware scanner.
-- Public malware scanning APIs must not be used for sensitive docs unless privacy risk is approved.
-
-### Storage
-- Generate extension from detected MIME, not user input.
-- Store as UUID in private storage.
-- Serve through dedicated authorized controller route.
-- Force download; do not render uploaded files inline in browser.
+> Rujukan lengkap dan spesifikasi implementasi: [File Upload Security Pipeline](security-and-uploads.md#1-file-upload-security-pipeline-4-layers).
 
 ---
 
