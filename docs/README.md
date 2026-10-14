@@ -7,9 +7,8 @@ Dokumentasi resmi arsitektur, operasional, referensi teknis, dan audit sistem Se
 ## 1. Arsitektur & Standar (`docs/architecture/`)
 - [Core Context & Domain](architecture/core-context.md) — Konteks inti domain bisnis SPMB, alur wizard, dan arsitektur aplikasi.
 - [Security & Upload Standard](architecture/security-and-uploads.md) — Standar keamanan 9 domain OWASP, autentikasi, serta 4 lapis validasi upload berkas.
-- [Frontend Development](architecture/frontend-development.md) — Standar React 18, Inertia.js v2, Tailwind CSS, 4 state wajib UI, dan integrasi form.
+- [Frontend Standards & UI System](architecture/frontend-standards.md) — Standar React 18, token tema Amber/Slate, 4 state wajib UI, 5 state upload, dan motion Anime.js.
 - [Backend Development](architecture/backend-development.md) — Standar Laravel 12, service layer, transaksi atomik DB, dan observer lifecycle.
-- [UI & Motion Standards](architecture/ui-animation-standards.md) — Spesifikasi animasi Anime.js, micro-interactions, dan token tema.
 - [Build Rules](architecture/build-rules.md) — Konfigurasi bundling Vite 7, chunk splitting, dan optimasi performa asset.
 - [Architectural Lessons](architecture/architectural-lessons.md) — Catatan retrospektif arsitektural dan audit pra-implementasi fitur.
 

@@ -1,13 +1,9 @@
 # Frontend & Sentinel Design System Rules
 
-## 1. Color Palette & Token Keys
-- **Primary Brand Accent**: Amber / Gold (`amber-400`, `amber-500`, `#d4a017`, `amber-500/20` for subtle glows).
-- **Background & Panels**: Deep Dark Slate (`slate-950`, `slate-900`, `#080d18`).
-- **Forbidden Colors**: Do NOT use default browser purple/indigo focus rings or hardcoded random hex codes scattered in inline styles. Always use semantic Tailwind color utility tokens (`border-amber-500/30`, `focus:border-amber-500`, `focus:ring-amber-500/20`).
+> Single Source of Truth: [`docs/architecture/frontend-standards.md`](../../docs/architecture/frontend-standards.md)
 
-## 2. Form Inputs & Custom Dropdowns
-- **Form Controls**: Native unstyled `<select>` elements with default OS dropdown arrows are forbidden in primary admin panels. Use custom styled dropdown components with dark glassmorphism styling, amber highlight on active item, and custom caret icons.
-- **Focus Rings**: All input controls (`input`, `select`, `textarea`) must feature Sentinel's signature amber focus ring (`focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none`).
+- **Colors & Tokens**: Primary Amber/Gold (`amber-500`, `#d4a017`, `amber-500/20`), Background Deep Dark Slate (`slate-950`, `slate-900`). No unstyled default purple rings or inline colors.
+- **Form Controls & Focus**: Native `<select>` forbidden in admin panels; use custom styled dropdowns (`makeSelectStyles`). Mandatory focus ring: `focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none`.
+- **States**: 4 mandatory UI states (loading, empty, error, success) & 5 document upload states (empty, uploading, pending, verified, rejected).
+- **Exam Parameters**: `duration_minutes` and `passing_score` automatically derived from selected `ExamPackage`.
 
-## 3. Exam Package Parameter Inheritance
-- Exam session parameters like `duration_minutes` and `passing_score` should be automatically derived from the selected `ExamPackage`. Do not force administrators to re-enter duration or passing score manually in creation forms when they are already defined in the package.
