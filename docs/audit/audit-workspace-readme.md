@@ -85,4 +85,4 @@ Every audit session must read in order:
 2. `docs/state-aktif/HANDOFF.md`
 3. `docs/state-aktif/BLOCKERS.md`
 4. `docs/state-aktif/QUEUE.md`
-5. The active slice task in `docs/task-audit/`
+5. The active slice task in `docs/audit/tasks/`

@@ -5,7 +5,7 @@
 - Audit progress and coordinates must be persisted in `docs/state-aktif/CURRENT.md` and `docs/state-aktif/HANDOFF.md`.
 
 ## 2. Evidence Requirements Per Audit Slice
-For every completed audit slice, record verifiable evidence under `docs/laporan-audit/evidence/<slice-name>/<date>/`:
+For every completed audit slice, record verifiable evidence under `docs/audit/evidence/<slice-name>/<date>/`:
 - **Environment & Commit:** Branch, baseline commit, and head commit.
 - **Commands Executed:** Exact CLI commands with exit codes and execution summaries.
 - **Verification Outputs:** Test assertion totals (`Tests: X passed (Y assertions)`), Vite build outputs, and route lists.

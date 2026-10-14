@@ -10,7 +10,7 @@ Never merge to `main`. Never deploy.
 
 ## Startup
 
-1. Read mandatory instructions (`docs/panduan-ai/`) and state (`docs/state-aktif/`).
+1. Read mandatory instructions (`docs/audit/`) and state (`docs/state-aktif/`).
 2. Reconcile state with actual Git tree.
 3. Select the next eligible item from `docs/state-aktif/QUEUE.md`.
 4. Use its slice task as the checklist.
@@ -54,7 +54,7 @@ Update `docs/state-aktif/CURRENT.md` at every transition.
 - Stop for schema/dependency/policy decisions needing approval.
 
 ### Verify
-- Apply all relevant release gates (`docs/panduan-ai/release-gates.md`).
+- Apply all relevant release gates (`../release-gates.md`).
 - Run focused checks, then broader regression (`php artisan test --compact`, `npm run build`).
 - Review the diff after tests pass.
 
@@ -69,12 +69,12 @@ Only `PASS` may be promoted.
 
 ### Commit & Evidence
 - Commit coherent milestones.
-- Update `docs/laporan-audit/` and `docs/laporan-audit/evidence/`.
-- Update `docs/state-aktif/CURRENT.md` and `docs/state-aktif/HANDOFF.md`.
-- Update `docs/persiapan-deploy/PRODUCTION-MANIFEST.md`.
+- Update `../reports/` and `../evidence/`.
+- Update `../../state-aktif/CURRENT.md` and `../../state-aktif/HANDOFF.md`.
+- Update `../production-manifest.md`.
 
 ### Promote
-- Follow `docs/panduan-ai/branching-and-promotion.md`.
+- Follow `../branching-and-promotion.md`.
 - Stop on non-trivial conflict.
 - Never promote to `main`.
 
@@ -84,7 +84,7 @@ Complete only when:
 - All required slices pass;
 - Integration regression passes;
 - Release candidate is reproducible;
-- Readiness and rollback docs are complete in `docs/persiapan-deploy/`;
-- Human review is approved in `docs/persiapan-deploy/HUMAN-REVIEW-CHECKLIST.md`;
+- Readiness and rollback docs are complete in `docs/audit/` and `docs/operations/emergency-rollback.md`;
+- Human review is approved in `docs/reference/human-review-checklist.md`;
 - `main` remains untouched.
 

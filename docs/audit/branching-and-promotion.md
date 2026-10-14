@@ -20,6 +20,6 @@
 - Only slices classified as **`PASS`** are eligible for promotion into the release candidate.
 - Slices with UI modifications carry a mandatory **`HUMAN VISUAL REVIEW REQUIRED`** tag.
 - Every promotion must update:
-  - `docs/persiapan-deploy/PRODUCTION-MANIFEST.md`
-  - `docs/persiapan-deploy/PROMOTION-LEDGER.md`
+  - `docs/audit/production-manifest.md`
+  - `docs/audit/promotion-ledger.md`
   - `docs/state-aktif/CURRENT.md`

@@ -22,7 +22,7 @@
 - **Broad Regression Check:** Run `php artisan test --compact` to verify zero regression.
 - **Frontend Compilation:** Execute `npm run build` after modifying any JSX/TSX/CSS files.
 - **Route & Boot Validation:** Check `php artisan route:list` for route registration and middleware accuracy.
-- **Record Evidence:** Save raw output of commands in `docs/laporan-audit/evidence/`.
+- **Record Evidence:** Save raw output of commands in `docs/audit/evidence/`.
 
 ## 5. Git & Commit Hygiene
 - **Milestone Commits:** Commit only clean, verified changes with descriptive commit messages.
