@@ -1,26 +1,29 @@
 # Verified Compact Project Context
 
-- Verified: 2026-07-14
+- Verified: 2026-10-14
 - Baseline: `1113160ebee605ebad439f53f3322f9deb060711`
+- Current Head: `ac81eb5` (TypeScript & Axios resolution)
 - Strategy: A — full integrated release candidate
 - Protected branch: `main` at `8d5efe5f910b324d0b7fd4b293256a0675af0f77`; never modify directly
 - Release candidate: `release/production-candidate`
 
 ## Stack
 
-- Laravel 12.62 / PHP `^8.2`; local PHP 8.5.8
-- Inertia 2 / React 18 / TypeScript / Tailwind / Vite 7
-- MariaDB deployment intent; tests use isolated in-memory/temporary SQLite
-- Midtrans, SMTP mail, OpenSpout XLSX, private local storage
-- Apache Docker base with public web root; deployment image/process is incomplete and assigned Task 10
+- Laravel 12.62 / PHP `^8.2`; local runtime PHP 8.5.8
+- Inertia 2.0 / React 18.2 / TypeScript 5.x / Tailwind CSS 3.2 / Vite 7.0
+- MariaDB 10.11+ / 11.x database; isolated testing via SQLite/in-memory
+- Laravel Reverb 1.11 WebSockets real-time broadcasting & Laravel Echo
+- Midtrans Snap SDK & manual transfer proof verification
+- OpenSpout XLSX streaming import/export, private filesystem disk storage
+- Apache 2.4 Docker runtime environment
 
 ## Application boundaries
 
-- 183 application routes: public/registration/auth, candidate, staff, admin, and Midtrans webhook.
-- Exact role middleware counts: candidate 50, staff 30, admin 78.
-- 28 migrations/29 tables cover user/session/queue/cache, admission, candidate/guardian/health, documents/security, payment/config, calendar, and exam.
-- Daily scheduled command: `drafts:prune`. Application queues are currently synchronous in examples.
-- External calls: Midtrans and national-holiday API; SMTP mail.
+- 218 non-vendor application routes: public landing, admission wizard, candidate dashboard, staff operations, admin controls, CBT exam engine, and Midtrans webhook.
+- 34 migrations / 32 tables covering authentication, admission waves/programs, drafts, candidates, guardians, health, documents, security audit, payments, calendar, and online selection exams.
+- Active features: Dedicated candidate status checklist (`/dashboard/status-pendaftaran`), Admin system settings (`/dashboard/admin/settings`), Program configuration (`/dashboard/admin/programs`), Staff/Admin reporting (`/dashboard/admin/reports`), Real-time WebSockets event sync, and Demo Traffic Simulator CLI.
+- Scheduled commands: `drafts:prune`.
+- External services: Midtrans Snap payment gateway, Resend/Mailtrap SMTP mailer.
 
 ## Dependency order
 
@@ -28,33 +31,27 @@
 2. Public/shared runtime
 3. Auth/registration
 4. Candidate lifecycle/profile
-5. Documents/storage and Payment/Midtrans and Selection exam
+5. Documents/storage, Payment/Midtrans, and Selection exam
 6. Staff operations
 7. Admin operations
 8. Reporting/export
 9. Infrastructure/deployment
 10. Integration regression
 
-Admin configuration crosses waves/programs/payment/exam; each affected rule must be checked with its domain slice as well as Task 08.
-
 ## Baseline proof
 
-- 71 tests / 580 assertions pass.
-- 183-route boot passes.
-- TypeScript/Vite production build passes.
-- Composer/npm advisory scans report zero known vulnerabilities at the audit time.
-- All migrations pass on a throwaway SQLite database.
-- Synthetic production optimize/cache/route boot passes.
+- 114 tests / 866 assertions pass (`php artisan test --compact`).
+- 218 application routes boot without error.
+- TypeScript strict compilation: 0 errors (`npx tsc --noEmit`).
+- Production Vite build passes (`✓ built in 15.30s`).
+- Pint PHP code style: 100% formatted.
 
 ## Known release risks
 
-- Local source is 70 commits ahead of tracked `origin/develop`; no push was performed.
-- No CI/deployment pipeline; Docker/compose are not self-contained production artifacts.
-- Production MariaDB migration/rollback, backup, permissions, scheduler, monitoring, proxy trust, and secret injection are unproven.
-- Dormant document-security bypass hooks require Task 04 review, though all layers are active in the current config.
-- Coming-soon routes and disabled report exports require explicit release acceptance.
-- `HUMAN VISUAL REVIEW REQUIRED` for UI; no visual quality is approved.
+- Local branch is ahead of origin; remote coordination required before push.
+- Deployment Docker setup uses development bind mounts; production container hardening assigned to Task 10.
+- `HUMAN VISUAL REVIEW REQUIRED` for UI and interactive design sign-off.
 
 ## Resume
 
-Trust `state/CURRENT.md`, `HANDOFF.md`, `BLOCKERS.md`, and `QUEUE.md`, then compare them with Git before acting.
+Trust `docs/state-aktif/CURRENT.md`, `docs/state-aktif/HANDOFF.md`, `docs/state-aktif/BLOCKERS.md`, and `docs/state-aktif/QUEUE.md`, then compare them with Git before acting.
