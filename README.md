@@ -652,8 +652,6 @@ sentinel-admission/
 │   ├── getting-started/        # Panduan instalasi lokal & testing
 │   ├── architecture/           # Desain sistem, keamanan, frontend/backend
 │   ├── operations/             # Traffic simulator, Docker, rollback
-│   ├── state-aktif/            # Status aktif auditor AI
-│   ├── audit/                  # Runbook, release gates, manifest & evidence
 │   └── reference/              # Skema DB, daftar route, tech stack
 ├── Dockerfile
 ├── docker-compose.yml

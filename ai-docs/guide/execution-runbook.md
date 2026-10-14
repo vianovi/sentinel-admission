@@ -86,3 +86,30 @@ npx tsc --noEmit
 npx vite build
 ```
 
+
+---
+
+## 6. Checkpoints & Findings Schema
+
+### A. Checkpoint Discipline
+Record a checkpoint in `ai-docs/state/`:
+- After every confirmed finding.
+- After any file modification.
+- Before and after running test or verification suites.
+- When approaching context budget limit.
+
+### B. Standard Findings Schema
+```markdown
+[CRITICAL | HIGH | MEDIUM | LOW] — <finding title>
+File: <path:line>
+Evidence: <command run + actual output, or code excerpt>
+Verified: YES (describe how) | NO (state why not)
+Recommendation: <specific fix>
+Status: OPEN | FIXED | HUMAN REVIEW REQUIRED
+```
+
+### C. Verification & Retry Discipline
+- On failing checks, investigate root cause and retry at most 2 times. If still failing, stop and escalate.
+- Never mark tasks "passing" from partial or truncated command outputs.
+- When a fix is applied, re-run the original failing check to confirm resolution.
+
