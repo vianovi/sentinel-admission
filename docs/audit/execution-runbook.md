@@ -1,63 +1,88 @@
-# Execution Runbook
+# Auditor Execution Runbook & Operational Standards
 
-## Startup
+Dokumen ini merupakan panduan operasional teknis pelaksanaan audit kode, verifikasi sistem, pencatatan bukti, dan klaim kesiapan produksi di Sentinel Admission. Aturan filosofi dan batasan keselamatan inti merujuk ke [`AGENTS.md`](../../AGENTS.md).
 
-1. Verify working directory and Git root.
-2. Confirm active instructions.
-3. Run `git status --short --branch`.
-4. Read durable state.
-5. Verify branches/ancestry.
-6. Verify runtimes/package managers.
-7. Confirm active task.
-8. Record baseline commit.
+---
 
-## Resume
+## 1. Startup & Resume Protocol
 
-1. Compare `CURRENT.md` with Git.
-2. Inspect uncommitted changes.
-3. Read latest evidence/audit.
-4. Re-run the smallest relevant check if uncertain.
-5. Continue from the exact next action.
+### A. Startup Sesi Baru
+1. Periksa root repositori dan branch kerja: `git status --short --branch`.
+2. Baca file state aktif secara berurutan:
+   - `docs/state-aktif/CURRENT.md` (koordinat aktif)
+   - `docs/state-aktif/HANDOFF.md` (catatan transfer konteks)
+   - `docs/state-aktif/BLOCKERS.md` (eskalasi terbuka)
+   - `docs/state-aktif/QUEUE.md` (antrean slice)
+3. Baca task aktif di `docs/audit/tasks/`.
+4. Catat baseline commit SHA sebelum memulai modifikasi kode.
 
-## Typical checks
+### B. Melanjutkan Sesi (Resume)
+1. Bandingkan catatan di `CURRENT.md` dengan status riil Git (`git log -2 --oneline`).
+2. Periksa apakah terdapat perubahan yang belum di-commit (`working tree clean`).
+3. Jalankan verifikasi terkecil yang relevan untuk memastikan fondasi hijau sebelum melanjutkan langkah berikutnya.
 
-Choose based on actual scripts:
+---
 
-```txt
-php artisan about
+## 2. Checklist Pelaksanaan Deep Audit (Deep Audit Execution)
+
+Saat mengaudit sebuah slice fitur, lakukan penelusuran sistematis berikut:
+
+1. **State Mutation Tracing:**
+   - Telusuri seluruh jalur mutasi (insert, update, delete, transisi status) pada model-model penting (`Candidate`, `Payment`, `ExamAttempt`).
+   - Pastikan transisi status dikontrol oleh Service terpusat, bukan controller ad-hoc.
+2. **Contract Verification (Backend to Frontend):**
+   - Pastikan props yang dikirim dari controller Inertia/JSON sesuai dengan antarmuka TypeScript pada komponen frontend.
+3. **Edge & Failure Paths:**
+   - Audit validasi input, penanganan nilai kosong/null, kondisi batas (*boundary conditions*), dan pesan feedback error.
+4. **Idempotency & Concurrency:**
+   - Gunakan transaksi atomik (`DB::transaction`) untuk operasi tulis yang melibatkan lebih dari satu tabel atau pembaruan status krusial (kuota, pembayaran, penyerahan jawaban ujian CBT).
+5. **Async & Background Jobs:**
+   - Audit penanganan queue, WebSockets Reverb broadcaster, dan webhook listener Midtrans.
+
+---
+
+## 3. Evidence & Documentation Standards
+
+Setiap slice audit yang selesai wajib mencatat bukti terverifikasi di bawah direktori `docs/audit/evidence/<slice-name>/<date>/`:
+
+- **Lingkungan & Commit:** Catat branch, commit baseline, dan commit hasil perbaikan.
+- **Perintah yang Dijalankan:** Simpan ringkasan perintah CLI beserta exit status.
+- **Hasil Verifikasi:** Rekam jumlah test (`Tests: X passed (Y assertions)`), status build Vite, dan daftar route.
+- **Sanitasi Data:** Dilarang menyimpan credential `.env`, private key, token autentikasi, atau data pribadi nyata dalam berkas evidence.
+
+---
+
+## 4. Claims Policy (Kebijakan Klaim Status)
+
+Auditor dilarang membuat klaim kesiapan produksi tanpa bukti terverifikasi langsung:
+
+| Klaim yang Diizinkan (Dengan Bukti) | Klaim Terlarang (Dilarang Tanpa Bukti) |
+|---|---|
+| `CODE AUDIT PASS` | "Aplikasi 100% bebas dari bug" |
+| `SECURITY PASS FOR AUDITED SCOPE` | "Tidak ada celah kerentanan sama sekali" |
+| `BUILD / TEST PASS (114/114 passing)` | "Tampilan UI visual sudah disetujui / sempurna" |
+| `HUMAN VISUAL REVIEW REQUIRED` | "Seluruh alur bisnis berjalan mulus di semua perangkat" |
+
+---
+
+## 5. Perintah Verifikasi Standar
+
+Gunakan perintah resmi sesuai lingkup perubahan:
+
+```bash
+# 1. Verifikasi route & middleware
 php artisan route:list
-php artisan test --testsuite=Feature
-composer validate --strict
-composer audit
-npm run build
-git diff --check
+
+# 2. Verifikasi unit & feature test
+php artisan test --compact
+
+# 3. Verifikasi formatting kode PHP
+vendor/bin/pint --dirty --format agent
+
+# 4. Verifikasi kompilasi frontend TypeScript
+npx tsc --noEmit
+
+# 5. Verifikasi build asset produksi
+npx vite build
 ```
 
-Safe local production-cache compatibility may use:
-
-```txt
-php artisan optimize
-php artisan about
-php artisan optimize:clear
-```
-
-Verify environment and side effects before running.
-
-## Long-running mode
-
-Interactive:
-
-- execute slices sequentially;
-- persist state between slices;
-- stop on blocker/context limit;
-- do not add artificial sleep.
-
-Scheduled/background:
-
-- prefer isolated worktrees;
-- process durable units;
-- keep machine/app running when local files are required;
-- start with narrow permissions;
-- review early runs before trusting unattended execution.
-
-A run is complete only after state and handoff are current.

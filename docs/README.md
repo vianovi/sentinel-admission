@@ -27,15 +27,12 @@ Dokumentasi resmi arsitektur, operasional, referensi teknis, dan audit sistem Se
 - [Context Summary](state-aktif/CONTEXT-SUMMARY.md) — Ringkasan snapshot konfigurasi teknis dan batas aplikasi terverifikasi.
 
 ## 4. Audit & Kesiapan Produksi (`docs/audit/`)
-- [Auditor Charter](audit/auditor-charter.md) — Misi, etika skeptisisme, dan batasan otonomi auditor produksi.
-- [Auditor Operating Rules](audit/operating-rules.md) — SOP pra-audit, penambalan minimal, dan standar verifikasi bukti.
-- [Execution Runbook](audit/execution-runbook.md) — Prosedur langkah-demi-langkah pelaksanaan audit slice.
+- [Execution Runbook & Operational Standards](audit/execution-runbook.md) — Panduan eksekusi audit, checklist deep audit, standar evidence, klaim, dan verifikasi.
 - [Release Gates](audit/release-gates.md) — Kriteria gerbang kelulusan G0 hingga G7 sebelum promosi kandidat rilis.
 - [Production Readiness](audit/production-readiness.md) — Checklist teknis kesiapan deploy produksi (kode, data, runtime, keamanan).
 - [Branching & Promotion](audit/branching-and-promotion.md) — Strategi branch release candidate dan alur promosi versi.
 - [Production Manifest](audit/production-manifest.md) — Ledger status kelulusan audit per slice fitur.
 - [Promotion Ledger](audit/promotion-ledger.md) — Riwayat pencatatan promosi release candidate.
-- [Documentation Policy](audit/documentation-policy.md) — Kebijakan penyimpanan bukti audit dan sanitasi data log.
 - [Master Audit Task](audit/tasks/master-production-audit.task.md) — Definisi master audit task dan checklist slice 01 s.d. 11.
 - [Reports & Evidence](audit/reports/README.md) — Laporan temuan audit dan rekaman bukti eksekusi perintah per slice.
 
