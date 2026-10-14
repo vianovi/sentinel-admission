@@ -10,9 +10,9 @@ Never merge to `main`. Never deploy.
 
 ## Startup
 
-1. Read mandatory instructions (`docs/audit/`) and state (`docs/state-aktif/`).
+1. Read mandatory instructions (`ai-docs/guide/`) and state (`ai-docs/state/`).
 2. Reconcile state with actual Git tree.
-3. Select the next eligible item from `docs/state-aktif/QUEUE.md`.
+3. Select the next eligible item from `ai-docs/state/QUEUE.md`.
 4. Use its slice task as the checklist.
 
 ## State machine
@@ -30,7 +30,7 @@ For each slice:
 9. `human_review_pending` where applicable
 10: `complete`
 
-Update `docs/state-aktif/CURRENT.md` at every transition.
+Update `ai-docs/state/CURRENT.md` at every transition.
 
 ## Slice procedure
 
@@ -69,12 +69,12 @@ Only `PASS` may be promoted.
 
 ### Commit & Evidence
 - Commit coherent milestones.
-- Update `../reports/` and `../evidence/`.
-- Update `../../state-aktif/CURRENT.md` and `../../state-aktif/HANDOFF.md`.
-- Update `../production-manifest.md`.
+- Update `../reports/` and `../reports/evidence/`.
+- Update `../state/CURRENT.md` and `../state/HANDOFF.md`.
+- Update `../reports/production-manifest.md`.
 
 ### Promote
-- Follow `../branching-and-promotion.md`.
+- Follow `../guide/branching-and-promotion.md`.
 - Stop on non-trivial conflict.
 - Never promote to `main`.
 
@@ -84,7 +84,7 @@ Complete only when:
 - All required slices pass;
 - Integration regression passes;
 - Release candidate is reproducible;
-- Readiness and rollback docs are complete in `docs/audit/` and `docs/operations/emergency-rollback.md`;
+- Readiness and rollback docs are complete in `ai-docs/guide/production-readiness.md` and `docs/operations/emergency-rollback.md`;
 - Human review is approved in `docs/reference/human-review-checklist.md`;
 - `main` remains untouched.
 

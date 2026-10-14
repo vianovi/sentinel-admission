@@ -1,6 +1,5 @@
-# Livi — Backend Skill (Token-Optimized)
-> Load for backend, Laravel, API, security, upload, RBAC, observer, migration, and storage work.
-> Goal: safe backend changes with low token overhead.
+# Backend Architecture & Development Standards
+> Technical standards for controllers, service layer, models, transactions, file storage, and RBAC security.
 
 ---
 

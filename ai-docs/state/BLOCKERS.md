@@ -7,7 +7,7 @@
 - Slice: 01 Public/shared runtime
 - Severity: release-blocking business/content integrity
 - State: open
-- Evidence: `../audit/reports/01-public-shared-runtime/public-shared-runtime-audit.md` and `../audit/evidence/01-public-shared-runtime/2026-07-14/public-contract.md`
+- Evidence: `../reports/01-public-shared-runtime/public-shared-runtime-audit.md` and `../reports/evidence/01-public-shared-runtime/2026-07-14/public-contract.md`
 - Why autonomous progress is unsafe: The landing page is explicitly configured to publish placeholder third-party media and unrelated claims. Footer address/map/legal/brochure contracts conflict. The repository contains no authoritative approved values, and the auditor must not invent production data or silently remove owner-required content.
 - Question requiring owner decision: Should the release candidate use an owner-supplied verified public-content manifest, or should all unverified showcase/contact/map/legal elements be removed/disabled until verified content is available?
 - Safe options: (A) provide/identify approved address, map, contacts, social/legal URLs, brochure format, showcase assets, and claims; (B) authorize temporary removal/disabled states for every unverified element.

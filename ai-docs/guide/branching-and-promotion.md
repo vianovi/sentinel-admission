@@ -11,7 +11,7 @@
 - `release/production-candidate`: Audited staging branch awaiting human review.
 - `fix/*` or `audit/*`: Isolated slice audit and repair branches.
 
-## 3. Promotion Strategies (Recorded in `docs/state-aktif/DECISIONS.md`)
+## 3. Promotion Strategies (Recorded in `ai-docs/state/DECISIONS.md`)
 - **Strategy A — Full Integrated Release Candidate (Default for this project):** Used when the codebase is an integrated whole. Slices are audited as sequential gates over the full tree.
 - **Strategy B — Selective Commit Promotion:** Used when independent, atomic commits can be cherry-picked onto a clean release branch.
 - **Strategy C — Reconstructed Slice:** Used when specific feature closures must be reconstructed cleanly.
@@ -20,6 +20,6 @@
 - Only slices classified as **`PASS`** are eligible for promotion into the release candidate.
 - Slices with UI modifications carry a mandatory **`HUMAN VISUAL REVIEW REQUIRED`** tag.
 - Every promotion must update:
-  - `docs/audit/production-manifest.md`
-  - `docs/audit/promotion-ledger.md`
-  - `docs/state-aktif/CURRENT.md`
+  - `ai-docs/reports/production-manifest.md`
+  - `ai-docs/reports/promotion-ledger.md`
+  - `ai-docs/state/CURRENT.md`

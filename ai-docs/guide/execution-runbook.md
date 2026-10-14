@@ -9,11 +9,11 @@ Dokumen ini merupakan panduan operasional teknis pelaksanaan audit kode, verifik
 ### A. Startup Sesi Baru
 1. Periksa root repositori dan branch kerja: `git status --short --branch`.
 2. Baca file state aktif secara berurutan:
-   - `docs/state-aktif/CURRENT.md` (koordinat aktif)
-   - `docs/state-aktif/HANDOFF.md` (catatan transfer konteks)
-   - `docs/state-aktif/BLOCKERS.md` (eskalasi terbuka)
-   - `docs/state-aktif/QUEUE.md` (antrean slice)
-3. Baca task aktif di `docs/audit/tasks/`.
+   - `ai-docs/state/CURRENT.md` (koordinat aktif)
+   - `ai-docs/state/HANDOFF.md` (catatan transfer konteks)
+   - `ai-docs/state/BLOCKERS.md` (eskalasi terbuka)
+   - `ai-docs/state/QUEUE.md` (antrean slice)
+3. Baca task aktif di `ai-docs/tasks/`.
 4. Catat baseline commit SHA sebelum memulai modifikasi kode.
 
 ### B. Melanjutkan Sesi (Resume)
@@ -43,7 +43,7 @@ Saat mengaudit sebuah slice fitur, lakukan penelusuran sistematis berikut:
 
 ## 3. Evidence & Documentation Standards
 
-Setiap slice audit yang selesai wajib mencatat bukti terverifikasi di bawah direktori `docs/audit/evidence/<slice-name>/<date>/`:
+Setiap slice audit yang selesai wajib mencatat bukti terverifikasi di bawah direktori `ai-docs/reports/evidence/<slice-name>/<date>/`:
 
 - **Lingkungan & Commit:** Catat branch, commit baseline, dan commit hasil perbaikan.
 - **Perintah yang Dijalankan:** Simpan ringkasan perintah CLI beserta exit status.

@@ -100,6 +100,8 @@ storage/app/private/
 
 Akses terhadap dokumen dilakukan melalui mekanisme aplikasi yang memverifikasi hak akses sebelum file diberikan kepada pengguna.
 
+> Dokumentasi arsitektur & pipeline lengkap: [File Upload Security Pipeline](docs/architecture/security-and-uploads.md).
+
 ---
 
 # 📝 Ujian Online / CBT
@@ -181,6 +183,8 @@ php artisan demo:wipe
 ```
 
 Command tersebut membantu pengujian fitur real-time sekaligus demonstrasi kemampuan dashboard.
+
+> Panduan lengkap opsi simulasi & benchmark: [Panduan Traffic Simulator](docs/operations/traffic-simulator.md).
 
 ---
 
@@ -268,6 +272,8 @@ Dokumen calon peserta disimpan pada private filesystem dan tidak diekspos secara
 | Testing            | Pest PHP                 |
 | Containerization   | Docker + Docker Compose  |
 | Public Demo Tunnel | Cloudflare Tunnel        |
+
+> Spesifikasi teknis & seluruh dependensi: [Tech Stack & Dependencies](docs/reference/tech-stack.md).
 
 ---
 
@@ -473,6 +479,8 @@ Untuk workflow lokal, siapkan:
 * npm
 * MariaDB 10.11+ / 11.x
 
+> Panduan instalasi langkah demi langkah: [Local Development Setup Guide](docs/getting-started/local-development.md).
+
 ---
 
 ## 1. Clone Repository
@@ -578,6 +586,8 @@ Seeder menyediakan akun dummy untuk kebutuhan development.
 
 > Credential di atas ditujukan untuk development/testing. Jangan menggunakan credential default ketika instance diekspos ke jaringan publik.
 
+> Rujukan kredensial dan skrip testing: [Demo Accounts & Testing Guide](docs/getting-started/demo-testing.md).
+
 ---
 
 # 🧪 Testing
@@ -638,6 +648,13 @@ sentinel-admission/
 │
 ├── tests/
 ├── docs/
+│   ├── README.md               # Indeks utama dokumentasi sistem
+│   ├── getting-started/        # Panduan instalasi lokal & testing
+│   ├── architecture/           # Desain sistem, keamanan, frontend/backend
+│   ├── operations/             # Traffic simulator, Docker, rollback
+│   ├── state-aktif/            # Status aktif auditor AI
+│   ├── audit/                  # Runbook, release gates, manifest & evidence
+│   └── reference/              # Skema DB, daftar route, tech stack
 ├── Dockerfile
 ├── docker-compose.yml
 ├── composer.json

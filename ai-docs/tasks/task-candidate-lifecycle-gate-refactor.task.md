@@ -55,7 +55,7 @@ Refactor the candidate lifecycle, gate services, and UI feedback to implement a 
 - **Scope:**
   - Run full test suite: `php artisan test`.
   - Format code with Laravel Pint: `./vendor/bin/pint`.
-  - Update `docs/state-aktif/CURRENT.md`, `DECISIONS.md`, and `HANDOFF.md`.
+  - Update `ai-docs/state/CURRENT.md`, `DECISIONS.md`, and `HANDOFF.md`.
 
 ---
 
@@ -63,7 +63,7 @@ Refactor the candidate lifecycle, gate services, and UI feedback to implement a 
 
 To safeguard against sudden session disconnects or context loss:
 1. **Checkpoint Rule:** Every time a milestone is completed or a file is modified:
-   - Log progress and changes in `docs/state-aktif/CURRENT.md` and `docs/state-aktif/HANDOFF.md`.
-   - Record architectural rulings or rule changes in `docs/state-aktif/DECISIONS.md`.
+   - Log progress and changes in `ai-docs/state/CURRENT.md` and `ai-docs/state/HANDOFF.md`.
+   - Record architectural rulings or rule changes in `ai-docs/state/DECISIONS.md`.
 2. **Never batch without committing state:** Keep working tree clean and preserve test evidence in docs.
 3. **Tool Precedence:** Always prioritize Graphify, Context7, and Pest CLI before making speculative assumptions.

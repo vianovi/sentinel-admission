@@ -1,15 +1,14 @@
-# Livi — Deep Discussion & Pre-Build Audit Skill
-> Load this file BEFORE starting any new feature or backend work.
-> Purpose: audit what already exists → discuss & conclude → produce a blueprint ready to execute.
+# Pre-Build Architecture Audit & Feature Blueprints
+> Guidelines for auditing existing code, discussion workflows, blueprinting, and preventing architectural drift.
 
 ---
 
-## When to Load This Skill
+## When to Load This Guideline
 
 ```
 ✅ Before building any new feature (backend or frontend)
 ✅ Before writing any new controller, model, migration, or component
-✅ When Silvia says "kita mau buat fitur X" or "next kita tackle Y"
+✅ When project owner says "kita mau buat fitur X" or "next kita tackle Y"
 ✅ When the scope of work is unclear or touches multiple system parts
 ✅ After a long break from the project — re-orient before doing anything
 
@@ -20,12 +19,12 @@
 
 ## Phase 1 — Audit What Already Exists
 
-Before proposing anything new, Livi must understand the current state.
+Before proposing anything new, understand the current state.
 **Never assume. Always ask for the actual files.**
 
 ### 1A. Codebase Audit Checklist
 ```
-Ask Silvia to share (or confirm from context):
+Ask project owner to share (or confirm from context):
   [ ] Relevant migration files → actual column names, types, constraints
   [ ] Relevant model files → fillable, relations, observers, scopes
   [ ] Relevant controller files → what's already handled, what's missing
@@ -34,7 +33,7 @@ Ask Silvia to share (or confirm from context):
   [ ] Current branch → confirm we're working in the right place
 ```
 
-### 1B. Questions Livi Must Answer Before Moving On
+### 1B. Questions Auditor Must Answer Before Moving On
 ```
 1. What tables/columns exist that are relevant to this feature?
 2. What relations are already defined (hasOne, hasMany, belongsTo)?
@@ -67,11 +66,11 @@ Rule: if a dependency is missing or broken → fix it first, don't build on top 
 
 ## Phase 2 — Discussion & Analysis
 
-Once the audit is complete, Livi synthesizes findings and opens discussion.
+Once the audit is complete, synthesize findings and open discussion.
 
-### 2A. Livi's Synthesis Format
+### 2A. Synthesis Format
 ```
-After audit, Livi presents:
+After audit, present:
 
   WHAT EXISTS:
   - [list what's already built and relevant]
@@ -135,13 +134,13 @@ Mobile & UX:
 
 ## Phase 3 — Blueprint
 
-Only after Phase 1 and Phase 2 are complete does Livi produce a blueprint.
+Only after Phase 1 and Phase 2 are complete does the agent produce a blueprint.
 **No code yet — just structure.**
 
 ### 3A. Blueprint Template
 ```
 FEATURE: [Feature name]
-BRANCH:  [Confirm with Silvia]
+BRANCH:  [Confirm with project owner]
 
 DATABASE:
   → New migration needed? [Yes/No]
@@ -173,7 +172,7 @@ DEPENDENCIES TO FINISH FIRST:
 
 ### 3B. Blueprint Quality Gates
 ```
-Before presenting blueprint to Silvia, verify:
+Before presenting blueprint to project owner, verify:
   [ ] No schema changes without explicit discussion
   [ ] All existing relations accounted for
   [ ] Observer side effects considered
@@ -205,7 +204,7 @@ Before presenting blueprint to Silvia, verify:
 
 ❌ Too many open questions in the blueprint
    → All decisions must be made before execution starts
-   → If Silvia hasn't decided something → that decision must happen now, not later
+   → If project owner hasn't decided something → that decision must happen now, not later
 ```
 
 ---
@@ -213,12 +212,12 @@ Before presenting blueprint to Silvia, verify:
 ## Quick Reference — Discussion Triggers
 
 ```
-Silvia says...                    → Livi does...
+Project owner says...             → Agent does...
 ─────────────────────────────────────────────────────────
 "kita mau buat [fitur X]"        → Start Phase 1 audit immediately
 "next kita tackle [Y]"           → Ask for relevant files, start audit
 "gimana menurut kamu [flow X]?"  → Analyze, map flow, present findings
 "bisa langsung execute?"         → Only if blueprint already complete
 "ada yang perlu diaudit dulu?"   → Yes — always audit before blueprint
-"lanjut dari sesi kemarin"       → Read 02_status.md Last Session Summary first
+"lanjut dari sesi kemarin"       → Read state/HANDOFF.md first
 ```

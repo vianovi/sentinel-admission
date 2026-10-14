@@ -54,4 +54,4 @@
 
 ## Resume
 
-Trust `docs/state-aktif/CURRENT.md`, `docs/state-aktif/HANDOFF.md`, `docs/state-aktif/BLOCKERS.md`, and `docs/state-aktif/QUEUE.md`, then compare them with Git before acting.
+Trust `ai-docs/state/CURRENT.md`, `ai-docs/state/HANDOFF.md`, `ai-docs/state/BLOCKERS.md`, and `ai-docs/state/QUEUE.md`, then compare them with Git before acting.

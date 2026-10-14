@@ -61,8 +61,8 @@ Do not trust this file if its Git state differs from the repository. Reconcile a
 
 - Completed presentation-only Email Design System work on `feature/email-design-system`.
 - Verification: full suite 76 tests/615 assertions, focused email, mail delivery, and domain tests 22/119 assertions, frontend build passed, Blade cache passed, PHP lint, Pint, and diff check passed.
-- Audit report: `docs/audit/reports/email-design-system-audit.md`.
-- Evidence: `docs/audit/evidence/email-design-system/2026-07-28/`.
+- Audit report: `ai-docs/reports/email-design-system-audit.md`.
+- Evidence: `ai-docs/reports/evidence/email-design-system/2026-07-28/`.
 - Status: code `PASS WITH NOTES`; `HUMAN VISUAL REVIEW REQUIRED` in Gmail and Outlook.
 - Changes are committed at `e9300bb`; do not conflate them with the blocked Task 01 public-content work.
 
@@ -70,8 +70,8 @@ Do not trust this file if its Git state differs from the repository. Reconcile a
 
 - Completed Sidebar Collapsed Menu behavior fixes and localStorage state persistence on the current branch.
 - Verification: full suite 76 tests/615 assertions passed, frontend production build compiled without errors.
-- Audit report: `docs/audit/reports/sidebar-collapsed-menu-audit.md`.
-- Evidence: `docs/audit/evidence/sidebar-collapsed-menu/2026-07-30/`.
+- Audit report: `ai-docs/reports/sidebar-collapsed-menu-audit.md`.
+- Evidence: `ai-docs/reports/evidence/sidebar-collapsed-menu/2026-07-30/`.
 - Status: code `PASS WITH NOTES`; `HUMAN VISUAL REVIEW REQUIRED` for visual alignment and feel. Committed at `8b23544`.
 
 ## Resume warning
