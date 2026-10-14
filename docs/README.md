@@ -40,6 +40,7 @@ Dokumentasi resmi arsitektur, operasional, referensi teknis, dan audit sistem Se
 - [Reports & Evidence](audit/reports/README.md) — Laporan temuan audit dan rekaman bukti eksekusi perintah per slice.
 
 ## 5. Referensi Teknis (`docs/reference/`)
+- [Tech Stack & Dependencies](reference/tech-stack.md) — Tumpukan teknologi resmi, versi runtime, dan inventaris library.
 - [Human Review Checklist](reference/human-review-checklist.md) — Lembar persetujuan manual pengujian end-to-end dan UI/UX (Bahasa Indonesia).
 - [Official References](reference/official-references.md) — Tautan dokumentasi resmi framework (Laravel 12, Vite, Inertia, OWASP).
 

@@ -5,24 +5,13 @@
 ---
 
 ## Stack Reference
+Spesifikasi lengkap versi dan arsitektur runtime tersedia di [Tech Stack Specification](../reference/tech-stack.md).
 
-```
-Backend/bridge : Laravel 12 + Inertia.js v2
-Frontend       : React 18 + TypeScript (strict)
-Styling        : Tailwind CSS 3
-Bundler        : Vite 7
-Entry points   : resources/css/app.css + resources/js/app.tsx
-```
-
-Config files to check before changing build behavior:
-```
-vite.config.ts
-tailwind.config.js
-tsconfig.json
-resources/views/app.blade.php
-resources/js/app.tsx
-package.json
-```
+File konfigurasi build utama:
+- `vite.config.js` (bundler & chunking)
+- `tailwind.config.js` (styling tokens)
+- `tsconfig.json` (TypeScript compiler options)
+- `package.json` (dependencies)
 
 ---
 
