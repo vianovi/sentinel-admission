@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { animate, stagger } from "animejs";
 import axios from "axios";
+
 import Field, { textareaCls } from "@/Components/UI/Field";
 import FilePreviewModal from "@/Components/UI/FilePreviewModal";
 
@@ -436,7 +437,7 @@ export default function TabCatatanKhusus({
             }));
 
             try {
-                const response = await axios.post(
+                const response = await axios.post<{ file_url: string | null; mime_type: string | null }>(
                     route("dashboard.data-kesehatan.upload", { docType: key }),
                     formData,
                     {
@@ -444,7 +445,7 @@ export default function TabCatatanKhusus({
                             "Content-Type": "multipart/form-data",
                             "Accept": "application/json",
                         },
-                        onUploadProgress: evt => {
+                        onUploadProgress: (evt: { loaded: number; total?: number }) => {
                             if (!evt.total) return;
                             const progress = Math.round((evt.loaded * 100) / evt.total);
                             setDocs(prev => ({
@@ -455,7 +456,8 @@ export default function TabCatatanKhusus({
                                 },
                             }));
                         },
-                    }
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    } as any
                 );
 
                 const nextUrl = response.data.file_url ?? null;

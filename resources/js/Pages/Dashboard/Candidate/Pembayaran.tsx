@@ -555,7 +555,7 @@ export default function PembayaranPage({
 
         if (!token) {
             try {
-                const res = await axios.post(route('dashboard.pembayaran.snap-token'), {}, {
+                const res = await axios.post<{ snap_token: string }>(route('dashboard.pembayaran.snap-token'), {}, {
                     headers: { Accept: 'application/json' },
                 })
                 token = res.data.snap_token

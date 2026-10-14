@@ -34,7 +34,7 @@ export default function CalendarPage({ candidate, settings, endpoints }: Calenda
         setLoadError(null);
 
         try {
-            const response = await axios.get(endpoints.events, { params: { start, end } });
+            const response = await axios.get<{ events: CalendarEvent[]; dateMeta: Record<string, DateMeta> }>(endpoints.events, { params: { start, end } });
             setEvents(response.data.events ?? []);
             setDateMeta(response.data.dateMeta ?? {});
         } catch {

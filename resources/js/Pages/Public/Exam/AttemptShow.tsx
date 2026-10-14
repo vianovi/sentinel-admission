@@ -118,12 +118,14 @@ export default function PublicAttemptShow({ participant, exam, attempt, question
             setSaveState("saved");
             setSaveMessage("Jawaban tersimpan");
         } catch (error) {
-            if (axios.isAxiosError<ExamSaveResponse>(error) && error.response?.data?.attempt) {
-                setAttemptState(error.response.data.attempt);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const axiosError = error as any;
+            if (axiosError?.isAxiosError && axiosError.response?.data?.attempt) {
+                setAttemptState(axiosError.response.data.attempt as ExamAttemptState);
 
-                if (error.response.status === 423) {
+                if (axiosError.response.status === 423) {
                     setSaveState("locked");
-                    setSaveMessage(error.response.data.message || "Ujian sudah dikunci.");
+                    setSaveMessage(axiosError.response.data.message || "Ujian sudah dikunci.");
                     return;
                 }
             }

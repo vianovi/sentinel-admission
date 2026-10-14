@@ -72,7 +72,7 @@ export default function WizardStep3({
         const init = async () => {
             const startTime = Date.now()
             try {
-                const { data: res } = await axios.put(`/daftar/step3/init/${draftId}`)
+                const { data: res } = await axios.put<{ registration_code: string }>(`/daftar/step3/init/${draftId}`)
                 setRegCode(res.registration_code)
 
                 // Minimum loading 800ms agar user sempat baca "Menyiapkan kode..."

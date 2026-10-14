@@ -170,10 +170,11 @@ export default function DocumentCard({
                         'X-CSRF-TOKEN': csrf,
                         'Accept':       'application/json',
                     },
-                    onUploadProgress: (e) => {
+                    onUploadProgress: (e: { loaded: number; total?: number }) => {
                         if (e.total) setUploadProgress(Math.round((e.loaded * 100) / e.total))
                     },
-                }
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                } as any
             )
             router.reload({ only: ['documents', 'achievementDocs', 'completion'] })
             swalDark.fire({

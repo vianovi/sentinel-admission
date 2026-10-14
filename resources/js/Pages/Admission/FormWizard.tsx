@@ -118,7 +118,7 @@ export default function FormWizard({ activeWave, flash }: FormWizardProps) {
         const init = async () => {
             if (stored.draftId) {
                 try {
-                    const { data: res } = await axios.post('/daftar/check-draft', {
+                    const { data: res } = await axios.post<{ valid: boolean }>('/daftar/check-draft', {
                         draft_id: stored.draftId,
                     })
 
@@ -225,7 +225,13 @@ export default function FormWizard({ activeWave, flash }: FormWizardProps) {
         if (!pendingNisnNik.current) return
         setResumeDraft(null)
         try {
-            const { data: res } = await axios.post('/daftar/resume', pendingNisnNik.current)
+            const { data: res } = await axios.post<{
+                draft_id: number;
+                current_step: number;
+                step1?: Partial<Step1Data>;
+                step2?: Partial<Step2Data>;
+                step3?: Partial<Step3Data>;
+            }>('/daftar/resume', pendingNisnNik.current)
             setDraftId(String(res.draft_id))
             saveDraftId(String(res.draft_id))
             if (res.step1) setStep1({ ...defaultStep1, ...res.step1 })
@@ -246,7 +252,7 @@ export default function FormWizard({ activeWave, flash }: FormWizardProps) {
         setDraftId('')
 
         try {
-            const { data: res } = await axios.post('/daftar/step1', {
+            const { data: res } = await axios.post<{ draft_id: number }>('/daftar/step1', {
                 draft_id:       null,
                 full_name:      step1.full_name,
                 nisn:           step1.nisn,

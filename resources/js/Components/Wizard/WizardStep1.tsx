@@ -69,7 +69,12 @@ export default function WizardStep1({ data, onChange, onNext, onDuplicateFound, 
         try {
             // Cek duplikat — selalu dicek, termasuk saat edit draft yang sudah ada.
             // Kirim current_draft_id agar backend tidak anggap draft sendiri sebagai duplikat.
-            const { data: check } = await axios.post('/daftar/check-duplicate', {
+            const { data: check } = await axios.post<{
+                found: boolean;
+                status: 'draft' | 'registered';
+                can_resume: boolean;
+                data: { name: string; nisn: string; nik: string; updated_at?: string };
+            }>('/daftar/check-duplicate', {
                 nisn:             data.nisn,
                 nik:              data.nik,
                 current_draft_id: currentDraftId ? Number(currentDraftId) : null,
@@ -85,7 +90,7 @@ export default function WizardStep1({ data, onChange, onNext, onDuplicateFound, 
             }
 
             // 2. Upsert — kirim draft_id kalau sudah ada (UPDATE), kosong = INSERT baru
-            const { data: res } = await axios.post('/daftar/step1', {
+            const { data: res } = await axios.post<{ draft_id: number }>('/daftar/step1', {
                 draft_id:       currentDraftId ? Number(currentDraftId) : null,
                 full_name:      data.full_name,
                 nisn:           data.nisn,

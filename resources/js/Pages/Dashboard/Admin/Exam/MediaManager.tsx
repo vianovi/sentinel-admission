@@ -72,10 +72,10 @@ export default function MediaManager({ media }: Props) {
         setSelectedPackageId(null);
         setQuestions([]);
         axios
-            .get(route("admin.exams.media.packages"))
+            .get<ExamPackage[]>(route("admin.exams.media.packages"))
             .then((res) => setPackages(res.data))
             .catch(() => showErrorToast("Gagal memuat daftar paket soal."))
-            .finally(() => setLoadingPackages(false));
+            .then(() => setLoadingPackages(false));
     }, [assignTarget]);
 
     // Load questions when package selected
@@ -87,10 +87,10 @@ export default function MediaManager({ media }: Props) {
         setLoadingQuestions(true);
         setQuestions([]);
         axios
-            .get(route("admin.exams.media.questions", { packageId: selectedPackageId }))
+            .get<ExamQuestion[]>(route("admin.exams.media.questions", { packageId: selectedPackageId }))
             .then((res) => setQuestions(res.data))
             .catch(() => showErrorToast("Gagal memuat daftar soal."))
-            .finally(() => setLoadingQuestions(false));
+            .then(() => setLoadingQuestions(false));
     }, [selectedPackageId]);
 
     const handleUpload = (e: FormEvent) => {
@@ -160,7 +160,7 @@ export default function MediaManager({ media }: Props) {
         if (!assignTarget) return;
         setAssigningId(questionId);
         try {
-            const res = await axios.post(route("admin.exams.media.assign"), {
+            const res = await axios.post<{ already_exists: boolean; message: string }>(route("admin.exams.media.assign"), {
                 filename: assignTarget.name,
                 question_id: questionId,
                 position: assignPosition,
@@ -173,7 +173,7 @@ export default function MediaManager({ media }: Props) {
                 // Refresh question list to update has_image indicator
                 if (selectedPackageId) {
                     axios
-                        .get(route("admin.exams.media.questions", { packageId: selectedPackageId }))
+                        .get<ExamQuestion[]>(route("admin.exams.media.questions", { packageId: selectedPackageId }))
                         .then((r) => setQuestions(r.data));
                 }
             }
