@@ -27,7 +27,6 @@ Dokumentasi resmi arsitektur, operasional, referensi teknis, dan audit sistem Se
 - [Context Summary](state-aktif/CONTEXT-SUMMARY.md) — Ringkasan snapshot konfigurasi teknis dan batas aplikasi terverifikasi.
 
 ## 4. Audit & Kesiapan Produksi (`docs/audit/`)
-- [Audit Workspace Guide](audit/audit-workspace-readme.md) — Filosofi sistem operasi audit produksi dan peta direktori.
 - [Auditor Charter](audit/auditor-charter.md) — Misi, etika skeptisisme, dan batasan otonomi auditor produksi.
 - [Auditor Operating Rules](audit/operating-rules.md) — SOP pra-audit, penambalan minimal, dan standar verifikasi bukti.
 - [Execution Runbook](audit/execution-runbook.md) — Prosedur langkah-demi-langkah pelaksanaan audit slice.
