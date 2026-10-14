@@ -5,12 +5,13 @@ Dokumentasi resmi arsitektur, operasional, referensi teknis, dan audit sistem Se
 ---
 
 ## 1. Arsitektur & Standar (`docs/architecture/`)
-- [Core Context & Domain](architecture/core-context.md) — Konteks inti domain bisnis SPMB, alur wizard, dan arsitektur aplikasi.
+- [Candidate Lifecycle & SPMB Documents](architecture/candidate-lifecycle.md) — Alur pendaftaran berjenjang, spesifikasi 7 dokumen wajib, dan aturan gerbang evaluasi.
 - [Security & Upload Standard](architecture/security-and-uploads.md) — Standar keamanan 9 domain OWASP, autentikasi, serta 4 lapis validasi upload berkas.
 - [Frontend Standards & UI System](architecture/frontend-standards.md) — Standar React 18, token tema Amber/Slate, 4 state wajib UI, 5 state upload, dan motion Anime.js.
 - [Backend Development](architecture/backend-development.md) — Standar Laravel 12, service layer, transaksi atomik DB, dan observer lifecycle.
 - [Build Rules](architecture/build-rules.md) — Konfigurasi bundling Vite 7, chunk splitting, dan optimasi performa asset.
 - [Architectural Lessons](architecture/architectural-lessons.md) — Catatan retrospektif arsitektural dan audit pra-implementasi fitur.
+- [Core Context & Domain](architecture/core-context.md) — Konteks inti domain bisnis SPMB, alur wizard, dan arsitektur aplikasi.
 
 ## 2. Operasional Sistem (`docs/operations/`)
 - [Traffic Simulator & Demo Injector](operations/traffic-simulator.md) — Panduan simulasi live traffic pendaftar, benchmark beban, dan pembersihan data demo.
