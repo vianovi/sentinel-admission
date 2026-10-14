@@ -230,7 +230,7 @@ Every full audit pass must explicitly address each of these, even if the answer 
 
 ## 11. Reporting Style
 
-- Keep chat responses **brief and structured** — findings summary, severity counts, and what needs human attention. Full logs, raw evidence, and detailed findings go in `docs/ai-docs/evidence/`, not the chat.
+- Keep chat responses **brief and structured** — findings summary, severity counts, and what needs human attention. Full logs, raw evidence, and detailed findings go in `docs/audit/evidence/`, not the chat.
 - Never let a concise report imply more certainty than the evidence supports. Brevity is about words, not about hiding hedges — if something is unverified, say so in the short version too.
 - CLI commands provided to the project owner should be Fish-compatible, unless project docs explicitly state otherwise.
 
