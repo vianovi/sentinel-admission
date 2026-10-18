@@ -14,10 +14,11 @@ type Props = {
     attempt: ExamAttemptState;
     questions: ExamQuestion[];
     answers: Record<string, ExamAnswerState>;
+    recovery_token: string;
     server_time: string;
 };
 
-export default function PublicAttemptShow({ participant, exam, attempt, questions, answers }: Props) {
+export default function PublicAttemptShow({ participant, exam, attempt, questions, answers, recovery_token }: Props) {
     const { flash, errors } = usePage<PageProps & { errors: Record<string, string>; flash: { success?: string; error?: string } }>().props;
     const [attemptState, setAttemptState] = useState<ExamAttemptState>(attempt);
     const [saveState, setSaveState] = useState<ExamSaveState>("idle");
@@ -47,12 +48,13 @@ export default function PublicAttemptShow({ participant, exam, attempt, question
                 subjectName: exam.subject_name ?? "",
                 startedAt: attemptState.started_at,
                 expiresAt: attemptState.expires_at,
+                recoveryToken: recovery_token,
             };
             localStorage.setItem("SENTINEL_PUBLIC_EXAM_ACTIVE_SESSION", JSON.stringify(sessionInfo));
         } else if (!isRunning) {
             localStorage.removeItem("SENTINEL_PUBLIC_EXAM_ACTIVE_SESSION");
         }
-    }, [isRunning, attempt.id, participant.name, participant.school, exam.session_title, exam.package_title, exam.subject_name, attemptState.expires_at, attemptState.started_at]);
+    }, [isRunning, attempt.id, participant.name, participant.school, exam.session_title, exam.package_title, exam.subject_name, attemptState.expires_at, attemptState.started_at, recovery_token]);
 
     const { activeIndex, activeQuestion, answeredCount, answerMap, setActiveIndex, goNext, goPrev, updateAnswer, patchAnswer, saveTimers } = useExamNavigation({
         questions,

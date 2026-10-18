@@ -100,7 +100,7 @@ test('admin can update a public exam session', function () {
     expect((float) $session->passing_score)->toBe(80.0);
 });
 
-test('admin can toggle result visibility, rotate token, and delete public session', function () {
+test('admin can toggle result visibility and delete public session without manual token rotation', function () {
     $session = ExamSession::create([
         'exam_package_id' => $this->package->id,
         'title' => 'Sesi Publik Test',
@@ -127,16 +127,9 @@ test('admin can toggle result visibility, rotate token, and delete public sessio
         ->assertRedirect();
     expect($session->fresh()->show_result_to_candidate)->toBeTrue();
 
-    // 2. Rotate token
-    $this->actingAs($this->admin)
-        ->post(route('admin.exams.public-sessions.tokens.rotate', $token))
-        ->assertRedirect();
-    expect($token->fresh()->isExpired())->toBeTrue();
+    expect(Route::has('admin.exams.public-sessions.tokens.rotate'))->toBeFalse();
 
-    $newToken = ExamSessionToken::where('exam_session_id', $session->id)->latest('id')->first();
-    expect($newToken->id)->not->toBe($token->id);
-
-    // 3. Delete session
+    // 2. Delete session
     $this->actingAs($this->admin)
         ->delete(route('admin.exams.public-sessions.destroy', $session))
         ->assertRedirect();
@@ -163,13 +156,14 @@ test('rotate-tokens command auto rotates tokens for active public sessions', fun
         'created_at' => now()->subMinutes(20),
     ]);
 
-    $this->artisan('exam:rotate-tokens', ['--force' => true])
+    $this->artisan('exam:rotate-tokens')
         ->assertExitCode(0);
 
     expect($oldToken->fresh()->isExpired())->toBeTrue();
     $latestToken = ExamSessionToken::where('exam_session_id', $session->id)->latest('id')->first();
-    expect($latestToken->id)->not->toBe($oldToken->id);
-    expect(strlen($latestToken->token))->toBe(6);
+    expect($latestToken->id)->not->toBe($oldToken->id)
+        ->and($latestToken->token)->not->toBe($oldToken->token)
+        ->and($latestToken->token)->toMatch('/^[A-Z0-9]{6}$/');
 });
 
 test('sync-expired command auto submits candidate attempts whose time limit expired', function () {

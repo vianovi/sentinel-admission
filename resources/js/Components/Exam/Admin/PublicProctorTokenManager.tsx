@@ -7,7 +7,6 @@ type Props = {
     activeProctorToken: PublicTokenItem | undefined;
     tokenForm: TokenFormReturn;
     handleGenerateToken: (e: FormEvent) => void;
-    handleRotateToken: (tokenId: number) => void;
     handleDeleteToken: (tokenId: number) => void;
     copyToClipboard: (text: string, label: string) => void;
     onOpenProctorScreen: () => void;
@@ -18,7 +17,6 @@ export default function PublicProctorTokenManager({
     activeProctorToken,
     tokenForm,
     handleGenerateToken,
-    handleRotateToken,
     handleDeleteToken,
     copyToClipboard,
     onOpenProctorScreen,
@@ -81,14 +79,10 @@ export default function PublicProctorTokenManager({
                     </div>
                 </div>
 
-                {activeProctorToken && (
-                    <button
-                        onClick={() => handleRotateToken(activeProctorToken.id)}
-                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-xs font-black text-slate-950 hover:bg-amber-400 transition-all shadow-lg shadow-amber-500/20 active:scale-95 shrink-0"
-                    >
-                        <i className="fa-solid fa-rotate text-xs" /> Rotasi Token Baru
-                    </button>
-                )}
+                <div className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs font-bold text-emerald-700 dark:text-emerald-300">
+                    <i className="fa-solid fa-arrows-rotate" />
+                    Token acak berganti otomatis setiap 15 menit
+                </div>
             </div>
 
             {/* Token History & Generator */}

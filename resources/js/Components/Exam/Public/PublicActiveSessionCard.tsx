@@ -6,6 +6,7 @@ type ActiveExamSession = {
     subjectName?: string;
     startedAt: string;
     expiresAt: string;
+    recoveryToken: string;
 };
 
 type Props = {

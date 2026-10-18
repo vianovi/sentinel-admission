@@ -120,7 +120,6 @@ Route::middleware(['auth', RoleMiddleware::class.':admin'])
         Route::delete('/public-sessions/{session}', [AdminPublicExamSession::class, 'destroy'])->name('public-sessions.destroy');
         Route::post('/public-sessions/{session}/toggle-results', [AdminPublicExamSession::class, 'toggleResultVisibility'])->name('public-sessions.toggle-results');
         Route::post('/public-sessions/{session}/tokens', [AdminPublicExamSession::class, 'generateToken'])->name('public-sessions.tokens.store');
-        Route::post('/tokens/{token}/rotate', [AdminPublicExamSession::class, 'rotateToken'])->name('public-sessions.tokens.rotate');
         Route::delete('/public-tokens/{token}', [AdminPublicExamSession::class, 'destroyToken'])->name('public-sessions.destroy-token');
         Route::post('/public-sessions/attempts/{attempt}/force-submit', [AdminPublicExamSession::class, 'forceSubmitAttempt'])->name('public-sessions.attempts.force-submit');
         Route::post('/public-sessions/attempts/{attempt}/reset-violations', [AdminPublicExamSession::class, 'resetAttemptViolations'])->name('public-sessions.attempts.reset-violations');

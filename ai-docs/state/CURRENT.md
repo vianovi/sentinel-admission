@@ -4,12 +4,12 @@
 - Master status: `in_progress`
 - Active task: `feat/exam-engine-audit-and-optimizations`
 - Active slice: `exam-engine-runtime-optimizations`
-- Slice phase: `verified_checkpoint`
+- Slice phase: `verified`
 - Repository root: `/home/silinux/Documents/MyPlaygraund/Laravel-Project/sentinel-admission`
 - Current branch: `feature/exam-panel-focus-layout`
-- Latest work: `1) Safe Exam Media Trash & Auto-Cleanup (30-day retention, automatic question tag stripping, conflict-safe question reference restoration, human-readable system audit log & trash management panel). 2) F-01: Memoized RichExamText rendering. 3) F-02: Stabilized useExamTimer countdown loop. 4) B-02/N-01: Optimized ExamMonitoringService snapshot caching (3s) and tab-visibility aware live polling (5s).`
-- Last successful verification: `npx tsc --noEmit (0 errors), npx vite build (built in 16.76s), 121 Pest tests passed (940 assertions), focused trash test 7 passed (74 assertions), Laravel Pint passed, git diff --check passed.`
-- Current blocker: `None for active exam use. B-002 is contained and deferred: ZIP upload is disabled; secure archive extraction remains a TODO if bulk ZIP support is reintroduced.`
-- Human visual review: `HUMAN VISUAL REVIEW REQUIRED — verifikasi halaman /dashboard/admin/system/activity-logs, /dashboard/admin/system/trash/media, dan tampilan ujian siswa.`
-- Next exact action: `Commit verified checkpoint, then audit public exam experience and question management.`
+- Latest work: `1) Safe Exam Media Trash & Audit panel (commit c815e59). 2) Public resume takeover fixed with a 40-character attempt-bound recovery token and token rotation after successful recovery. 3) Public room tokens remain random 6-character codes and rotate automatically every 15 minutes with scheduler overlap protection. 4) Manual token rotation route/controller/button removed. 5) ZIP Bank Media upload remains disabled and deferred as TODO.`
+- Last successful verification: `npx tsc --noEmit (0 errors), npx vite build (built in 13.32s), 121 Pest tests passed (942 assertions), focused public exam/token tests 10 passed (95 assertions), Laravel Pint passed, git diff --check passed.`
+- Current blocker: `None for active public exam use. B-003 resolved. B-002 ZIP upload remains contained/deferred.`
+- Human visual review: `HUMAN VISUAL REVIEW REQUIRED — verify recovery flow after refresh, automatic token status display, public attempt layout, and admin question-management layout.`
+- Next exact action: `Continue Exam audit from public attempt UI and package/question-management behavior; do not reintroduce manual token rotation or ZIP upload.`
 - Last updated: `2026-10-15`

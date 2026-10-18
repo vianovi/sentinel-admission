@@ -179,22 +179,31 @@ test('guest auto resume flow for active in progress session', function () {
     expect($attempt)->not->toBeNull();
     expect($attempt->status)->toBe('in_progress');
 
-    // 2. Resume active attempt via identity matching
+    $originalRecoveryToken = $attempt->guest_session_token;
+
+    // 2. Reject identity-only takeover without the attempt-bound recovery token
+    $this->post(route('exam.public.attempts.resume', ['attempt' => $attempt->id]), [
+        'guest_name' => 'Budi Santoso',
+        'guest_school' => 'SMP Negeri 1 Surabaya',
+    ])->assertSessionHasErrors(['recovery_token']);
+
+    // 3. Resume with the high-entropy recovery token and rotate it after use
     $response = $this->post(route('exam.public.attempts.resume', ['attempt' => $attempt->id]), [
         'guest_name' => 'Budi Santoso',
         'guest_school' => 'SMP Negeri 1 Surabaya',
+        'recovery_token' => $originalRecoveryToken,
     ]);
 
     $response->assertRedirect(route('exam.public.attempts.show', ['attempt' => $attempt->id]));
     $response->assertCookie('guest_exam_token');
+    expect($attempt->fresh()->guest_session_token)->not->toBe($originalRecoveryToken);
 
-    // 3. Reject if identity mismatch
-    $badResponse = $this->post(route('exam.public.attempts.resume', ['attempt' => $attempt->id]), [
-        'guest_name' => 'Budi Mismatch',
-        'guest_school' => 'SMP Lain',
-    ]);
-
-    $badResponse->assertSessionHasErrors(['token']);
+    // 4. Reject reuse of the old recovery token
+    $this->post(route('exam.public.attempts.resume', ['attempt' => $attempt->id]), [
+        'guest_name' => 'Budi Santoso',
+        'guest_school' => 'SMP Negeri 1 Surabaya',
+        'recovery_token' => $originalRecoveryToken,
+    ])->assertSessionHasErrors(['token']);
 });
 
 test('public exam prevents multiple submissions with same guest name', function () {

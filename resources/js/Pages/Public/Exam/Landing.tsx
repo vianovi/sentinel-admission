@@ -20,6 +20,7 @@ type ActiveExamSession = {
     subjectName?: string;
     startedAt: string;
     expiresAt: string;
+    recoveryToken: string;
 };
 
 export default function PublicExamLanding({ token: initialToken, token_valid, session }: Props) {
@@ -32,7 +33,7 @@ export default function PublicExamLanding({ token: initialToken, token_valid, se
             const raw = localStorage.getItem("SENTINEL_PUBLIC_EXAM_ACTIVE_SESSION");
             if (raw) {
                 const parsed = JSON.parse(raw) as ActiveExamSession;
-                if (parsed.expiresAt && new Date(parsed.expiresAt).getTime() > Date.now()) {
+                if (parsed.recoveryToken && parsed.expiresAt && new Date(parsed.expiresAt).getTime() > Date.now()) {
                     setActiveSession(parsed);
                 } else {
                     localStorage.removeItem("SENTINEL_PUBLIC_EXAM_ACTIVE_SESSION");
@@ -50,6 +51,7 @@ export default function PublicExamLanding({ token: initialToken, token_valid, se
             {
                 guest_name: activeSession.guestName,
                 guest_school: activeSession.guestSchool,
+                recovery_token: activeSession.recoveryToken,
             },
             {
                 onError: () => {

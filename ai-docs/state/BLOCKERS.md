@@ -26,3 +26,17 @@
 - Temporary containment: ZIP support was removed from backend validation, upload execution, and the admin file picker. Individual or multiple image upload remains available.
 - TODO if ZIP support is needed later: Implement bounded entry-by-entry extraction; reject absolute/traversal paths and symlinks; limit entry count and total uncompressed bytes; verify actual image MIME/content; always clean temporary files in `finally`; add malicious ZIP regression tests.
 - Next action: Keep ZIP support disabled while prioritizing the public exam experience and question management.
+
+## B-003 — Public exam resume can reissue an attempt session token from low-entropy identity data
+
+- ID: B-003
+- Date: 2026-10-18
+- Slice: Exam Engine / Public Exam
+- Severity: high security — session takeover / authentication bypass
+- State: resolved on `feature/exam-panel-focus-layout`
+- Evidence: `app/Http/Controllers/Exam/PublicExamController.php` and public route `POST /exam/attempts/{attempt}/resume`.
+- Confirmed behavior: A caller who supplies an in-progress attempt ID plus matching participant name and school receives a fresh `guest_exam_token` cookie. The endpoint does not require the original room/session token, an existing guest session secret, email/phone verification, or a dedicated high-entropy recovery secret.
+- Impact: Anyone who learns or guesses an attempt ID and knows a participant's name/school can take over the active attempt, read its questions and saved answers, change answers, or submit it. Sequential numeric attempt IDs and commonly known school rosters increase practical exposure.
+- Resolution: Resume now requires the 40-character high-entropy attempt-bound recovery token stored by the originating browser in addition to participant identity. A successful resume rotates the token, invalidating replay of the old recovery credential.
+- Verification: Identity-only resume is rejected, valid recovery succeeds, old-token replay is rejected, and the full suite passes.
+- Next action: Continue auditing public exam UI and question-management behavior.

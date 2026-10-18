@@ -291,17 +291,6 @@ export default function PublicSessions({
         });
     };
 
-    const handleRotateToken = async (tokenId: number) => {
-        const confirmed = await confirmAction(
-            "Rotasi Token Proktor?",
-            "Apakah Anda yakin ingin merotasi token ini? Token lama akan langsung non-aktif dan token baru akan otomatis dibuat.",
-            "Ya, Rotasi Token"
-        );
-        if (confirmed) {
-            router.post(route("admin.exams.public-sessions.tokens.rotate", tokenId));
-        }
-    };
-
     const handleDeleteToken = async (tokenId: number) => {
         const confirmed = await confirmAction(
             "Hapus Token Proktor?",
@@ -541,7 +530,6 @@ export default function PublicSessions({
                                             activeProctorToken={activeProctorToken}
                                             tokenForm={tokenForm}
                                             handleGenerateToken={handleGenerateToken}
-                                            handleRotateToken={handleRotateToken}
                                             handleDeleteToken={handleDeleteToken}
                                             copyToClipboard={copyToClipboard}
                                             onOpenProctorScreen={() => setShowProctorScreen(true)}

@@ -2,7 +2,7 @@
 
 ## Current position
 
-Starting new task on `feature/demo-traffic-injector`. Creating a Live Traffic Simulator (Artisan Command) to gradually inject dummy candidate data for testing and demo presentations.
+Exam Engine audit is active on `feature/exam-panel-focus-layout`. The media trash/audit checkpoint is committed at `c815e59`. Public attempt resume security and automatic room-token rotation changes are verified and ready for a follow-up commit.
 
 ## Completed
 
@@ -14,7 +14,10 @@ Starting new task on `feature/demo-traffic-injector`. Creating a Live Traffic Si
 
 ## In progress
 
-- Building the traffic simulator command (`php artisan demo:simulate-traffic`).
+- Continue audit of the public attempt UI and admin package/question-management behavior.
+- `B-003` public resume takeover is resolved: resume requires the browser-held 40-character attempt token and rotates it after successful recovery.
+- Public room tokens automatically rotate every 15 minutes via `exam:rotate-tokens`; manual rotate route/controller/UI were removed.
+- `B-002` ZIP Bank Media support remains disabled and documented as a deferred TODO.
 
 ## Important decisions
 
@@ -32,7 +35,7 @@ None.
 
 ## Last verification
 
-Test suite run: 99 passed, 773 assertions. Laravel Pint: 223 files formatted. MariaDB live simulator and wipe runs passed.
+`121 passed, 942 assertions`; focused public exam/token tests `10 passed, 95 assertions`; `npx tsc --noEmit` passed; Vite production build passed in `13.32s`; Pint and `git diff --check` passed.
 
 ## Completed in this slice
 
@@ -51,7 +54,7 @@ Test suite run: 99 passed, 773 assertions. Laravel Pint: 223 files formatted. Ma
 
 ## Next exact action
 
-Present demo commands to user for review and interactive testing.
+Commit the verified public resume/token-rotation fix, then continue from public attempt UI and package/question-management audit. Run Playwright/browser verification when the browser driver is available.
 
 ## Resume warning
 

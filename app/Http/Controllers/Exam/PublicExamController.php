@@ -13,6 +13,7 @@ use App\Services\Exam\ExamAttemptService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -119,13 +120,15 @@ class PublicExamController extends Controller
         $validated = $request->validate([
             'guest_name' => ['required', 'string', 'max:255'],
             'guest_school' => ['required', 'string', 'max:255'],
+            'recovery_token' => ['required', 'string', 'size:40'],
         ]);
 
         if (
+            ! hash_equals((string) $attempt->guest_session_token, $validated['recovery_token']) ||
             strcasecmp(trim($attempt->guest_name ?? ''), trim($validated['guest_name'])) !== 0 ||
             strcasecmp(trim($attempt->guest_school ?? ''), trim($validated['guest_school'])) !== 0
         ) {
-            return back()->withErrors(['token' => 'Identitas tidak cocok dengan sesi ujian aktif ini.']);
+            return back()->withErrors(['token' => 'Kredensial pemulihan sesi tidak valid.']);
         }
 
         $attempt = $this->attemptService->syncExpired($attempt, $request);
@@ -135,6 +138,8 @@ class PublicExamController extends Controller
                 ->route('exam.public.landing')
                 ->withErrors(['token' => 'Sesi ujian telah berakhir atau waktu pengerjaan habis.']);
         }
+
+        $attempt->update(['guest_session_token' => Str::random(40)]);
 
         return redirect()
             ->route('exam.public.attempts.show', $attempt)
@@ -194,6 +199,7 @@ class PublicExamController extends Controller
                 'show_result_to_candidate' => (bool) ($attempt->session?->show_result_to_candidate || $attempt->package?->show_result_to_candidate),
             ],
             'attempt' => $this->attemptPayload($attempt, true),
+            'recovery_token' => $attempt->guest_session_token,
             'questions' => $questions,
             'answers' => $answers,
             'server_time' => now()->toISOString(),

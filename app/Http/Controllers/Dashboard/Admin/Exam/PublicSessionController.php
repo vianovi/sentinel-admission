@@ -267,33 +267,6 @@ class PublicSessionController extends Controller
         return back()->with('success', "Token Proktor Ujian Baru berhasil dibuat: {$token->token}");
     }
 
-    public function rotateToken(ExamSessionToken $token, Request $request): RedirectResponse
-    {
-        $session = $token->session;
-
-        // Expire current token
-        $token->update(['expires_at' => now()]);
-
-        // Generate new random 6-character room token
-        $newToken = ExamSessionToken::create([
-            'exam_session_id' => $session->id,
-            'token' => Str::upper(Str::random(6)),
-            'label' => 'Token Proktor Rotasi ('.now()->format('H:i').')',
-            'type' => $token->type,
-            'max_uses' => $token->max_uses,
-            'expires_at' => $session->closes_at,
-            'created_by' => $request->user()?->id,
-        ]);
-
-        $this->audit->log('proctor_token_rotated', [
-            'exam_session_id' => $session->id,
-            'old_token' => $token->token,
-            'new_token' => $newToken->token,
-        ], $request);
-
-        return back()->with('success', "Token berhasil dirotasi ke token baru: {$newToken->token}");
-    }
-
     public function forceSubmitAttempt(ExamAttempt $attempt, Request $request): RedirectResponse
     {
         if (! $attempt->isInProgress()) {
