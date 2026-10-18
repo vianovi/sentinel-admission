@@ -143,4 +143,15 @@ Route::middleware(['auth', RoleMiddleware::class.':admin'])
             ->name('profile.avatar');
         Route::post('/profile/avatar', [AdminProfile::class, 'updateAvatar'])
             ->name('profile.avatar.update');
+
+        // ─── RIWAYAT AKTIVITAS & TEMPAT SAMPAH (SYSTEM AUDIT & TRASH) ─────────
+        Route::prefix('system')->name('system.')->group(function () {
+            Route::get('/activity-logs', [\App\Http\Controllers\Dashboard\Admin\SystemActivityLogController::class, 'index'])->name('activity-logs.index');
+            Route::get('/trash/media', [\App\Http\Controllers\Dashboard\Admin\SystemTrashController::class, 'media'])->name('trash.media');
+            Route::get('/trash/candidates', [\App\Http\Controllers\Dashboard\Admin\SystemTrashController::class, 'candidates'])->name('trash.candidates');
+            Route::get('/trash/preview/{trash}', [\App\Http\Controllers\Dashboard\Admin\SystemTrashController::class, 'preview'])->name('trash.preview');
+            Route::post('/trash/{trash}/restore', [\App\Http\Controllers\Dashboard\Admin\SystemTrashController::class, 'restore'])->name('trash.restore');
+            Route::delete('/trash/{trash}/purge', [\App\Http\Controllers\Dashboard\Admin\SystemTrashController::class, 'purge'])->name('trash.purge');
+            Route::delete('/trash/empty', [\App\Http\Controllers\Dashboard\Admin\SystemTrashController::class, 'emptyAll'])->name('trash.empty');
+        });
     });

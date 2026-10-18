@@ -355,6 +355,31 @@ export const navigationConfig: Record<string, NavGroup[]> = {
             items: [
                 { label: "Staff", href: "/dashboard/admin/staff-list", icon: "fa-solid fa-user-tie" },
                 { label: "Pengguna", href: "/dashboard/admin/users", icon: "fa-solid fa-users-gear" },
+                {
+                    label: "Audit & Tempat Sampah",
+                    icon: "fa-solid fa-clock-rotate-left",
+                    activeRules: [{ path: "/dashboard/admin/system" }],
+                    children: [
+                        {
+                            label: "Riwayat Aktivitas",
+                            href: "/dashboard/admin/system/activity-logs",
+                            icon: "fa-solid fa-list-check",
+                            activePrefixes: ["/dashboard/admin/system/activity-logs"],
+                        },
+                        {
+                            label: "Sampah Bank Media",
+                            href: "/dashboard/admin/system/trash/media",
+                            icon: "fa-solid fa-photo-film",
+                            activePrefixes: ["/dashboard/admin/system/trash/media"],
+                        },
+                        {
+                            label: "Sampah Draft Kandidat",
+                            href: "/dashboard/admin/system/trash/candidates",
+                            icon: "fa-solid fa-user-xmark",
+                            activePrefixes: ["/dashboard/admin/system/trash/candidates"],
+                        },
+                    ],
+                },
             ],
         },
         {

@@ -41,9 +41,10 @@ type ExamQuestion = {
 
 type Props = {
     media: MediaFile[];
+    trash_count?: number;
 };
 
-export default function MediaManager({ media }: Props) {
+export default function MediaManager({ media, trash_count = 0 }: Props) {
     const { flash, errors: pageErrors } = usePage<PageProps & { errors: Record<string, string> }>().props;
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedPreview, setSelectedPreview] = useState<MediaFile | null>(null);
@@ -143,9 +144,9 @@ export default function MediaManager({ media }: Props) {
 
     const handleDelete = async (filename: string) => {
         const confirmed = await confirmAction(
-            "Hapus Gambar?",
-            `Apakah Anda yakin ingin menghapus "${filename}"? Tag pada soal yang memuat gambar ini tidak akan lagi menampilkan gambar.`,
-            "Ya, Hapus Gambar"
+            "Pindahkan ke Tempat Sampah?",
+            `Gambar "${filename}" akan dipindahkan ke Tempat Sampah (tersedia 30 hari). Relasi tag [GAMBAR: ...] pada butir soal akan dibersihkan secara aman.`,
+            "Ya, Pindahkan ke Sampah"
         );
 
         if (confirmed) {
@@ -215,6 +216,17 @@ export default function MediaManager({ media }: Props) {
                     actions={
                         <div className="flex items-center gap-2">
                             <Link
+                                href="/dashboard/admin/system/trash/media"
+                                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 text-sm font-bold text-amber-500 transition hover:bg-amber-500/20"
+                            >
+                                <i className="fa-solid fa-trash-can text-xs" /> Tempat Sampah
+                                {trash_count > 0 && (
+                                    <span className="rounded-full bg-amber-500 text-slate-950 px-1.5 py-0.5 text-[10px] font-black">
+                                        {trash_count}
+                                    </span>
+                                )}
+                            </Link>
+                            <Link
                                 href="/dashboard/admin/exams/packages"
                                 className={secondaryButtonClass}
                             >
@@ -232,8 +244,8 @@ export default function MediaManager({ media }: Props) {
                     items={[
                         {
                             label: "Langkah 1",
-                            title: "Unggah Media / ZIP",
-                            description: "Unggah gambar satu-per-satu atau kompresi satu folder menjadi .ZIP untuk ekstrak otomatis.",
+                            title: "Unggah Media",
+                            description: "Unggah satu atau beberapa file gambar sekaligus. Dukungan ZIP dinonaktifkan sementara untuk keamanan.",
                             icon: "fa-solid fa-cloud-arrow-up",
                             state: media.length > 0 ? "done" : "active",
                         },
@@ -270,8 +282,8 @@ export default function MediaManager({ media }: Props) {
                     />
                     <StatCard
                         label="Format Didukung"
-                        value="JPG, PNG, WEBP, ZIP"
-                        icon="fa-solid fa-file-zipper"
+                        value="JPG, PNG, GIF, SVG, WEBP"
+                        icon="fa-solid fa-file-image"
                         tone="text-emerald-500"
                     />
                     <StatCard
@@ -306,13 +318,13 @@ export default function MediaManager({ media }: Props) {
                                         Klik untuk pilih file atau Drag & Drop
                                     </p>
                                     <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
-                                        Maks 50MB · JPG, PNG, WEBP, atau ZIP
+                                        Maks 50MB per file · JPG, PNG, GIF, SVG, atau WEBP
                                     </p>
                                 </div>
                                 <input
                                     type="file"
                                     multiple
-                                    accept=".jpg,.jpeg,.png,.webp,.gif,.svg,.zip"
+                                    accept=".jpg,.jpeg,.png,.webp,.gif,.svg"
                                     className="hidden"
                                     onChange={(e) => {
                                         if (e.target.files) {
@@ -341,7 +353,7 @@ export default function MediaManager({ media }: Props) {
                                     <div className="mt-2 max-h-28 overflow-y-auto space-y-1 text-[11px] text-slate-600 dark:text-slate-300">
                                         {form.data.files.slice(0, 5).map((f, idx) => (
                                             <div key={idx} className="truncate flex items-center gap-1.5">
-                                                <i className={f.name.endsWith(".zip") ? "fa-solid fa-file-zipper text-amber-500" : "fa-solid fa-image text-blue-500"} />
+                                                <i className="fa-solid fa-image text-blue-500" />
                                                 <span className="truncate">{f.name}</span>
                                             </div>
                                         ))}

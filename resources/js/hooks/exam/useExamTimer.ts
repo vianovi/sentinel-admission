@@ -46,17 +46,18 @@ export function useExamTimer({
         if (!isRunning) return;
 
         const timer = window.setInterval(() => {
-            const current = calcClientRemaining(attempt.expires_at_iso, remaining);
-            setRemaining(current);
-
-            if (current <= 0 && !expiredTriggered.current) {
-                expiredTriggered.current = true;
-                onExpired();
-            }
+            setRemaining((prev) => {
+                const current = calcClientRemaining(attempt.expires_at_iso, prev > 0 ? prev - 1 : 0);
+                if (current <= 0 && !expiredTriggered.current) {
+                    expiredTriggered.current = true;
+                    onExpired();
+                }
+                return current;
+            });
         }, 1000);
 
         return () => window.clearInterval(timer);
-    }, [isRunning, attempt.expires_at_iso, remaining, onExpired]);
+    }, [isRunning, attempt.expires_at_iso, onExpired]);
 
     // Periodic server sync
     useEffect(() => {

@@ -75,10 +75,16 @@ export default function ExamMonitoring({ snapshot, feed_url, display_url }: Prop
 
     useEffect(() => {
         const fetchSnapshot = async () => {
+            if (typeof document !== "undefined" && document.hidden) {
+                return;
+            }
+
             setIsRefreshing(true);
             try {
                 const response = await axios.get<MonitoringSnapshot>(feed_url);
                 setData(response.data);
+            } catch {
+                // Ignore transient errors during continuous polling
             } finally {
                 setIsRefreshing(false);
             }

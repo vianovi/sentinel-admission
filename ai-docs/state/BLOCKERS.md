@@ -13,3 +13,16 @@
 - Safe options: (A) provide/identify approved address, map, contacts, social/legal URLs, brochure format, showcase assets, and claims; (B) authorize temporary removal/disabled states for every unverified element.
 - Temporary containment: Do not promote Task 01 and do not deploy the current public landing surface.
 - Next action after decision: Implement the chosen content boundary, fix the confirmed technical findings, add focused public tests, run build/regression, and reclassify Task 01.
+
+## B-002 — Exam Media ZIP upload permits unsafe archive extraction
+
+- ID: B-002
+- Date: 2026-10-18
+- Slice: Exam Engine / Bank Media
+- Severity: high security — ZIP Slip / arbitrary file write
+- State: deferred / contained by disabling ZIP upload
+- Original evidence: `app/Http/Controllers/Dashboard/Admin/Exam/AdminExamMediaController.php` previously passed admin-uploaded archives directly to `ZipArchive::extractTo()` before validating archive entries.
+- Impact if reintroduced unsafely: A compromised admin account could write outside the intended temporary directory, overwrite writable files, or exhaust storage through an archive bomb.
+- Temporary containment: ZIP support was removed from backend validation, upload execution, and the admin file picker. Individual or multiple image upload remains available.
+- TODO if ZIP support is needed later: Implement bounded entry-by-entry extraction; reject absolute/traversal paths and symlinks; limit entry count and total uncompressed bytes; verify actual image MIME/content; always clean temporary files in `finally`; add malicious ZIP regression tests.
+- Next action: Keep ZIP support disabled while prioritizing the public exam experience and question management.

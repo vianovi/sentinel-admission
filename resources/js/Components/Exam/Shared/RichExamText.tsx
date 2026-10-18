@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { memo, type ReactNode } from "react";
 import { InlineMath, BlockMath } from "react-katex";
 import "katex/dist/katex.min.css";
 
@@ -15,9 +15,17 @@ const UNICODE_SUPERSCRIPTS: Record<string, string> = {
     "⁺": "+", "⁻": "-", "ⁿ": "n", "ˣ": "x", "ʸ": "y",
 };
 
-export default function RichExamText({ text, className, imageSize = "md" }: Props) {
+function RichExamText({ text, className, imageSize = "md" }: Props) {
     return <span className={className}>{renderRichText(text ?? "", imageSize)}</span>;
 }
+
+export default memo(RichExamText, (prev, next) => {
+    return (
+        prev.text === next.text &&
+        prev.className === next.className &&
+        prev.imageSize === next.imageSize
+    );
+});
 
 function renderRichText(text: string, imageSize: "sm" | "md" | "lg" = "md"): ReactNode[] {
     const nodes: ReactNode[] = [];

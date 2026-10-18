@@ -43,11 +43,19 @@ export default function MonitoringDisplay({ snapshot, feed_url }: Props) {
         void requestFullscreen();
 
         const fetchSnapshot = async () => {
-            const response = await axios.get<MonitoringSnapshot>(feed_url);
-            setData(response.data);
+            if (typeof document !== "undefined" && document.hidden) {
+                return;
+            }
+
+            try {
+                const response = await axios.get<MonitoringSnapshot>(feed_url);
+                setData(response.data);
+            } catch {
+                // Ignore transient network errors during continuous live polling
+            }
         };
 
-        const timer = window.setInterval(() => void fetchSnapshot(), 3000);
+        const timer = window.setInterval(() => void fetchSnapshot(), 5000);
 
         return () => window.clearInterval(timer);
     }, [feed_url]);

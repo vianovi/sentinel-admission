@@ -3,12 +3,13 @@
 namespace App\Http\Controllers\Dashboard\Admin\Exam;
 
 use App\Http\Controllers\Controller;
+use App\Models\SystemActivityLog;
+use App\Services\Trash\TrashManagerService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
-use ZipArchive;
 
 class AdminExamMediaController extends Controller
 {
@@ -35,15 +36,19 @@ class AdminExamMediaController extends Controller
             ->sortByDesc('last_modified')
             ->values();
 
+        $trashCount = DB::table('system_trashes')->where('type', 'exam_media')->count();
+
         return Inertia::render('Dashboard/Admin/Exam/MediaManager', [
             'media' => $media,
+            'trash_count' => $trashCount,
         ]);
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'files.*' => 'required|file|mimes:jpeg,png,jpg,gif,svg,webp,zip|max:51200', // max 50MB per file/zip
+            'files' => 'required|array|min:1',
+            'files.*' => 'required|file|mimes:jpeg,png,jpg,gif,svg,webp|max:51200',
         ]);
 
         $this->ensureDirectoryExists();
@@ -51,15 +56,22 @@ class AdminExamMediaController extends Controller
 
         if ($request->hasFile('files')) {
             foreach ($request->file('files') as $file) {
-                if ($file->getClientOriginalExtension() === 'zip') {
-                    $uploadedCount += $this->extractZip($file);
-                } else {
-                    $filename = $file->getClientOriginalName();
-                    $filename = $this->getUniqueFilename($filename);
-                    $file->storeAs($this->path, $filename, $this->disk);
-                    $uploadedCount++;
-                }
+                $filename = $this->getUniqueFilename($file->getClientOriginalName());
+                $file->storeAs($this->path, $filename, $this->disk);
+                $uploadedCount++;
             }
+        }
+
+        if ($uploadedCount > 0) {
+            $user = auth()->user();
+            SystemActivityLog::log(
+                action: 'media.uploaded',
+                module: 'exam_media',
+                description: ($user?->name ?? 'Admin')." mengunggah {$uploadedCount} file gambar ke Bank Media.",
+                targetLabel: "{$uploadedCount} File",
+                metadata: ['count' => $uploadedCount],
+                targetType: 'ExamMedia'
+            );
         }
 
         return redirect()->back()->with('success', "Berhasil mengunggah {$uploadedCount} gambar.");
@@ -95,23 +107,59 @@ class AdminExamMediaController extends Controller
 
         Storage::disk($this->disk)->move($oldPath, $newPath);
 
+        // Update any question tags referencing old filename to new filename
+        $oldTagPattern = '/\[(GAMBAR|IMG):\s*'.preg_quote($oldName, '/').'\s*\]/i';
+        $newTag = "[GAMBAR: {$newName}]";
+
+        $questions = DB::table('exam_questions')
+            ->whereNull('deleted_at')
+            ->where(function ($q) use ($oldName) {
+                $q->where('question_text', 'like', "%{$oldName}%")
+                    ->orWhere('explanation', 'like', "%{$oldName}%");
+            })
+            ->get(['id', 'question_text', 'explanation']);
+
+        foreach ($questions as $q) {
+            DB::table('exam_questions')->where('id', $q->id)->update([
+                'question_text' => preg_replace($oldTagPattern, $newTag, $q->question_text),
+                'explanation' => $q->explanation ? preg_replace($oldTagPattern, $newTag, $q->explanation) : null,
+                'updated_at' => now(),
+            ]);
+        }
+
+        $user = auth()->user();
+        SystemActivityLog::log(
+            action: 'media.renamed',
+            module: 'exam_media',
+            description: ($user?->name ?? 'Admin')." mengubah nama gambar '{$oldName}' menjadi '{$newName}'.",
+            targetLabel: $newName,
+            metadata: ['old_name' => $oldName, 'new_name' => $newName],
+            targetType: 'ExamMedia'
+        );
+
         return redirect()->back()->with('success', 'File berhasil diubah namanya.');
     }
 
-    public function destroy(Request $request)
+    public function destroy(Request $request, TrashManagerService $trashService)
     {
         $request->validate([
             'name' => 'required|string',
         ]);
 
         $name = basename($request->name);
-        $path = $this->path.'/'.$name;
 
-        if (Storage::disk($this->disk)->exists($path)) {
-            Storage::disk($this->disk)->delete($path);
+        try {
+            $trash = $trashService->trashMedia($name);
+            $affectedCount = $trash->metadata['affected_questions_count'] ?? 0;
+            $msg = "Gambar '{$name}' dipindahkan ke Tempat Sampah.";
+            if ($affectedCount > 0) {
+                $msg .= " Relasi pada {$affectedCount} butir soal telah dibersihkan secara aman.";
+            }
+
+            return redirect()->back()->with('success', $msg);
+        } catch (\Throwable $e) {
+            return redirect()->back()->with('error', $e->getMessage());
         }
-
-        return redirect()->back()->with('success', 'File berhasil dihapus.');
     }
 
     /** Return all exam packages (for assign modal dropdown). */
@@ -179,34 +227,6 @@ class AdminExamMediaController extends Controller
             ->update(['question_text' => $newText, 'updated_at' => now()]);
 
         return response()->json(['message' => "Tag {$tag} berhasil ditambahkan ke soal #{$question->sort_order}."]);
-    }
-
-    private function extractZip($zipFile): int
-    {
-        $zip = new ZipArchive;
-        $extractedCount = 0;
-
-        if ($zip->open($zipFile->getPathname()) === true) {
-            $tempDir = storage_path('app/temp/zip_'.uniqid());
-            File::makeDirectory($tempDir, 0755, true);
-
-            $zip->extractTo($tempDir);
-            $zip->close();
-
-            $allFiles = File::allFiles($tempDir);
-            foreach ($allFiles as $file) {
-                $ext = strtolower($file->getExtension());
-                if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'])) {
-                    $filename = $this->getUniqueFilename($file->getFilename());
-                    Storage::disk($this->disk)->putFileAs($this->path, $file, $filename);
-                    $extractedCount++;
-                }
-            }
-
-            File::deleteDirectory($tempDir);
-        }
-
-        return $extractedCount;
     }
 
     private function getUniqueFilename(string $filename): string

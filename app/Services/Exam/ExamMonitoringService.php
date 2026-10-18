@@ -5,6 +5,7 @@ namespace App\Services\Exam;
 use App\Models\Exam\ExamAttempt;
 use App\Models\Exam\ExamSession;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 class ExamMonitoringService
 {
@@ -12,6 +13,20 @@ class ExamMonitoringService
      * @return array<string, mixed>
      */
     public function snapshot(): array
+    {
+        if (app()->environment('testing')) {
+            return $this->buildSnapshot();
+        }
+
+        return Cache::remember('exam_monitoring_snapshot', 3, fn () => $this->buildSnapshot());
+    }
+
+    /**
+     * Build the raw monitoring snapshot data array.
+     *
+     * @return array<string, mixed>
+     */
+    private function buildSnapshot(): array
     {
         $sessionIds = $this->monitoredSessionIds();
         $sessions = $this->sessions($sessionIds);
