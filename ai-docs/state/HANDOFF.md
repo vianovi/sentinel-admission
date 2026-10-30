@@ -60,6 +60,15 @@ Commit the verified public resume/token-rotation fix, then continue from public 
 
 Do not trust this file if its Git state differs from the repository. Reconcile and update first.
 
+## Public exam rebuild backup checkpoint (2026-10-30)
+
+- Working branch: `feature/public-exam-rebuild` at baseline `b4fb0c7`; do not bring commits from `feature/exam-panel-focus-layout`.
+- Moved the three Desktop SQL files into ignored `database/backups/`, preserving their original SHA-256 digests. This directory must never be committed because dumps can contain personal data and secrets.
+- Fresh full MariaDB dump: `database/backups/sentinel_admission_db_20261030_pre_public_rebuild.sql`, SHA-256 `b3b8e41dc35f653748b4f8555eabc7264bc405e0b496891b155e4d6f66cf500e`, 6,181,957 bytes, 44 `CREATE TABLE` statements, including six `exam_public_*` tables and a normal `Dump completed` footer. It has not been restore-tested.
+- The older 2026-10-29 full dump has only 38 tables; `exam_bank_data.sql` contains subject/package/question data and `exam_packages.sql` only packages.
+- **Do not reset yet:** the live DB reports migration `2026_10_29_000001_create_exam_public_tables` in batch 2, but that migration is absent from the active branch and `git log --all` for its path. Reconcile this schema/code mismatch and settle public scoring/remedial policy before destructive migration or feature work.
+- `docker compose exec -T app php artisan db:show --database=mariadb` identified the expected host and database but exited nonzero because the app container lacks PHP `intl`; database table count was confirmed separately through read-only SQL.
+
 ## Parallel scoped email-design task
 
 - Completed presentation-only Email Design System work on `feature/email-design-system`.
