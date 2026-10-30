@@ -68,6 +68,9 @@ Do not trust this file if its Git state differs from the repository. Reconcile a
 - The older 2026-10-29 full dump has only 38 tables; `exam_bank_data.sql` contains subject/package/question data and `exam_packages.sql` only packages.
 - **Do not reset yet:** the live DB reports migration `2026_10_29_000001_create_exam_public_tables` in batch 2, but that migration is absent from the active branch and `git log --all` for its path. Reconcile this schema/code mismatch and settle public scoring/remedial policy before destructive migration or feature work.
 - `docker compose exec -T app php artisan db:show --database=mariadb` identified the expected host and database but exited nonzero because the app container lacks PHP `intl`; database table count was confirmed separately through read-only SQL.
+- Reset authorized by owner and completed with `docker compose exec -T app php artisan migrate:fresh --seed --no-interaction` against `sentinel_admission_db` at `172.17.0.1:3306`. Command exited 0: 36 migrations and four seeders ran. Verified afterward: 38 base tables, 36 migration records, two seeded users, zero exam packages, and zero `exam_public_*` tables; `migrate:status` reports the latest migrations ran.
+- Post-reset backup digest still matches the pre-reset checkpoint (`b3b8e41dc35f653748b4f8555eabc7264bc405e0b496891b155e4d6f66cf500e`). No SQL backup is tracked by Git. Do not restore full dump into the reset DB without a separate explicit decision, since it would undo the clean state.
+- Next: obtain owner decision on the public-exam passing/remedial policy (boundary at exactly 65, subject floor at 50, which attempts replace original scores, and remedial eligibility) before implementing a new public schema and routes. Existing internal exam schema remains untouched.
 
 ## Parallel scoped email-design task
 
