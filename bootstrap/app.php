@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->encryptCookies(except: [
             'guest_exam_token',
+            'public_exam_session',
         ]);
 
         $middleware->web(append: [

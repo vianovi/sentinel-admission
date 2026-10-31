@@ -18,6 +18,7 @@ use App\Http\Controllers\Dashboard\Candidate\Exam\AttemptController as Candidate
 use App\Http\Controllers\Dashboard\Candidate\Exam\ExamController as CandidateExam;
 use App\Http\Controllers\Dashboard\Staff\Exam\ResultController as StaffExamResult;
 use App\Http\Controllers\Exam\PublicExamController;
+use App\Http\Controllers\Exam\PublicExamFlowController;
 use App\Http\Middleware\RoleMiddleware;
 use Illuminate\Support\Facades\Route;
 
@@ -46,6 +47,16 @@ Route::prefix('exam')->name('exam.public.')->group(function () {
     Route::post('/attempts/{attempt}/save-answer', [PublicExamController::class, 'saveAnswer'])->name('attempts.save-answer')->middleware('throttle:60,1');
     Route::post('/attempts/{attempt}/violation', [PublicExamController::class, 'logViolation'])->name('attempts.violation');
     Route::post('/attempts/{attempt}/submit', [PublicExamController::class, 'submit'])->name('attempts.submit');
+});
+
+Route::prefix('public-exam')->name('public-exam.')->group(function () {
+    Route::get('/sessions/{token}', [PublicExamFlowController::class, 'session'])->name('session')->middleware('throttle:30,1');
+    Route::post('/sessions/{token}/join', [PublicExamFlowController::class, 'join'])->name('join')->middleware('throttle:10,1');
+    Route::get('/participants/{participant}', [PublicExamFlowController::class, 'dashboard'])->name('dashboard');
+    Route::post('/participants/{participant}/packages/{package}/start', [PublicExamFlowController::class, 'start'])->name('start')->middleware('throttle:10,1');
+    Route::get('/attempts/{attempt}', [PublicExamFlowController::class, 'attempt'])->name('attempt');
+    Route::post('/attempts/{attempt}/answers', [PublicExamFlowController::class, 'answer'])->name('answer')->middleware('throttle:60,1');
+    Route::post('/attempts/{attempt}/submit', [PublicExamFlowController::class, 'submit'])->name('submit')->middleware('throttle:60,1');
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
