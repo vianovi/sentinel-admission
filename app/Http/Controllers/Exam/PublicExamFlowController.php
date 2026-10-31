@@ -108,6 +108,7 @@ class PublicExamFlowController extends Controller
 
                 return (int) $active->id;
             }
+            abort_unless($attempts->every(fn ($attempt) => $attempt->status !== 'in_progress'), 409, 'Kumpulkan mapel yang waktunya habis sebelum melanjutkan.');
 
             $primary = $attempts->first(fn ($attempt) => (int) $attempt->exam_public_subject_id === (int) $assignment->exam_public_subject_id && $attempt->attempt_type === 'primary');
             $result = $primary ? $this->results->refresh($participant) : null;
@@ -153,9 +154,9 @@ class PublicExamFlowController extends Controller
     public function attempt(Request $request, int $attempt): JsonResponse
     {
         $record = $this->attemptFor($request, $attempt);
-        $ids = collect(json_decode($record->question_order, true, 512, JSON_THROW_ON_ERROR));
         $questions = collect();
         if ($record->status === 'in_progress' && $record->expires_at > now()) {
+            $ids = collect(json_decode($record->question_order, true, 512, JSON_THROW_ON_ERROR));
             $questions = DB::table('exam_public_questions')->whereIn('id', $ids)->where('exam_public_package_id', $record->exam_public_package_id)
                 ->get(['id', 'question_text', 'options'])->sortBy(fn ($question) => $ids->search($question->id))->values()
                 ->map(fn ($question) => ['id' => $question->id, 'question_text' => $question->question_text, 'options' => json_decode($question->options, true)]);

@@ -147,3 +147,20 @@ test('answers cannot use a question outside the frozen attempt', function () {
     ])->assertUnprocessable();
     expect(DB::table('exam_public_attempt_answers')->count())->toBe(0);
 });
+
+test('an expired attempt must be submitted before another subject starts', function () {
+    [, $packages] = publicFlowFixture();
+    $join = $this->postJson(route('public-exam.join', 'ROOM01'), ['name' => 'Anak C', 'school_origin' => 'SD Asal']);
+    $cookie = collect($join->headers->getCookies())->first(fn ($value) => $value->getName() === 'public_exam_session');
+    $this->withHeader('X-Public-Exam-Session', $cookie->getValue());
+    $participant = $join->json('participant_id');
+    $attempt = $this->postJson(route('public-exam.start', [$participant, $packages['IPAS'][0]]))->json('attempt_id');
+    DB::table('exam_public_subject_attempts')->where('id', $attempt)->update(['expires_at' => now()->subMinute()]);
+
+    $this->postJson(route('public-exam.answer', $attempt), [
+        'question_id' => $packages['IPAS'][1], 'selected_option' => 'A',
+    ])->assertStatus(423);
+    $this->postJson(route('public-exam.start', [$participant, $packages['MTK'][0]]))->assertStatus(409);
+    $this->postJson(route('public-exam.submit', $attempt))->assertSuccessful();
+    $this->postJson(route('public-exam.start', [$participant, $packages['MTK'][0]]))->assertSuccessful();
+});
