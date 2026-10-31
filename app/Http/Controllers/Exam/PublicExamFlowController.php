@@ -28,9 +28,7 @@ class PublicExamFlowController extends Controller
     public function join(Request $request, string $token): JsonResponse
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'school_origin' => ['required', 'string', 'max:255'],
-            'address' => ['nullable', 'string', 'max:2000'],
+            'participant_code' => ['required', 'string', 'size:16', 'alpha_num'],
         ]);
 
         [$participantId, $secret] = DB::transaction(function () use ($token, $data): array {
@@ -43,22 +41,22 @@ class PublicExamFlowController extends Controller
                 && ($access->max_uses === null || $access->used_count < $access->max_uses), 403);
             abort_unless(DB::table('exam_public_session_packages')->where('exam_public_session_id', $session->id)->count() === 4, 422);
 
+            $person = DB::table('exam_public_participants')
+                ->where('exam_public_session_id', $session->id)
+                ->where('participant_code', Str::upper($data['participant_code']))
+                ->lockForUpdate()->first();
+            abort_unless($person && $person->started_at === null, 403, 'Kode peserta tidak valid atau sudah digunakan.');
+
             $secret = Str::random(64);
-            $participantId = DB::table('exam_public_participants')->insertGetId([
-                'exam_public_session_id' => $session->id,
+            DB::table('exam_public_participants')->where('id', $person->id)->update([
                 'exam_public_session_token_id' => $access->id,
-                'participant_code' => Str::upper(Str::random(12)),
-                'name' => trim($data['name']),
-                'school_origin' => trim($data['school_origin']),
-                'address' => $data['address'] ?? null,
                 'session_secret' => hash('sha256', $secret),
                 'started_at' => now(),
-                'created_at' => now(),
                 'updated_at' => now(),
             ]);
             DB::table('exam_public_session_tokens')->where('id', $access->id)->increment('used_count');
 
-            return [$participantId, $secret];
+            return [$person->id, $secret];
         });
 
         return response()->json(['participant_id' => $participantId])

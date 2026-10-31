@@ -14,6 +14,12 @@ function publicFlowFixture(string $order = 'free'): array
         'status' => 'published', 'order_type' => $order,
     ]);
     DB::table('exam_public_session_tokens')->insert(['exam_public_session_id' => $session, 'token' => 'ROOM01']);
+    DB::table('exam_public_participants')->insert([
+        'exam_public_session_id' => $session,
+        'participant_code' => 'STUDENTCODE00001',
+        'name' => 'Anak A',
+        'school_origin' => 'SD Asal',
+    ]);
     $packages = [];
     foreach (['IPAS', 'PAIBP', 'MTK', 'BINDO'] as $index => $code) {
         $subject = DB::table('exam_public_subjects')->insertGetId(['name' => $code, 'code' => $code]);
@@ -37,7 +43,7 @@ function publicFlowFixture(string $order = 'free'): array
 test('public participant completes four packages in free order and sees only aggregate result', function () {
     [, $packages] = publicFlowFixture();
     $this->get(route('public-exam.session', 'ROOM01'))->assertSuccessful()->assertJsonPath('session.order_type', 'free');
-    $join = $this->postJson(route('public-exam.join', 'ROOM01'), ['name' => 'Anak A', 'school_origin' => 'SD Asal']);
+    $join = $this->postJson(route('public-exam.join', 'ROOM01'), ['participant_code' => 'STUDENTCODE00001']);
     $join->assertSuccessful();
     $participant = $join->json('participant_id');
     $cookie = collect($join->headers->getCookies())->first(fn ($value) => $value->getName() === 'public_exam_session');
@@ -64,14 +70,14 @@ test('public participant completes four packages in free order and sees only agg
 
 test('public participant cannot access another participant by changing the ID', function () {
     publicFlowFixture();
-    $join = $this->postJson(route('public-exam.join', 'ROOM01'), ['name' => 'Anak A', 'school_origin' => 'SD Asal']);
+    $join = $this->postJson(route('public-exam.join', 'ROOM01'), ['participant_code' => 'STUDENTCODE00001']);
     $id = $join->json('participant_id');
     $this->getJson(route('public-exam.dashboard', $id))->assertForbidden();
 });
 
 test('sequential session blocks skipping its first subject', function () {
     [, $packages] = publicFlowFixture('sequential');
-    $join = $this->postJson(route('public-exam.join', 'ROOM01'), ['name' => 'Anak A', 'school_origin' => 'SD Asal']);
+    $join = $this->postJson(route('public-exam.join', 'ROOM01'), ['participant_code' => 'STUDENTCODE00001']);
     $cookie = collect($join->headers->getCookies())->first(fn ($value) => $value->getName() === 'public_exam_session');
     $this->withHeader('X-Public-Exam-Session', $cookie->getValue());
     $this->postJson(route('public-exam.start', [$join->json('participant_id'), $packages['MTK'][0]]))->assertForbidden();
@@ -79,7 +85,7 @@ test('sequential session blocks skipping its first subject', function () {
 
 test('a passing aggregate does not open remedial even for a low subject', function () {
     [, $packages] = publicFlowFixture();
-    $join = $this->postJson(route('public-exam.join', 'ROOM01'), ['name' => 'Anak A', 'school_origin' => 'SD Asal']);
+    $join = $this->postJson(route('public-exam.join', 'ROOM01'), ['participant_code' => 'STUDENTCODE00001']);
     $participant = $join->json('participant_id');
     $cookie = collect($join->headers->getCookies())->first(fn ($value) => $value->getName() === 'public_exam_session');
     $this->withHeader('X-Public-Exam-Session', $cookie->getValue());
@@ -102,7 +108,7 @@ test('a passing aggregate does not open remedial even for a low subject', functi
 
 test('a failing aggregate opens remedial only for the low subject', function () {
     [, $packages] = publicFlowFixture();
-    $join = $this->postJson(route('public-exam.join', 'ROOM01'), ['name' => 'Anak B', 'school_origin' => 'SD Asal']);
+    $join = $this->postJson(route('public-exam.join', 'ROOM01'), ['participant_code' => 'STUDENTCODE00001']);
     $participant = $join->json('participant_id');
     $cookie = collect($join->headers->getCookies())->first(fn ($value) => $value->getName() === 'public_exam_session');
     $this->withHeader('X-Public-Exam-Session', $cookie->getValue());
@@ -137,7 +143,7 @@ test('a failing aggregate opens remedial only for the low subject', function () 
 
 test('answers cannot use a question outside the frozen attempt', function () {
     [, $packages] = publicFlowFixture();
-    $join = $this->postJson(route('public-exam.join', 'ROOM01'), ['name' => 'Anak A', 'school_origin' => 'SD Asal']);
+    $join = $this->postJson(route('public-exam.join', 'ROOM01'), ['participant_code' => 'STUDENTCODE00001']);
     $cookie = collect($join->headers->getCookies())->first(fn ($value) => $value->getName() === 'public_exam_session');
     $this->withHeader('X-Public-Exam-Session', $cookie->getValue());
     $attempt = $this->postJson(route('public-exam.start', [$join->json('participant_id'), $packages['IPAS'][0]]))->json('attempt_id');
@@ -150,7 +156,7 @@ test('answers cannot use a question outside the frozen attempt', function () {
 
 test('an expired attempt must be submitted before another subject starts', function () {
     [, $packages] = publicFlowFixture();
-    $join = $this->postJson(route('public-exam.join', 'ROOM01'), ['name' => 'Anak C', 'school_origin' => 'SD Asal']);
+    $join = $this->postJson(route('public-exam.join', 'ROOM01'), ['participant_code' => 'STUDENTCODE00001']);
     $cookie = collect($join->headers->getCookies())->first(fn ($value) => $value->getName() === 'public_exam_session');
     $this->withHeader('X-Public-Exam-Session', $cookie->getValue());
     $participant = $join->json('participant_id');
@@ -163,4 +169,16 @@ test('an expired attempt must be submitted before another subject starts', funct
     $this->postJson(route('public-exam.start', [$participant, $packages['MTK'][0]]))->assertStatus(409);
     $this->postJson(route('public-exam.submit', $attempt))->assertSuccessful();
     $this->postJson(route('public-exam.start', [$participant, $packages['MTK'][0]]))->assertSuccessful();
+});
+
+test('room token cannot create duplicates or reclaim a participant after code is used', function () {
+    publicFlowFixture();
+    $this->postJson(route('public-exam.join', 'ROOM01'), ['participant_code' => 'UNKNOWNCODE00000'])->assertForbidden();
+
+    $join = $this->postJson(route('public-exam.join', 'ROOM01'), ['participant_code' => 'STUDENTCODE00001']);
+    $join->assertSuccessful();
+    $this->postJson(route('public-exam.join', 'ROOM01'), ['participant_code' => 'STUDENTCODE00001'])->assertForbidden();
+
+    expect(DB::table('exam_public_participants')->count())->toBe(1)
+        ->and(DB::table('exam_public_session_tokens')->where('token', 'ROOM01')->value('used_count'))->toBe(1);
 });

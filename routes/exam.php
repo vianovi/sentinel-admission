@@ -9,6 +9,7 @@
 use App\Http\Controllers\Dashboard\Admin\Exam\IndexController as AdminExamDashboard;
 use App\Http\Controllers\Dashboard\Admin\Exam\MonitoringController as AdminExamMonitoring;
 use App\Http\Controllers\Dashboard\Admin\Exam\PackageController as AdminExamPackage;
+use App\Http\Controllers\Dashboard\Admin\Exam\PublicParticipantController as AdminPublicParticipant;
 use App\Http\Controllers\Dashboard\Admin\Exam\PublicSessionController as AdminPublicExamSession;
 use App\Http\Controllers\Dashboard\Admin\Exam\QuestionImportController as AdminExamImport;
 use App\Http\Controllers\Dashboard\Admin\Exam\ResultController as AdminExamResult;
@@ -126,6 +127,7 @@ Route::middleware(['auth', RoleMiddleware::class.':admin'])
         Route::delete('/imports/{batch}/questions', [AdminExamImport::class, 'destroyQuestions'])->name('imports.questions.destroy');
 
         Route::get('/public-sessions', [AdminPublicExamSession::class, 'index'])->name('public-sessions.index');
+        Route::post('/public-sessions/{session}/participants', [AdminPublicParticipant::class, 'store'])->name('public-sessions.participants.store');
         Route::post('/public-sessions', [AdminPublicExamSession::class, 'store'])->name('public-sessions.store');
         Route::put('/public-sessions/{session}', [AdminPublicExamSession::class, 'update'])->name('public-sessions.update');
         Route::delete('/public-sessions/{session}', [AdminPublicExamSession::class, 'destroy'])->name('public-sessions.destroy');
