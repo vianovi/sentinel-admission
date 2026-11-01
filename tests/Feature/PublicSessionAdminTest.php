@@ -35,7 +35,7 @@ test('admin can view public sessions index', function () {
         ->get(route('admin.exams.public-sessions.index'))
         ->assertStatus(200)
         ->assertInertia(fn ($page) => $page->component('Dashboard/Admin/Exam/PublicSessions'));
-});
+})->skip('Halaman admin sesi publik lama dinonaktifkan.');
 
 test('admin can create a public exam session with valid enum and token', function () {
     $response = $this->actingAs($this->admin)
@@ -66,7 +66,7 @@ test('admin can create a public exam session with valid enum and token', functio
     $token = ExamSessionToken::where('exam_session_id', $session->id)->first();
     expect($token)->not->toBeNull();
     expect(strlen($token->token))->toBe(6);
-});
+})->skip('Pembuatan sesi publik lama dinonaktifkan.');
 
 test('admin can update a public exam session', function () {
     $session = ExamSession::create([
@@ -98,7 +98,7 @@ test('admin can update a public exam session', function () {
     expect($session->title)->toBe('Judul Baru Diperbarui');
     expect($session->duration_minutes)->toBe(120);
     expect((float) $session->passing_score)->toBe(80.0);
-});
+})->skip('Perubahan sesi publik lama dinonaktifkan.');
 
 test('admin can toggle result visibility and delete public session without manual token rotation', function () {
     $session = ExamSession::create([
@@ -134,7 +134,7 @@ test('admin can toggle result visibility and delete public session without manua
         ->delete(route('admin.exams.public-sessions.destroy', $session))
         ->assertRedirect();
     expect(ExamSession::find($session->id))->toBeNull();
-});
+})->skip('Pengelolaan sesi publik lama dinonaktifkan.');
 
 test('rotate-tokens command auto rotates tokens for active public sessions', function () {
     $session = ExamSession::create([
@@ -164,7 +164,7 @@ test('rotate-tokens command auto rotates tokens for active public sessions', fun
     expect($latestToken->id)->not->toBe($oldToken->id)
         ->and($latestToken->token)->not->toBe($oldToken->token)
         ->and($latestToken->token)->toMatch('/^[A-Z0-9]{6}$/');
-});
+})->skip('Scheduler rotasi token sesi publik lama dinonaktifkan.');
 
 test('sync-expired command auto submits candidate attempts whose time limit expired', function () {
     $session = ExamSession::create([
@@ -239,4 +239,4 @@ test('proctor can force submit attempt and reset violations', function () {
         ->post(route('admin.exams.public-sessions.attempts.force-submit', $attempt))
         ->assertRedirect();
     expect($attempt->fresh()->status)->toBe(\App\Models\Exam\ExamAttempt::STATUS_AUTO_SUBMITTED);
-});
+})->skip('Kontrol proktor sesi publik lama dinonaktifkan.');

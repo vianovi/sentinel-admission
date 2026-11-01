@@ -40,3 +40,16 @@
 - Resolution: Resume now requires the 40-character high-entropy attempt-bound recovery token stored by the originating browser in addition to participant identity. A successful resume rotates the token, invalidating replay of the old recovery credential.
 - Verification: Identity-only resume is rejected, valid recovery succeeds, old-token replay is rejected, and the full suite passes.
 - Next action: Continue auditing public exam UI and question-management behavior.
+
+## B-004 — Legacy public start reissues an active attempt cookie using a shared room token and name
+
+- ID: B-004
+- Date: 2026-11-01
+- Slice: Exam Engine / Public Exam Rebuild
+- Severity: high security — active attempt takeover / authentication bypass
+- State: contained on `feature/public-exam-rebuild` (legacy public routes return HTTP 410; admin legacy session routes and token issuance disabled)
+- Static evidence: `app/Services/Exam/ExamAttemptService.php` lines 91–113 selects an existing in-progress attempt by session ID, package ID, and case-insensitive guest name, then returns it without checking the original `guest_session_token`. `app/Http/Controllers/Exam/PublicExamController.php` lines 74–113 exposes this path through `POST /exam/p/{token}/start` and returns that attempt's `guest_exam_token` cookie. The separate resume endpoint requires a high-entropy recovery token, but the start path bypasses it.
+- Impact before containment: anyone with the shared room token and a participant's name could receive the participant's active attempt cookie; the school field was not checked in the existing-attempt lookup.
+- Containment authorized by owner: `RetireLegacyPublicExam` returns HTTP 410 for the legacy participant routes and legacy admin session/token routes; the old admin menu entry and scheduled legacy token rotation were removed. Internal session store/update force `is_public = false`, and legacy token issuance through internal session routes is blocked. New `public-exam.*` routes and the new admin participant/CSV routes remain available. An unresolved ID may return 404 at model binding before middleware; no legacy attempt is exposed.
+- Verification: focused retirement + new-flow tests `15 passed, 112 assertions`; full Pest suite `135 passed, 9 skipped, 996 assertions`; `npx tsc --noEmit`, Pint and `git diff --check` passed. Nine old-behavior tests were preserved but skipped explicitly because the endpoints are retired. The legacy service still contains the original logic but has no reachable HTTP entry in the tested routes; do not re-enable these routes without fixing that logic and restoring regression coverage.
+- Next action: build and verify the new admin public-session/bank and participant UI before exposing the replacement in navigation.

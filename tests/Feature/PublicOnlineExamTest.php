@@ -120,7 +120,7 @@ test('public exam token validation and guest attempt execution flow', function (
     expect($attempt->status)->toBe('submitted');
     expect((float) $attempt->percentage_score)->toBe(100.0);
     expect($attempt->passed)->toBeTrue();
-});
+})->skip('Jalur ujian publik lama dinonaktifkan; pengganti memakai public-exam.*.');
 
 test('guest auto resume flow for active in progress session', function () {
     $subject = ExamSubject::create([
@@ -204,7 +204,7 @@ test('guest auto resume flow for active in progress session', function () {
         'guest_school' => 'SMP Negeri 1 Surabaya',
         'recovery_token' => $originalRecoveryToken,
     ])->assertSessionHasErrors(['token']);
-});
+})->skip('Jalur ujian publik lama dinonaktifkan; pengganti memakai public-exam.*.');
 
 test('public exam prevents multiple submissions with same guest name', function () {
     $subject = ExamSubject::create([
@@ -296,4 +296,4 @@ test('public exam prevents multiple submissions with same guest name', function 
 
     $otherStudent->assertRedirect();
     expect(ExamAttempt::where('guest_name', 'Fatimah Az-Zahra')->exists())->toBeTrue();
-});
+})->skip('Jalur ujian publik lama dinonaktifkan; pengganti memakai kode peserta unik.');

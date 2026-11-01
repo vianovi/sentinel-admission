@@ -64,7 +64,7 @@ class SessionController extends Controller
             'exam_package_id' => $primaryPackageId,
             'created_by' => $request->user()?->id,
             'show_result_to_candidate' => $request->boolean('show_result_to_candidate'),
-            'is_public' => $request->boolean('is_public'),
+            'is_public' => false,
             'public_access_type' => $request->input('public_access_type', 'token_required'),
             'status' => $request->input('status', ExamSession::STATUS_DRAFT),
         ]);
@@ -197,7 +197,7 @@ class SessionController extends Controller
             ...$request->safe()->except(['package_ids']),
             'exam_package_id' => $primaryPackageId,
             'show_result_to_candidate' => $request->boolean('show_result_to_candidate'),
-            'is_public' => $request->boolean('is_public'),
+            'is_public' => false,
             'public_access_type' => $request->input('public_access_type', 'token_required'),
         ]);
 

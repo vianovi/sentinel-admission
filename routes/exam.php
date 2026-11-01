@@ -20,6 +20,7 @@ use App\Http\Controllers\Dashboard\Candidate\Exam\ExamController as CandidateExa
 use App\Http\Controllers\Dashboard\Staff\Exam\ResultController as StaffExamResult;
 use App\Http\Controllers\Exam\PublicExamController;
 use App\Http\Controllers\Exam\PublicExamFlowController;
+use App\Http\Middleware\RetireLegacyPublicExam;
 use App\Http\Middleware\RoleMiddleware;
 use Illuminate\Support\Facades\Route;
 
@@ -39,7 +40,7 @@ Route::get('/exam-media/{filename}', function (string $filename) {
 // PUBLIC EXAM — Guest access via token (Cloudflare Tunnel compatible)
 // ─────────────────────────────────────────────────────────────────────────────
 
-Route::prefix('exam')->name('exam.public.')->group(function () {
+Route::prefix('exam')->name('exam.public.')->middleware(RetireLegacyPublicExam::class)->group(function () {
     Route::get('/p/{token?}', [PublicExamController::class, 'showLanding'])->name('landing');
     Route::post('/p/{token}/start', [PublicExamController::class, 'start'])->name('start')->middleware('throttle:10,1');
     Route::get('/attempts/{attempt}', [PublicExamController::class, 'showAttempt'])->name('attempts.show');
@@ -126,22 +127,24 @@ Route::middleware(['auth', RoleMiddleware::class.':admin'])
         Route::get('/imports/{batch}', [AdminExamImport::class, 'show'])->name('imports.show');
         Route::delete('/imports/{batch}/questions', [AdminExamImport::class, 'destroyQuestions'])->name('imports.questions.destroy');
 
-        Route::get('/public-sessions', [AdminPublicExamSession::class, 'index'])->name('public-sessions.index');
         Route::get('/public-sessions/{session}/participants', [AdminPublicParticipant::class, 'index'])->name('public-sessions.participants.index');
         Route::get('/public-sessions/{session}/results.csv', [AdminPublicParticipant::class, 'export'])->name('public-sessions.results.export');
         Route::post('/public-sessions/{session}/participants', [AdminPublicParticipant::class, 'store'])->name('public-sessions.participants.store');
-        Route::post('/public-sessions', [AdminPublicExamSession::class, 'store'])->name('public-sessions.store');
-        Route::put('/public-sessions/{session}', [AdminPublicExamSession::class, 'update'])->name('public-sessions.update');
-        Route::delete('/public-sessions/{session}', [AdminPublicExamSession::class, 'destroy'])->name('public-sessions.destroy');
-        Route::post('/public-sessions/{session}/toggle-results', [AdminPublicExamSession::class, 'toggleResultVisibility'])->name('public-sessions.toggle-results');
-        Route::post('/public-sessions/{session}/tokens', [AdminPublicExamSession::class, 'generateToken'])->name('public-sessions.tokens.store');
-        Route::delete('/public-tokens/{token}', [AdminPublicExamSession::class, 'destroyToken'])->name('public-sessions.destroy-token');
-        Route::post('/public-sessions/attempts/{attempt}/force-submit', [AdminPublicExamSession::class, 'forceSubmitAttempt'])->name('public-sessions.attempts.force-submit');
-        Route::post('/public-sessions/attempts/{attempt}/reset-violations', [AdminPublicExamSession::class, 'resetAttemptViolations'])->name('public-sessions.attempts.reset-violations');
+        Route::middleware(RetireLegacyPublicExam::class)->group(function () {
+            Route::get('/public-sessions', [AdminPublicExamSession::class, 'index'])->name('public-sessions.index');
+            Route::post('/public-sessions', [AdminPublicExamSession::class, 'store'])->name('public-sessions.store');
+            Route::put('/public-sessions/{session}', [AdminPublicExamSession::class, 'update'])->name('public-sessions.update');
+            Route::delete('/public-sessions/{session}', [AdminPublicExamSession::class, 'destroy'])->name('public-sessions.destroy');
+            Route::post('/public-sessions/{session}/toggle-results', [AdminPublicExamSession::class, 'toggleResultVisibility'])->name('public-sessions.toggle-results');
+            Route::post('/public-sessions/{session}/tokens', [AdminPublicExamSession::class, 'generateToken'])->name('public-sessions.tokens.store');
+            Route::delete('/public-tokens/{token}', [AdminPublicExamSession::class, 'destroyToken'])->name('public-sessions.destroy-token');
+            Route::post('/public-sessions/attempts/{attempt}/force-submit', [AdminPublicExamSession::class, 'forceSubmitAttempt'])->name('public-sessions.attempts.force-submit');
+            Route::post('/public-sessions/attempts/{attempt}/reset-violations', [AdminPublicExamSession::class, 'resetAttemptViolations'])->name('public-sessions.attempts.reset-violations');
+        });
 
         Route::post('/sessions/{session}/candidates', [AdminExamSession::class, 'assignCandidates'])->name('sessions.candidates.assign');
-        Route::post('/sessions/{session}/tokens', [AdminExamSession::class, 'generateToken'])->name('sessions.tokens.store');
-        Route::delete('/tokens/{token}', [AdminExamSession::class, 'destroyToken'])->name('tokens.destroy');
+        Route::post('/sessions/{session}/tokens', [AdminExamSession::class, 'generateToken'])->name('sessions.tokens.store')->middleware(RetireLegacyPublicExam::class);
+        Route::delete('/tokens/{token}', [AdminExamSession::class, 'destroyToken'])->name('tokens.destroy')->middleware(RetireLegacyPublicExam::class);
         Route::resource('sessions', AdminExamSession::class);
 
         Route::get('/results', [AdminExamResult::class, 'index'])->name('results.index');

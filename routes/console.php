@@ -8,8 +8,5 @@ Schedule::command('drafts:prune')->dailyAt('02:00');
 // Prune system trashed files & records older than 30 days
 Schedule::command('system:prune-trash')->dailyAt('02:30');
 
-// Rotate public CBT room proctor tokens automatically every 15 minutes
-Schedule::command('exam:rotate-tokens')->everyFifteenMinutes()->withoutOverlapping();
-
 // Sync and auto-submit candidate exam attempts whose time limit has expired every minute
 Schedule::command('exam:sync-expired')->everyMinute();
