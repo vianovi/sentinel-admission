@@ -9,6 +9,7 @@
 use App\Http\Controllers\Dashboard\Admin\Exam\IndexController as AdminExamDashboard;
 use App\Http\Controllers\Dashboard\Admin\Exam\MonitoringController as AdminExamMonitoring;
 use App\Http\Controllers\Dashboard\Admin\Exam\PackageController as AdminExamPackage;
+use App\Http\Controllers\Dashboard\Admin\Exam\PublicBankController as AdminPublicBank;
 use App\Http\Controllers\Dashboard\Admin\Exam\PublicParticipantController as AdminPublicParticipant;
 use App\Http\Controllers\Dashboard\Admin\Exam\PublicSessionController as AdminPublicExamSession;
 use App\Http\Controllers\Dashboard\Admin\Exam\QuestionImportController as AdminExamImport;
@@ -126,6 +127,13 @@ Route::middleware(['auth', RoleMiddleware::class.':admin'])
         Route::post('/packages/{package}/imports', [AdminExamImport::class, 'store'])->middleware('throttle:upload')->name('packages.imports.store');
         Route::get('/imports/{batch}', [AdminExamImport::class, 'show'])->name('imports.show');
         Route::delete('/imports/{batch}/questions', [AdminExamImport::class, 'destroyQuestions'])->name('imports.questions.destroy');
+
+        Route::get('/public-bank', [AdminPublicBank::class, 'index'])->name('public-bank.index');
+        Route::post('/public-bank/subjects', [AdminPublicBank::class, 'storeSubject'])->name('public-bank.subjects.store');
+        Route::post('/public-bank/packages', [AdminPublicBank::class, 'storePackage'])->name('public-bank.packages.store');
+        Route::get('/public-bank/packages/{package}/questions', [AdminPublicBank::class, 'questions'])->name('public-bank.questions.index');
+        Route::post('/public-bank/packages/{package}/questions', [AdminPublicBank::class, 'storeQuestion'])->name('public-bank.questions.store');
+        Route::post('/public-bank/packages/{package}/publish', [AdminPublicBank::class, 'publish'])->name('public-bank.packages.publish');
 
         Route::get('/public-sessions/{session}/participants', [AdminPublicParticipant::class, 'index'])->name('public-sessions.participants.index');
         Route::get('/public-sessions/{session}/results.csv', [AdminPublicParticipant::class, 'export'])->name('public-sessions.results.export');
