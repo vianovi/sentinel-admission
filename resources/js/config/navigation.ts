@@ -291,51 +291,44 @@ export const navigationConfig: Record<string, NavGroup[]> = {
                 },
                 {
                     label: "Seleksi / Ujian",
+                    href: "/dashboard/admin/exams",
                     icon: "fa-solid fa-file-pen",
                     activeRules: [{ path: "/dashboard/admin/exams" }],
+                },
+                {
+                    label: "Ujian Publik",
+                    icon: "fa-solid fa-tower-broadcast",
+                    activeRules: [{ path: "/dashboard/admin/public-exams" }],
                     children: [
                         {
-                            label: "Bank Media Ujian",
-                            href: "/dashboard/admin/exams/media",
+                            label: "Bank Media",
+                            href: "/dashboard/admin/public-exams/media",
                             icon: "fa-solid fa-photo-film",
-                            activePrefixes: [
-                                "/dashboard/admin/exams/media",
-                            ],
+                            activePrefixes: ["/dashboard/admin/public-exams/media"],
                         },
                         {
-                            label: "Kategori Ujian",
-                            href: "/dashboard/admin/exams/subjects",
+                            label: "Kategori",
+                            href: "/dashboard/admin/public-exams/categories",
                             icon: "fa-solid fa-layer-group",
-                            activePrefixes: [
-                                "/dashboard/admin/exams/subjects",
-                            ],
+                            activePrefixes: ["/dashboard/admin/public-exams/categories"],
                         },
                         {
-                            label: "Paket Soal",
-                            href: "/dashboard/admin/exams/packages",
+                            label: "Paket",
+                            href: "/dashboard/admin/public-exams/packages",
                             icon: "fa-solid fa-box-archive",
-                            activePrefixes: [
-                                "/dashboard/admin/exams/packages",
-                                "/dashboard/admin/exams/imports",
-                            ],
+                            activePrefixes: ["/dashboard/admin/public-exams/packages"],
                         },
                         {
-                            label: "Sesi Ujian Internal",
-                            href: "/dashboard/admin/exams/sessions",
+                            label: "Sesi",
+                            href: "/dashboard/admin/public-exams/sessions",
                             icon: "fa-solid fa-calendar-check",
-                            activePrefixes: [
-                                "/dashboard/admin/exams/sessions",
-                            ],
+                            activePrefixes: ["/dashboard/admin/public-exams/sessions"],
                         },
                         {
                             label: "Hasil Ujian",
-                            href: "/dashboard/admin/exams/results",
+                            href: "/dashboard/admin/public-exams/results",
                             icon: "fa-solid fa-list-check",
-                        },
-                        {
-                            label: "Monitoring Ujian",
-                            href: "/dashboard/admin/exams/monitoring",
-                            icon: "fa-solid fa-satellite-dish",
+                            activePrefixes: ["/dashboard/admin/public-exams/results"],
                         },
                     ],
                 },

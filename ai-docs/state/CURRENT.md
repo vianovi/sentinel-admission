@@ -2,14 +2,14 @@
 
 - Execution mode: `autonomous`
 - Master status: `in_progress`
-- Active task: `feat/exam-engine-audit-and-optimizations`
-- Active slice: `exam-engine-runtime-optimizations`
-- Slice phase: `verified`
+- Active task: `feat/public-exam-rebuild`
+- Active slice: `public-exam-rebuild-v2`
+- Slice phase: `code_verified_browser_review_pending`
 - Repository root: `/home/silinux/Documents/MyPlaygraund/Laravel-Project/sentinel-admission`
-- Current branch: `feature/exam-panel-focus-layout`
-- Latest work: `1) Safe Exam Media Trash & Audit panel (commit c815e59). 2) Public resume takeover fixed with a 40-character attempt-bound recovery token and token rotation after successful recovery. 3) Public room tokens remain random 6-character codes and rotate automatically every 15 minutes with scheduler overlap protection. 4) Manual token rotation route/controller/button removed. 5) ZIP Bank Media upload remains disabled and deferred as TODO.`
-- Last successful verification: `npx tsc --noEmit (0 errors), npx vite build (built in 13.32s), 121 Pest tests passed (942 assertions), focused public exam/token tests 10 passed (95 assertions), Laravel Pint passed, git diff --check passed.`
-- Current blocker: `None for active public exam use. B-003 resolved. B-002 ZIP upload remains contained/deferred.`
-- Human visual review: `HUMAN VISUAL REVIEW REQUIRED — verify recovery flow after refresh, automatic token status display, public attempt layout, and admin question-management layout.`
-- Next exact action: `Continue Exam audit from public attempt UI and package/question-management behavior; do not reintroduce manual token rotation or ZIP upload.`
-- Last updated: `2026-10-15`
+- Current branch: `feature/public-exam-rebuild`
+- Latest work: `Added three separate admin public-exam pages at /dashboard/admin/public-exams/packages, /sessions, and /results; pages use only exam_public_* database sources and existing public bank/session/participant API actions. Internal exam index remains 404. No schema changes.`
+- Last successful verification: `Focused PublicExamAdminPagesTest.php 2 passed (55 assertions); full suite 154 passed, 9 skipped (1250 assertions); final npm run build passed in 9.65s; Pint and git diff --check passed. Browser visit refused connection to localhost:8000.`
+- Current blocker: `None. B-004 contained. B-005 resolved.`
+- Human visual review: `HUMAN VISUAL REVIEW REQUIRED — inspect three new pages, including package draft/publish and session/roster/result flow. Browser evidence unavailable unless an authenticated local server is running.`
+- Next exact action: `Run an authenticated admin browser scenario when local dev server is available, then have user review three new pages; no commits without instruction.`
+- Last updated: `2026-11-01`

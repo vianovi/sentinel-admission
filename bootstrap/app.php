@@ -39,7 +39,19 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->respond(function (Response $response) {
             if ($response->getStatusCode() === 404) {
-                return Inertia::render('Errors/NotFound')
+                $user = request()->user();
+                $dashboardUrl = match ($user?->role) {
+                    'admin' => '/dashboard/admin',
+                    'staff' => '/dashboard/staff',
+                    'candidate' => '/dashboard',
+                    default => '/',
+                };
+
+                return Inertia::render('Errors/NotFound', [
+                    'comingSoon' => false,
+                    'backUrl' => $dashboardUrl,
+                    'backLabel' => $user ? 'Kembali ke Dashboard' : 'Kembali ke Beranda',
+                ])
                     ->toResponse(request())
                     ->setStatusCode(404);
             }

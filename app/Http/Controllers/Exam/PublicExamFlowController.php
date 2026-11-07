@@ -9,10 +9,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class PublicExamFlowController extends Controller
 {
     public function __construct(private readonly PublicExamResultService $results) {}
+
+    public function page(): Response
+    {
+        return Inertia::render('Public/Exam/PublicExam');
+    }
 
     public function session(string $token): JsonResponse
     {
@@ -161,7 +168,12 @@ class PublicExamFlowController extends Controller
         }
 
         return response()->json([
-            'attempt' => ['id' => $record->id, 'status' => $record->status, 'expires_at' => $record->expires_at, 'total_questions' => $record->total_questions],
+            'attempt' => [
+                'id' => $record->id,
+                'status' => $record->status,
+                'expires_at' => \Carbon\Carbon::parse($record->expires_at, config('app.timezone'))->toISOString(),
+                'total_questions' => $record->total_questions,
+            ],
             'questions' => $questions,
             'answers' => DB::table('exam_public_attempt_answers')->where('exam_public_subject_attempt_id', $attempt)
                 ->get(['exam_public_question_id', 'selected_option']),

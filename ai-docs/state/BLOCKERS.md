@@ -53,3 +53,15 @@
 - Containment authorized by owner: `RetireLegacyPublicExam` returns HTTP 410 for the legacy participant routes and legacy admin session/token routes; the old admin menu entry and scheduled legacy token rotation were removed. Internal session store/update force `is_public = false`, and legacy token issuance through internal session routes is blocked. New `public-exam.*` routes and the new admin participant/CSV routes remain available. An unresolved ID may return 404 at model binding before middleware; no legacy attempt is exposed.
 - Verification: focused retirement + new-flow tests `15 passed, 112 assertions`; full Pest suite `135 passed, 9 skipped, 996 assertions`; `npx tsc --noEmit`, Pint and `git diff --check` passed. Nine old-behavior tests were preserved but skipped explicitly because the endpoints are retired. The legacy service still contains the original logic but has no reachable HTTP entry in the tested routes; do not re-enable these routes without fixing that logic and restoring regression coverage.
 - Next action: build and verify the new admin public-session/bank and participant UI before exposing the replacement in navigation.
+
+## B-005 — New public session publish flow fails focused test
+
+- ID: B-005
+- Date: 2026-11-01
+- Slice: Exam Engine / Public Exam Rebuild
+- Severity: release-blocking functional regression (new work not committed)
+- State: resolved locally on `feature/public-exam-rebuild`; human visual review remains pending
+- Evidence: `php artisan test --compact tests/Feature/PublicSessionV2Test.php` failed twice after attempts to identify the 404 and adjust timestamp serialization. Latest failure: `tests/Feature/PublicSessionV2Test.php:24`, `assertJsonPath('status', 'published')` received null on `POST admin.exams.public-v2.sessions.publish`. Earlier test reached `public-exam.session` and received 404 after an apparently successful publish response; exact root cause is not verified. `php -l app/Http/Controllers/Dashboard/Admin/Exam/PublicSessionV2Controller.php` passes; route list confirms publish route exists.
+- Impact: cannot publish or trust newly configured public sessions. Admin UI and public release must remain disabled.
+- Safe next step: inspect response status/body for publish and stored `opens_at`/`closes_at` in isolated SQLite test without secrets; confirm whether `abort_unless` rejects the timestamp or four published package relation, then fix and re-run focused/full tests. Do not claim successful publication or commit this milestone while failing.
+- Resolution evidence (2026-11-01): UTC-offset input normalized to application timezone before storage; session publish and participant token lookup verified by `PublicSessionV2Test.php`. Focused tests: 11 passed / 115 assertions; full suite: 140 passed, 9 skipped / 1107 assertions; `npm run build`, Pint, and `git diff --check` passed. Browser/manual visual verification still pending; do not classify visual design as approved.

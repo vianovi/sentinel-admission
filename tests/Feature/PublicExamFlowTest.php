@@ -42,6 +42,8 @@ function publicFlowFixture(string $order = 'free'): array
 
 test('public participant completes four packages in free order and sees only aggregate result', function () {
     [, $packages] = publicFlowFixture();
+    $this->get(route('public-exam.page'))
+        ->assertInertia(fn ($page) => $page->component('Public/Exam/PublicExam'));
     $this->get(route('public-exam.session', 'ROOM01'))->assertSuccessful()->assertJsonPath('session.order_type', 'free');
     $join = $this->postJson(route('public-exam.join', 'ROOM01'), ['participant_code' => 'STUDENTCODE00001']);
     $join->assertSuccessful();

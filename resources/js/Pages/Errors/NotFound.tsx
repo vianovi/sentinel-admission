@@ -2,7 +2,7 @@
 // Gunakan juga untuk halaman "Segera Hadir" dengan prop `comingSoon={true}`
 
 import { useEffect, useRef } from 'react'
-import { Head, Link }        from '@inertiajs/react'
+import { Head, Link, usePage } from '@inertiajs/react'
 import { animate, stagger }  from 'animejs'
 
 interface Props {
@@ -24,7 +24,6 @@ export default function NotFound({
 }: Props) {
 
     const containerRef = useRef<HTMLDivElement>(null)
-
     useEffect(() => {
         // Stagger entrance
         animate('.nf-item', {
