@@ -168,3 +168,25 @@ test('score exactly at subject threshold is not passing but aggregate 65 is also
         ->and($result['subjects'][2]['subject_passed'])->toBeFalse()
         ->and($result['subjects'][2]['remedial_available'])->toBeTrue();
 });
+
+test('second attempt below subject threshold keeps the higher actual score in the overall average', function () {
+    [$participantId, $subjects] = publicResultFixture(['IPAS' => 80, 'PAIBP' => 80, 'MTK' => 50, 'BINDO' => 80]);
+    DB::table('exam_public_packages')->where('id', $subjects['MTK'][1])->update(['passing_score' => 60]);
+    DB::table('exam_public_subject_attempts')->insert([
+        'exam_public_participant_id' => $participantId,
+        'exam_public_subject_id' => $subjects['MTK'][0],
+        'exam_public_package_id' => $subjects['MTK'][1],
+        'attempt_type' => 'remedial', 'attempt_number' => 2,
+        'started_at' => now(), 'expires_at' => now()->addHour(),
+        'status' => 'submitted', 'percentage_score' => 55,
+    ]);
+
+    $result = app(PublicExamResultService::class)->refresh($participantId);
+    expect($result['subjects'][2]['primary_score'])->toBe(50.0)
+        ->and($result['subjects'][2]['remedial_score'])->toBe(55.0)
+        ->and($result['subjects'][2]['effective_score'])->toBe(55.0)
+        ->and($result['subjects'][2]['subject_passed'])->toBeFalse()
+        ->and($result['subjects'][2]['remedial_available'])->toBeFalse()
+        ->and($result['average_score'])->toBe(73.75)
+        ->and($result['is_passed'])->toBeTrue();
+});

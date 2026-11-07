@@ -77,3 +77,29 @@ test('unconfigured public packages cannot publish until admin supplies all scori
     $this->postJson(route('admin.exams.public-bank.packages.publish', $package))->assertSuccessful();
     expect((float) DB::table('exam_public_packages')->where('id', $package)->value('passing_score'))->toBe(55.0);
 });
+
+test('public package settings cannot change after a participant has started its session', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+    $subject = DB::table('exam_public_subjects')->insertGetId(['name' => 'MTK', 'code' => 'MTK']);
+    $package = DB::table('exam_public_packages')->insertGetId([
+        'exam_public_subject_id' => $subject, 'title' => 'MTK Paket 1', 'code' => 'MTK-1',
+        'passing_score' => 55, 'allow_retry' => true, 'show_result_to_participant' => false,
+    ]);
+    $session = DB::table('exam_public_sessions')->insertGetId([
+        'title' => 'Sesi MTK', 'opens_at' => now()->subHour(), 'closes_at' => now()->addHour(), 'status' => 'published',
+    ]);
+    DB::table('exam_public_session_packages')->insert([
+        'exam_public_session_id' => $session, 'exam_public_package_id' => $package,
+        'exam_public_subject_id' => $subject, 'sort_order' => 0,
+    ]);
+    $url = route('admin.exams.public-bank.packages.settings.update', $package);
+    $settings = ['passing_score' => 60, 'allow_retry' => false, 'show_result_to_participant' => true];
+
+    $this->actingAs($admin)->putJson($url, $settings)->assertSuccessful();
+    DB::table('exam_public_participants')->insert([
+        'exam_public_session_id' => $session, 'participant_code' => 'STARTEDCODE00001',
+        'name' => 'Anak A', 'school_origin' => 'Sekolah A', 'started_at' => now(),
+    ]);
+    $this->putJson($url, ['passing_score' => 70, 'allow_retry' => true, 'show_result_to_participant' => false])->assertStatus(409);
+    expect((float) DB::table('exam_public_packages')->where('id', $package)->value('passing_score'))->toBe(60.0);
+});

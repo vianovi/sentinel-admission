@@ -132,7 +132,7 @@ class PublicExamPagesController extends Controller
             ->join('exam_public_subjects as subject', 'subject.id', '=', 'assignment.exam_public_subject_id')
             ->whereIn('assignment.exam_public_session_id', $sessionIds)
             ->orderBy('assignment.sort_order')
-            ->get(['assignment.exam_public_session_id', 'assignment.exam_public_subject_id', 'package.title as package_title', 'package.passing_score', 'subject.name as subject_name'])
+            ->get(['assignment.exam_public_session_id', 'assignment.exam_public_subject_id', 'package.title as package_title', 'package.passing_score', 'package.allow_retry', 'subject.name as subject_name'])
             ->groupBy('exam_public_session_id');
         $attempts = DB::table('exam_public_subject_attempts')
             ->whereIn('exam_public_participant_id', $participants->getCollection()->pluck('id'))
@@ -159,6 +159,7 @@ class PublicExamPagesController extends Controller
                     'name' => $subject->subject_name,
                     'package' => $subject->package_title,
                     'threshold' => $subject->passing_score === null ? null : (float) $subject->passing_score,
+                    'allow_retry' => (bool) $subject->allow_retry,
                     'best' => $best,
                     'passed' => $best === null || $subject->passing_score === null ? null : ! $below,
                     'note' => $below ? ($participant->is_passed === null ? 'Nilai mapel rendah; hasil akhir belum tersedia.' : ($participant->is_passed ? 'Nilai mapel rendah; rata-rata akhir memenuhi ambang lulus.' : 'Nilai mapel rendah; rata-rata akhir belum memenuhi ambang lulus.')) : null,

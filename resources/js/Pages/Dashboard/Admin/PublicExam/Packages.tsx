@@ -24,6 +24,9 @@ type Package = {
     code: string;
     status: string;
     duration_minutes: number;
+    passing_score: number | null;
+    allow_retry: boolean | number | null;
+    show_result_to_participant: boolean | number | null;
     exam_public_subject_id: number;
     subject_name: string;
     question_count: number;
@@ -62,6 +65,10 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
     const [formTitle, setFormTitle] = useState("");
     const [formCode, setFormCode] = useState("");
     const [formDuration, setFormDuration] = useState(35);
+    const [formThreshold, setFormThreshold] = useState("");
+    const [formRetry, setFormRetry] = useState(false);
+    const [formShowScore, setFormShowScore] = useState(false);
+    const [settingsPackage, setSettingsPackage] = useState<Package | null>(null);
 
     // Question Manager Modal states
     const [activePackageForQuestions, setActivePackageForQuestions] = useState<Package | null>(null);
@@ -103,24 +110,46 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
         setFormTitle("");
         setFormCode("");
         setFormDuration(35);
+        setFormThreshold("");
+        setFormRetry(false);
+        setFormShowScore(false);
+        setIsCreateModalOpen(true);
+    };
+
+    const openSettings = (pkg: Package) => {
+        setSettingsPackage(pkg);
+        setFormThreshold(pkg.passing_score === null ? "" : String(pkg.passing_score));
+        setFormRetry(Boolean(pkg.allow_retry));
+        setFormShowScore(Boolean(pkg.show_result_to_participant));
         setIsCreateModalOpen(true);
     };
 
     const closePackageModal = () => {
         setIsCreateModalOpen(false);
+        setSettingsPackage(null);
     };
 
     const handleSavePackage = async (event: FormEvent) => {
         event.preventDefault();
         setBusy(true);
         try {
-            await axios.post(route("admin.exams.public-bank.packages.store"), {
-                exam_public_subject_id: formCategory,
-                title: formTitle,
-                code: formCode,
-                duration_minutes: formDuration,
-            });
-            showSuccessToast("Paket ujian publik berhasil disimpan.");
+            const settings = {
+                passing_score: Number(formThreshold),
+                allow_retry: formRetry,
+                show_result_to_participant: formShowScore,
+            };
+            if (settingsPackage) {
+                await axios.put(route("admin.exams.public-bank.packages.settings.update", { package: settingsPackage.id }), settings);
+            } else {
+                await axios.post(route("admin.exams.public-bank.packages.store"), {
+                    exam_public_subject_id: formCategory,
+                    title: formTitle,
+                    code: formCode,
+                    duration_minutes: formDuration,
+                    ...settings,
+                });
+            }
+            showSuccessToast("Pengaturan paket ujian publik berhasil disimpan.");
             closePackageModal();
             router.reload();
         } catch (err) {
@@ -419,6 +448,11 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                                                         </span>
                                                     </div>
                                                 </div>
+                                                <p className="mt-2 text-xs text-slate-600 dark:text-slate-300">
+                                                    {pkg.passing_score === null || pkg.allow_retry === null || pkg.show_result_to_participant === null
+                                                        ? "Pengaturan nilai belum lengkap — isi sebelum paket diterbitkan."
+                                                        : `Ambang mapel > ${pkg.passing_score} · Ulang ${pkg.allow_retry ? "aktif" : "nonaktif"} · Nilai peserta ${pkg.show_result_to_participant ? "ditampilkan" : "disembunyikan"}`}
+                                                </p>
 
                                                 <div className="mt-2.5">
                                                     <div className="h-1.5 w-full rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
@@ -441,7 +475,14 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                                                 </button>
 
                                                 <div className="flex items-center gap-1.5">
-                                                    {pkg.status === "draft" && isComplete && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => openSettings(pkg)}
+                                                        className="rounded-lg border border-amber-500/30 px-2.5 py-1.5 text-xs font-bold text-amber-700 dark:text-amber-300"
+                                                    >
+                                                        Pengaturan nilai
+                                                    </button>
+                                                    {pkg.status === "draft" && isComplete && pkg.passing_score !== null && pkg.allow_retry !== null && pkg.show_result_to_participant !== null && (
                                                         <button
                                                             type="button"
                                                             onClick={() => void handlePublishPackage(pkg)}
@@ -473,7 +514,7 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                             <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
                                 <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                                     <i className="fa-solid fa-box-archive text-amber-500" />
-                                    Tambah Paket Soal Publik Baru
+                                    {settingsPackage ? `Pengaturan Nilai: ${settingsPackage.title}` : "Tambah Paket Soal Publik Baru"}
                                 </h3>
                                 <button type="button" onClick={closePackageModal} className="text-slate-400 hover:text-slate-600">
                                     <i className="fa-solid fa-xmark text-sm" />
@@ -481,7 +522,7 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                             </div>
 
                             <form onSubmit={handleSavePackage} className="space-y-3.5">
-                                <div>
+                                {!settingsPackage && <div>
                                     <label className={labelClass}>Kategori Mata Pelajaran</label>
                                     <select
                                         value={formCategory}
@@ -493,9 +534,9 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                                             <option key={sub.id} value={sub.id}>{sub.name}</option>
                                         ))}
                                     </select>
-                                </div>
+                                </div>}
 
-                                <div>
+                                {!settingsPackage && <div>
                                     <label className={labelClass}>Judul Paket</label>
                                     <input
                                         type="text"
@@ -505,9 +546,9 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                                         placeholder="Contoh: Paket 1 - Matematika Dasar"
                                         className={inputClass}
                                     />
-                                </div>
+                                </div>}
 
-                                <div className="grid grid-cols-2 gap-3">
+                                {!settingsPackage && <div className="grid grid-cols-2 gap-3">
                                     <div>
                                         <label className={labelClass}>Kode Paket</label>
                                         <input
@@ -531,7 +572,20 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                                             className={inputClass}
                                         />
                                     </div>
+                                </div>}
+
+                                <div>
+                                    <label className={labelClass} htmlFor="public-package-threshold">Ambang lulus mapel (nilai harus lebih besar)</label>
+                                    <input id="public-package-threshold" type="number" min={0} max={100} step="0.01" required value={formThreshold} onChange={e => setFormThreshold(e.target.value)} className={inputClass} />
                                 </div>
+                                <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                                    <input type="checkbox" checked={formRetry} onChange={e => setFormRetry(e.target.checked)} className="rounded border-slate-300 text-amber-500 focus:ring-amber-500" />
+                                    Izinkan satu kali ujian ulang (maksimal dua attempt)
+                                </label>
+                                <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                                    <input type="checkbox" checked={formShowScore} onChange={e => setFormShowScore(e.target.checked)} className="rounded border-slate-300 text-amber-500 focus:ring-amber-500" />
+                                    Tampilkan nilai mapel kepada peserta
+                                </label>
 
                                 <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100 dark:border-white/10">
                                     <button type="button" onClick={closePackageModal} className={secondaryButtonClass}>

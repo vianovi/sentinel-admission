@@ -69,8 +69,8 @@ class PublicBankController extends Controller
         abort_unless($record, 404);
         abort_if(DB::table('exam_public_subject_attempts')->where('exam_public_package_id', $package)->exists(), 409, 'Pengaturan paket yang sudah dikerjakan tidak boleh diubah.');
         abort_if(DB::table('exam_public_session_packages as assignment')
-            ->join('exam_public_sessions as session', 'session.id', '=', 'assignment.exam_public_session_id')
-            ->where('assignment.exam_public_package_id', $package)->where('session.status', 'published')->exists(), 409, 'Pengaturan paket dalam sesi aktif tidak boleh diubah.');
+            ->join('exam_public_participants as participant', 'participant.exam_public_session_id', '=', 'assignment.exam_public_session_id')
+            ->where('assignment.exam_public_package_id', $package)->whereNotNull('participant.started_at')->exists(), 409, 'Pengaturan paket dalam sesi yang sudah dimulai tidak boleh diubah.');
 
         DB::table('exam_public_packages')->where('id', $package)->update([...$data, 'updated_at' => now()]);
 

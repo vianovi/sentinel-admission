@@ -77,5 +77,7 @@ test('admin result details distinguish a low subject from a passing overall aver
         ->where('participants.data.0.subjects.0.best', 50)
         ->where('participants.data.0.subjects.0.passed', false)
         ->where('participants.data.0.subjects.0.threshold', 55)
+        ->where('participants.data.0.subjects.0.attempts.0.score', 50)
+        ->where('participants.data.0.subjects.0.allow_retry', false)
         ->where('participants.data.0.subjects.1.passed', true));
 });

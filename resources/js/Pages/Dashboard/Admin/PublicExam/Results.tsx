@@ -1,4 +1,4 @@
-import { useState, type FormEvent, type ReactNode } from "react";
+import { Fragment, useState, type FormEvent, type ReactNode } from "react";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import {
@@ -27,6 +27,16 @@ type Participant = {
     completed_at: string | null;
     exam_public_session_id: number;
     session_title: string;
+    subjects: {
+        name: string;
+        package: string;
+        threshold: number | null;
+        allow_retry: boolean;
+        best: number | null;
+        passed: boolean | null;
+        note: string | null;
+        attempts: { number: number; type: string; status: string; score: number | null }[];
+    }[];
 };
 
 type PaginationLink = {
@@ -70,9 +80,7 @@ type Props = {
 const statusOptions = [
     ["", "Semua status"],
     ["in_progress", "Sedang Mengerjakan"],
-    ["submitted", "Submitted"],
     ["completed", "Selesai"],
-    ["expired", "Kedaluwarsa"],
 ];
 
 export default function PublicResults({ participants, sessions, filters, stats }: Props) {
@@ -82,6 +90,7 @@ export default function PublicResults({ participants, sessions, filters, stats }
     const [status, setStatus] = useState(filters.status ?? "");
     const [passed, setPassed] = useState(filters.passed ?? "");
     const [session, setSession] = useState(filters.session ? String(filters.session) : "");
+    const [expanded, setExpanded] = useState<number | null>(null);
 
     const applyFilters = (event: FormEvent) => {
         event.preventDefault();
@@ -286,9 +295,12 @@ export default function PublicResults({ participants, sessions, filters, stats }
                                         {participants.data.map((p) => {
                                             const isPassed = p.is_passed;
                                             return (
+                                                <Fragment key={p.id}>
                                                 <tr key={p.id} className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-all">
                                                     <td className="p-3 font-mono font-bold text-amber-600 dark:text-amber-400">
-                                                        {p.participant_code}
+                                                        <button type="button" onClick={() => setExpanded(expanded === p.id ? null : p.id)} aria-expanded={expanded === p.id} aria-label={`Rincian nilai ${p.name}`} className="rounded-md text-left underline focus:outline-none focus:ring-2 focus:ring-amber-500/20">
+                                                            {p.participant_code} <i className={`fa-solid ${expanded === p.id ? "fa-chevron-up" : "fa-chevron-down"}`} aria-hidden="true" />
+                                                        </button>
                                                     </td>
                                                     <td className="p-3">
                                                         <div className="font-semibold text-slate-900 dark:text-white">{p.name}</div>
@@ -328,6 +340,18 @@ export default function PublicResults({ participants, sessions, filters, stats }
                                                         {formatDate(p.completed_at)}
                                                     </td>
                                                 </tr>
+                                                {expanded === p.id && <tr key={`${p.id}-details`}><td colSpan={7} className="bg-slate-50 p-4 dark:bg-slate-950">
+                                                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                                                        {p.subjects.map((subject, index) => <section key={index} className="rounded-xl border border-slate-200 bg-white p-3 dark:border-white/10 dark:bg-slate-900">
+                                                            <h3 className="font-bold text-slate-900 dark:text-white">{subject.name} · {subject.package}</h3>
+                                                            <p className="text-slate-600 dark:text-slate-300">Nilai dipakai: {subject.best ?? "—"} · Ambang: {subject.threshold ?? "—"}</p>
+                                                            <p className={subject.passed === false ? "font-bold text-red-600 dark:text-red-400" : "font-bold text-emerald-600 dark:text-emerald-400"}>{subject.passed === null ? "Belum dikerjakan" : subject.passed ? "Lulus mapel" : "Tidak lulus mapel"}</p>
+                                                            <ul className="mt-2 space-y-1 text-slate-600 dark:text-slate-300">{subject.attempts.map(attempt => <li key={attempt.number}>Attempt {attempt.number}: {attempt.score ?? "—"} ({attempt.status})</li>)}</ul>
+                                                            {subject.note && <p className="mt-2 text-amber-700 dark:text-amber-300">{subject.note} {!subject.allow_retry && subject.attempts.length === 1 ? "Pertimbangkan ujian ulang melalui kebijakan sekolah." : ""}</p>}
+                                                        </section>)}
+                                                    </div>
+                                                </td></tr>}
+                                                </Fragment>
                                             );
                                         })}
                                     </tbody>
