@@ -16,7 +16,7 @@ class PublicBankController extends Controller
             'subjects' => DB::table('exam_public_subjects')->orderBy('name')->get(['id', 'name', 'code', 'is_active']),
             'packages' => DB::table('exam_public_packages as packages')
                 ->join('exam_public_subjects as subjects', 'subjects.id', '=', 'packages.exam_public_subject_id')
-                ->select('packages.id', 'packages.title', 'packages.code', 'packages.status', 'packages.duration_minutes', 'packages.exam_public_subject_id', 'subjects.name as subject_name')
+                ->select('packages.id', 'packages.title', 'packages.code', 'packages.status', 'packages.duration_minutes', 'packages.passing_score', 'packages.allow_retry', 'packages.show_result_to_participant', 'packages.exam_public_subject_id', 'subjects.name as subject_name')
                 ->selectSub(DB::table('exam_public_questions')->selectRaw('count(*)')->whereColumn('exam_public_package_id', 'packages.id')->whereNull('deleted_at')->where('is_active', true), 'question_count')
                 ->orderBy('subjects.name')->orderBy('packages.title')->get(),
         ]);
@@ -44,6 +44,9 @@ class PublicBankController extends Controller
             'code' => ['required', 'alpha_dash', 'max:80', Rule::unique('exam_public_packages', 'code')],
             'duration_minutes' => ['required', 'integer', 'between:5,300'],
             'randomize_questions' => ['sometimes', 'boolean'],
+            'passing_score' => ['required', 'numeric', 'between:0,100'],
+            'allow_retry' => ['required', 'boolean'],
+            'show_result_to_participant' => ['required', 'boolean'],
         ]);
 
         $id = DB::table('exam_public_packages')->insertGetId([
@@ -52,6 +55,26 @@ class PublicBankController extends Controller
         ]);
 
         return response()->json(['id' => $id], 201);
+    }
+
+    public function updatePackage(Request $request, int $package): JsonResponse
+    {
+        $data = $request->validate([
+            'passing_score' => ['required', 'numeric', 'between:0,100'],
+            'allow_retry' => ['required', 'boolean'],
+            'show_result_to_participant' => ['required', 'boolean'],
+        ]);
+
+        $record = DB::table('exam_public_packages')->where('id', $package)->first();
+        abort_unless($record, 404);
+        abort_if(DB::table('exam_public_subject_attempts')->where('exam_public_package_id', $package)->exists(), 409, 'Pengaturan paket yang sudah dikerjakan tidak boleh diubah.');
+        abort_if(DB::table('exam_public_session_packages as assignment')
+            ->join('exam_public_sessions as session', 'session.id', '=', 'assignment.exam_public_session_id')
+            ->where('assignment.exam_public_package_id', $package)->where('session.status', 'published')->exists(), 409, 'Pengaturan paket dalam sesi aktif tidak boleh diubah.');
+
+        DB::table('exam_public_packages')->where('id', $package)->update([...$data, 'updated_at' => now()]);
+
+        return response()->json(['updated' => true]);
     }
 
     public function questions(int $package): JsonResponse
@@ -94,6 +117,7 @@ class PublicBankController extends Controller
         return DB::transaction(function () use ($package): JsonResponse {
             $record = DB::table('exam_public_packages')->where('id', $package)->lockForUpdate()->first();
             abort_unless($record && $record->status === 'draft', 403);
+            abort_unless($record->passing_score !== null && $record->allow_retry !== null && $record->show_result_to_participant !== null, 422, 'Lengkapi pengaturan penilaian paket.');
             abort_unless(DB::table('exam_public_questions')->where('exam_public_package_id', $package)
                 ->whereNull('deleted_at')->where('is_active', true)->count() === 10, 422, 'Paket harus berisi tepat 10 soal aktif.');
 

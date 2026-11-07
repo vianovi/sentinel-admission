@@ -14,7 +14,7 @@ class PublicExamPagesController extends Controller
     {
         $packages = DB::table('exam_public_packages as package')
             ->join('exam_public_subjects as subject', 'subject.id', '=', 'package.exam_public_subject_id')
-            ->select('package.id', 'package.title', 'package.code', 'package.status', 'package.duration_minutes', 'package.exam_public_subject_id', 'subject.name as subject_name')
+            ->select('package.id', 'package.title', 'package.code', 'package.status', 'package.duration_minutes', 'package.passing_score', 'package.allow_retry', 'package.show_result_to_participant', 'package.exam_public_subject_id', 'subject.name as subject_name')
             ->selectSub(DB::table('exam_public_questions')->selectRaw('count(*)')->whereColumn('exam_public_package_id', 'package.id')->whereNull('deleted_at')->where('is_active', true), 'question_count')
             ->orderByDesc('package.id')->get();
 
@@ -78,6 +78,7 @@ class PublicExamPagesController extends Controller
         $availablePackages = DB::table('exam_public_packages as package')
             ->join('exam_public_subjects as subject', 'subject.id', '=', 'package.exam_public_subject_id')
             ->where('package.status', 'published')->where('subject.is_active', true)
+            ->whereNotNull('package.passing_score')->whereNotNull('package.allow_retry')->whereNotNull('package.show_result_to_participant')
             ->orderBy('subject.name')->get(['package.id', 'package.title', 'subject.name as subject_name', 'subject.id as subject_id']);
 
         return Inertia::render('Dashboard/Admin/PublicExam/Sessions', [
@@ -124,6 +125,49 @@ class PublicExamPagesController extends Controller
             ->orderByDesc('participant.id')
             ->paginate(25, ['participant.id', 'participant.participant_code', 'participant.name', 'participant.school_origin', 'participant.status', 'participant.average_score', 'participant.is_passed', 'participant.completed_at', 'participant.exam_public_session_id', 'session.title as session_title'])
             ->withQueryString();
+
+        $sessionIds = $participants->getCollection()->pluck('exam_public_session_id')->unique();
+        $assigned = DB::table('exam_public_session_packages as assignment')
+            ->join('exam_public_packages as package', 'package.id', '=', 'assignment.exam_public_package_id')
+            ->join('exam_public_subjects as subject', 'subject.id', '=', 'assignment.exam_public_subject_id')
+            ->whereIn('assignment.exam_public_session_id', $sessionIds)
+            ->orderBy('assignment.sort_order')
+            ->get(['assignment.exam_public_session_id', 'assignment.exam_public_subject_id', 'package.title as package_title', 'package.passing_score', 'subject.name as subject_name'])
+            ->groupBy('exam_public_session_id');
+        $attempts = DB::table('exam_public_subject_attempts')
+            ->whereIn('exam_public_participant_id', $participants->getCollection()->pluck('id'))
+            ->orderBy('attempt_number')
+            ->get(['exam_public_participant_id', 'exam_public_subject_id', 'attempt_number', 'attempt_type', 'status', 'percentage_score'])
+            ->groupBy('exam_public_participant_id');
+
+        $participants->getCollection()->transform(function ($participant) use ($assigned, $attempts) {
+            $participant->is_passed = $participant->is_passed === null ? null : (bool) $participant->is_passed;
+            $bySubject = $attempts->get($participant->id, collect())->groupBy('exam_public_subject_id');
+            $participant->subjects = $assigned->get($participant->exam_public_session_id, collect())->map(function ($subject) use ($bySubject, $participant) {
+                $history = $bySubject->get($subject->exam_public_subject_id, collect())
+                    ->map(fn ($attempt) => [
+                        'number' => $attempt->attempt_number,
+                        'type' => $attempt->attempt_type,
+                        'status' => $attempt->status,
+                        'score' => $attempt->percentage_score === null ? null : (float) $attempt->percentage_score,
+                    ])->values();
+                $scores = $history->whereIn('status', ['submitted', 'auto_submitted'])->pluck('score')->filter(fn ($score) => $score !== null);
+                $best = $scores->isEmpty() ? null : $scores->max();
+                $below = $best !== null && $subject->passing_score !== null && $best <= (float) $subject->passing_score;
+
+                return [
+                    'name' => $subject->subject_name,
+                    'package' => $subject->package_title,
+                    'threshold' => $subject->passing_score === null ? null : (float) $subject->passing_score,
+                    'best' => $best,
+                    'passed' => $best === null || $subject->passing_score === null ? null : ! $below,
+                    'note' => $below ? ($participant->is_passed === null ? 'Nilai mapel rendah; hasil akhir belum tersedia.' : ($participant->is_passed ? 'Nilai mapel rendah; rata-rata akhir memenuhi ambang lulus.' : 'Nilai mapel rendah; rata-rata akhir belum memenuhi ambang lulus.')) : null,
+                    'attempts' => $history,
+                ];
+            })->values();
+
+            return $participant;
+        });
 
         $baseStatsQuery = DB::table('exam_public_participants')
             ->when($sessionId, fn ($q) => $q->where('exam_public_session_id', $sessionId));

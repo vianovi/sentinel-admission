@@ -8,6 +8,7 @@ test('public package, session, and result pages use isolated public tables', fun
     $subject = DB::table('exam_public_subjects')->insertGetId(['name' => 'IPAS Publik', 'code' => 'IPAS-P']);
     $package = DB::table('exam_public_packages')->insertGetId([
         'exam_public_subject_id' => $subject, 'title' => 'Paket Publik', 'code' => 'IPAS-P-01', 'status' => 'published',
+        'passing_score' => 55, 'allow_retry' => false, 'show_result_to_participant' => false,
     ]);
     $session = DB::table('exam_public_sessions')->insertGetId([
         'title' => 'Sesi Publik', 'status' => 'published', 'opens_at' => now()->subHour(), 'closes_at' => now()->addHour(),
@@ -41,4 +42,40 @@ test('only administrators can read public exam admin pages', function () {
         $this->actingAs($staff)->get($url)->assertForbidden();
         $this->app['auth']->logout();
     }
+});
+
+test('admin result details distinguish a low subject from a passing overall average', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+    $session = DB::table('exam_public_sessions')->insertGetId([
+        'title' => 'Ujian Empat Mapel', 'status' => 'published', 'opens_at' => now()->subHour(), 'closes_at' => now()->addHour(),
+    ]);
+    $participant = DB::table('exam_public_participants')->insertGetId([
+        'exam_public_session_id' => $session, 'participant_code' => 'STUDENTCODE00002',
+        'name' => 'Anak B', 'school_origin' => 'Sekolah B', 'average_score' => 67.25, 'is_passed' => true, 'status' => 'completed',
+    ]);
+    foreach (['MTK' => [50, 55], 'IPAS' => [69, 65], 'PAIBP' => [70, 65], 'BINDO' => [80, 65]] as $index => $data) {
+        [$score, $threshold] = $data;
+        $subject = DB::table('exam_public_subjects')->insertGetId(['name' => $index, 'code' => $index]);
+        $package = DB::table('exam_public_packages')->insertGetId([
+            'exam_public_subject_id' => $subject, 'title' => $index.' Paket 1', 'code' => $index.'-1', 'passing_score' => $threshold,
+        ]);
+        DB::table('exam_public_session_packages')->insert([
+            'exam_public_session_id' => $session, 'exam_public_package_id' => $package,
+            'exam_public_subject_id' => $subject, 'sort_order' => $index === 'MTK' ? 0 : ($index === 'IPAS' ? 1 : ($index === 'PAIBP' ? 2 : 3)),
+        ]);
+        DB::table('exam_public_subject_attempts')->insert([
+            'exam_public_participant_id' => $participant, 'exam_public_package_id' => $package,
+            'exam_public_subject_id' => $subject, 'started_at' => now(), 'expires_at' => now()->addHour(),
+            'status' => 'submitted', 'percentage_score' => $score,
+        ]);
+    }
+
+    $this->actingAs($admin)->get(route('admin.public-exams.results.index', ['session' => $session]))
+        ->assertSuccessful()->assertInertia(fn ($page) => $page
+        ->where('participants.data.0.is_passed', true)
+        ->where('participants.data.0.subjects.0.name', 'MTK')
+        ->where('participants.data.0.subjects.0.best', 50)
+        ->where('participants.data.0.subjects.0.passed', false)
+        ->where('participants.data.0.subjects.0.threshold', 55)
+        ->where('participants.data.0.subjects.1.passed', true));
 });

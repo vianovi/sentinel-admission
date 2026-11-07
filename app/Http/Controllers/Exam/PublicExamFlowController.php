@@ -46,7 +46,11 @@ class PublicExamFlowController extends Controller
                 && $session->opens_at <= now() && $session->closes_at > now()
                 && (! $access->expires_at || $access->expires_at > now())
                 && ($access->max_uses === null || $access->used_count < $access->max_uses), 403);
-            abort_unless(DB::table('exam_public_session_packages')->where('exam_public_session_id', $session->id)->count() === 4, 422);
+            abort_unless(DB::table('exam_public_session_packages as assignment')
+                ->join('exam_public_packages as package', 'package.id', '=', 'assignment.exam_public_package_id')
+                ->where('assignment.exam_public_session_id', $session->id)
+                ->whereNotNull('package.passing_score')->whereNotNull('package.allow_retry')->whereNotNull('package.show_result_to_participant')
+                ->count() === 4, 422, 'Pengaturan paket sesi belum lengkap.');
 
             $person = DB::table('exam_public_participants')
                 ->where('exam_public_session_id', $session->id)
@@ -80,13 +84,23 @@ class PublicExamFlowController extends Controller
             ->where('pivot.exam_public_session_id', $session->id)->orderBy('pivot.sort_order')
             ->get(['package.id', 'package.title', 'subject.name as subject_name', 'subject.id as subject_id']);
 
+        $result = $this->results->refresh($person->id);
+
         return response()->json([
             'participant' => ['id' => $person->id, 'name' => $person->name, 'school_origin' => $person->school_origin],
             'session' => ['title' => $session->title, 'order_type' => $session->order_type],
             'packages' => $packages,
             'attempts' => DB::table('exam_public_subject_attempts')->where('exam_public_participant_id', $person->id)
-                ->get(['id', 'exam_public_subject_id', 'attempt_type', 'status', 'percentage_score']),
-            'result' => $this->results->refresh($person->id),
+                ->get(['id', 'exam_public_subject_id', 'attempt_type', 'status']),
+            'result' => [
+                'completed' => $result['completed'],
+                'subjects' => collect($result['subjects'])->map(fn (array $subject): array => [
+                    'subject_id' => $subject['subject_id'],
+                    'primary_score' => $subject['show_result_to_participant'] ? $subject['primary_score'] : null,
+                    'remedial_score' => $subject['show_result_to_participant'] ? $subject['remedial_score'] : null,
+                    'remedial_available' => $subject['remedial_available'],
+                ])->all(),
+            ],
         ]);
     }
 
@@ -105,6 +119,8 @@ class PublicExamFlowController extends Controller
                 ->where('package.status', 'published')->where('subject.is_active', true)
                 ->first(['pivot.exam_public_subject_id', 'pivot.sort_order', 'package.duration_minutes', 'package.randomize_questions']);
             abort_unless($assignment, 403);
+            abort_unless(DB::table('exam_public_packages')->where('id', $package)->whereNotNull('passing_score')
+                ->whereNotNull('allow_retry')->whereNotNull('show_result_to_participant')->exists(), 422, 'Pengaturan paket belum lengkap.');
 
             $attempts = DB::table('exam_public_subject_attempts')->where('exam_public_participant_id', $participant)->get();
             $active = $attempts->first(fn ($attempt) => $attempt->status === 'in_progress' && $attempt->expires_at > now());

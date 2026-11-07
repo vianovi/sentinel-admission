@@ -26,6 +26,7 @@ class PublicSessionV2Controller extends Controller
             'packages' => DB::table('exam_public_packages as package')
                 ->join('exam_public_subjects as subject', 'subject.id', '=', 'package.exam_public_subject_id')
                 ->where('package.status', 'published')->where('subject.is_active', true)
+                ->whereNotNull('package.passing_score')->whereNotNull('package.allow_retry')->whereNotNull('package.show_result_to_participant')
                 ->orderBy('subject.name')->get(['package.id', 'package.title', 'subject.name as subject_name', 'subject.id as subject_id']),
         ]);
     }
@@ -47,7 +48,9 @@ class PublicSessionV2Controller extends Controller
             $packages = DB::table('exam_public_packages as package')
                 ->join('exam_public_subjects as subject', 'subject.id', '=', 'package.exam_public_subject_id')
                 ->whereIn('package.id', $data['package_ids'])->where('package.status', 'published')
-                ->where('subject.is_active', true)->get(['package.id', 'package.exam_public_subject_id']);
+                ->where('subject.is_active', true)
+                ->whereNotNull('package.passing_score')->whereNotNull('package.allow_retry')->whereNotNull('package.show_result_to_participant')
+                ->get(['package.id', 'package.exam_public_subject_id']);
             abort_unless($packages->count() === 4 && $packages->unique('exam_public_subject_id')->count() === 4, 422, 'Pilih tepat satu paket dari empat mapel berbeda.');
 
             $sessionId = DB::table('exam_public_sessions')->insertGetId([
@@ -101,7 +104,9 @@ class PublicSessionV2Controller extends Controller
             abort_unless($record && $record->status === 'draft', 403);
             abort_unless($record->closes_at > now() && DB::table('exam_public_session_packages as pivot')
                 ->join('exam_public_packages as package', 'package.id', '=', 'pivot.exam_public_package_id')
-                ->where('pivot.exam_public_session_id', $session)->where('package.status', 'published')->count() === 4, 422);
+                ->where('pivot.exam_public_session_id', $session)->where('package.status', 'published')
+                ->whereNotNull('package.passing_score')->whereNotNull('package.allow_retry')->whereNotNull('package.show_result_to_participant')
+                ->count() === 4, 422);
 
             DB::table('exam_public_sessions')->where('id', $session)->update(['status' => 'published', 'updated_at' => now()]);
 

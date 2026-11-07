@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 class PublicExamResultService
 {
     /**
-     * @return array{completed: bool, average_score: ?float, is_passed: ?bool, subjects: array<int, array{subject_id: int, primary_score: ?float, remedial_score: ?float, effective_score: ?float, remedial_available: bool}>}
+     * @return array{completed: bool, average_score: ?float, is_passed: ?bool, subjects: array<int, array<string, mixed>>}
      */
     public function refresh(int $participantId): array
     {
@@ -20,9 +20,10 @@ class PublicExamResultService
 
             $session = DB::table('exam_public_sessions')->where('id', $participant->exam_public_session_id)->first();
             $packages = DB::table('exam_public_session_packages')
+                ->join('exam_public_packages', 'exam_public_packages.id', '=', 'exam_public_session_packages.exam_public_package_id')
                 ->where('exam_public_session_id', $session->id)
-                ->orderBy('sort_order')
-                ->get();
+                ->orderBy('exam_public_session_packages.sort_order')
+                ->get(['exam_public_session_packages.exam_public_subject_id', 'exam_public_packages.passing_score', 'exam_public_packages.allow_retry', 'exam_public_packages.show_result_to_participant']);
             $attempts = DB::table('exam_public_subject_attempts')
                 ->where('exam_public_participant_id', $participantId)
                 ->get()
@@ -37,13 +38,19 @@ class PublicExamResultService
                 $remedial = $subjectAttempts->where('attempt_type', 'remedial')->sortByDesc('percentage_score')->first();
                 $primaryScore = $primary?->percentage_score !== null ? (float) $primary->percentage_score : null;
                 $remedialScore = $remedial?->percentage_score !== null ? (float) $remedial->percentage_score : null;
+                $effectiveScore = $primaryScore === null ? null : max($primaryScore, $remedialScore ?? $primaryScore);
+                $attemptCount = $attempts->get($package->exam_public_subject_id, collect())->count();
 
                 $subjects[] = [
                     'subject_id' => (int) $package->exam_public_subject_id,
                     'primary_score' => $primaryScore,
                     'remedial_score' => $remedialScore,
-                    'effective_score' => $primaryScore === null ? null : max($primaryScore, $remedialScore ?? $primaryScore),
-                    'remedial_available' => false,
+                    'effective_score' => $effectiveScore,
+                    'passing_score' => $package->passing_score === null ? null : (float) $package->passing_score,
+                    'subject_passed' => $effectiveScore === null || $package->passing_score === null ? null : $effectiveScore > (float) $package->passing_score,
+                    'show_result_to_participant' => (bool) $package->show_result_to_participant,
+                    'remedial_available' => $primaryScore !== null && $attemptCount < 2 && (bool) $package->allow_retry
+                        && (! $package->show_result_to_participant || $effectiveScore <= (float) $package->passing_score),
                 ];
             }
 
@@ -51,16 +58,6 @@ class PublicExamResultService
                 && collect($subjects)->every(fn (array $subject): bool => $subject['primary_score'] !== null);
             $average = $completed ? round(collect($subjects)->sum('effective_score') / 4, 2) : null;
             $isPassed = $completed ? collect($subjects)->sum('effective_score') > (float) $session->passing_score * 4 : null;
-
-            if ($completed && ! $isPassed && $session->allow_remedial) {
-                foreach ($subjects as &$subject) {
-                    $remedialCount = $attempts->get($subject['subject_id'], collect())
-                        ->where('attempt_type', 'remedial')->count();
-                    $subject['remedial_available'] = $subject['primary_score'] < (float) $session->remedial_score_limit
-                        && $remedialCount < (int) $session->max_remedial_attempts;
-                }
-                unset($subject);
-            }
 
             DB::table('exam_public_participants')->where('id', $participantId)->update([
                 'status' => $completed ? 'completed' : 'in_progress',

@@ -25,6 +25,7 @@ function publicFlowFixture(string $order = 'free'): array
         $subject = DB::table('exam_public_subjects')->insertGetId(['name' => $code, 'code' => $code]);
         $package = DB::table('exam_public_packages')->insertGetId([
             'exam_public_subject_id' => $subject, 'title' => $code.' Paket 1', 'code' => $code.'-1', 'status' => 'published',
+            'passing_score' => 50, 'allow_retry' => $code === 'MTK', 'show_result_to_participant' => false,
         ]);
         DB::table('exam_public_session_packages')->insert([
             'exam_public_session_id' => $session, 'exam_public_package_id' => $package,
@@ -40,7 +41,7 @@ function publicFlowFixture(string $order = 'free'): array
     return [$session, $packages];
 }
 
-test('public participant completes four packages in free order and sees only aggregate result', function () {
+test('public participant completes four packages in free order without seeing aggregate result', function () {
     [, $packages] = publicFlowFixture();
     $this->get(route('public-exam.page'))
         ->assertInertia(fn ($page) => $page->component('Public/Exam/PublicExam'));
@@ -65,8 +66,9 @@ test('public participant completes four packages in free order and sees only agg
         $this->postJson(route('public-exam.submit', $attempt))->assertSuccessful();
     }
 
-    $this->getJson(route('public-exam.dashboard', $participant))->assertJsonPath('result.average_score', 100)
-        ->assertJsonPath('result.is_passed', true);
+    $this->getJson(route('public-exam.dashboard', $participant))->assertJsonPath('result.completed', true)
+        ->assertJsonMissingPath('result.average_score')->assertJsonMissingPath('result.is_passed');
+    expect((float) DB::table('exam_public_participants')->where('id', $participant)->value('average_score'))->toBe(100.0);
     expect(DB::table('exam_attempts')->count())->toBe(0);
 });
 
@@ -85,7 +87,7 @@ test('sequential session blocks skipping its first subject', function () {
     $this->postJson(route('public-exam.start', [$join->json('participant_id'), $packages['MTK'][0]]))->assertForbidden();
 });
 
-test('a passing aggregate does not open remedial even for a low subject', function () {
+test('a passing aggregate does not prevent retry of a low subject when scores are hidden', function () {
     [, $packages] = publicFlowFixture();
     $join = $this->postJson(route('public-exam.join', 'ROOM01'), ['participant_code' => 'STUDENTCODE00001']);
     $participant = $join->json('participant_id');
@@ -99,13 +101,11 @@ test('a passing aggregate does not open remedial even for a low subject', functi
             $this->postJson(route('public-exam.answer', $attempt), ['question_id' => $question, 'selected_option' => 'A'])->assertSuccessful();
         }
         $this->postJson(route('public-exam.submit', $attempt))->assertSuccessful();
-        if ($code === 'MTK') {
-            $this->postJson(route('public-exam.start', [$participant, $package]))->assertForbidden();
-        }
     }
 
-    $this->getJson(route('public-exam.dashboard', $participant))->assertJsonPath('result.average_score', 75)
-        ->assertJsonPath('result.is_passed', true)->assertJsonPath('result.subjects.2.remedial_available', false);
+    $this->getJson(route('public-exam.dashboard', $participant))->assertJsonPath('result.subjects.2.remedial_available', true)
+        ->assertJsonMissingPath('result.average_score');
+    expect((float) DB::table('exam_public_participants')->where('id', $participant)->value('average_score'))->toBe(75.0);
 });
 
 test('a failing aggregate opens remedial only for the low subject', function () {
@@ -127,7 +127,7 @@ test('a failing aggregate opens remedial only for the low subject', function () 
         $this->postJson(route('public-exam.submit', $attempt))->assertSuccessful();
     }
 
-    $this->getJson(route('public-exam.dashboard', $participant))->assertJsonPath('result.average_score', 50)
+    $this->getJson(route('public-exam.dashboard', $participant))
         ->assertJsonPath('result.subjects.2.remedial_available', true);
     $this->postJson(route('public-exam.start', [$participant, $packages['IPAS'][0]]))->assertForbidden();
     $remedial = $this->postJson(route('public-exam.start', [$participant, $packages['MTK'][0]]));
@@ -138,9 +138,9 @@ test('a failing aggregate opens remedial only for the low subject', function () 
         'question_id' => $packages['MTK'][1], 'selected_option' => 'A',
     ])->assertSuccessful();
     $this->postJson(route('public-exam.submit', $remedial->json('attempt_id')))->assertSuccessful();
-    $this->getJson(route('public-exam.dashboard', $participant))->assertJsonPath('result.average_score', 75)
-        ->assertJsonPath('result.is_passed', true)->assertJsonPath('result.subjects.2.primary_score', 0)
-        ->assertJsonPath('result.subjects.2.remedial_score', 100);
+    $this->getJson(route('public-exam.dashboard', $participant))->assertJsonPath('result.subjects.2.remedial_available', false)
+        ->assertJsonPath('result.subjects.2.primary_score', null);
+    expect((float) DB::table('exam_public_participants')->where('id', $participant)->value('average_score'))->toBe(75.0);
 });
 
 test('answers cannot use a question outside the frozen attempt', function () {
@@ -183,4 +183,46 @@ test('room token cannot create duplicates or reclaim a participant after code is
 
     expect(DB::table('exam_public_participants')->count())->toBe(1)
         ->and(DB::table('exam_public_session_tokens')->where('token', 'ROOM01')->value('used_count'))->toBe(1);
+});
+
+test('visible passing score hides retry while hidden score permits exactly one retry', function () {
+    [, $packages] = publicFlowFixture();
+    DB::table('exam_public_packages')->where('id', $packages['IPAS'][0])->update([
+        'passing_score' => 60, 'allow_retry' => true, 'show_result_to_participant' => true,
+    ]);
+    $join = $this->postJson(route('public-exam.join', 'ROOM01'), ['participant_code' => 'STUDENTCODE00001']);
+    $participant = $join->json('participant_id');
+    $cookie = collect($join->headers->getCookies())->first(fn ($value) => $value->getName() === 'public_exam_session');
+    $this->withHeader('X-Public-Exam-Session', $cookie->getValue());
+
+    $ipas = $this->postJson(route('public-exam.start', [$participant, $packages['IPAS'][0]]))->json('attempt_id');
+    $this->postJson(route('public-exam.answer', $ipas), ['question_id' => $packages['IPAS'][1], 'selected_option' => 'A'])->assertSuccessful();
+    $this->postJson(route('public-exam.submit', $ipas))->assertSuccessful();
+    $this->getJson(route('public-exam.dashboard', $participant))
+        ->assertJsonPath('result.subjects.0.primary_score', 100)
+        ->assertJsonPath('result.subjects.0.remedial_available', false)
+        ->assertJsonPath('result.subjects.2.primary_score', null)
+        ->assertJsonMissingPath('result.average_score')->assertJsonMissingPath('result.is_passed');
+    $this->postJson(route('public-exam.start', [$participant, $packages['IPAS'][0]]))->assertForbidden();
+
+    $mtk = $this->postJson(route('public-exam.start', [$participant, $packages['MTK'][0]]))->json('attempt_id');
+    $this->postJson(route('public-exam.submit', $mtk))->assertSuccessful();
+    $this->getJson(route('public-exam.dashboard', $participant))
+        ->assertJsonPath('result.subjects.2.primary_score', null)
+        ->assertJsonPath('result.subjects.2.remedial_available', true);
+    $retry = $this->postJson(route('public-exam.start', [$participant, $packages['MTK'][0]]))->assertSuccessful()->json('attempt_id');
+    $this->postJson(route('public-exam.submit', $retry))->assertSuccessful();
+    $this->postJson(route('public-exam.start', [$participant, $packages['MTK'][0]]))->assertForbidden();
+    expect(DB::table('exam_public_subject_attempts')->where('exam_public_package_id', $packages['MTK'][0])->count())->toBe(2);
+});
+
+test('unconfigured published public package cannot be started', function () {
+    [, $packages] = publicFlowFixture();
+    $join = $this->postJson(route('public-exam.join', 'ROOM01'), ['participant_code' => 'STUDENTCODE00001']);
+    $cookie = collect($join->headers->getCookies())->first(fn ($value) => $value->getName() === 'public_exam_session');
+    $this->withHeader('X-Public-Exam-Session', $cookie->getValue());
+    DB::table('exam_public_packages')->where('id', $packages['MTK'][0])->update(['passing_score' => null]);
+
+    $this->postJson(route('public-exam.start', [$join->json('participant_id'), $packages['MTK'][0]]))->assertUnprocessable();
+    expect(DB::table('exam_public_subject_attempts')->count())->toBe(0);
 });

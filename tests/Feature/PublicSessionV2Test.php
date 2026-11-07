@@ -10,6 +10,7 @@ test('admin creates a four-subject draft then publishes and issues a room token'
         $subject = DB::table('exam_public_subjects')->insertGetId(['name' => $code, 'code' => $code]);
         $ids[] = DB::table('exam_public_packages')->insertGetId([
             'exam_public_subject_id' => $subject, 'title' => $code.' Paket 1', 'code' => $code.'-1', 'status' => 'published',
+            'passing_score' => 50, 'allow_retry' => false, 'show_result_to_participant' => false,
         ]);
     }
 
@@ -42,6 +43,7 @@ test('duplicate mapel is rejected and guests cannot manage public sessions', fun
         $ids[] = DB::table('exam_public_packages')->insertGetId([
             'exam_public_subject_id' => $subject, 'title' => 'MTK '.$index,
             'code' => 'MTK-'.$index, 'status' => 'published',
+            'passing_score' => 50, 'allow_retry' => false, 'show_result_to_participant' => false,
         ]);
     }
     $input = [
@@ -60,6 +62,7 @@ test('session timestamps with an explicit offset are stored in the application t
         $subject = DB::table('exam_public_subjects')->insertGetId(['name' => $code, 'code' => $code]);
         $ids[] = DB::table('exam_public_packages')->insertGetId([
             'exam_public_subject_id' => $subject, 'title' => $code, 'code' => $code, 'status' => 'published',
+            'passing_score' => 50, 'allow_retry' => false, 'show_result_to_participant' => false,
         ]);
     }
 

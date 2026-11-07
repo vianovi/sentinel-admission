@@ -11,7 +11,8 @@ test('admin creates a separate four-subject bank and publishes only ten-question
         ])->assertCreated()->json('id');
         $package = $this->postJson(route('admin.exams.public-bank.packages.store'), [
             'exam_public_subject_id' => $subject, 'title' => $code.' Paket 1',
-            'code' => $code.'-1', 'duration_minutes' => 35,
+            'code' => $code.'-1', 'duration_minutes' => 35, 'passing_score' => 55,
+            'allow_retry' => true, 'show_result_to_participant' => false,
         ])->assertCreated()->json('id');
 
         $this->postJson(route('admin.exams.public-bank.packages.publish', $package))->assertUnprocessable();
@@ -46,6 +47,7 @@ test('public bank rejects malformed answers and guest access', function () {
     ])->json('id');
     $package = $this->postJson(route('admin.exams.public-bank.packages.store'), [
         'exam_public_subject_id' => $subject, 'title' => 'IPAS 1', 'code' => 'IPAS-1', 'duration_minutes' => 35,
+        'passing_score' => 55, 'allow_retry' => false, 'show_result_to_participant' => false,
     ])->json('id');
 
     $this->postJson(route('admin.exams.public-bank.questions.store', $package), [
@@ -53,4 +55,25 @@ test('public bank rejects malformed answers and guest access', function () {
         'correct_answer' => 'C', 'point' => 10,
     ])->assertUnprocessable();
     expect(DB::table('exam_public_questions')->count())->toBe(0);
+});
+
+test('unconfigured public packages cannot publish until admin supplies all scoring options', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+    $subject = DB::table('exam_public_subjects')->insertGetId(['name' => 'MTK', 'code' => 'MTK']);
+    $package = DB::table('exam_public_packages')->insertGetId([
+        'exam_public_subject_id' => $subject, 'title' => 'Paket lama', 'code' => 'MTK-OLD',
+    ]);
+    for ($index = 0; $index < 10; $index++) {
+        DB::table('exam_public_questions')->insert([
+            'exam_public_package_id' => $package, 'question_text' => 'Soal '.$index,
+            'options' => json_encode(['A' => 'Benar', 'B' => 'Salah']), 'correct_answer' => 'A',
+        ]);
+    }
+
+    $this->actingAs($admin)->postJson(route('admin.exams.public-bank.packages.publish', $package))->assertUnprocessable();
+    $this->putJson(route('admin.exams.public-bank.packages.settings.update', $package), [
+        'passing_score' => 55, 'allow_retry' => false, 'show_result_to_participant' => true,
+    ])->assertSuccessful();
+    $this->postJson(route('admin.exams.public-bank.packages.publish', $package))->assertSuccessful();
+    expect((float) DB::table('exam_public_packages')->where('id', $package)->value('passing_score'))->toBe(55.0);
 });

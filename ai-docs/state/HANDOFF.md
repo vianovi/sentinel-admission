@@ -1,5 +1,11 @@
 # Audit Handoff
 
+## 2026-11-07 public-only exam scoring checkpoint
+
+- Baseline committed as `91f83b9` on `feature/public-exam-rebuild` after 154 passed / 9 skipped (1250 assertions), frontend build and route/diff checks. Removed unsupported package/question delete and edit controls before checkpoint.
+- Owner policy: four actual effective subject scores averaged; overall pass only >65; each subject passes only > its package threshold. A below-threshold subject is noted even when overall passes. At most two attempts total; repeat enabled per public package, hidden scores permit repeat regardless of first score, visible scores prevent repeat once score exceeds package threshold. Participant aggregate never shown; individual scores only when package flag enabled. Disabled repeats yield admin recommendation only, no approval workflow. No configuration copied from internal exam packages.
+- Backend milestone tests after change: `php artisan test --compact` 160 passed / 9 skipped (1302 assertions); `vendor/bin/pint --dirty --format agent` and `git diff --check` passed. Frontend milestone and browser checks pending. New migration adds nullable package settings so old packages need explicit admin configuration before publish/use.
+
 ## Current position
 
 Exam Engine audit is active on `feature/exam-panel-focus-layout`. The media trash/audit checkpoint is committed at `c815e59`. Public attempt resume security and automatic room-token rotation changes are verified and ready for a follow-up commit.

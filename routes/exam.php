@@ -139,6 +139,7 @@ Route::middleware(['auth', RoleMiddleware::class.':admin'])
         Route::get('/public-bank', [AdminPublicBank::class, 'index'])->name('public-bank.index');
         Route::post('/public-bank/subjects', [AdminPublicBank::class, 'storeSubject'])->name('public-bank.subjects.store');
         Route::post('/public-bank/packages', [AdminPublicBank::class, 'storePackage'])->name('public-bank.packages.store');
+        Route::put('/public-bank/packages/{package}/settings', [AdminPublicBank::class, 'updatePackage'])->name('public-bank.packages.settings.update');
         Route::get('/public-bank/packages/{package}/questions', [AdminPublicBank::class, 'questions'])->name('public-bank.questions.index');
         Route::post('/public-bank/packages/{package}/questions', [AdminPublicBank::class, 'storeQuestion'])->name('public-bank.questions.store');
         Route::post('/public-bank/packages/{package}/publish', [AdminPublicBank::class, 'publish'])->name('public-bank.packages.publish');

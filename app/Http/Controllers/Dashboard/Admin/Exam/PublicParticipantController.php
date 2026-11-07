@@ -51,7 +51,8 @@ class PublicParticipantController extends Controller
         $subjects = DB::table('exam_public_session_packages as pivot')
             ->join('exam_public_subjects as subject', 'subject.id', '=', 'pivot.exam_public_subject_id')
             ->where('pivot.exam_public_session_id', $session)->orderBy('pivot.sort_order')
-            ->get(['subject.id', 'subject.name']);
+            ->join('exam_public_packages as package', 'package.id', '=', 'pivot.exam_public_package_id')
+            ->get(['subject.id', 'subject.name', 'package.passing_score']);
 
         return response()->streamDownload(function () use ($session, $subjects): void {
             $stream = fopen('php://output', 'w');
@@ -61,8 +62,10 @@ class PublicParticipantController extends Controller
                     $this->safeCsv($subject->name.' Awal'),
                     $this->safeCsv($subject->name.' Remedial'),
                     $this->safeCsv($subject->name.' Efektif'),
+                    $this->safeCsv($subject->name.' Ambang'),
+                    $this->safeCsv($subject->name.' Status'),
                 ])->all(),
-                'Rata-rata', 'Kelulusan',
+                'Rata-rata', 'Kelulusan', 'Catatan',
             ]);
 
             DB::table('exam_public_participants')->where('exam_public_session_id', $session)
@@ -76,11 +79,17 @@ class PublicParticipantController extends Controller
                     foreach ($participants as $participant) {
                         $scores = $attempts->get($participant->id, collect())->groupBy('exam_public_subject_id');
                         $columns = [];
+                        $notes = [];
                         foreach ($subjects as $subject) {
                             $subjectAttempts = $scores->get($subject->id, collect());
                             $primary = $subjectAttempts->firstWhere('attempt_type', 'primary')?->percentage_score;
                             $remedial = $subjectAttempts->where('attempt_type', 'remedial')->max('percentage_score');
-                            array_push($columns, $primary, $remedial, $primary === null ? null : max((float) $primary, (float) ($remedial ?? $primary)));
+                            $best = $primary === null ? null : max((float) $primary, (float) ($remedial ?? $primary));
+                            $below = $best !== null && $subject->passing_score !== null && $best <= (float) $subject->passing_score;
+                            if ($below) {
+                                $notes[] = $subject->name.' di bawah ambang mapel; '.($participant->is_passed ? 'rata-rata akhir lulus' : 'rata-rata akhir belum lulus');
+                            }
+                            array_push($columns, $primary, $remedial, $best, $subject->passing_score, $best === null || $subject->passing_score === null ? 'BELUM ADA NILAI' : ($below ? 'TIDAK LULUS MAPEL' : 'LULUS MAPEL'));
                         }
 
                         fputcsv($stream, [
@@ -91,6 +100,7 @@ class PublicParticipantController extends Controller
                             ...$columns,
                             $participant->average_score,
                             $participant->is_passed === null ? 'BELUM SELESAI' : ($participant->is_passed ? 'LULUS' : 'TIDAK LULUS'),
+                            $this->safeCsv(implode('; ', $notes)),
                         ]);
                     }
                 });

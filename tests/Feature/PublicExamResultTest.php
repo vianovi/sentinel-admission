@@ -26,6 +26,7 @@ function publicResultFixture(array $scores): array
             'exam_public_subject_id' => $subjectId,
             'code' => $code.'-1',
             'title' => $code.' Paket 1',
+            'passing_score' => 50, 'allow_retry' => $code === 'MTK', 'show_result_to_participant' => false,
         ]);
         DB::table('exam_public_session_packages')->insert([
             'exam_public_session_id' => $sessionId,
@@ -118,12 +119,12 @@ test('worse remedial never lowers the effective score', function () {
         ->and($result['subjects'][2]['remedial_available'])->toBeFalse();
 });
 
-test('no subject below 50 leaves a failing candidate without automatic remedial', function () {
+test('a failing aggregate can still offer an enabled retry regardless of score', function () {
     [$participantId] = publicResultFixture(['IPAS' => 60, 'PAIBP' => 60, 'MTK' => 60, 'BINDO' => 60]);
     $result = app(PublicExamResultService::class)->refresh($participantId);
 
     expect($result['is_passed'])->toBeFalse()
-        ->and(collect($result['subjects'])->contains('remedial_available', true))->toBeFalse();
+        ->and($result['subjects'][2]['remedial_available'])->toBeTrue();
 });
 
 test('an in-progress remedial does not free another remedial slot', function () {
@@ -143,4 +144,27 @@ test('an in-progress remedial does not free another remedial slot', function () 
 
     expect($result['average_score'])->toBe(65.0)
         ->and($result['subjects'][2]['remedial_available'])->toBeFalse();
+});
+
+test('below-threshold MTK is recorded without cancelling a passing four-subject average', function () {
+    [$participantId, $subjects] = publicResultFixture(['IPAS' => 69, 'PAIBP' => 70, 'MTK' => 50, 'BINDO' => 80]);
+    DB::table('exam_public_packages')->where('id', $subjects['MTK'][1])->update(['passing_score' => 55, 'allow_retry' => false]);
+    $result = app(PublicExamResultService::class)->refresh($participantId);
+
+    expect($result['average_score'])->toBe(67.25)
+        ->and($result['is_passed'])->toBeTrue()
+        ->and($result['subjects'][2]['subject_passed'])->toBeFalse()
+        ->and($result['subjects'][2]['effective_score'])->toBe(50.0)
+        ->and($result['subjects'][2]['remedial_available'])->toBeFalse();
+});
+
+test('score exactly at subject threshold is not passing but aggregate 65 is also not passing', function () {
+    [$participantId, $subjects] = publicResultFixture(['IPAS' => 70, 'PAIBP' => 70, 'MTK' => 40, 'BINDO' => 80]);
+    DB::table('exam_public_packages')->where('id', $subjects['MTK'][1])->update(['passing_score' => 40, 'show_result_to_participant' => true]);
+
+    $result = app(PublicExamResultService::class)->refresh($participantId);
+    expect($result['average_score'])->toBe(65.0)
+        ->and($result['is_passed'])->toBeFalse()
+        ->and($result['subjects'][2]['subject_passed'])->toBeFalse()
+        ->and($result['subjects'][2]['remedial_available'])->toBeTrue();
 });
