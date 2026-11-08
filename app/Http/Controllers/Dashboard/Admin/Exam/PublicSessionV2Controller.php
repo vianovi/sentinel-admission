@@ -124,6 +124,8 @@ class PublicSessionV2Controller extends Controller
         return DB::transaction(function () use ($session, $data): JsonResponse {
             $record = DB::table('exam_public_sessions')->where('id', $session)->lockForUpdate()->first();
             abort_unless($record && $record->status === 'draft', 409, 'Hanya sesi draft yang paketnya dapat diubah.');
+            abort_if(DB::table('exam_public_participants')->where('exam_public_session_id', $session)
+                ->whereNotNull('started_at')->exists(), 409, 'Peserta sudah masuk ke sesi; paket tidak boleh diubah.');
             abort_if(DB::table('exam_public_participants as participant')
                 ->join('exam_public_subject_attempts as attempt', 'attempt.exam_public_participant_id', '=', 'participant.id')
                 ->where('participant.exam_public_session_id', $session)->exists(), 409, 'Sesi sudah memiliki pengerjaan peserta.');

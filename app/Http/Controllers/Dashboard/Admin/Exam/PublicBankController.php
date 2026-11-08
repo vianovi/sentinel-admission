@@ -233,6 +233,8 @@ class PublicBankController extends Controller
             $sessions = DB::table('exam_public_session_packages')
                 ->where('exam_public_package_id', $package)->pluck('exam_public_session_id');
             DB::table('exam_public_sessions')->whereIn('id', $sessions)->orderBy('id')->lockForUpdate()->get();
+            abort_if(DB::table('exam_public_participants')->whereIn('exam_public_session_id', $sessions)
+                ->whereNotNull('started_at')->exists(), 409, 'Peserta sudah masuk ke sesi terkait; paket tidak boleh dihapus.');
             abort_if(DB::table('exam_public_subject_attempts')->where('exam_public_package_id', $package)->exists(), 409, 'Paket sudah memiliki pengerjaan peserta.');
             abort_if(DB::table('exam_public_subject_attempts as attempt')
                 ->join('exam_public_participants as participant', 'participant.id', '=', 'attempt.exam_public_participant_id')

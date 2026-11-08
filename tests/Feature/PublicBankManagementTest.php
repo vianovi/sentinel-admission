@@ -194,6 +194,21 @@ test('public package deletion preserves all data once an attempt exists', functi
         ->and(DB::table('exam_public_subject_attempts')->count())->toBe(1);
 });
 
+test('package deletion refuses a participant already inside a related room before starting questions', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+    $subject = DB::table('exam_public_subjects')->insertGetId(['name' => 'MTK', 'code' => 'MTK']);
+    $package = DB::table('exam_public_packages')->insertGetId(['exam_public_subject_id' => $subject, 'title' => 'MTK 1', 'code' => 'MTK-1']);
+    $session = DB::table('exam_public_sessions')->insertGetId(['title' => 'Sesi', 'opens_at' => now(), 'closes_at' => now()->addHour(), 'status' => 'published']);
+    DB::table('exam_public_session_packages')->insert(['exam_public_session_id' => $session, 'exam_public_package_id' => $package, 'exam_public_subject_id' => $subject, 'sort_order' => 0]);
+    DB::table('exam_public_session_tokens')->insert(['exam_public_session_id' => $session, 'token' => 'ACTIVE_ROOM']);
+    DB::table('exam_public_participants')->insert(['exam_public_session_id' => $session, 'name' => 'Anak', 'school_origin' => 'Sekolah', 'participant_code' => 'JOINEDSTUDENT0001', 'started_at' => now()]);
+
+    $this->actingAs($admin)->deleteJson(route('admin.exams.public-bank.packages.destroy', $package))->assertStatus(409);
+    expect(DB::table('exam_public_packages')->where('id', $package)->exists())->toBeTrue()
+        ->and(DB::table('exam_public_session_tokens')->where('token', 'ACTIVE_ROOM')->exists())->toBeTrue()
+        ->and(DB::table('exam_public_sessions')->where('id', $session)->value('status'))->toBe('published');
+});
+
 test('public bank rejects malformed answers and guest access', function () {
     $this->postJson(route('admin.exams.public-bank.subjects.store'), ['name' => 'IPAS', 'code' => 'IPAS'])
         ->assertUnauthorized();
