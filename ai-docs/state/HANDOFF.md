@@ -1,7 +1,15 @@
 # Audit Handoff
 
+## Public XLSX flow in progress (uncommitted)
+
+- 2026-11-08 menu discoverability follow-up: changed admin public submenu labels to `Paket Soal` and `Sesi Ujian`; added visible explanation above list and renamed per-package action to `Import XLSX & Review Soal`. Frontend build passed (11.26s), focused public bank/admin tests 11 passed (194 assertions), diff check passed. Container volume sees updated source and build manifest, `public/hot` absent. Playwright against local port 8080 returned `ERR_SSL_PROTOCOL_ERROR`; do not claim authenticated UI visual verification. Existing workbook category remains incompatible with MTK until owner edits XLSX.
+
+- Workbook inspected read-only: `/home/silinux/Desktop/Paket Ujian PSB/Soal/MTK/Soal-ta01-mtk-mtk-paket-1.xlsx`; 11 active rows, category `Tes Akademik (Tulis)`, title `MTK-PAKET 1`, code `TA01-MTK`, duration 30, threshold 55, result/retry disabled. Import for public packages now reads XLSX settings, refuses mismatched mapel/title/code and invalid rows without writes, no fixed 10-question publish rule. Do not copy backup or edit workbook automatically.
+- Verification: `php artisan test --compact` 166 passed / 9 skipped (1350 assertions); focused public tests 23 passed (231 assertions); `npm run build`, Pint and `git diff --check` passed. Admin authenticated browser and actual XLSX acceptance after user edits category remain UNVERIFIED. No live DB import performed. Working tree has uncommitted changes; review before any commit.
+
 ## 2026-11-07 public-only exam scoring checkpoint
 
+- Resume reconciliation: frontend milestone committed as `313e1b0`. User approved migration on MariaDB `sentinel_admission_db`; `2026_11_07_101904_add_scoring_options_to_exam_public_packages_table` completed, status `[4] Ran`, three nullable columns confirmed via `db:table`. Existing package rows retain NULL settings and require admin configuration before publish/use. No rollback. Browser authenticated admin remains UNVERIFIED (route redirects to login). Recheck menus after migration, keep HUMAN VISUAL REVIEW REQUIRED.
 - Backend commit `2f9f158`; frontend suite 162 passed / 9 skipped (1316 assertions), Pint and npm run build passed. Playwright public landing rendered on temporary HTTP-local server with zero console errors; admin result route redirected to login, so authenticated UI flow is UNVERIFIED. Temporary server stopped. Frontend milestone is not committed yet at this checkpoint.
 
 - Baseline committed as `91f83b9` on `feature/public-exam-rebuild` after 154 passed / 9 skipped (1250 assertions), frontend build and route/diff checks. Removed unsupported package/question delete and edit controls before checkpoint.

@@ -33,7 +33,6 @@ type Package = {
 };
 type Subject = { id: number; name: string };
 type Question = { id: number; question_text: string; options: string; correct_answer: string; point: number; is_active: boolean };
-type QuestionForm = { question_text: string; A: string; B: string; C: string; D: string; E: string; correct_answer: string; point: number };
 type Props = {
     packages: Package[];
     subjects: Subject[];
@@ -45,7 +44,6 @@ type Props = {
     };
 };
 
-const emptyQuestion: QuestionForm = { question_text: "", A: "", B: "", C: "", D: "", E: "", correct_answer: "A", point: 10 };
 
 type StatusFilter = "all" | "draft" | "published" | "closed";
 type SortOption = "newest" | "title_asc" | "questions_desc";
@@ -64,19 +62,14 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
     const [formCategory, setFormCategory] = useState<number>(0);
     const [formTitle, setFormTitle] = useState("");
     const [formCode, setFormCode] = useState("");
-    const [formDuration, setFormDuration] = useState(35);
-    const [formThreshold, setFormThreshold] = useState("");
-    const [formRetry, setFormRetry] = useState(false);
-    const [formShowScore, setFormShowScore] = useState(false);
-    const [settingsPackage, setSettingsPackage] = useState<Package | null>(null);
 
     // Question Manager Modal states
     const [activePackageForQuestions, setActivePackageForQuestions] = useState<Package | null>(null);
     const [questions, setQuestions] = useState<Question[]>([]);
-    const [question, setQuestion] = useState<QuestionForm>(emptyQuestion);
     const [loadingQuestions, setLoadingQuestions] = useState(false);
 
     const [busy, setBusy] = useState(false);
+    const [importFile, setImportFile] = useState<File | null>(null);
 
     const filteredPackages = useMemo(() => {
         return packages
@@ -109,51 +102,46 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
         setFormCategory(subjects[0]?.id ?? 0);
         setFormTitle("");
         setFormCode("");
-        setFormDuration(35);
-        setFormThreshold("");
-        setFormRetry(false);
-        setFormShowScore(false);
-        setIsCreateModalOpen(true);
-    };
-
-    const openSettings = (pkg: Package) => {
-        setSettingsPackage(pkg);
-        setFormThreshold(pkg.passing_score === null ? "" : String(pkg.passing_score));
-        setFormRetry(Boolean(pkg.allow_retry));
-        setFormShowScore(Boolean(pkg.show_result_to_participant));
         setIsCreateModalOpen(true);
     };
 
     const closePackageModal = () => {
         setIsCreateModalOpen(false);
-        setSettingsPackage(null);
     };
 
     const handleSavePackage = async (event: FormEvent) => {
         event.preventDefault();
         setBusy(true);
         try {
-            const settings = {
-                passing_score: Number(formThreshold),
-                allow_retry: formRetry,
-                show_result_to_participant: formShowScore,
-            };
-            if (settingsPackage) {
-                await axios.put(route("admin.exams.public-bank.packages.settings.update", { package: settingsPackage.id }), settings);
-            } else {
-                await axios.post(route("admin.exams.public-bank.packages.store"), {
-                    exam_public_subject_id: formCategory,
-                    title: formTitle,
-                    code: formCode,
-                    duration_minutes: formDuration,
-                    ...settings,
-                });
-            }
-            showSuccessToast("Pengaturan paket ujian publik berhasil disimpan.");
+            await axios.post(route("admin.exams.public-bank.packages.store"), {
+                exam_public_subject_id: formCategory,
+                title: formTitle,
+                code: formCode,
+            });
+            showSuccessToast("Paket dibuat. Import XLSX untuk mengisi soal dan konfigurasi.");
             closePackageModal();
             router.reload();
         } catch (err) {
             showErrorToast(axios.isAxiosError(err) ? err.response?.data?.message ?? "Gagal menyimpan paket." : "Terjadi kesalahan.");
+        } finally {
+            setBusy(false);
+        }
+    };
+
+    const importQuestions = async (event: FormEvent) => {
+        event.preventDefault();
+        if (!activePackageForQuestions || !importFile) return;
+        setBusy(true);
+        try {
+            const data = new FormData();
+            data.append("file", importFile);
+            const response = await axios.post<{ imported: number; active: number }>(route("admin.exams.public-bank.packages.import", { package: activePackageForQuestions.id }), data);
+            showSuccessToast(`${response.data.imported} soal diimpor, ${response.data.active} aktif. Periksa sebelum terbitkan.`);
+            setImportFile(null);
+            closeQuestionManager();
+            router.reload();
+        } catch (error) {
+            showErrorToast(axios.isAxiosError(error) ? (error.response?.data?.errors?.file?.[0] ?? error.response?.data?.message ?? "Import gagal.") : "File gagal diproses.");
         } finally {
             setBusy(false);
         }
@@ -181,6 +169,7 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
 
     const openQuestionManager = async (pkg: Package) => {
         setActivePackageForQuestions(pkg);
+        setImportFile(null);
         setLoadingQuestions(true);
         try {
             const response = await axios.get<{ questions: Question[] }>(route("admin.exams.public-bank.questions.index", { package: pkg.id }));
@@ -195,31 +184,9 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
     const closeQuestionManager = () => {
         setActivePackageForQuestions(null);
         setQuestions([]);
-        setQuestion(emptyQuestion);
+        setImportFile(null);
     };
 
-    const handleAddQuestion = async (event: FormEvent) => {
-        event.preventDefault();
-        if (!activePackageForQuestions) return;
-        setBusy(true);
-        try {
-            await axios.post(route("admin.exams.public-bank.questions.store", { package: activePackageForQuestions.id }), {
-                question_text: question.question_text,
-                options: Object.fromEntries((["A", "B", "C", "D", "E"] as const).filter((key) => question[key].trim()).map((key) => [key, question[key]])),
-                correct_answer: question.correct_answer,
-                point: question.point,
-            });
-            showSuccessToast("Butir soal berhasil ditambahkan.");
-            const response = await axios.get<{ questions: Question[] }>(route("admin.exams.public-bank.questions.index", { package: activePackageForQuestions.id }));
-            setQuestions(response.data.questions);
-            setQuestion(emptyQuestion);
-            router.reload();
-        } catch (err) {
-            showErrorToast(axios.isAxiosError(err) ? err.response?.data?.message ?? "Gagal menambahkan soal." : "Terjadi kesalahan.");
-        } finally {
-            setBusy(false);
-        }
-    };
 
     return (
         <>
@@ -229,7 +196,7 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                 <PageHeader
                     title="Pengaturan Paket Soal Ujian Publik"
                     badge="LANGKAH 2: BANK SOAL & PAKET UJIAN"
-                    description="Kelola paket soal 4 mata pelajaran, susun 10 butir soal per paket, dan terbitkan paket untuk dipakai di sesi ujian publik."
+                    description="Buat paket menurut jenis mapel, import XLSX berisi soal dan konfigurasi, lalu review sebelum terbitkan."
                     icon="fa-solid fa-box-archive"
                     actions={
                         <div className="flex flex-wrap items-center gap-2.5">
@@ -238,7 +205,7 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                                     href="/dashboard/admin/public-exams/categories"
                                     className="inline-flex items-center gap-2 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 px-4 py-2.5 text-xs font-extrabold hover:bg-amber-500/30 transition-all shadow-lg shadow-amber-500/10"
                                 >
-                                    <i className="fa-solid fa-layer-group" /> Buat Kategori Ujian Dahulu
+                                    <i className="fa-solid fa-layer-group" /> Buat Jenis Mapel Dahulu
                                 </Link>
                             ) : (
                                 <button
@@ -277,7 +244,7 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                         <p className="mt-1 text-2xl font-black text-slate-900 dark:text-white">{stats.total_questions}</p>
                     </div>
                     <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 p-4 shadow-sm">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Kategori Mata Pelajaran</span>
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Jenis Mata Pelajaran</span>
                         <p className="mt-1 text-2xl font-black text-slate-900 dark:text-white">{stats.total_subjects}</p>
                     </div>
                 </div>
@@ -300,17 +267,17 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                         },
                         {
                             label: "Langkah 3",
-                            title: "Susun 10 Soal",
-                            description: "Setiap paket wajib berisi tepat 10 butir soal pilihan ganda.",
+                            title: "Import & Review Soal",
+                            description: "Impor XLSX; hanya soal yang ditandai aktif di file yang dipakai.",
                             icon: "fa-solid fa-list-check",
-                            state: stats.total_questions >= 10 ? "done" : stats.total > 0 ? "active" : "idle",
+                            state: stats.total_questions > 0 ? "done" : stats.total > 0 ? "active" : "idle",
                         },
                         {
                             label: "Langkah 4",
                             title: "Terbitkan Paket",
                             description: `${stats.published} paket berstatus published dan siap dimasukkan ke sesi.`,
                             icon: "fa-solid fa-circle-check",
-                            state: stats.published >= 4 ? "done" : stats.total_questions >= 10 ? "active" : "idle",
+                            state: stats.published >= 4 ? "done" : stats.total_questions > 0 ? "active" : "idle",
                         },
                         {
                             label: "Langkah 5",
@@ -335,7 +302,7 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                                     </span>
                                 </h2>
                                 <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                                    Susun 10 soal per paket, lalu terbitkan agar siap dipasangkan ke dalam sesi ujian publik.
+                                    Buat paket dari Jenis Mapel, Judul, dan Kode yang sesuai XLSX. Lalu klik <strong>Import XLSX &amp; Review Soal</strong> pada paket untuk mengunggah file. Durasi, ambang lulus, izin ulang, dan visibilitas nilai otomatis dibaca dari file, bukan diisi di formulir ini.
                                 </p>
                             </div>
 
@@ -414,7 +381,7 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                         ) : (
                             <div className="grid gap-4 md:grid-cols-2">
                                 {filteredPackages.map((pkg) => {
-                                    const isComplete = pkg.question_count === 10;
+                                    const isComplete = pkg.question_count > 0;
                                     return (
                                         <div
                                             key={pkg.id}
@@ -444,13 +411,13 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                                                     <div className="rounded-lg bg-white dark:bg-slate-900 p-2 border border-slate-100 dark:border-white/5">
                                                         <span className="block text-[10px] text-slate-400 uppercase font-semibold">Butir Soal</span>
                                                         <span className={`font-bold ${isComplete ? "text-emerald-500" : "text-amber-500"}`}>
-                                                            {pkg.question_count} / 10 Soal
+                                                            {pkg.question_count} Soal Aktif
                                                         </span>
                                                     </div>
                                                 </div>
                                                 <p className="mt-2 text-xs text-slate-600 dark:text-slate-300">
                                                     {pkg.passing_score === null || pkg.allow_retry === null || pkg.show_result_to_participant === null
-                                                        ? "Pengaturan nilai belum lengkap — isi sebelum paket diterbitkan."
+                                                        ? "Pengaturan paket belum lengkap — import XLSX sebelum paket diterbitkan."
                                                         : `Ambang mapel > ${pkg.passing_score} · Ulang ${pkg.allow_retry ? "aktif" : "nonaktif"} · Nilai peserta ${pkg.show_result_to_participant ? "ditampilkan" : "disembunyikan"}`}
                                                 </p>
 
@@ -458,7 +425,7 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                                                     <div className="h-1.5 w-full rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
                                                         <div
                                                             className={`h-full rounded-full transition-all ${isComplete ? "bg-emerald-500" : "bg-amber-500"}`}
-                                                            style={{ width: `${Math.min(100, (pkg.question_count / 10) * 100)}%` }}
+                                                            style={{ width: isComplete ? "100%" : "0%" }}
                                                         />
                                                     </div>
                                                 </div>
@@ -470,18 +437,11 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                                                     onClick={() => void openQuestionManager(pkg)}
                                                     className="inline-flex items-center gap-1.5 rounded-lg bg-slate-200/80 dark:bg-white/10 px-3 py-1.5 text-xs font-bold text-slate-800 dark:text-white hover:bg-slate-300 dark:hover:bg-white/20 transition-all"
                                                 >
-                                                    <i className="fa-solid fa-list-check text-xs" />
-                                                    Kelola Butir Soal ({pkg.question_count})
+                                                    <i className="fa-solid fa-file-import text-xs" />
+                                                    <span>Import XLSX &amp; Review Soal ({pkg.question_count})</span>
                                                 </button>
 
                                                 <div className="flex items-center gap-1.5">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => openSettings(pkg)}
-                                                        className="rounded-lg border border-amber-500/30 px-2.5 py-1.5 text-xs font-bold text-amber-700 dark:text-amber-300"
-                                                    >
-                                                        Pengaturan nilai
-                                                    </button>
                                                     {pkg.status === "draft" && isComplete && pkg.passing_score !== null && pkg.allow_retry !== null && pkg.show_result_to_participant !== null && (
                                                         <button
                                                             type="button"
@@ -514,7 +474,7 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                             <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
                                 <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                                     <i className="fa-solid fa-box-archive text-amber-500" />
-                                    {settingsPackage ? `Pengaturan Nilai: ${settingsPackage.title}` : "Tambah Paket Soal Publik Baru"}
+                                    Tambah Paket Soal Publik Baru
                                 </h3>
                                 <button type="button" onClick={closePackageModal} className="text-slate-400 hover:text-slate-600">
                                     <i className="fa-solid fa-xmark text-sm" />
@@ -522,8 +482,8 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                             </div>
 
                             <form onSubmit={handleSavePackage} className="space-y-3.5">
-                                {!settingsPackage && <div>
-                                    <label className={labelClass}>Kategori Mata Pelajaran</label>
+                                <div>
+                                    <label className={labelClass}>Jenis Mata Pelajaran</label>
                                     <select
                                         value={formCategory}
                                         onChange={(e) => setFormCategory(Number(e.target.value))}
@@ -534,9 +494,9 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                                             <option key={sub.id} value={sub.id}>{sub.name}</option>
                                         ))}
                                     </select>
-                                </div>}
+                                </div>
 
-                                {!settingsPackage && <div>
+                                <div>
                                     <label className={labelClass}>Judul Paket</label>
                                     <input
                                         type="text"
@@ -546,10 +506,9 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                                         placeholder="Contoh: Paket 1 - Matematika Dasar"
                                         className={inputClass}
                                     />
-                                </div>}
+                                </div>
 
-                                {!settingsPackage && <div className="grid grid-cols-2 gap-3">
-                                    <div>
+                                <div>
                                         <label className={labelClass}>Kode Paket</label>
                                         <input
                                             type="text"
@@ -559,33 +518,9 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                                             placeholder="MTK-PKT-01"
                                             className={inputClass}
                                         />
-                                    </div>
-                                    <div>
-                                        <label className={labelClass}>Durasi (Menit)</label>
-                                        <input
-                                            type="number"
-                                            required
-                                            min={5}
-                                            max={300}
-                                            value={formDuration}
-                                            onChange={(e) => setFormDuration(Number(e.target.value))}
-                                            className={inputClass}
-                                        />
-                                    </div>
-                                </div>}
-
-                                <div>
-                                    <label className={labelClass} htmlFor="public-package-threshold">Ambang lulus mapel (nilai harus lebih besar)</label>
-                                    <input id="public-package-threshold" type="number" min={0} max={100} step="0.01" required value={formThreshold} onChange={e => setFormThreshold(e.target.value)} className={inputClass} />
                                 </div>
-                                <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
-                                    <input type="checkbox" checked={formRetry} onChange={e => setFormRetry(e.target.checked)} className="rounded border-slate-300 text-amber-500 focus:ring-amber-500" />
-                                    Izinkan satu kali ujian ulang (maksimal dua attempt)
-                                </label>
-                                <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
-                                    <input type="checkbox" checked={formShowScore} onChange={e => setFormShowScore(e.target.checked)} className="rounded border-slate-300 text-amber-500 focus:ring-amber-500" />
-                                    Tampilkan nilai mapel kepada peserta
-                                </label>
+                                <p className="text-xs text-slate-600 dark:text-slate-300">Durasi, ambang mapel, izin ulang dan visibilitas hasil diambil dari XLSX saat import.</p>
+                                <p className="text-xs text-slate-600 dark:text-slate-300">Kategori pada file XLSX harus sama dengan jenis mapel yang dipilih. Sesuaikan file lama sebelum diunggah.</p>
 
                                 <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100 dark:border-white/10">
                                     <button type="button" onClick={closePackageModal} className={secondaryButtonClass}>
@@ -615,13 +550,19 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                                         {activePackageForQuestions.subject_name} · KODE: {activePackageForQuestions.code}
                                     </span>
                                     <h3 className="text-base font-black text-slate-900 dark:text-white">
-                                        Kelola 10 Butir Soal: {activePackageForQuestions.title}
+                                        Import & Review Soal: {activePackageForQuestions.title}
                                     </h3>
                                 </div>
                                 <button type="button" onClick={closeQuestionManager} className="text-slate-400 hover:text-slate-600">
                                     <i className="fa-solid fa-xmark text-sm" />
                                 </button>
                             </div>
+
+                            {activePackageForQuestions.status === "draft" && questions.length === 0 && <form onSubmit={importQuestions} className="space-y-3 rounded-xl border border-amber-500/20 p-4">
+                                <label htmlFor="public-exam-import" className={labelClass}>Import soal dan konfigurasi dari XLSX</label>
+                                <input id="public-exam-import" type="file" accept=".xlsx" required onChange={event => setImportFile(event.target.files?.[0] ?? null)} className={inputClass} />
+                                <button type="submit" disabled={busy || !importFile} className={primaryButtonClass}>{busy ? "Mengimpor..." : "Validasi & Import XLSX"}</button>
+                            </form>}
 
                             {loadingQuestions ? (
                                 <div className="py-12 text-center text-xs text-slate-400">
@@ -634,15 +575,15 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                                     <div>
                                         <div className="flex items-center justify-between mb-2">
                                             <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                                                Daftar Soal ({questions.length} / 10 Butir)
+                                                Daftar Soal ({questions.length} Butir)
                                             </span>
-                                            {questions.length === 10 ? (
+                                            {questions.some((item) => item.is_active) ? (
                                                 <span className="text-xs font-bold text-emerald-500 flex items-center gap-1">
-                                                    <i className="fa-solid fa-circle-check" /> Kuota 10 soal terpenuhi
+                                                    <i className="fa-solid fa-circle-check" /> Soal aktif tersedia
                                                 </span>
                                             ) : (
                                                 <span className="text-xs font-bold text-amber-500 flex items-center gap-1">
-                                                    <i className="fa-solid fa-triangle-exclamation" /> Kurang {10 - questions.length} soal lagi
+                                                    <i className="fa-solid fa-triangle-exclamation" /> Belum ada soal aktif
                                                 </span>
                                             )}
                                         </div>
@@ -651,7 +592,7 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                                             <EmptyState
                                                 icon="fa-solid fa-list-ol"
                                                 title="Belum ada butir soal"
-                                                description="Tambahkan 10 soal pilihan ganda di bawah ini."
+                                                description="Upload XLSX dengan kategori, judul dan kode yang cocok. Konfigurasi serta jumlah soal aktif dibaca dari file."
                                             />
                                         ) : (
                                             <div className="space-y-2">
@@ -666,90 +607,14 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                                                             </span>
                                                             <div className="text-xs text-slate-900 dark:text-white min-w-0">
                                                                 <RichExamText text={q.question_text} />
-                                                                <div className="mt-1 flex items-center gap-2 text-[11px] text-slate-400">
-                                                                    <span className="font-bold text-emerald-500">Kunci: {q.correct_answer}</span>
-                                                                    <span>·</span>
-                                                                    <span>{q.point} Poin</span>
-                                                                </div>
+                                                                <div className="mt-1 text-slate-500">Kunci: {q.correct_answer} · {q.point} poin · {q.is_active ? "Aktif" : "Nonaktif"}</div>
                                                             </div>
                                                         </div>
-
                                                     </div>
                                                 ))}
                                             </div>
                                         )}
                                     </div>
-
-                                    {/* Add Question Form (if < 10) */}
-                                    {questions.length < 10 && (
-                                        <form onSubmit={handleAddQuestion} className="rounded-xl border border-amber-500/20 bg-amber-500/[0.02] p-4 space-y-3">
-                                            <h4 className="text-xs font-bold uppercase tracking-wider text-amber-500 flex items-center gap-1.5">
-                                                <i className="fa-solid fa-plus-circle" /> Tambah Soal ke-{questions.length + 1}
-                                            </h4>
-
-                                            <div>
-                                                <label className={labelClass}>Teks Pertanyaan</label>
-                                                <textarea
-                                                    required
-                                                    rows={3}
-                                                    value={question.question_text}
-                                                    onChange={(e) => setQuestion({ ...question, question_text: e.target.value })}
-                                                    placeholder="Tuliskan soal ujian di sini. Anda juga dapat menggunakan tag gambar [GAMBAR: nama_file.jpg] dari Bank Media..."
-                                                    className={inputClass}
-                                                />
-                                            </div>
-
-                                            <div className="grid gap-2.5 sm:grid-cols-2">
-                                                {(["A", "B", "C", "D", "E"] as const).map((opt) => (
-                                                    <div key={opt}>
-                                                        <label className={labelClass}>Pilihan {opt}</label>
-                                                        <input
-                                                            type="text"
-                                                            required={opt === "A" || opt === "B" || opt === "C" || opt === "D"}
-                                                            value={question[opt]}
-                                                            onChange={(e) => setQuestion({ ...question, [opt]: e.target.value })}
-                                                            placeholder={`Jawaban ${opt}...`}
-                                                            className={inputClass}
-                                                        />
-                                                    </div>
-                                                ))}
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-3 pt-2">
-                                                <div>
-                                                    <label className={labelClass}>Kunci Jawaban Benar</label>
-                                                    <select
-                                                        value={question.correct_answer}
-                                                        onChange={(e) => setQuestion({ ...question, correct_answer: e.target.value })}
-                                                        className={inputClass}
-                                                    >
-                                                        {(["A", "B", "C", "D", "E"] as const).map((k) => (
-                                                            <option key={k} value={k}>Pilihan {k}</option>
-                                                        ))}
-                                                    </select>
-                                                </div>
-
-                                                <div>
-                                                    <label className={labelClass}>Bobot Poin</label>
-                                                    <input
-                                                        type="number"
-                                                        min={1}
-                                                        max={100}
-                                                        required
-                                                        value={question.point}
-                                                        onChange={(e) => setQuestion({ ...question, point: Number(e.target.value) })}
-                                                        className={inputClass}
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div className="flex justify-end pt-2">
-                                                <button type="submit" disabled={busy} className={primaryButtonClass}>
-                                                    <i className="fa-solid fa-save text-xs" /> Simpan Soal
-                                                </button>
-                                            </div>
-                                        </form>
-                                    )}
                                 </div>
                             )}
                         </div>

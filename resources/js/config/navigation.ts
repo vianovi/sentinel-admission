@@ -307,19 +307,19 @@ export const navigationConfig: Record<string, NavGroup[]> = {
                             activePrefixes: ["/dashboard/admin/public-exams/media"],
                         },
                         {
-                            label: "Kategori",
+                            label: "Jenis Mapel",
                             href: "/dashboard/admin/public-exams/categories",
                             icon: "fa-solid fa-layer-group",
                             activePrefixes: ["/dashboard/admin/public-exams/categories"],
                         },
                         {
-                            label: "Paket",
+                            label: "Paket Soal",
                             href: "/dashboard/admin/public-exams/packages",
                             icon: "fa-solid fa-box-archive",
                             activePrefixes: ["/dashboard/admin/public-exams/packages"],
                         },
                         {
-                            label: "Sesi",
+                            label: "Sesi Ujian",
                             href: "/dashboard/admin/public-exams/sessions",
                             icon: "fa-solid fa-calendar-check",
                             activePrefixes: ["/dashboard/admin/public-exams/sessions"],

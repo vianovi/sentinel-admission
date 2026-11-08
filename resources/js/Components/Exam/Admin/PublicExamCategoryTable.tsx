@@ -42,8 +42,8 @@ export const PublicExamCategoryTable = memo(function PublicExamCategoryTable({ s
 
     const destroy = async (subject: PublicExamSubject) => {
         const confirmed = await confirmAction(
-            "Hapus Kategori Ujian Publik?",
-            `Hapus kategori publik “${subject.name}”? Kategori yang masih memiliki paket publik tidak bisa dihapus.`,
+            "Hapus Jenis Mapel Ujian Publik?",
+            `Hapus jenis mapel “${subject.name}”? Jenis mapel yang masih memiliki paket publik tidak bisa dihapus.`,
             "Ya, Hapus"
         );
         if (!confirmed) return;
@@ -60,7 +60,7 @@ export const PublicExamCategoryTable = memo(function PublicExamCategoryTable({ s
                             type="search"
                             value={search}
                             onChange={(event) => setSearch(event.target.value)}
-                            placeholder="Cari kategori publik atau kode..."
+                            placeholder="Cari jenis mapel atau kode..."
                             className={`${inputClass} h-9 pl-8 pr-7 text-xs`}
                         />
                         {search && (
@@ -103,7 +103,7 @@ export const PublicExamCategoryTable = memo(function PublicExamCategoryTable({ s
                         value={sortBy}
                         onChange={(event) => setSortBy(event.target.value as SortOption)}
                         className="rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:border-white/10 dark:bg-slate-900 dark:text-slate-200"
-                        aria-label="Urutkan kategori"
+                        aria-label="Urutkan jenis mapel"
                     >
                         <option value="newest">Terbaru</option>
                         <option value="name_asc">Nama (A-Z)</option>
@@ -117,22 +117,22 @@ export const PublicExamCategoryTable = memo(function PublicExamCategoryTable({ s
                     onClick={onCreate}
                     className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-4 py-2 text-xs font-black text-slate-950 shadow-md shadow-amber-500/20 transition-all hover:from-amber-400"
                 >
-                    <i className="fa-solid fa-plus text-xs" /> Tambah Kategori Publik
+                    <i className="fa-solid fa-plus text-xs" /> Tambah Jenis Mapel
                 </button>
             </div>
 
             {filteredAndSorted.length === 0 ? (
                 <EmptyState
                     icon="fa-solid fa-layer-group"
-                    title={subjects.length === 0 ? "Belum ada kategori publik" : "Tidak ada hasil"}
-                    description={subjects.length === 0 ? "Buat kategori publik pertama untuk mulai menyusun paket." : "Coba ubah kata kunci atau filter kategori."}
+                    title={subjects.length === 0 ? "Belum ada jenis mapel" : "Tidak ada hasil"}
+                    description={subjects.length === 0 ? "Buat jenis mapel pertama untuk mulai menyusun paket." : "Coba ubah kata kunci atau filter jenis mapel."}
                 />
             ) : (
                 <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-white/10">
                     <table className="min-w-full divide-y divide-slate-200 text-sm dark:divide-white/10">
                         <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:bg-white/5 dark:text-slate-400">
                             <tr>
-                                <th className="px-4 py-3 text-left">Kategori Publik</th>
+                                <th className="px-4 py-3 text-left">Jenis Mapel Publik</th>
                                 <th className="px-4 py-3 text-left">Status</th>
                                 <th className="px-4 py-3 text-right">Paket</th>
                                 <th className="px-4 py-3 text-right">Soal Aktif</th>
@@ -174,8 +174,8 @@ export const PublicExamCategoryTable = memo(function PublicExamCategoryTable({ s
                                                 type="button"
                                                 onClick={() => void destroy(subject)}
                                                 className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:border-red-400 hover:text-red-600 dark:border-white/10"
-                                                aria-label={`Hapus kategori ${subject.name}`}
-                                                title={subject.packages_count > 0 ? "Kategori masih memiliki paket" : "Hapus kategori"}
+                                                aria-label={`Hapus jenis mapel ${subject.name}`}
+                                                title={subject.packages_count > 0 ? "Jenis mapel masih memiliki paket" : "Hapus jenis mapel"}
                                             >
                                                 <i className="fa-solid fa-trash text-[11px]" />
                                             </button>

@@ -142,6 +142,7 @@ Route::middleware(['auth', RoleMiddleware::class.':admin'])
         Route::put('/public-bank/packages/{package}/settings', [AdminPublicBank::class, 'updatePackage'])->name('public-bank.packages.settings.update');
         Route::get('/public-bank/packages/{package}/questions', [AdminPublicBank::class, 'questions'])->name('public-bank.questions.index');
         Route::post('/public-bank/packages/{package}/questions', [AdminPublicBank::class, 'storeQuestion'])->name('public-bank.questions.store');
+        Route::post('/public-bank/packages/{package}/imports', [AdminPublicBank::class, 'importQuestions'])->middleware('throttle:upload')->name('public-bank.packages.import');
         Route::post('/public-bank/packages/{package}/publish', [AdminPublicBank::class, 'publish'])->name('public-bank.packages.publish');
 
         Route::get('/public-v2', [AdminPublicSessionV2::class, 'page'])->name('public-v2.page');

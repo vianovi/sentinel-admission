@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Dashboard\Admin\Exam;
 
 use App\Http\Controllers\Controller;
+use App\Imports\Exam\ExamQuestionWorkbookReader;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class PublicBankController extends Controller
 {
@@ -42,11 +44,8 @@ class PublicBankController extends Controller
             'exam_public_subject_id' => ['required', 'integer', Rule::exists('exam_public_subjects', 'id')->where('is_active', true)],
             'title' => ['required', 'string', 'max:255'],
             'code' => ['required', 'alpha_dash', 'max:80', Rule::unique('exam_public_packages', 'code')],
-            'duration_minutes' => ['required', 'integer', 'between:5,300'],
+            'duration_minutes' => ['sometimes', 'integer', 'between:5,300'],
             'randomize_questions' => ['sometimes', 'boolean'],
-            'passing_score' => ['required', 'numeric', 'between:0,100'],
-            'allow_retry' => ['required', 'boolean'],
-            'show_result_to_participant' => ['required', 'boolean'],
         ]);
 
         $id = DB::table('exam_public_packages')->insertGetId([
@@ -86,6 +85,104 @@ class PublicBankController extends Controller
             ->orderBy('sort_order')->orderBy('id')->get(['id', 'question_text', 'options', 'correct_answer', 'point', 'is_active'])]);
     }
 
+    public function importQuestions(Request $request, int $package, ExamQuestionWorkbookReader $reader): JsonResponse
+    {
+        $request->validate(['file' => ['required', 'file', 'mimes:xlsx', 'max:5120']]);
+        $file = $request->file('file');
+        abort_unless($file && $file->isValid(), 422);
+        $signature = file_get_contents($file->getRealPath(), false, null, 0, 4);
+        abort_unless($signature === "PK\x03\x04", 422, 'File bukan XLSX yang valid.');
+
+        try {
+            $book = $reader->readDataSheet($file->getRealPath(), 2001);
+        } catch (\Throwable) {
+            throw ValidationException::withMessages(['file' => 'File XLSX tidak dapat dibaca.']);
+        }
+
+        $settings = $book['exam_config'];
+        $meta = $book['package_config'];
+        $headings = array_map(fn ($value) => strtolower(trim((string) $value)), $book['headings']);
+        $required = ['teks_soal', 'opsi_a', 'opsi_b', 'opsi_c', 'jawaban_benar', 'poin', 'aktif'];
+        $missing = array_diff($required, $headings);
+        if ($missing || count($headings) !== count(array_unique($headings)) || count($book['rows']) === 0 || count($book['rows']) > 2000) {
+            throw ValidationException::withMessages(['file' => 'Header tidak lengkap atau jumlah baris soal harus 1–2000.']);
+        }
+
+        $duration = $settings['durasi_menit'] ?? null;
+        $threshold = $settings['ambang_lulus_persen'] ?? null;
+        $boolean = ['ya' => true, 'tidak' => false, 'yes' => true, 'no' => false, 'true' => true, 'false' => false, '1' => true, '0' => false];
+        $show = $boolean[strtolower($settings['tampilkan_hasil'] ?? '')] ?? null;
+        $retry = $boolean[strtolower($settings['izinkan_ujian_ulang'] ?? '')] ?? null;
+        if (! is_numeric($duration) || (float) $duration != (int) $duration || (int) $duration < 5 || (int) $duration > 300 || ! is_numeric($threshold) || (float) $threshold < 0 || (float) $threshold > 100 || $show === null || $retry === null) {
+            throw ValidationException::withMessages(['file' => 'Konfigurasi ujian (durasi, ambang, tampilkan hasil, izin ulang) tidak valid.']);
+        }
+
+        $questions = [];
+        foreach ($book['rows'] as $row) {
+            $values = array_combine($headings, array_map(static function ($value): string {
+                return $value instanceof \DateTimeInterface ? $value->format('Y-m-d H:i:s') : (is_scalar($value) ? trim((string) $value) : '');
+            }, array_slice(array_pad($row['values'], count($headings), ''), 0, count($headings))));
+            $text = trim((string) ($values['teks_soal'] ?? ''));
+            if ($text === '' && trim((string) ($values['jawaban_benar'] ?? '')) === '') {
+                continue;
+            }
+            $options = [];
+            foreach (['a', 'b', 'c', 'd', 'e'] as $letter) {
+                $value = trim((string) ($values['opsi_'.$letter] ?? ''));
+                if ($value !== '') {
+                    $options[strtoupper($letter)] = $value;
+                }
+            }
+            $correct = strtoupper(trim((string) ($values['jawaban_benar'] ?? '')));
+            $active = $boolean[strtolower(trim((string) ($values['aktif'] ?? '')))] ?? null;
+            $point = $values['poin'] ?? null;
+            if ($text === '' || mb_strlen($text) > 20000 || count($options) < 2 || collect($options)->contains(fn ($value) => mb_strlen($value) > 5000) || ! isset($options[$correct]) || ! is_numeric($point) || (float) $point <= 0 || (float) $point > 9999 || $active === null) {
+                throw ValidationException::withMessages(['file' => 'Soal pada baris '.$row['row_number'].' tidak valid; tidak ada data yang diimpor.']);
+            }
+            $questions[] = [
+                'exam_public_package_id' => $package,
+                'question_text' => $text,
+                'options' => json_encode($options, JSON_THROW_ON_ERROR),
+                'correct_answer' => $correct,
+                'point' => $point,
+                'is_active' => $active,
+                'sort_order' => count($questions) + 1,
+                'created_at' => now(), 'updated_at' => now(),
+            ];
+        }
+        if ($questions === [] || ! collect($questions)->contains('is_active', true)) {
+            throw ValidationException::withMessages(['file' => 'File harus memiliki setidaknya satu soal aktif.']);
+        }
+
+        return DB::transaction(function () use ($package, $meta, $duration, $threshold, $show, $retry, $questions): JsonResponse {
+            $record = DB::table('exam_public_packages as package')
+                ->join('exam_public_subjects as subject', 'subject.id', '=', 'package.exam_public_subject_id')
+                ->where('package.id', $package)
+                ->lockForUpdate()
+                ->first(['package.id', 'package.code', 'package.title', 'package.status', 'subject.name as subject_name']);
+            abort_unless($record, 404);
+            abort_unless($record->status === 'draft', 409, 'Paket harus draft sebelum import.');
+            foreach (['kode_paket' => $record->code, 'judul_paket' => $record->title, 'kategori' => $record->subject_name] as $key => $expected) {
+                if (mb_strtolower(trim((string) ($meta[$key] ?? ''))) !== mb_strtolower(trim((string) $expected))) {
+                    throw ValidationException::withMessages(['file' => "{$key} tidak cocok dengan paket/jenis mapel tujuan. Perbaiki file XLSX sebelum import."]);
+                }
+            }
+            abort_if(DB::table('exam_public_questions')->where('exam_public_package_id', $package)->exists(), 409, 'Bank soal paket tidak kosong; import ditolak agar soal tidak tertimpa atau terduplikasi.');
+            abort_if(DB::table('exam_public_subject_attempts')->where('exam_public_package_id', $package)->exists(), 409);
+
+            DB::table('exam_public_questions')->insert($questions);
+            DB::table('exam_public_packages')->where('id', $package)->update([
+                'duration_minutes' => (int) $duration,
+                'passing_score' => (float) $threshold,
+                'show_result_to_participant' => $show,
+                'allow_retry' => $retry,
+                'updated_at' => now(),
+            ]);
+
+            return response()->json(['imported' => count($questions), 'active' => collect($questions)->where('is_active', true)->count()]);
+        });
+    }
+
     public function storeQuestion(Request $request, int $package): JsonResponse
     {
         $data = $request->validate([
@@ -118,8 +215,9 @@ class PublicBankController extends Controller
             $record = DB::table('exam_public_packages')->where('id', $package)->lockForUpdate()->first();
             abort_unless($record && $record->status === 'draft', 403);
             abort_unless($record->passing_score !== null && $record->allow_retry !== null && $record->show_result_to_participant !== null, 422, 'Lengkapi pengaturan penilaian paket.');
-            abort_unless(DB::table('exam_public_questions')->where('exam_public_package_id', $package)
-                ->whereNull('deleted_at')->where('is_active', true)->count() === 10, 422, 'Paket harus berisi tepat 10 soal aktif.');
+            $activeQuestionCount = DB::table('exam_public_questions')
+                ->where('exam_public_package_id', $package)->whereNull('deleted_at')->where('is_active', true)->count();
+            abort_unless($activeQuestionCount > 0, 422, 'Paket harus memiliki setidaknya satu soal aktif.');
 
             DB::table('exam_public_packages')->where('id', $package)->update(['status' => 'published', 'updated_at' => now()]);
 

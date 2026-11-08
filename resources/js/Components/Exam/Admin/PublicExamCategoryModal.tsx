@@ -57,7 +57,7 @@ export const PublicExamCategoryModal = memo(function PublicExamCategoryModal({ s
         const options = {
             preserveScroll: true,
             onSuccess: () => {
-                showSuccessToast(editing ? "Kategori ujian publik berhasil diperbarui." : "Kategori ujian publik berhasil dibuat.");
+                showSuccessToast(editing ? "Jenis mapel publik berhasil diperbarui." : "Jenis mapel publik berhasil dibuat.");
                 form.reset();
                 onClose();
             },
@@ -92,7 +92,7 @@ export const PublicExamCategoryModal = memo(function PublicExamCategoryModal({ s
                                 {editing ? "EDIT KATEGORI PUBLIK" : "KATEGORI PUBLIK BARU"}
                             </span>
                             <h2 id="public-category-modal-title" className="text-lg font-black text-slate-900 dark:text-white">
-                                {editing ? "Ubah kategori ujian publik" : "Buat kategori ujian publik"}
+                                {editing ? "Ubah jenis mapel publik" : "Buat jenis mapel publik"}
                             </h2>
                         </div>
                     </div>
@@ -108,7 +108,7 @@ export const PublicExamCategoryModal = memo(function PublicExamCategoryModal({ s
 
                 <form onSubmit={submit} className="space-y-4">
                     <div>
-                        <label className={labelClass} htmlFor="public-category-name">Nama Kategori</label>
+                        <label className={labelClass} htmlFor="public-category-name">Nama Jenis Mapel</label>
                         <input
                             id="public-category-name"
                             required
@@ -123,7 +123,7 @@ export const PublicExamCategoryModal = memo(function PublicExamCategoryModal({ s
                     </div>
 
                     <div>
-                        <label className={labelClass} htmlFor="public-category-code">Kode Kategori</label>
+                        <label className={labelClass} htmlFor="public-category-code">Kode Jenis Mapel</label>
                         <input
                             id="public-category-code"
                             required
@@ -158,7 +158,7 @@ export const PublicExamCategoryModal = memo(function PublicExamCategoryModal({ s
                         </button>
                         <button type="submit" disabled={form.processing} className={`${primaryButtonClass} min-h-10 px-5 text-xs shadow-lg shadow-amber-500/20`}>
                             {form.processing ? <i className="fa-solid fa-spinner fa-spin text-xs" /> : <i className="fa-solid fa-floppy-disk text-xs" />}
-                            {editing ? "Simpan Perubahan" : "Simpan Kategori"}
+                            {editing ? "Simpan Perubahan" : "Simpan Jenis Mapel"}
                         </button>
                     </div>
                 </form>

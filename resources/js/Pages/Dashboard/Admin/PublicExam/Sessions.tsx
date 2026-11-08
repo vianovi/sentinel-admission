@@ -730,7 +730,7 @@ export default function PublicSessions({ sessions, packages, stats }: Props) {
                                 {/* 4 Package Selectors for 4 distinct subjects */}
                                 <div className="space-y-2.5 pt-2 border-t border-slate-100 dark:border-white/10">
                                     <span className="block text-xs font-bold uppercase tracking-wider text-amber-500">
-                                        Pilih Tepat 4 Paket dari 4 Kategori Berbeda
+                                        Pilih Tepat 4 Paket dari 4 Jenis Mapel Berbeda
                                     </span>
 
                                     {packagesBySubject.slice(0, 4).map((group, idx) => (

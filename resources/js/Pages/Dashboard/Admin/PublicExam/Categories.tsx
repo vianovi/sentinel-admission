@@ -46,13 +46,13 @@ export default function PublicExamCategories({ subjects }: Props) {
 
     return (
         <>
-            <Head title="Kategori Ujian Publik" />
+            <Head title="Jenis Mapel Ujian Publik" />
 
             <main className="min-w-0 space-y-5 pb-8">
                 <PageHeader
-                    title="Kategori Ujian Publik"
-                    badge="UJIAN PUBLIK · LANGKAH 1: KATEGORI"
-                    description="Kelola kategori mata pelajaran yang terisolasi dari kategori ujian internal. Paket dan bank soal publik hanya terhubung ke kategori di halaman ini."
+                    title="Jenis Mapel Ujian Publik"
+                    badge="UJIAN PUBLIK · LANGKAH 1: JENIS MAPEL"
+                    description="Tentukan jenis mata pelajaran publik. Nilai kategori pada file XLSX harus cocok dengan jenis mapel paket tujuan."
                     icon="fa-solid fa-layer-group"
                     actions={
                         <div className="flex flex-wrap items-center gap-2.5">
@@ -61,7 +61,7 @@ export default function PublicExamCategories({ subjects }: Props) {
                                 onClick={handleCreate}
                                 className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-4 py-2.5 text-xs font-black text-slate-950 shadow-lg shadow-amber-500/20 transition-all hover:from-amber-400 hover:to-amber-500"
                             >
-                                <i className="fa-solid fa-plus text-xs" /> Kategori Baru
+                                <i className="fa-solid fa-plus text-xs" /> Jenis Mapel Baru
                             </button>
                             <Link
                                 href="/dashboard/admin/public-exams/packages"
@@ -78,11 +78,11 @@ export default function PublicExamCategories({ subjects }: Props) {
 
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-slate-900">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Kategori Publik</span>
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Jenis Mapel</span>
                         <p className="mt-1 text-2xl font-black text-slate-900 dark:text-white">{subjects.length}</p>
                     </div>
                     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-slate-900">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Kategori Aktif</span>
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Mapel Aktif</span>
                         <p className="mt-1 text-2xl font-black text-emerald-600 dark:text-emerald-400">{activeCount}</p>
                     </div>
                     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-slate-900">
