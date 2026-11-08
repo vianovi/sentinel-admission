@@ -1,5 +1,11 @@
 # Audit Handoff
 
+## Autonomous readiness work — approved scope
+
+- Return-point baseline is `781822c43ac579bab0535a63718514b9e7d711ee` on `feature/public-exam-rebuild` (166 passed, 9 skipped, 1350 assertions; build passed). This commit preserves pre-autonomous XLSX import changes. A Git return point does not undo database migrations; no migration or demo data mutation is authorized in this task.
+- Owner permits permanent public package deletion before any attempt, including assignments to published sessions: affected sessions return draft, room tokens must be revoked, roster and participant codes retained. Admin must select four distinct-subject published packages again and publish, then issue a new room token. If any attempt exists in a related session, block destructive operation to protect its history.
+- Implemented package-delete endpoint/UI and draft session package-replacement endpoint/UI; fixed nested response assumptions for room token and participant code. Verification: full SQLite suite 169 passed, 9 skipped (1368 assertions), focused bank/session/flow tests 24 passed (263 assertions), TypeScript, Pint, build (10.89s), diff checks passed. No live data deleted/imported. Authenticated Playwright, concurrency stress and complete UI redesign remain pending; do not label full readiness complete.
+
 ## Public XLSX flow in progress (uncommitted)
 
 - 2026-11-08 menu discoverability follow-up: changed admin public submenu labels to `Paket Soal` and `Sesi Ujian`; added visible explanation above list and renamed per-package action to `Import XLSX & Review Soal`. Frontend build passed (11.26s), focused public bank/admin tests 11 passed (194 assertions), diff check passed. Container volume sees updated source and build manifest, `public/hot` absent. Playwright against local port 8080 returned `ERR_SSL_PROTOCOL_ERROR`; do not claim authenticated UI visual verification. Existing workbook category remains incompatible with MTK until owner edits XLSX.

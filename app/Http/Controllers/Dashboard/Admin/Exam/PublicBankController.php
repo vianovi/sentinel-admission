@@ -224,4 +224,27 @@ class PublicBankController extends Controller
             return response()->json(['status' => 'published']);
         });
     }
+
+    public function destroyPackage(int $package): JsonResponse
+    {
+        return DB::transaction(function () use ($package): JsonResponse {
+            $record = DB::table('exam_public_packages')->where('id', $package)->lockForUpdate()->first();
+            abort_unless($record, 404);
+            $sessions = DB::table('exam_public_session_packages')
+                ->where('exam_public_package_id', $package)->pluck('exam_public_session_id');
+            DB::table('exam_public_sessions')->whereIn('id', $sessions)->orderBy('id')->lockForUpdate()->get();
+            abort_if(DB::table('exam_public_subject_attempts')->where('exam_public_package_id', $package)->exists(), 409, 'Paket sudah memiliki pengerjaan peserta.');
+            abort_if(DB::table('exam_public_subject_attempts as attempt')
+                ->join('exam_public_participants as participant', 'participant.id', '=', 'attempt.exam_public_participant_id')
+                ->whereIn('participant.exam_public_session_id', $sessions)->exists(), 409, 'Sesi terkait sudah memiliki pengerjaan peserta.');
+
+            DB::table('exam_public_session_tokens')->whereIn('exam_public_session_id', $sessions)->delete();
+            DB::table('exam_public_sessions')->whereIn('id', $sessions)->update(['status' => 'draft', 'updated_at' => now()]);
+            DB::table('exam_public_session_packages')->where('exam_public_package_id', $package)->delete();
+            DB::table('exam_public_questions')->where('exam_public_package_id', $package)->delete();
+            DB::table('exam_public_packages')->where('id', $package)->delete();
+
+            return response()->json(['deleted' => true, 'sessions_reset' => $sessions->count()]);
+        });
+    }
 }

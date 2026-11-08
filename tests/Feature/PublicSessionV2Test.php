@@ -79,3 +79,36 @@ test('session timestamps with an explicit offset are stored in the application t
         ->and(DB::table('exam_public_sessions')->where('id', $id)->value('closes_at'))->toBe($closesAt->toDateTimeString());
     $this->postJson(route('admin.exams.public-v2.sessions.publish', $id))->assertSuccessful();
 });
+
+test('draft session can replace four distinct public packages and revoke stale tokens without losing roster', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+    $packages = [];
+    foreach (['IPAS', 'PAIBP', 'MTK', 'BINDO'] as $code) {
+        $subject = DB::table('exam_public_subjects')->insertGetId(['name' => $code, 'code' => $code]);
+        foreach ([1, 2] as $number) {
+            $packages[$code][$number] = DB::table('exam_public_packages')->insertGetId([
+                'exam_public_subject_id' => $subject, 'title' => $code.' '.$number, 'code' => $code.'-'.$number,
+                'status' => 'published', 'passing_score' => 55, 'allow_retry' => false, 'show_result_to_participant' => false,
+            ]);
+        }
+    }
+    $session = $this->actingAs($admin)->postJson(route('admin.exams.public-v2.sessions.store'), [
+        'title' => 'Sesi Ulang', 'opens_at' => now()->subHour()->toISOString(), 'closes_at' => now()->addHours(2)->toISOString(),
+        'order_type' => 'free', 'package_ids' => array_map(fn ($code) => $packages[$code][1], ['IPAS', 'PAIBP', 'MTK', 'BINDO']),
+    ])->assertCreated()->json('id');
+    DB::table('exam_public_session_tokens')->insert(['exam_public_session_id' => $session, 'token' => 'STALECODE']);
+    DB::table('exam_public_participants')->insert([
+        'exam_public_session_id' => $session, 'name' => 'Peserta Fiktif', 'school_origin' => 'Sekolah Fiktif', 'participant_code' => 'FAKESTUDENT000001',
+    ]);
+    $replacement = array_map(fn ($code) => $packages[$code][2], ['IPAS', 'PAIBP', 'MTK', 'BINDO']);
+
+    $this->putJson(route('admin.exams.public-v2.sessions.packages.update', $session), ['package_ids' => [$replacement[0], $replacement[0], $replacement[2], $replacement[3]]])->assertUnprocessable();
+    $this->putJson(route('admin.exams.public-v2.sessions.packages.update', $session), ['package_ids' => $replacement])
+        ->assertSuccessful()->assertJsonPath('tokens_revoked', true);
+
+    expect(DB::table('exam_public_session_packages')->where('exam_public_session_id', $session)->orderBy('sort_order')->pluck('exam_public_package_id')->all())->toBe($replacement)
+        ->and(DB::table('exam_public_session_tokens')->where('exam_public_session_id', $session)->count())->toBe(0)
+        ->and(DB::table('exam_public_participants')->where('exam_public_session_id', $session)->count())->toBe(1);
+    $this->postJson(route('admin.exams.public-v2.sessions.publish', $session))->assertSuccessful();
+    $this->getJson(route('public-exam.session', 'STALECODE'))->assertNotFound();
+});

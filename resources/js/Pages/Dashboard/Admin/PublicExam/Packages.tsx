@@ -167,6 +167,26 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
         }
     };
 
+    const handleDeletePackage = async (pkg: Package) => {
+        const confirmed = await confirmAction(
+            "Hapus Paket Soal Publik?",
+            `Paket “${pkg.title}” dan soalnya akan dihapus permanen. Sesi yang memakainya kembali draft dan seluruh token ruangnya dicabut. Hanya dapat dilakukan sebelum peserta mulai mengerjakan.`,
+            "Ya, Hapus Paket"
+        );
+        if (!confirmed) return;
+
+        setBusy(true);
+        try {
+            const response = await axios.delete<{ sessions_reset: number }>(route("admin.exams.public-bank.packages.destroy", { package: pkg.id }));
+            showSuccessToast(`Paket dihapus. ${response.data.sessions_reset} sesi kembali draft; buat token baru setelah diterbitkan ulang.`);
+            router.reload();
+        } catch (error) {
+            showErrorToast(axios.isAxiosError(error) ? (error.response?.data?.message ?? "Paket tidak dapat dihapus.") : "Gagal menghapus paket.");
+        } finally {
+            setBusy(false);
+        }
+    };
+
     const openQuestionManager = async (pkg: Package) => {
         setActivePackageForQuestions(pkg);
         setImportFile(null);
@@ -415,6 +435,7 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                                                         </span>
                                                     </div>
                                                 </div>
+                                                <p className="mt-2 text-xs text-slate-600 dark:text-slate-300">{pkg.question_count} soal aktif · tandai `aktif = ya` di XLSX untuk dimasukkan ke ujian.</p>
                                                 <p className="mt-2 text-xs text-slate-600 dark:text-slate-300">
                                                     {pkg.passing_score === null || pkg.allow_retry === null || pkg.show_result_to_participant === null
                                                         ? "Pengaturan paket belum lengkap — import XLSX sebelum paket diterbitkan."
@@ -452,6 +473,9 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                                                             <i className="fa-solid fa-check text-xs" /> Terbitkan
                                                         </button>
                                                     )}
+                                                    <button type="button" onClick={() => void handleDeletePackage(pkg)} disabled={busy} className="rounded-lg border border-red-500/30 px-2.5 py-1.5 text-xs font-bold text-red-700 hover:bg-red-500/10 focus:outline-none focus:ring-2 focus:ring-red-500/40 disabled:opacity-50 dark:text-red-300" aria-label={`Hapus paket ${pkg.title}`}>
+                                                        <i className="fa-solid fa-trash-can mr-1" aria-hidden="true" /> Hapus
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>

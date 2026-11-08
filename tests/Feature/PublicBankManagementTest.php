@@ -153,6 +153,47 @@ function publicPackageWorkbook(): UploadedFile
     return new UploadedFile($path, 'mtk-paket-1.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', null, true);
 }
 
+test('deleting an unused public package resets sessions and revokes tokens while preserving roster', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+    $subject = DB::table('exam_public_subjects')->insertGetId(['name' => 'MTK', 'code' => 'MTK']);
+    $package = DB::table('exam_public_packages')->insertGetId([
+        'exam_public_subject_id' => $subject, 'title' => 'MTK 1', 'code' => 'MTK-1', 'status' => 'published',
+    ]);
+    $session = DB::table('exam_public_sessions')->insertGetId([
+        'title' => 'Sesi Aman', 'status' => 'published', 'opens_at' => now()->subHour(), 'closes_at' => now()->addHour(),
+    ]);
+    DB::table('exam_public_session_packages')->insert([
+        'exam_public_session_id' => $session, 'exam_public_package_id' => $package, 'exam_public_subject_id' => $subject, 'sort_order' => 0,
+    ]);
+    DB::table('exam_public_session_tokens')->insert(['exam_public_session_id' => $session, 'token' => 'OLDROOM']);
+    $participant = DB::table('exam_public_participants')->insertGetId([
+        'exam_public_session_id' => $session, 'name' => 'Peserta Fiktif', 'school_origin' => 'Sekolah Fiktif', 'participant_code' => 'FAKESTUDENT000001',
+    ]);
+    $this->actingAs($admin)->deleteJson(route('admin.exams.public-bank.packages.destroy', $package))
+        ->assertSuccessful()->assertJsonPath('sessions_reset', 1);
+    expect(DB::table('exam_public_packages')->where('id', $package)->exists())->toBeFalse()
+        ->and(DB::table('exam_public_sessions')->where('id', $session)->value('status'))->toBe('draft')
+        ->and(DB::table('exam_public_session_tokens')->where('exam_public_session_id', $session)->count())->toBe(0)
+        ->and(DB::table('exam_public_participants')->where('id', $participant)->value('participant_code'))->toBe('FAKESTUDENT000001');
+});
+
+test('public package deletion preserves all data once an attempt exists', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+    $subject = DB::table('exam_public_subjects')->insertGetId(['name' => 'MTK', 'code' => 'MTK']);
+    $package = DB::table('exam_public_packages')->insertGetId(['exam_public_subject_id' => $subject, 'title' => 'MTK 1', 'code' => 'MTK-1']);
+    $session = DB::table('exam_public_sessions')->insertGetId(['title' => 'Sesi', 'opens_at' => now(), 'closes_at' => now()->addHour()]);
+    $participant = DB::table('exam_public_participants')->insertGetId([
+        'exam_public_session_id' => $session, 'name' => 'Peserta Fiktif', 'school_origin' => 'Sekolah Fiktif', 'participant_code' => 'FAKESTUDENT000001',
+    ]);
+    DB::table('exam_public_subject_attempts')->insert([
+        'exam_public_participant_id' => $participant, 'exam_public_package_id' => $package, 'exam_public_subject_id' => $subject,
+        'started_at' => now(), 'expires_at' => now()->addHour(),
+    ]);
+    $this->actingAs($admin)->deleteJson(route('admin.exams.public-bank.packages.destroy', $package))->assertStatus(409);
+    expect(DB::table('exam_public_packages')->where('id', $package)->exists())->toBeTrue()
+        ->and(DB::table('exam_public_subject_attempts')->count())->toBe(1);
+});
+
 test('public bank rejects malformed answers and guest access', function () {
     $this->postJson(route('admin.exams.public-bank.subjects.store'), ['name' => 'IPAS', 'code' => 'IPAS'])
         ->assertUnauthorized();

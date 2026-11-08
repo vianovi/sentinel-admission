@@ -83,6 +83,7 @@ export default function PublicSessions({ sessions, packages, stats }: Props) {
     const [formClosesAt, setFormClosesAt] = useState("");
     const [formOrderType, setFormOrderType] = useState<"free" | "sequential">("free");
     const [formPackageIds, setFormPackageIds] = useState<number[]>([0, 0, 0, 0]);
+    const [editingDraftSession, setEditingDraftSession] = useState<Session | null>(null);
 
     // Participant Manager modal state
     const [selectedSessionForParticipants, setSelectedSessionForParticipants] = useState<Session | null>(null);
@@ -135,12 +136,31 @@ export default function PublicSessions({ sessions, packages, stats }: Props) {
     }, [sessions, search, statusFilter, sortBy]);
 
     const openCreateModal = () => {
+        setEditingDraftSession(null);
         setFormTitle("");
         setFormOpensAt("");
         setFormClosesAt("");
         setFormOrderType("free");
         setFormPackageIds(packagesBySubject.slice(0, 4).map((g) => g.packages[0]?.id ?? 0));
         setIsCreateModalOpen(true);
+    };
+
+    const openEditPackages = async (session: Session) => {
+        setBusy(true);
+        try {
+            const response = await axios.get(route("admin.exams.public-v2.sessions.show", { session: session.id }));
+            const selected = response.data.packages as { id: number; subject_name: string }[];
+            const selectedIds = packagesBySubject.slice(0, 4).map(group => group.packages.find(pkg => selected.some(item => item.id === pkg.id))?.id ?? 0);
+            setEditingDraftSession(session);
+            setFormTitle(session.title);
+            setFormOrderType(session.order_type as "free" | "sequential");
+            setFormPackageIds(selectedIds);
+            setIsCreateModalOpen(true);
+        } catch (error) {
+            showErrorToast(axios.isAxiosError(error) ? error.response?.data?.message ?? "Gagal memuat paket sesi." : "Gagal memuat paket sesi.");
+        } finally {
+            setBusy(false);
+        }
     };
 
     const closeCreateModal = () => {
@@ -151,14 +171,19 @@ export default function PublicSessions({ sessions, packages, stats }: Props) {
         event.preventDefault();
         setBusy(true);
         try {
-            await axios.post(route("admin.exams.public-v2.sessions.store"), {
-                title: formTitle,
-                opens_at: new Date(formOpensAt).toISOString(),
-                closes_at: new Date(formClosesAt).toISOString(),
-                order_type: formOrderType,
-                package_ids: formPackageIds,
-            });
-            showSuccessToast("Sesi ujian publik berhasil dibuat dalam status draft.");
+            if (editingDraftSession) {
+                await axios.put(route("admin.exams.public-v2.sessions.packages.update", { session: editingDraftSession.id }), { package_ids: formPackageIds });
+                showSuccessToast("Empat paket sesi draft diperbarui. Token lama dicabut; buat token baru setelah sesi diterbitkan ulang.");
+            } else {
+                await axios.post(route("admin.exams.public-v2.sessions.store"), {
+                    title: formTitle,
+                    opens_at: new Date(formOpensAt).toISOString(),
+                    closes_at: new Date(formClosesAt).toISOString(),
+                    order_type: formOrderType,
+                    package_ids: formPackageIds,
+                });
+                showSuccessToast("Sesi ujian publik berhasil dibuat dalam status draft.");
+            }
             closeCreateModal();
             router.reload();
         } catch (err) {
@@ -191,10 +216,10 @@ export default function PublicSessions({ sessions, packages, stats }: Props) {
     const handleGenerateToken = async (sess: Session) => {
         setBusy(true);
         try {
-            const response = await axios.post<{ token: { token: string } }>(
+            const response = await axios.post<{ token: string }>(
                 route("admin.exams.public-v2.sessions.tokens.store", { session: sess.id })
             );
-            showSuccessToast(`Token ruang berhasil dibuat: ${response.data.token.token}`);
+            showSuccessToast(`Token ruang berhasil dibuat: ${response.data.token}`);
             router.reload();
         } catch (err) {
             showErrorToast(axios.isAxiosError(err) ? err.response?.data?.message ?? "Gagal membuat token." : "Terjadi kesalahan.");
@@ -221,6 +246,10 @@ export default function PublicSessions({ sessions, packages, stats }: Props) {
         } finally {
             setBusy(false);
         }
+    };
+
+    const handleEditSessionPackages = (sess: Session) => {
+        void openEditPackages(sess);
     };
 
     const openParticipantManager = async (sess: Session) => {
@@ -253,7 +282,7 @@ export default function PublicSessions({ sessions, packages, stats }: Props) {
         if (!selectedSessionForParticipants) return;
         setBusy(true);
         try {
-            const response = await axios.post<{ participant: { participant_code: string } }>(
+            const response = await axios.post<{ participant_code: string }>(
                 route("admin.exams.public-sessions.participants.store", { session: selectedSessionForParticipants.id }),
                 {
                     name: regName,
@@ -261,7 +290,7 @@ export default function PublicSessions({ sessions, packages, stats }: Props) {
                     address: regAddress,
                 }
             );
-            const code = response.data.participant.participant_code;
+            const code = response.data.participant_code;
             setIssuedCode(code);
             showSuccessToast(`Peserta berhasil didaftarkan! Kode: ${code}`);
             setRegName("");
@@ -618,6 +647,11 @@ export default function PublicSessions({ sessions, packages, stats }: Props) {
 
                                                 <div className="flex items-center gap-1.5">
                                                     {sess.status === "draft" && (
+                                                        <button type="button" onClick={() => handleEditSessionPackages(sess)} disabled={busy} className={secondaryButtonClass}>
+                                                            <i className="fa-solid fa-pen-to-square mr-1" aria-hidden="true" /> Atur 4 Paket
+                                                        </button>
+                                                    )}
+                                                    {sess.status === "draft" && (
                                                         <button
                                                             type="button"
                                                             onClick={() => void handlePublishSession(sess)}
@@ -671,7 +705,7 @@ export default function PublicSessions({ sessions, packages, stats }: Props) {
                             <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
                                 <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                                     <i className="fa-solid fa-calendar-plus text-amber-500" />
-                                    Buat Sesi Ujian Publik 4 Mata Pelajaran
+                                    {editingDraftSession ? `Atur Paket: ${editingDraftSession.title}` : "Buat Sesi Ujian Publik 4 Mata Pelajaran"}
                                 </h3>
                                 <button type="button" onClick={closeCreateModal} className="text-slate-400 hover:text-slate-600">
                                     <i className="fa-solid fa-xmark text-sm" />
@@ -679,7 +713,7 @@ export default function PublicSessions({ sessions, packages, stats }: Props) {
                             </div>
 
                             <form onSubmit={handleCreateSession} className="space-y-3.5">
-                                <div>
+                                {!editingDraftSession && <div>
                                     <label className={labelClass}>Judul Sesi Ujian</label>
                                     <input
                                         type="text"
@@ -690,9 +724,9 @@ export default function PublicSessions({ sessions, packages, stats }: Props) {
                                         placeholder="Contoh: Sesi Ujian Publik Gelombang 1"
                                         className={inputClass}
                                     />
-                                </div>
+                                </div>}
 
-                                <div className="grid grid-cols-2 gap-3">
+                                {!editingDraftSession && <div className="grid grid-cols-2 gap-3">
                                     <div>
                                         <label className={labelClass}>Waktu Mulai</label>
                                         <input
@@ -713,9 +747,9 @@ export default function PublicSessions({ sessions, packages, stats }: Props) {
                                             className={inputClass}
                                         />
                                     </div>
-                                </div>
+                                </div>}
 
-                                <div>
+                                {!editingDraftSession && <div>
                                     <label className={labelClass}>Urutan Pengerjaan Paket</label>
                                     <select
                                         value={formOrderType}
@@ -725,7 +759,7 @@ export default function PublicSessions({ sessions, packages, stats }: Props) {
                                         <option value="free">Bebas Memilih (Peserta bebas memilih urutan mapel)</option>
                                         <option value="sequential">Wajib Berurutan (Harus menyelesaikan mapel 1 lalu mapel 2, dst.)</option>
                                     </select>
-                                </div>
+                                </div>}
 
                                 {/* 4 Package Selectors for 4 distinct subjects */}
                                 <div className="space-y-2.5 pt-2 border-t border-slate-100 dark:border-white/10">
@@ -764,10 +798,10 @@ export default function PublicSessions({ sessions, packages, stats }: Props) {
                                     </button>
                                     <button
                                         type="submit"
-                                        disabled={busy || formPackageIds.some((id) => !id)}
+                                        disabled={busy || formPackageIds.length !== 4 || formPackageIds.some((id) => !id)}
                                         className={primaryButtonClass}
                                     >
-                                        {busy ? "Menyimpan..." : "Buat Sesi Draft"}
+                                        {busy ? "Menyimpan..." : editingDraftSession ? "Simpan 4 Paket" : "Buat Sesi Draft"}
                                     </button>
                                 </div>
                             </form>

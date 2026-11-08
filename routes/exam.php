@@ -144,12 +144,14 @@ Route::middleware(['auth', RoleMiddleware::class.':admin'])
         Route::post('/public-bank/packages/{package}/questions', [AdminPublicBank::class, 'storeQuestion'])->name('public-bank.questions.store');
         Route::post('/public-bank/packages/{package}/imports', [AdminPublicBank::class, 'importQuestions'])->middleware('throttle:upload')->name('public-bank.packages.import');
         Route::post('/public-bank/packages/{package}/publish', [AdminPublicBank::class, 'publish'])->name('public-bank.packages.publish');
+        Route::delete('/public-bank/packages/{package}', [AdminPublicBank::class, 'destroyPackage'])->name('public-bank.packages.destroy');
 
         Route::get('/public-v2', [AdminPublicSessionV2::class, 'page'])->name('public-v2.page');
         Route::get('/public-v2/sessions', [AdminPublicSessionV2::class, 'index'])->name('public-v2.sessions.index');
         Route::post('/public-v2/sessions', [AdminPublicSessionV2::class, 'store'])->name('public-v2.sessions.store');
         Route::get('/public-v2/sessions/{session}', [AdminPublicSessionV2::class, 'show'])->name('public-v2.sessions.show');
         Route::post('/public-v2/sessions/{session}/publish', [AdminPublicSessionV2::class, 'publish'])->name('public-v2.sessions.publish');
+        Route::put('/public-v2/sessions/{session}/packages', [AdminPublicSessionV2::class, 'updatePackages'])->name('public-v2.sessions.packages.update');
         Route::post('/public-v2/sessions/{session}/close', [AdminPublicSessionV2::class, 'close'])->name('public-v2.sessions.close');
         Route::post('/public-v2/sessions/{session}/tokens', [AdminPublicSessionV2::class, 'token'])->name('public-v2.sessions.tokens.store');
 
