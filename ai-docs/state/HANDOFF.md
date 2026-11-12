@@ -1,5 +1,13 @@
 # Audit Handoff
 
+## 2026-11-12 session configuration readiness audit
+
+- Committed all reviewed implementation/state changes as `4c7b659` (`feat(exam): align public package and session detail workflows`) after owner acceptance and explicit commit instruction. No push requested or performed.
+- Continued with read-only audit of session configuration, assignments, publication, tokens, roster, join/start/answer/submit, and close. Report: [Public session configuration readiness](../reports/public-session-configuration-readiness.md).
+- Findings: missing full draft edit, publish/start readiness mismatch, ambiguous close semantics for active attempts, incomplete token lifecycle UI, missing roster pagination, timezone-less session timestamps, unverified MariaDB concurrency, and optimistic clipboard feedback. Source observations are separated from runtime evidence; no new security exploit or race was claimed.
+- Full suite 171 passed / 1453 assertions, 9 pre-existing legacy skips (7.03s); eight public-v2 routes listed; diff check passed. No application code changed during audit. Existing UI acceptance does not cover production readiness or future session changes.
+- Next: follow the ordered remediation plan; clarify close/token semantics before altering business behavior. Keep production/demo data and internal retired paths untouched.
+
 ## 2026-11-12 owner acceptance and commit authorization
 
 - Owner reviewed the current changes, reported them acceptable, and explicitly authorized committing all repository changes with updated documentation.

@@ -3,13 +3,13 @@
 - Execution mode: `autonomous`
 - Master status: `in_progress`
 - Active task: `feat/public-exam-rebuild`
-- Active slice: `public-exam-rebuild-v2`
-- Slice phase: `public_package_session_detail_parity_verified`
+- Active slice: `public-session-configuration-readiness`
+- Slice phase: `audit_complete_findings_open`
 - Repository root: `/home/silinux/Documents/MyPlaygraund/Laravel-Project/sentinel-admission`
 - Current branch: `feature/public-exam-rebuild`
-- Latest work: `Public package creation and Kelola Soal now navigate to a dedicated package detail page with XLSX workflow, complete answer-option review, publication, related sessions, and persisted import reports using existing SystemActivityLog storage. Added scoped session detail navigation with inline participant management and distinct-subject custom selectors. Public scoring rules and internal retirement remain intact; no schema or live data changed.`
-- Last successful verification: `2026-11-12: focused public admin/bank/session tests 19 passed (326 assertions); Pint passed; final TypeScript and Vite build passed (10.23s); diff check passed. Authenticated Playwright on isolated SQLite verified create-to-detail navigation, XLSX import and answer review, publication, rejected mismatched import and persisted failure report, inline session roster, and 390px overflow checks. Temporary server stopped. Full-suite verification predates these changes.`
+- Latest work: `Owner-accepted package/session-detail milestone committed as 4c7b659. Completed read-only session configuration audit: dependency map, eight findings/verification gaps, release gates and ordered remediation in ai-docs/reports/public-session-configuration-readiness.md. No session fixes, live data operations or schema changes during audit.`
+- Last successful verification: `2026-11-12: full regression 171 passed, 9 existing legacy skips, 1453 assertions (7.03s); route inventory 8 public-v2 endpoints; diff check passed. Latest application build including TypeScript passed (10.23s). Prior Playwright smoke covers package workflow and session detail only, not full session production scenarios.`
 - Current blocker: `None. B-004 contained. B-005 resolved.`
 - Human visual review: `Owner reviewed the current UI and reported it acceptable on 2026-11-12. This acceptance covers the reviewed package/session-detail changes, not complete production readiness or four-subject participant execution.`
-- Next exact action: `Review the public package/detail and session/detail UI with owner. Imports remain atomic (no partial success), and reports use existing system audit storage rather than internal import batches. Batch-level question removal is not added. Complete four-subject/session/participant browser coverage before production-readiness claims. No commit without explicit instruction.`
+- Next exact action: `Use the session readiness report to implement guarded draft configuration editing, explicit timezone serialization, publish readiness and roster pagination when directed. Resolve close-active-attempt and multi-token policy before changing those semantics. Full four-subject browser flow and MariaDB concurrency remain unverified; do not claim production readiness.`
 - Last updated: `2026-11-12`
