@@ -1,5 +1,16 @@
 # Durable Audit Decisions
 
+## D-010 — Closing a public session forcibly stops ongoing attempts
+
+- Date: 2026-11-12
+- Status: owner-approved policy; implementation pending.
+- Decision: Owner selected forced termination, not allowing already-active attempts to continue until their original time limit, when an administrator closes a public exam session.
+- Scope: Public Exam session close. Do not alter internal exam behavior.
+- Follow-up: Owner mentioned a similar feature/module under Hasil Ujian as a possible later addition. Its UI, per-participant/bulk scope and controls are not yet specified; do not treat this as authorization to build that module now.
+- Implementation constraints: Preserve previously saved answers and existing completed results. Trace and test scoring, finalization, idempotency, and concurrent answer/submit requests before claiming completion. Exact status representation and handling of unstarted subjects are not specified by this decision; raise material policy gaps before implementing assumptions.
+- Separate unresolved choice: whether newly issued room tokens revoke older tokens. No decision was supplied.
+- Pause: Owner requested ending the chat with documentation only. Do not implement this policy until work is resumed.
+
 ## D-001 — Main is human-controlled
 
 - Status: active

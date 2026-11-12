@@ -4,6 +4,20 @@ Date: 2026-11-12
 Source commit: `4c7b659` (`feature/public-exam-rebuild`)
 Classification: **NOT READY FOR PRODUCTION SIGN-OFF** — operational gaps and unverified concurrency/end-to-end coverage.
 
+## Implementation follow-up — 2026-11-12 (uncommitted)
+
+- S-01: guarded atomic draft configuration editor implemented, with regression for configuration, reordered assignments, invalid-input rollback and started-participant/non-draft/staff guards.
+- S-02: publish rechecks active categories and active non-deleted questions; rejection tests added and previous unrealistic fixtures corrected.
+- S-05: roster pagination implemented; Playwright confirmed page 2 and participant 51 with accurate total.
+- S-06: page timestamps serialized with offset; display uses configured exam timezone; browser-local input is explained. Cross-timezone browser coverage still pending.
+- S-08: clipboard success now awaits the operation with failure feedback; denied-permission browser scenario pending.
+- S-03: owner chose forced termination on session close (D-010); implementation pending. S-04 token policy still unanswered; current close/token lifecycle unchanged. S-07 remains unverified.
+- Verification: 172 tests passed, 9 legacy skipped, 1480 assertions; Pint/build passed. Original findings below are retained as audit evidence; these updates do not constitute production approval.
+
+### Session-end update
+
+Owner paused execution and requested state/handoff documentation only. Force-close is the next decided behavior to implement after resume; a comparable Hasil Ujian module is a deferred idea requiring scope. No force-close or results-module code was added. See [latest handoff](../state/HANDOFF.md) for remaining tasks, preserved dirty files, verification limits and resume order. Original audit questions below are historical; D-010 settles the close-versus-continue choice but not the separate token policy.
+
 ## Scope and evidence
 
 Read-only review of public session creation, package assignment, publication, schedule, token issuance, roster, participant entry, and closing. No application fixes, schema changes, or live database mutations during this audit. Owner accepted the preceding UI milestone; that is not production approval.

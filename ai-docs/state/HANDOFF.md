@@ -1,5 +1,43 @@
 # Audit Handoff
 
+## 2026-11-12 FINAL HANDOFF — owner paused the chat
+
+This is the latest checkpoint and supersedes older statements that both policy questions are unanswered.
+
+### Owner decision and scope
+
+- **Closing a public session must forcibly stop ongoing attempts.** Recorded as D-010 in [DECISIONS.md](DECISIONS.md). This is decided but NOT implemented; current runtime still has the old close behavior.
+- A similar module/action under **Hasil Ujian** was mentioned as a possible future task. No implementation, schema, UI, individual/bulk scope, or detailed policy has been agreed for it.
+- Room-token policy is still unanswered: keep old tokens valid until expiry, or revoke old tokens when creating a new one. Do not infer an answer from the force-close decision.
+- Owner explicitly ended this chat and requested documentation/state only. No further coding, test suite runs, commit, or push in this closing turn.
+
+### Preserved work and verified baseline
+
+- Branch: `feature/public-exam-rebuild`; HEAD `571f91c` (audit documentation), preceding implementation commit `4c7b659`. Neither was pushed by this session.
+- Uncommitted application changes: `PublicSessionV2Controller.php`, `PublicExamPagesController.php`, public `Sessions.tsx`, `routes/exam.php`, and `PublicSessionV2Test.php`. Preserve them; do not reset or recreate them.
+- Implemented: guarded atomic draft edit, publication readiness checks, explicit-offset timestamps/timezone guidance, roster pagination, and clipboard error feedback.
+- Last checks: 172 passed / 1480 assertions / 9 existing legacy skips; focused 8 passed / 189 assertions; Pint and diff check passed; TypeScript/build passed (22.81s). Isolated browser verified participant 51 on roster page 2 and draft form prefill. No tests rerun for this documentation-only checkpoint.
+- Documentation changes are also uncommitted, including this handoff, current state, readiness report and D-010. No live/demo data or schema changes. Temporary browser server was stopped; `/tmp/sentinel-public-parity-pA7MN0/` is synthetic disposable fixture data only and may not survive a restart.
+
+### Remaining work, in resume order
+
+1. Reconcile Git/state and preserve the uncommitted configuration fixes. Obtain human review of these latest UI changes; previous acceptance covered the earlier milestone only.
+2. Implement public force-close after tracing existing scoring/finalization. Retain saved answers and finished results; test rejection of further answers/start/join, finalization behavior, repeated close and concurrent close/answer/submit. Do not invent policy for unstarted subjects or overall result completion.
+3. Ask the outstanding token-policy question, then implement the selected issuance/revocation behavior and accurate token status feedback.
+4. Finish browser coverage: full draft save with four categories, free/sequential participant flow, force-close, results/export, cross-timezone display and denied clipboard permission.
+5. Verify integrity/concurrency on an isolated MariaDB fixture; SQLite success is not proof of row-lock behavior. Re-run affected regression/build after new changes.
+6. Scope the proposed Hasil Ujian module with the owner in a later task; it is deferred, not partially implemented.
+7. Update readiness report/state and commit only when instructed. Production readiness remains NOT signed off.
+
+## 2026-11-12 session configuration fixes; policy questions pending
+
+- Owner authorized applying agreed audit corrections and stopping to ask about policy gaps. Two questions were sent: whether closing allows active attempts to finish or finalizes them, and whether new room tokens revoke predecessors. No answers received at this checkpoint; neither behavior changed.
+- Implemented full draft editor (title, schedule, description, participant instructions, ordering, four packages) via new PUT session endpoint. Existing package-update guards and revocation run in the same outer transaction as configuration updates. Started participants/attempts and non-draft sessions cannot be edited.
+- Publish requires active categories and active non-deleted questions as well as configured published packages. Existing publication fixtures were corrected to contain real questions; new regression covers failed atomic update, successful configuration/reordering, timezone props, missing questions, inactive categories, participant-entry guard and staff authorization.
+- Session page timestamps now include explicit offsets, display the configured exam timezone, and explain browser-local datetime input. Roster consumes total/current/last-page metadata with navigation and retry. Clipboard toast waits for success and handles rejection.
+- Verification: full suite 172 passed / 1480 assertions, 9 existing legacy skips (8.05s); focused 8 passed / 189 assertions; Pint, TypeScript/build (22.81s), diff check passed. Initial focused failures were expected old fixtures without active questions and resolved by realistic fixtures, not weakening production checks.
+- Isolated SQLite fixture only: Playwright verified page 2 contains participant 51, counts show 1 of 51, and draft edit shows prefilled dates with Asia/Jakarta guidance. Full browser save/four-subject lifecycle, denied-clipboard and cross-timezone-browser scenarios not yet verified. Production/demo data and schema unchanged. Changes uncommitted; current UI changes require owner review.
+
 ## 2026-11-12 session configuration readiness audit
 
 - Committed all reviewed implementation/state changes as `4c7b659` (`feat(exam): align public package and session detail workflows`) after owner acceptance and explicit commit instruction. No push requested or performed.

@@ -104,13 +104,42 @@ class PublicSessionV2Controller extends Controller
             abort_unless($record && $record->status === 'draft', 403);
             abort_unless($record->closes_at > now() && DB::table('exam_public_session_packages as pivot')
                 ->join('exam_public_packages as package', 'package.id', '=', 'pivot.exam_public_package_id')
+                ->join('exam_public_subjects as subject', 'subject.id', '=', 'package.exam_public_subject_id')
+                ->where('subject.is_active', true)
+                ->whereExists(fn ($query) => $query->selectRaw('1')->from('exam_public_questions as question')
+                    ->whereColumn('question.exam_public_package_id', 'package.id')
+                    ->where('question.is_active', true)->whereNull('question.deleted_at'))
                 ->where('pivot.exam_public_session_id', $session)->where('package.status', 'published')
                 ->whereNotNull('package.passing_score')->whereNotNull('package.allow_retry')->whereNotNull('package.show_result_to_participant')
-                ->count() === 4, 422);
+                ->count() === 4, 422, 'Sesi harus belum berakhir dan memiliki empat paket terbit dengan kategori aktif, konfigurasi lengkap, serta soal aktif.');
 
             DB::table('exam_public_sessions')->where('id', $session)->update(['status' => 'published', 'updated_at' => now()]);
 
             return response()->json(['status' => 'published']);
+        });
+    }
+
+    public function update(Request $request, int $session): JsonResponse
+    {
+        $data = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string', 'max:1500'],
+            'instructions' => ['nullable', 'string', 'max:5000'],
+            'opens_at' => ['required', 'date'],
+            'closes_at' => ['required', 'date', 'after:opens_at'],
+            'order_type' => ['required', Rule::in(['free', 'sequential'])],
+        ]);
+
+        return DB::transaction(function () use ($request, $session, $data): JsonResponse {
+            $response = $this->updatePackages($request, $session);
+            DB::table('exam_public_sessions')->where('id', $session)->update([
+                ...$data,
+                'opens_at' => \Carbon\Carbon::parse($data['opens_at'])->setTimezone(config('app.timezone'))->toDateTimeString(),
+                'closes_at' => \Carbon\Carbon::parse($data['closes_at'])->setTimezone(config('app.timezone'))->toDateTimeString(),
+                'updated_at' => now(),
+            ]);
+
+            return $response;
         });
     }
 

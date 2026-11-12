@@ -20,6 +20,7 @@ test('admin creates a four-subject draft then publishes and issues a room token'
         'package_ids' => $ids,
     ])->assertCreated();
     $session = $response->json('id');
+    addPublicSessionQuestions($ids);
     $this->getJson(route('admin.exams.public-v2.sessions.show', $session))->assertJsonCount(4, 'packages')
         ->assertJsonPath('packages.0.subject_name', 'IPAS');
     $this->actingAs($admin)->get(route('admin.exams.public-v2.page'))
@@ -77,6 +78,7 @@ test('session timestamps with an explicit offset are stored in the application t
 
     expect(DB::table('exam_public_sessions')->where('id', $id)->value('opens_at'))->toBe($opensAt->toDateTimeString())
         ->and(DB::table('exam_public_sessions')->where('id', $id)->value('closes_at'))->toBe($closesAt->toDateTimeString());
+    addPublicSessionQuestions($ids);
     $this->postJson(route('admin.exams.public-v2.sessions.publish', $id))->assertSuccessful();
 });
 
@@ -101,6 +103,7 @@ test('draft session can replace four distinct public packages and revoke stale t
         'exam_public_session_id' => $session, 'name' => 'Peserta Fiktif', 'school_origin' => 'Sekolah Fiktif', 'participant_code' => 'FAKESTUDENT000001',
     ]);
     $replacement = array_map(fn ($code) => $packages[$code][2], ['IPAS', 'PAIBP', 'MTK', 'BINDO']);
+    addPublicSessionQuestions($replacement);
 
     $this->putJson(route('admin.exams.public-v2.sessions.packages.update', $session), ['package_ids' => [$replacement[0], $replacement[0], $replacement[2], $replacement[3]]])->assertUnprocessable();
     $this->putJson(route('admin.exams.public-v2.sessions.packages.update', $session), ['package_ids' => $replacement])
@@ -111,4 +114,53 @@ test('draft session can replace four distinct public packages and revoke stale t
         ->and(DB::table('exam_public_participants')->where('exam_public_session_id', $session)->count())->toBe(1);
     $this->postJson(route('admin.exams.public-v2.sessions.publish', $session))->assertSuccessful();
     $this->getJson(route('public-exam.session', 'STALECODE'))->assertNotFound();
+});
+
+function addPublicSessionQuestions(array $packages): void
+{
+    foreach ($packages as $package) {
+        DB::table('exam_public_questions')->insert([
+            'exam_public_package_id' => $package, 'question_text' => 'Pertanyaan fixture',
+            'options' => json_encode(['A' => 'Ya', 'B' => 'Tidak']), 'correct_answer' => 'A', 'point' => 1,
+        ]);
+    }
+}
+
+test('draft configuration updates atomically and cannot change after participant entry', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+    $ids = [];
+    foreach (range(1, 4) as $number) {
+        $subject = DB::table('exam_public_subjects')->insertGetId(['name' => 'Mapel '.$number, 'code' => 'M'.$number]);
+        $ids[] = DB::table('exam_public_packages')->insertGetId([
+            'exam_public_subject_id' => $subject, 'title' => 'Paket '.$number, 'code' => 'P'.$number,
+            'status' => 'published', 'passing_score' => 55, 'allow_retry' => false, 'show_result_to_participant' => false,
+        ]);
+    }
+    $data = ['title' => 'Draft', 'opens_at' => now()->toISOString(), 'closes_at' => now()->addHours(2)->toISOString(), 'order_type' => 'free', 'package_ids' => $ids];
+    $session = $this->actingAs($admin)->postJson(route('admin.exams.public-v2.sessions.store'), $data)->assertCreated()->json('id');
+    $url = route('admin.exams.public-v2.sessions.update', $session);
+    $this->putJson($url, [...$data, 'title' => 'Tidak tersimpan', 'package_ids' => [$ids[0], $ids[0], $ids[2], $ids[3]]])->assertUnprocessable();
+    expect(DB::table('exam_public_sessions')->where('id', $session)->value('title'))->toBe('Draft');
+    $this->putJson($url, [...$data, 'title' => 'Revisi', 'instructions' => 'Baca petunjuk', 'order_type' => 'sequential', 'package_ids' => array_reverse($ids)])->assertSuccessful();
+    expect(DB::table('exam_public_sessions')->where('id', $session)->value('title'))->toBe('Revisi')
+        ->and(DB::table('exam_public_session_packages')->where('exam_public_session_id', $session)->orderBy('sort_order')->pluck('exam_public_package_id')->all())->toBe(array_reverse($ids));
+    $this->get(route('admin.public-exams.sessions.show', $session))->assertInertia(fn ($page) => $page
+        ->where('examTimezone', config('app.timezone'))
+        ->where('sessions.0.instructions', 'Baca petunjuk')
+        ->where('sessions.0.opens_at', fn ($value) => preg_match('/[+-]\d{2}:\d{2}$/', $value) === 1));
+    $this->postJson(route('admin.exams.public-v2.sessions.publish', $session))->assertUnprocessable();
+    addPublicSessionQuestions($ids);
+    $subject = DB::table('exam_public_packages')->where('id', $ids[0])->value('exam_public_subject_id');
+    DB::table('exam_public_subjects')->where('id', $subject)->update(['is_active' => false]);
+    $this->postJson(route('admin.exams.public-v2.sessions.publish', $session))->assertUnprocessable();
+    DB::table('exam_public_subjects')->where('id', $subject)->update(['is_active' => true]);
+    DB::table('exam_public_participants')->insert([
+        'exam_public_session_id' => $session, 'participant_code' => 'CONFIGGUARD00001',
+        'name' => 'Fixture', 'school_origin' => 'School', 'started_at' => now(),
+    ]);
+    $this->putJson($url, $data)->assertConflict();
+    expect(DB::table('exam_public_sessions')->where('id', $session)->value('title'))->toBe('Revisi');
+    $this->postJson(route('admin.exams.public-v2.sessions.publish', $session))->assertSuccessful();
+    $this->putJson($url, $data)->assertConflict();
+    $this->actingAs(User::factory()->create(['role' => 'staff']))->putJson($url, $data)->assertForbidden();
 });

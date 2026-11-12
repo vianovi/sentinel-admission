@@ -31,6 +31,8 @@ type PackageInfo = {
 type Session = {
     id: number;
     title: string;
+    description: string | null;
+    instructions: string | null;
     status: string;
     order_type: string;
     opens_at: string;
@@ -58,6 +60,7 @@ type Participant = {
 };
 
 type Props = {
+    examTimezone: string;
     detailMode?: boolean;
     sessions: Session[];
     packages: AvailablePackage[];
@@ -72,7 +75,7 @@ type Props = {
 type StatusFilter = "all" | "draft" | "published" | "closed";
 type SortOption = "newest" | "oldest" | "title_asc" | "closes_soon";
 
-export default function PublicSessions({ sessions, packages, stats, detailMode = false }: Props) {
+export default function PublicSessions({ sessions, packages, stats, examTimezone, detailMode = false }: Props) {
     const { theme } = useTheme();
     const selectStyles = makeSelectStyles(false, theme === "dark");
     const { flash, errors: pageErrors } = usePage<PageProps & { errors: Record<string, string> }>().props;
@@ -85,6 +88,8 @@ export default function PublicSessions({ sessions, packages, stats, detailMode =
     // Create session modal state
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [formTitle, setFormTitle] = useState("");
+    const [formDescription, setFormDescription] = useState("");
+    const [formInstructions, setFormInstructions] = useState("");
     const [formOpensAt, setFormOpensAt] = useState("");
     const [formClosesAt, setFormClosesAt] = useState("");
     const [formOrderType, setFormOrderType] = useState<"free" | "sequential">("free");
@@ -95,6 +100,10 @@ export default function PublicSessions({ sessions, packages, stats, detailMode =
     const [selectedSessionForParticipants, setSelectedSessionForParticipants] = useState<Session | null>(null);
     const [participantsList, setParticipantsList] = useState<Participant[]>([]);
     const [loadingParticipants, setLoadingParticipants] = useState(false);
+    const [rosterPage, setRosterPage] = useState(1);
+    const [rosterLastPage, setRosterLastPage] = useState(1);
+    const [rosterTotal, setRosterTotal] = useState(0);
+    const [rosterError, setRosterError] = useState(false);
     const [regName, setRegName] = useState("");
     const [regSchool, setRegSchool] = useState("");
     const [regAddress, setRegAddress] = useState("");
@@ -148,6 +157,8 @@ export default function PublicSessions({ sessions, packages, stats, detailMode =
     const openCreateModal = () => {
         setEditingDraftSession(null);
         setFormTitle("");
+        setFormDescription("");
+        setFormInstructions("");
         setFormOpensAt("");
         setFormClosesAt("");
         setFormOrderType("free");
@@ -163,6 +174,14 @@ export default function PublicSessions({ sessions, packages, stats, detailMode =
             const selectedIds = Array.from({ length: 4 }, (_, index) => selected[index]?.id ?? 0);
             setEditingDraftSession(session);
             setFormTitle(session.title);
+            setFormDescription(session.description ?? "");
+            setFormInstructions(session.instructions ?? "");
+            const localInput = (value: string) => {
+                const date = new Date(value);
+                return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+            };
+            setFormOpensAt(localInput(session.opens_at));
+            setFormClosesAt(localInput(session.closes_at));
             setFormOrderType(session.order_type as "free" | "sequential");
             setFormPackageIds(selectedIds);
             setIsCreateModalOpen(true);
@@ -181,17 +200,16 @@ export default function PublicSessions({ sessions, packages, stats, detailMode =
         event.preventDefault();
         setBusy(true);
         try {
+            const data = {
+                title: formTitle, description: formDescription, instructions: formInstructions,
+                opens_at: new Date(formOpensAt).toISOString(), closes_at: new Date(formClosesAt).toISOString(),
+                order_type: formOrderType, package_ids: formPackageIds,
+            };
             if (editingDraftSession) {
-                await axios.put(route("admin.exams.public-v2.sessions.packages.update", { session: editingDraftSession.id }), { package_ids: formPackageIds });
-                showSuccessToast("Empat paket sesi draft diperbarui. Token lama dicabut; buat token baru setelah sesi diterbitkan ulang.");
+                await axios.put(route("admin.exams.public-v2.sessions.update", { session: editingDraftSession.id }), data);
+                showSuccessToast("Konfigurasi sesi draft diperbarui. Buat token baru setelah sesi diterbitkan.");
             } else {
-                await axios.post(route("admin.exams.public-v2.sessions.store"), {
-                    title: formTitle,
-                    opens_at: new Date(formOpensAt).toISOString(),
-                    closes_at: new Date(formClosesAt).toISOString(),
-                    order_type: formOrderType,
-                    package_ids: formPackageIds,
-                });
+                await axios.post(route("admin.exams.public-v2.sessions.store"), data);
                 showSuccessToast("Sesi ujian publik berhasil dibuat dalam status draft.");
             }
             closeCreateModal();
@@ -262,20 +280,30 @@ export default function PublicSessions({ sessions, packages, stats, detailMode =
         void openEditPackages(sess);
     };
 
-    const openParticipantManager = async (sess: Session) => {
-        setSelectedSessionForParticipants(sess);
-        setIssuedCode(null);
+    const loadRoster = async (sess: Session, page = 1) => {
         setLoadingParticipants(true);
+        setRosterError(false);
+        setParticipantsList([]);
         try {
-            const response = await axios.get<{ data: Participant[] }>(
-                route("admin.exams.public-sessions.participants.index", { session: sess.id })
+            const response = await axios.get<{ data: Participant[]; current_page: number; last_page: number; total: number }>(
+                route("admin.exams.public-sessions.participants.index", { session: sess.id }), { params: { page } }
             );
             setParticipantsList(response.data.data);
+            setRosterPage(response.data.current_page);
+            setRosterLastPage(response.data.last_page);
+            setRosterTotal(response.data.total);
         } catch {
+            setRosterError(true);
             showErrorToast("Gagal memuat daftar peserta.");
         } finally {
             setLoadingParticipants(false);
         }
+    };
+
+    const openParticipantManager = async (sess: Session) => {
+        setSelectedSessionForParticipants(sess);
+        setIssuedCode(null);
+        await loadRoster(sess);
     };
 
     const closeParticipantManager = () => {
@@ -308,10 +336,7 @@ export default function PublicSessions({ sessions, packages, stats, detailMode =
             setRegAddress("");
 
             // Reload roster
-            const roster = await axios.get<{ data: Participant[] }>(
-                route("admin.exams.public-sessions.participants.index", { session: selectedSessionForParticipants.id })
-            );
-            setParticipantsList(roster.data.data);
+            await loadRoster(selectedSessionForParticipants, rosterPage);
             router.reload();
         } catch (err) {
             showErrorToast(axios.isAxiosError(err) ? err.response?.data?.message ?? "Gagal mendaftarkan peserta." : "Terjadi kesalahan.");
@@ -325,6 +350,8 @@ export default function PublicSessions({ sessions, packages, stats, detailMode =
         try {
             const date = new Date(isoString);
             return date.toLocaleString("id-ID", {
+                timeZone: examTimezone,
+                timeZoneName: "short",
                 day: "numeric",
                 month: "short",
                 year: "numeric",
@@ -336,9 +363,13 @@ export default function PublicSessions({ sessions, packages, stats, detailMode =
         }
     };
 
-    const copyToClipboard = (text: string, label: string) => {
-        navigator.clipboard.writeText(text);
-        showSuccessToast(`${label} berhasil disalin ke clipboard!`);
+    const copyToClipboard = async (text: string, label: string) => {
+        try {
+            await navigator.clipboard.writeText(text);
+            showSuccessToast(`${label} berhasil disalin ke clipboard!`);
+        } catch {
+            showErrorToast("Tidak dapat menyalin. Pilih teks dan salin secara manual.");
+        }
     };
 
     return (
@@ -653,7 +684,7 @@ export default function PublicSessions({ sessions, packages, stats, detailMode =
                                                 <div className="flex items-center gap-1.5">
                                                     {sess.status === "draft" && (
                                                         <button type="button" onClick={() => handleEditSessionPackages(sess)} disabled={busy} className={secondaryButtonClass}>
-                                                            <i className="fa-solid fa-pen-to-square mr-1" aria-hidden="true" /> Atur 4 Paket
+                                                            <i className="fa-solid fa-pen-to-square mr-1" aria-hidden="true" /> Konfigurasi Sesi
                                                         </button>
                                                     )}
                                                     {sess.status === "draft" && (
@@ -710,7 +741,7 @@ export default function PublicSessions({ sessions, packages, stats, detailMode =
                             <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
                                 <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                                     <i className="fa-solid fa-calendar-plus text-amber-500" />
-                                    {editingDraftSession ? `Atur Paket: ${editingDraftSession.title}` : "Buat Sesi Ujian Publik 4 Mata Pelajaran"}
+                                    {editingDraftSession ? `Konfigurasi Sesi: ${editingDraftSession.title}` : "Buat Sesi Ujian Publik 4 Mata Pelajaran"}
                                 </h3>
                                 <button type="button" onClick={closeCreateModal} className="text-slate-400 hover:text-slate-600">
                                     <i className="fa-solid fa-xmark text-sm" />
@@ -718,7 +749,7 @@ export default function PublicSessions({ sessions, packages, stats, detailMode =
                             </div>
 
                             <form onSubmit={handleCreateSession} className="space-y-3.5">
-                                {!editingDraftSession && <div>
+                                <div>
                                     <label className={labelClass}>Judul Sesi Ujian</label>
                                     <input
                                         type="text"
@@ -729,9 +760,10 @@ export default function PublicSessions({ sessions, packages, stats, detailMode =
                                         placeholder="Contoh: Sesi Ujian Publik Gelombang 1"
                                         className={inputClass}
                                     />
-                                </div>}
+                                </div>
 
-                                {!editingDraftSession && <div className="grid grid-cols-2 gap-3">
+                                <p className="text-xs text-slate-600 dark:text-slate-300">Input waktu mengikuti zona perangkat ({Intl.DateTimeFormat().resolvedOptions().timeZone}). Jadwal sesi ditampilkan dalam {examTimezone}.</p>
+                                <div className="grid grid-cols-2 gap-3">
                                     <div>
                                         <label className={labelClass}>Waktu Mulai</label>
                                         <input
@@ -752,15 +784,23 @@ export default function PublicSessions({ sessions, packages, stats, detailMode =
                                             className={inputClass}
                                         />
                                     </div>
-                                </div>}
+                                </div>
 
-                                {!editingDraftSession && <div>
+                                <div>
                                     <label className={labelClass}>Urutan Pengerjaan Paket</label>
                                     <Select aria-label="Urutan pengerjaan" styles={selectStyles}
                                         options={[{ value: "free", label: "Bebas Memilih" }, { value: "sequential", label: "Wajib Berurutan" }]}
                                         value={{ value: formOrderType, label: formOrderType === "free" ? "Bebas Memilih" : "Wajib Berurutan" }}
                                         onChange={option => setFormOrderType(option?.value === "sequential" ? "sequential" : "free")} />
-                                </div>}
+                                </div>
+                                <div>
+                                    <label htmlFor="session-description" className={labelClass}>Deskripsi Sesi</label>
+                                    <textarea id="session-description" value={formDescription} onChange={event => setFormDescription(event.target.value)} maxLength={1500} className={inputClass} />
+                                </div>
+                                <div>
+                                    <label htmlFor="session-instructions" className={labelClass}>Petunjuk untuk Peserta</label>
+                                    <textarea id="session-instructions" value={formInstructions} onChange={event => setFormInstructions(event.target.value)} maxLength={5000} className={inputClass} />
+                                </div>
 
                                 {/* 4 Package Selectors for 4 distinct subjects */}
                                 <div className="space-y-2.5 pt-2 border-t border-slate-100 dark:border-white/10">
@@ -792,7 +832,7 @@ export default function PublicSessions({ sessions, packages, stats, detailMode =
                                         disabled={busy || formPackageIds.length !== 4 || formPackageIds.some((id) => !id)}
                                         className={primaryButtonClass}
                                     >
-                                        {busy ? "Menyimpan..." : editingDraftSession ? "Simpan 4 Paket" : "Buat Sesi Draft"}
+                                        {busy ? "Menyimpan..." : editingDraftSession ? "Simpan Konfigurasi" : "Buat Sesi Draft"}
                                     </button>
                                 </div>
                             </form>
@@ -897,7 +937,7 @@ export default function PublicSessions({ sessions, packages, stats, detailMode =
                             <div className="space-y-2 pt-2">
                                 <div className="flex items-center justify-between">
                                     <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                                        Daftar Peserta Terdaftar ({participantsList.length})
+                                        Daftar Peserta Terdaftar ({rosterTotal})
                                     </span>
                                     {participantsList.length > 0 && (
                                         <a
@@ -914,6 +954,8 @@ export default function PublicSessions({ sessions, packages, stats, detailMode =
                                         <i className="fa-solid fa-circle-notch fa-spin text-base text-amber-500 mb-2" />
                                         <p>Memuat daftar peserta...</p>
                                     </div>
+                                ) : rosterError ? (
+                                    <button type="button" className={secondaryButtonClass} onClick={() => void loadRoster(selectedSessionForParticipants, rosterPage)}>Gagal memuat peserta · Coba lagi</button>
                                 ) : participantsList.length === 0 ? (
                                     <EmptyState
                                         icon="fa-solid fa-users"
@@ -948,6 +990,13 @@ export default function PublicSessions({ sessions, packages, stats, detailMode =
                                         </table>
                                     </div>
                                 )}
+                                {!rosterError && <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600 dark:text-slate-300">
+                                    <span>Halaman {rosterPage} dari {rosterLastPage} · {participantsList.length} dari {rosterTotal} peserta</span>
+                                    <div className="flex gap-2">
+                                        <button disabled={loadingParticipants || rosterPage <= 1} className={secondaryButtonClass} onClick={() => void loadRoster(selectedSessionForParticipants, rosterPage - 1)}>Sebelumnya</button>
+                                        <button disabled={loadingParticipants || rosterPage >= rosterLastPage} className={secondaryButtonClass} onClick={() => void loadRoster(selectedSessionForParticipants, rosterPage + 1)}>Berikutnya</button>
+                                    </div>
+                                </div>}
                             </div>
                         </div>
                     </div>

@@ -64,7 +64,7 @@ class PublicExamPagesController extends Controller
         }
         $sessions = DB::table('exam_public_sessions')->orderByDesc('id')
             ->when($session !== null, fn ($query) => $query->where('id', $session))
-            ->get(['id', 'title', 'status', 'order_type', 'opens_at', 'closes_at']);
+            ->get(['id', 'title', 'description', 'instructions', 'status', 'order_type', 'opens_at', 'closes_at']);
 
         $sessionIds = $sessions->pluck('id')->all();
 
@@ -94,10 +94,12 @@ class PublicExamPagesController extends Controller
             return [
                 'id' => $session->id,
                 'title' => $session->title,
+                'description' => $session->description,
+                'instructions' => $session->instructions,
                 'status' => $session->status,
                 'order_type' => $session->order_type,
-                'opens_at' => $session->opens_at,
-                'closes_at' => $session->closes_at,
+                'opens_at' => \Carbon\Carbon::parse($session->opens_at, config('app.timezone'))->toIso8601String(),
+                'closes_at' => \Carbon\Carbon::parse($session->closes_at, config('app.timezone'))->toIso8601String(),
                 'packages' => $sessionPackages->get($session->id, collect())->values(),
                 'active_token' => $sessionTokens->get($session->id)?->token ?? null,
                 'participants_count' => (int) ($participantCounts->get($session->id) ?? 0),
@@ -112,6 +114,7 @@ class PublicExamPagesController extends Controller
 
         return Inertia::render('Dashboard/Admin/PublicExam/Sessions', [
             'detailMode' => $session !== null,
+            'examTimezone' => config('app.timezone'),
             'sessions' => $sessionsWithDetails,
             'packages' => $availablePackages,
             'stats' => [

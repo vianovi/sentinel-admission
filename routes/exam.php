@@ -153,6 +153,7 @@ Route::middleware(['auth', RoleMiddleware::class.':admin'])
         Route::get('/public-v2/sessions/{session}', [AdminPublicSessionV2::class, 'show'])->name('public-v2.sessions.show');
         Route::post('/public-v2/sessions/{session}/publish', [AdminPublicSessionV2::class, 'publish'])->name('public-v2.sessions.publish');
         Route::put('/public-v2/sessions/{session}/packages', [AdminPublicSessionV2::class, 'updatePackages'])->name('public-v2.sessions.packages.update');
+        Route::put('/public-v2/sessions/{session}', [AdminPublicSessionV2::class, 'update'])->name('public-v2.sessions.update');
         Route::post('/public-v2/sessions/{session}/close', [AdminPublicSessionV2::class, 'close'])->name('public-v2.sessions.close');
         Route::post('/public-v2/sessions/{session}/tokens', [AdminPublicSessionV2::class, 'token'])->name('public-v2.sessions.tokens.store');
 
