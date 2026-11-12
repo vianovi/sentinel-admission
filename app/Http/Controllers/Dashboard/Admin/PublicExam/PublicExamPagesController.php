@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard\Admin\PublicExam;
 
 use App\Http\Controllers\Controller;
+use App\Models\SystemActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -10,6 +11,30 @@ use Inertia\Response;
 
 class PublicExamPagesController extends Controller
 {
+    public function package(int $package): Response
+    {
+        $record = DB::table('exam_public_packages as package')
+            ->join('exam_public_subjects as subject', 'subject.id', '=', 'package.exam_public_subject_id')
+            ->where('package.id', $package)
+            ->first(['package.*', 'subject.name as subject_name']);
+        abort_unless($record, 404);
+
+        return Inertia::render('Dashboard/Admin/PublicExam/PackageShow', [
+            'examPackage' => $record,
+            'imports' => SystemActivityLog::query()->where('module', 'public_exam')
+                ->where('target_type', 'PublicExamPackage')->where('target_id', (string) $package)
+                ->whereIn('action', ['public_exam.import.completed', 'public_exam.import.failed'])
+                ->latest('id')->get(['id', 'actor_name', 'created_at', 'metadata']),
+            'questions' => DB::table('exam_public_questions')->where('exam_public_package_id', $package)
+                ->whereNull('deleted_at')->orderBy('sort_order')->orderBy('id')
+                ->get(['id', 'question_text', 'options', 'correct_answer', 'point', 'is_active']),
+            'sessions' => DB::table('exam_public_session_packages as assignment')
+                ->join('exam_public_sessions as session', 'session.id', '=', 'assignment.exam_public_session_id')
+                ->where('assignment.exam_public_package_id', $package)
+                ->orderByDesc('session.id')->get(['session.id', 'session.title', 'session.status']),
+        ]);
+    }
+
     public function packages(): Response
     {
         $packages = DB::table('exam_public_packages as package')
@@ -32,9 +57,13 @@ class PublicExamPagesController extends Controller
         ]);
     }
 
-    public function sessions(): Response
+    public function sessions(?int $session = null): Response
     {
+        if ($session !== null) {
+            abort_unless(DB::table('exam_public_sessions')->where('id', $session)->exists(), 404);
+        }
         $sessions = DB::table('exam_public_sessions')->orderByDesc('id')
+            ->when($session !== null, fn ($query) => $query->where('id', $session))
             ->get(['id', 'title', 'status', 'order_type', 'opens_at', 'closes_at']);
 
         $sessionIds = $sessions->pluck('id')->all();
@@ -82,13 +111,14 @@ class PublicExamPagesController extends Controller
             ->orderBy('subject.name')->get(['package.id', 'package.title', 'subject.name as subject_name', 'subject.id as subject_id']);
 
         return Inertia::render('Dashboard/Admin/PublicExam/Sessions', [
+            'detailMode' => $session !== null,
             'sessions' => $sessionsWithDetails,
             'packages' => $availablePackages,
             'stats' => [
                 'total' => $sessions->count(),
                 'published' => $sessions->where('status', 'published')->count(),
                 'available_packages' => $availablePackages->count(),
-                'total_participants' => (int) DB::table('exam_public_participants')->count(),
+                'total_participants' => (int) $participantCounts->sum(),
             ],
         ]);
     }

@@ -4,12 +4,12 @@
 - Master status: `in_progress`
 - Active task: `feat/public-exam-rebuild`
 - Active slice: `public-exam-rebuild-v2`
-- Slice phase: `admin_browser_smoke_verified_full_flow_review_pending`
+- Slice phase: `public_package_session_detail_parity_verified`
 - Repository root: `/home/silinux/Documents/MyPlaygraund/Laravel-Project/sentinel-admission`
 - Current branch: `feature/public-exam-rebuild`
-- Latest work: `Return point 781822c and admin milestone 62b3db5 committed. Subsequent uncommitted audit fix protects sessions with joined participants from package deletion or reassignment. Authenticated browser smoke tested against isolated SQLite at /tmp/sentinel-exam-browser/database.sqlite; no demo database writes.`
-- Last successful verification: `Full SQLite suite 170 passed, 9 skipped (1372 assertions); focused bank/session tests 15 passed (165 assertions), TypeScript/Pint/build passed (12.33s). Authenticated Playwright loaded category/package/session/result pages; created MTK mapel and one draft package only in isolated SQLite, import control rendered, no console errors on checked pages. Actual XLSX import to browser, full four-subject run, concurrent mutations, and demo environment remain unverified.`
+- Latest work: `Public package creation and Kelola Soal now navigate to a dedicated package detail page with XLSX workflow, complete answer-option review, publication, related sessions, and persisted import reports using existing SystemActivityLog storage. Added scoped session detail navigation with inline participant management and distinct-subject custom selectors. Public scoring rules and internal retirement remain intact; no schema or live data changed.`
+- Last successful verification: `2026-11-12: focused public admin/bank/session tests 19 passed (326 assertions); Pint passed; final TypeScript and Vite build passed (10.23s); diff check passed. Authenticated Playwright on isolated SQLite verified create-to-detail navigation, XLSX import and answer review, publication, rejected mismatched import and persisted failure report, inline session roster, and 390px overflow checks. Temporary server stopped. Full-suite verification predates these changes.`
 - Current blocker: `None. B-004 contained. B-005 resolved.`
-- Human visual review: `HUMAN VISUAL REVIEW REQUIRED for revised public package/results UI. Authenticated browser interaction remains UNVERIFIED; no safe admin browser fixture is available in the inspected test setup.`
-- Next exact action: `Re-run full suite/build for joined-participant guard, commit scoped audit fix if green, then continue end-to-end XLSX/session/participant browser flow on isolated SQLite. Resolve template download/public edit and import-review gaps before claiming production readiness. Keep demo data untouched.`
-- Last updated: `2026-11-07`
+- Human visual review: `Owner reviewed the current UI and reported it acceptable on 2026-11-12. This acceptance covers the reviewed package/session-detail changes, not complete production readiness or four-subject participant execution.`
+- Next exact action: `Review the public package/detail and session/detail UI with owner. Imports remain atomic (no partial success), and reports use existing system audit storage rather than internal import batches. Batch-level question removal is not added. Complete four-subject/session/participant browser coverage before production-readiness claims. No commit without explicit instruction.`
+- Last updated: `2026-11-12`

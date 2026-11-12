@@ -1,6 +1,9 @@
-import { useState, useMemo, type FormEvent, type ReactNode } from "react";
+import { useState, useMemo, useEffect, type FormEvent, type ReactNode } from "react";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import axios from "axios";
+import Select from "react-select";
+import { makeSelectStyles } from "@/Components/UI/selectStyles";
+import { useTheme } from "@/context/ThemeContext";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import {
     ExamWorkspace,
@@ -55,6 +58,7 @@ type Participant = {
 };
 
 type Props = {
+    detailMode?: boolean;
     sessions: Session[];
     packages: AvailablePackage[];
     stats: {
@@ -68,7 +72,9 @@ type Props = {
 type StatusFilter = "all" | "draft" | "published" | "closed";
 type SortOption = "newest" | "oldest" | "title_asc" | "closes_soon";
 
-export default function PublicSessions({ sessions, packages, stats }: Props) {
+export default function PublicSessions({ sessions, packages, stats, detailMode = false }: Props) {
+    const { theme } = useTheme();
+    const selectStyles = makeSelectStyles(false, theme === "dark");
     const { flash, errors: pageErrors } = usePage<PageProps & { errors: Record<string, string> }>().props;
 
     // Filters & toolbar
@@ -95,6 +101,10 @@ export default function PublicSessions({ sessions, packages, stats }: Props) {
     const [issuedCode, setIssuedCode] = useState<string | null>(null);
 
     const [busy, setBusy] = useState(false);
+
+    useEffect(() => {
+        if (detailMode && sessions[0]) void openParticipantManager(sessions[0]);
+    }, [detailMode, sessions[0]?.id]);
 
     // Group available packages by distinct subjects
     const packagesBySubject = useMemo(() => {
@@ -150,7 +160,7 @@ export default function PublicSessions({ sessions, packages, stats }: Props) {
         try {
             const response = await axios.get(route("admin.exams.public-v2.sessions.show", { session: session.id }));
             const selected = response.data.packages as { id: number; subject_name: string }[];
-            const selectedIds = packagesBySubject.slice(0, 4).map(group => group.packages.find(pkg => selected.some(item => item.id === pkg.id))?.id ?? 0);
+            const selectedIds = Array.from({ length: 4 }, (_, index) => selected[index]?.id ?? 0);
             setEditingDraftSession(session);
             setFormTitle(session.title);
             setFormOrderType(session.order_type as "free" | "sequential");
@@ -333,17 +343,17 @@ export default function PublicSessions({ sessions, packages, stats }: Props) {
 
     return (
         <>
-            <Head title="Sesi Ujian Publik" />
+            <Head title={detailMode ? sessions[0].title : "Sesi Ujian Publik"} />
 
             <ExamWorkspace active="sessions">
                 <PageHeader
-                    title="Pengaturan Sesi Ujian Publik"
+                    title={detailMode ? sessions[0].title : "Pengaturan Sesi Ujian Publik"}
                     badge="LANGKAH 3: JADWAL & AKSES PESERTA"
                     description="Jadwalkan sesi ujian publik 4 mata pelajaran, aktifkan token ruang ujian, dan daftarkan peserta ujian."
                     icon="fa-solid fa-calendar-check"
                     actions={
                         <div className="flex flex-wrap items-center gap-2.5">
-                            {packages.length < 4 ? (
+                            {detailMode ? <Link href={route("admin.public-exams.sessions.index")} className={secondaryButtonClass}>Kembali ke Sesi Ujian</Link> : packagesBySubject.length < 4 ? (
                                 <Link
                                     href="/dashboard/admin/public-exams/packages"
                                     className="inline-flex items-center gap-2 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 px-4 py-2.5 text-xs font-extrabold hover:bg-amber-500/30 transition-all shadow-lg shadow-amber-500/10"
@@ -441,7 +451,7 @@ export default function PublicSessions({ sessions, packages, stats }: Props) {
 
                 {/* Session List Section */}
                 <section className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-sm overflow-hidden space-y-4">
-                    <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-white/10 space-y-4">
+                    {!detailMode && <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-white/10 space-y-4">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div>
                                 <h2 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
@@ -459,7 +469,7 @@ export default function PublicSessions({ sessions, packages, stats }: Props) {
                             <button
                                 type="button"
                                 onClick={openCreateModal}
-                                disabled={packages.length < 4}
+                                disabled={packagesBySubject.length < 4}
                                 className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-4 py-2 text-xs font-black text-slate-950 hover:from-amber-400 hover:to-amber-500 transition-all shadow-md shadow-amber-500/20 whitespace-nowrap self-start sm:self-auto disabled:opacity-50"
                             >
                                 <i className="fa-solid fa-plus text-xs" /> Buat Sesi Baru
@@ -497,19 +507,13 @@ export default function PublicSessions({ sessions, packages, stats }: Props) {
                                     ))}
                                 </div>
 
-                                <select
-                                    value={sortBy}
-                                    onChange={(e) => setSortBy(e.target.value as SortOption)}
-                                    className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200"
-                                >
-                                    <option value="newest">Terbaru</option>
-                                    <option value="oldest">Terlama</option>
-                                    <option value="title_asc">Judul (A-Z)</option>
-                                    <option value="closes_soon">Segera Berakhir</option>
-                                </select>
+                                <Select aria-label="Urutkan sesi" styles={selectStyles}
+                                    options={[{ value: "newest", label: "Terbaru" }, { value: "oldest", label: "Terlama" }, { value: "title_asc", label: "Judul (A-Z)" }, { value: "closes_soon", label: "Segera Berakhir" }]}
+                                    value={{ value: sortBy, label: { newest: "Terbaru", oldest: "Terlama", title_asc: "Judul (A-Z)", closes_soon: "Segera Berakhir" }[sortBy] }}
+                                    onChange={option => setSortBy((option?.value ?? "newest") as SortOption)} />
                             </div>
                         </div>
-                    </div>
+                    </div>}
 
                     {/* Session Cards Grid */}
                     <div className="p-4 sm:p-5">
@@ -520,7 +524,7 @@ export default function PublicSessions({ sessions, packages, stats }: Props) {
                                 description="Buat sesi baru dengan memilih 4 paket mapel berbeda."
                             />
                         ) : (
-                            <div className="grid gap-4 lg:grid-cols-2">
+                            <div className="grid gap-4">
                                 {filteredSessions.map((sess) => {
                                     return (
                                         <div
@@ -540,7 +544,7 @@ export default function PublicSessions({ sessions, packages, stats }: Props) {
                                                             </span>
                                                         </div>
                                                         <h3 className="mt-1 text-base font-bold text-slate-900 dark:text-white">
-                                                            {sess.title}
+                                                            {detailMode ? sess.title : <Link href={route("admin.public-exams.sessions.show", { session: sess.id })} className="hover:text-amber-600 hover:underline">{sess.title} · Kelola Sesi</Link>}
                                                         </h3>
                                                     </div>
                                                     <StatusPill value={sess.status} />
@@ -555,17 +559,18 @@ export default function PublicSessions({ sessions, packages, stats }: Props) {
                                                 {/* 4 Packages Badges */}
                                                 <div>
                                                     <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-                                                        4 Paket Terhubung
+                                                        {sess.packages.length} Paket Terhubung
                                                     </span>
                                                     <div className="flex flex-wrap gap-1.5">
                                                         {sess.packages.map((p) => (
-                                                            <span
+                                                            <Link
                                                                 key={p.id}
+                                                                href={route("admin.public-exams.packages.show", { package: p.id })}
                                                                 className="rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 px-2 py-1 text-[11px] font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 shadow-xs"
                                                             >
                                                                 <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
                                                                 <strong className="text-amber-600 dark:text-amber-400">{p.subject_name}:</strong> {p.title}
-                                                            </span>
+                                                            </Link>
                                                         ))}
                                                     </div>
                                                 </div>
@@ -751,14 +756,10 @@ export default function PublicSessions({ sessions, packages, stats }: Props) {
 
                                 {!editingDraftSession && <div>
                                     <label className={labelClass}>Urutan Pengerjaan Paket</label>
-                                    <select
-                                        value={formOrderType}
-                                        onChange={(e) => setFormOrderType(e.target.value as "free" | "sequential")}
-                                        className={inputClass}
-                                    >
-                                        <option value="free">Bebas Memilih (Peserta bebas memilih urutan mapel)</option>
-                                        <option value="sequential">Wajib Berurutan (Harus menyelesaikan mapel 1 lalu mapel 2, dst.)</option>
-                                    </select>
+                                    <Select aria-label="Urutan pengerjaan" styles={selectStyles}
+                                        options={[{ value: "free", label: "Bebas Memilih" }, { value: "sequential", label: "Wajib Berurutan" }]}
+                                        value={{ value: formOrderType, label: formOrderType === "free" ? "Bebas Memilih" : "Wajib Berurutan" }}
+                                        onChange={option => setFormOrderType(option?.value === "sequential" ? "sequential" : "free")} />
                                 </div>}
 
                                 {/* 4 Package Selectors for 4 distinct subjects */}
@@ -767,29 +768,19 @@ export default function PublicSessions({ sessions, packages, stats }: Props) {
                                         Pilih Tepat 4 Paket dari 4 Jenis Mapel Berbeda
                                     </span>
 
-                                    {packagesBySubject.slice(0, 4).map((group, idx) => (
-                                        <div key={idx}>
-                                            <label className={labelClass}>Mapel {idx + 1}: {group.subject_name}</label>
-                                            <select
-                                                value={formPackageIds[idx] ?? 0}
-                                                onChange={(e) => {
-                                                    const val = Number(e.target.value);
-                                                    setFormPackageIds((current) =>
-                                                        current.map((item, pIdx) => (pIdx === idx ? val : item))
-                                                    );
-                                                }}
-                                                className={inputClass}
-                                                required
-                                            >
-                                                <option value={0}>Pilih Paket {group.subject_name}</option>
-                                                {group.packages.map((pkg) => (
-                                                    <option key={pkg.id} value={pkg.id}>
-                                                        {pkg.title} ({pkg.subject_name})
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                    ))}
+                                    {Array.from({ length: 4 }, (_, idx) => {
+                                        const selected = packages.find(pkg => pkg.id === formPackageIds[idx]);
+                                        const otherSubjects = formPackageIds.filter((_, index) => index !== idx).map(id => packages.find(pkg => pkg.id === id)?.subject_id);
+                                        return <div key={idx}>
+                                            <label className={labelClass}>Paket {idx + 1}</label>
+                                            <Select aria-label={`Paket ${idx + 1}`} styles={selectStyles}
+                                                options={packages.filter(pkg => !otherSubjects.includes(pkg.subject_id)).map(pkg => ({ value: pkg.id, label: `${pkg.subject_name} · ${pkg.title}` }))}
+                                                value={selected ? { value: selected.id, label: `${selected.subject_name} · ${selected.title}` } : null}
+                                                placeholder="Pilih paket dari mapel berbeda"
+                                                onChange={option => setFormPackageIds(current => current.map((id, index) => index === idx ? option?.value ?? 0 : id))}
+                                                required />
+                                        </div>;
+                                    })}
                                 </div>
 
                                 <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100 dark:border-white/10">
@@ -812,12 +803,12 @@ export default function PublicSessions({ sessions, packages, stats }: Props) {
                 {/* Modal Participant Manager for a Session */}
                 {selectedSessionForParticipants && (
                     <div
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm overflow-y-auto"
-                        onClick={(e) => { if (e.target === e.currentTarget) closeParticipantManager(); }}
-                        role="dialog"
-                        aria-modal="true"
+                        className={detailMode ? "min-w-0" : "fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm overflow-y-auto"}
+                        onClick={(e) => { if (!detailMode && e.target === e.currentTarget) closeParticipantManager(); }}
+                        role={detailMode ? undefined : "dialog"}
+                        aria-modal={detailMode ? undefined : true}
                     >
-                        <div className="w-full max-w-3xl rounded-2xl border border-slate-200 dark:border-amber-500/30 bg-white dark:bg-slate-900 p-6 shadow-2xl space-y-4 my-8">
+                        <div className={`w-full rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 p-4 space-y-4 ${detailMode ? "" : "max-w-3xl my-8"}`}>
                             <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
                                 <div>
                                     <span className="text-[10px] font-bold uppercase tracking-wider text-amber-500">
@@ -827,9 +818,9 @@ export default function PublicSessions({ sessions, packages, stats }: Props) {
                                         Kelola & Daftarkan Peserta Ujian Publik
                                     </h3>
                                 </div>
-                                <button type="button" onClick={closeParticipantManager} className="text-slate-400 hover:text-slate-600">
+                                {!detailMode && <button type="button" onClick={closeParticipantManager} className="text-slate-400 hover:text-slate-600">
                                     <i className="fa-solid fa-xmark text-sm" />
-                                </button>
+                                </button>}
                             </div>
 
                             {/* Alert when newly registered participant code is issued */}

@@ -1,8 +1,10 @@
 import { useState, useMemo, type FormEvent, type ReactNode } from "react";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import axios from "axios";
+import Select from "react-select";
+import { makeSelectStyles } from "@/Components/UI/selectStyles";
+import { useTheme } from "@/context/ThemeContext";
 import DashboardLayout from "@/Layouts/DashboardLayout";
-import RichExamText from "@/Components/Exam/Shared/RichExamText";
 import {
     ExamWorkspace,
     FlashMessage,
@@ -32,7 +34,6 @@ type Package = {
     question_count: number;
 };
 type Subject = { id: number; name: string };
-type Question = { id: number; question_text: string; options: string; correct_answer: string; point: number; is_active: boolean };
 type Props = {
     packages: Package[];
     subjects: Subject[];
@@ -50,6 +51,8 @@ type SortOption = "newest" | "title_asc" | "questions_desc";
 
 export default function PublicPackages({ packages, subjects, stats }: Props) {
     const { flash, errors: pageErrors } = usePage<PageProps & { errors: Record<string, string> }>().props;
+    const { theme } = useTheme();
+    const selectStyles = makeSelectStyles(false, theme === "dark");
 
     // Filter & search states
     const [search, setSearch] = useState("");
@@ -63,13 +66,7 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
     const [formTitle, setFormTitle] = useState("");
     const [formCode, setFormCode] = useState("");
 
-    // Question Manager Modal states
-    const [activePackageForQuestions, setActivePackageForQuestions] = useState<Package | null>(null);
-    const [questions, setQuestions] = useState<Question[]>([]);
-    const [loadingQuestions, setLoadingQuestions] = useState(false);
-
     const [busy, setBusy] = useState(false);
-    const [importFile, setImportFile] = useState<File | null>(null);
 
     const filteredPackages = useMemo(() => {
         return packages
@@ -113,35 +110,16 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
         event.preventDefault();
         setBusy(true);
         try {
-            await axios.post(route("admin.exams.public-bank.packages.store"), {
+            const response = await axios.post<{ id: number }>(route("admin.exams.public-bank.packages.store"), {
                 exam_public_subject_id: formCategory,
                 title: formTitle,
                 code: formCode,
             });
             showSuccessToast("Paket dibuat. Import XLSX untuk mengisi soal dan konfigurasi.");
             closePackageModal();
-            router.reload();
+            router.visit(route("admin.public-exams.packages.show", { package: response.data.id }));
         } catch (err) {
             showErrorToast(axios.isAxiosError(err) ? err.response?.data?.message ?? "Gagal menyimpan paket." : "Terjadi kesalahan.");
-        } finally {
-            setBusy(false);
-        }
-    };
-
-    const importQuestions = async (event: FormEvent) => {
-        event.preventDefault();
-        if (!activePackageForQuestions || !importFile) return;
-        setBusy(true);
-        try {
-            const data = new FormData();
-            data.append("file", importFile);
-            const response = await axios.post<{ imported: number; active: number }>(route("admin.exams.public-bank.packages.import", { package: activePackageForQuestions.id }), data);
-            showSuccessToast(`${response.data.imported} soal diimpor, ${response.data.active} aktif. Periksa sebelum terbitkan.`);
-            setImportFile(null);
-            closeQuestionManager();
-            router.reload();
-        } catch (error) {
-            showErrorToast(axios.isAxiosError(error) ? (error.response?.data?.errors?.file?.[0] ?? error.response?.data?.message ?? "Import gagal.") : "File gagal diproses.");
         } finally {
             setBusy(false);
         }
@@ -187,27 +165,6 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
         }
     };
 
-    const openQuestionManager = async (pkg: Package) => {
-        setActivePackageForQuestions(pkg);
-        setImportFile(null);
-        setLoadingQuestions(true);
-        try {
-            const response = await axios.get<{ questions: Question[] }>(route("admin.exams.public-bank.questions.index", { package: pkg.id }));
-            setQuestions(response.data.questions);
-        } catch {
-            showErrorToast("Gagal memuat daftar soal.");
-        } finally {
-            setLoadingQuestions(false);
-        }
-    };
-
-    const closeQuestionManager = () => {
-        setActivePackageForQuestions(null);
-        setQuestions([]);
-        setImportFile(null);
-    };
-
-
     return (
         <>
             <Head title="Paket Ujian Publik" />
@@ -223,7 +180,7 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                             {subjects.length === 0 ? (
                                 <Link
                                     href="/dashboard/admin/public-exams/categories"
-                                    className="inline-flex items-center gap-2 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 px-4 py-2.5 text-xs font-extrabold hover:bg-amber-500/30 transition-all shadow-lg shadow-amber-500/10"
+                                    className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-amber-600/30 bg-amber-50 px-4 py-2.5 text-xs font-bold text-amber-900 transition hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-500/30 dark:border-amber-500/40 dark:bg-amber-500/15 dark:text-amber-200 dark:hover:bg-amber-500/25"
                                 >
                                     <i className="fa-solid fa-layer-group" /> Buat Jenis Mapel Dahulu
                                 </Link>
@@ -231,14 +188,14 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                                 <button
                                     type="button"
                                     onClick={openCreateModal}
-                                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-4 py-2.5 text-xs font-black text-slate-950 hover:from-amber-400 hover:to-amber-500 transition-all shadow-lg shadow-amber-500/20"
+                                    className={primaryButtonClass}
                                 >
                                     <i className="fa-solid fa-plus text-xs" /> Buat Paket Baru
                                 </button>
                             )}
                             <Link
                                 href="/dashboard/admin/public-exams/sessions"
-                                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-white/10 px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+                                className={`${secondaryButtonClass} bg-white dark:bg-slate-900`}
                             >
                                 Lanjut ke Sesi Publik <i className="fa-solid fa-arrow-right text-xs" />
                             </Link>
@@ -249,60 +206,47 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                 <FlashMessage value={flash.success} type="success" />
                 <FlashMessage value={flash.error ?? pageErrors.package} />
 
-                {/* 4 Stat Cards */}
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                    <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 p-4 shadow-sm">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Paket Publik</span>
-                        <p className="mt-1 text-2xl font-black text-slate-900 dark:text-white">{stats.total}</p>
-                    </div>
-                    <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 p-4 shadow-sm">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Paket Diterbitkan</span>
-                        <p className="mt-1 text-2xl font-black text-emerald-600 dark:text-emerald-400">{stats.published}</p>
-                    </div>
-                    <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 p-4 shadow-sm">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Butir Soal</span>
-                        <p className="mt-1 text-2xl font-black text-slate-900 dark:text-white">{stats.total_questions}</p>
-                    </div>
-                    <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 p-4 shadow-sm">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Jenis Mata Pelajaran</span>
-                        <p className="mt-1 text-2xl font-black text-slate-900 dark:text-white">{stats.total_subjects}</p>
-                    </div>
-                </div>
-
                 <WorkflowRail
                     items={[
                         {
                             label: "Langkah 1",
-                            title: "Kategori Mapel",
-                            description: `${stats.total_subjects} mata pelajaran terdaftar (IPAS, PAIBP, MTK, B.INDO).`,
-                            icon: "fa-solid fa-layer-group",
-                            state: stats.total_subjects >= 4 ? "done" : "active",
-                        },
-                        {
-                            label: "Langkah 2",
                             title: "Buat Paket",
-                            description: `${stats.total} paket dibuat (masing-masing 3 paket per mapel).`,
+                            description: `${stats.total.toLocaleString("id-ID")} paket, ${stats.total_subjects.toLocaleString("id-ID")} jenis mapel tersedia.`,
                             icon: "fa-solid fa-box-archive",
                             state: stats.total > 0 ? "done" : "active",
                         },
                         {
+                            label: "Langkah 2",
+                            title: "Siapkan XLSX",
+                            description: "Samakan jenis mapel, judul, dan kode pada file dengan paket.",
+                            icon: "fa-solid fa-file-excel",
+                            state: stats.total > 0 ? "active" : "idle",
+                        },
+                        {
                             label: "Langkah 3",
-                            title: "Import & Review Soal",
-                            description: "Impor XLSX; hanya soal yang ditandai aktif di file yang dipakai.",
-                            icon: "fa-solid fa-list-check",
+                            title: "Import Soal",
+                            description: `${stats.total_questions.toLocaleString("id-ID")} soal aktif telah diimpor.`,
+                            icon: "fa-solid fa-file-import",
                             state: stats.total_questions > 0 ? "done" : stats.total > 0 ? "active" : "idle",
                         },
                         {
                             label: "Langkah 4",
-                            title: "Terbitkan Paket",
-                            description: `${stats.published} paket berstatus published dan siap dimasukkan ke sesi.`,
-                            icon: "fa-solid fa-circle-check",
-                            state: stats.published >= 4 ? "done" : stats.total_questions > 0 ? "active" : "idle",
+                            title: "Review Bank Soal",
+                            description: "Periksa isi soal dan konfigurasi paket sebelum terbit.",
+                            icon: "fa-solid fa-list-check",
+                            state: stats.total_questions > 0 ? "active" : "idle",
                         },
                         {
                             label: "Langkah 5",
+                            title: "Terbitkan Paket",
+                            description: `${stats.published.toLocaleString("id-ID")} paket siap dimasukkan ke sesi.`,
+                            icon: "fa-solid fa-circle-check",
+                            state: stats.published > 0 ? "done" : stats.total_questions > 0 ? "active" : "idle",
+                        },
+                        {
+                            label: "Langkah 6",
                             title: "Jadwalkan Sesi",
-                            description: "Pilih 4 paket berbeda untuk 1 sesi ujian publik.",
+                            description: "Pilih empat paket dari mapel berbeda untuk satu sesi publik.",
                             icon: "fa-solid fa-calendar-check",
                             state: stats.published >= 4 ? "active" : "idle",
                         },
@@ -310,12 +254,11 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                 />
 
                 {/* Package List Card with Filters, Tabs, and Table/Cards */}
-                <section className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-sm overflow-hidden space-y-4">
+                <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900">
                     <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-white/10 space-y-4">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div>
                                 <h2 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-                                    <i className="fa-solid fa-box-open text-amber-500" />
                                     <span>Daftar Paket Soal Ujian Publik</span>
                                     <span className="rounded-full bg-slate-100 dark:bg-white/10 px-2 py-0.5 text-xs font-bold text-slate-600 dark:text-slate-300">
                                         {packages.length}
@@ -326,13 +269,13 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                                 </p>
                             </div>
 
-                            <button
+                            {subjects.length > 0 && <button
                                 type="button"
                                 onClick={openCreateModal}
-                                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-4 py-2 text-xs font-black text-slate-950 hover:from-amber-400 hover:to-amber-500 transition-all shadow-md shadow-amber-500/20 whitespace-nowrap self-start sm:self-auto"
+                                className={`${primaryButtonClass} self-start whitespace-nowrap sm:self-auto`}
                             >
                                 <i className="fa-solid fa-plus text-xs" /> Buat Paket Baru
-                            </button>
+                            </button>}
                         </div>
 
                         {/* Search & Filter Toolbar */}
@@ -344,21 +287,23 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
                                     placeholder="Cari judul paket, kode, mata pelajaran..."
-                                    className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/60 pl-8 pr-3 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:border-amber-500 focus:outline-none"
+                                    className={`${inputClass} pl-9`}
+                                    aria-label="Cari paket soal publik"
                                 />
                             </div>
 
                             <div className="flex flex-wrap items-center gap-2">
                                 <div className="inline-flex rounded-xl bg-slate-100 dark:bg-slate-800 p-0.5 text-xs font-bold">
                                     {(["all", "draft", "published", "closed"] as StatusFilter[]).map((tab) => (
-                                        <button
+                                                <button
                                             key={tab}
                                             type="button"
                                             onClick={() => setStatusFilter(tab)}
+                                                    aria-pressed={statusFilter === tab}
                                             className={`rounded-lg px-2.5 py-1 transition-all capitalize ${
                                                 statusFilter === tab
                                                     ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm"
-                                                    : "text-slate-500 hover:text-slate-800 dark:text-slate-400"
+                                                            : "text-slate-700 hover:bg-white/70 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-900"
                                             }`}
                                         >
                                             {tab === "all" ? "Semua" : tab}
@@ -366,101 +311,90 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                                     ))}
                                 </div>
 
-                                <select
-                                    value={subjectFilter}
-                                    onChange={(e) => setSubjectFilter(e.target.value)}
-                                    className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200"
-                                >
-                                    <option value="all">Semua Kategori</option>
-                                    {subjects.map((sub) => (
-                                        <option key={sub.id} value={sub.id}>{sub.name}</option>
-                                    ))}
-                                </select>
+                                <div className="min-w-[180px]">
+                                    <Select
+                                        aria-label="Filter jenis mapel"
+                                        options={[{ value: "all", label: "Semua Jenis Mapel" }, ...subjects.map(sub => ({ value: String(sub.id), label: sub.name }))]}
+                                        value={[{ value: "all", label: "Semua Jenis Mapel" }, ...subjects.map(sub => ({ value: String(sub.id), label: sub.name }))].find(option => option.value === subjectFilter)}
+                                        onChange={option => setSubjectFilter(option?.value ?? "all")}
+                                        styles={selectStyles}
+                                        menuPortalTarget={typeof document !== "undefined" ? document.body : undefined}
+                                    />
+                                </div>
 
-                                <select
-                                    value={sortBy}
-                                    onChange={(e) => setSortBy(e.target.value as SortOption)}
-                                    className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200"
-                                >
-                                    <option value="newest">Terbaru</option>
-                                    <option value="title_asc">Judul (A-Z)</option>
-                                    <option value="questions_desc">Soal Terbanyak</option>
-                                </select>
+                                <div className="min-w-[165px]">
+                                    <Select
+                                        aria-label="Urutkan paket"
+                                        options={[{ value: "newest", label: "Terbaru" }, { value: "title_asc", label: "Judul (A-Z)" }, { value: "questions_desc", label: "Soal Terbanyak" }]}
+                                        value={[{ value: "newest", label: "Terbaru" }, { value: "title_asc", label: "Judul (A-Z)" }, { value: "questions_desc", label: "Soal Terbanyak" }].find(option => option.value === sortBy)}
+                                        onChange={option => setSortBy((option?.value ?? "newest") as SortOption)}
+                                        styles={selectStyles}
+                                        menuPortalTarget={typeof document !== "undefined" ? document.body : undefined}
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Package Cards Grid */}
-                    <div className="p-4 sm:p-5">
+                    {/* Full-width package list follows the internal package workflow. */}
+                    <div>
                         {filteredPackages.length === 0 ? (
-                            <EmptyState
-                                icon="fa-solid fa-box-open"
-                                title="Tidak ada paket soal yang cocok"
-                                description="Coba ubah kata kunci pencarian atau buat paket baru."
-                            />
+                            <div className="p-8">
+                                <EmptyState
+                                    icon="fa-solid fa-box-open"
+                                    title={packages.length === 0 ? "Belum ada paket soal publik" : "Tidak ada paket soal yang cocok"}
+                                    description={packages.length === 0 ? "Buat jenis mapel, lalu buat paket untuk mengimpor XLSX." : "Coba ubah filter atau kata kunci pencarian."}
+                                />
+                            </div>
                         ) : (
-                            <div className="grid gap-4 md:grid-cols-2">
+                            <div className="divide-y divide-slate-200 dark:divide-white/10">
                                 {filteredPackages.map((pkg) => {
                                     const isComplete = pkg.question_count > 0;
                                     return (
                                         <div
                                             key={pkg.id}
-                                            className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-slate-800/30 p-4 shadow-sm hover:border-amber-500/50 transition-all flex flex-col justify-between gap-3"
+                                            className="flex flex-col gap-4 p-4 transition-colors hover:bg-slate-50/70 sm:p-5 lg:flex-row lg:items-start lg:justify-between dark:hover:bg-slate-800/40"
                                         >
-                                            <div>
-                                                <div className="flex items-start justify-between gap-2">
-                                                    <div className="min-w-0">
-                                                        <span className="inline-block rounded-md bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
-                                                            {pkg.subject_name}
-                                                        </span>
-                                                        <h3 className="mt-1 text-sm font-bold text-slate-900 dark:text-white truncate">
-                                                            {pkg.title}
-                                                        </h3>
-                                                        <span className="text-[11px] font-mono text-slate-400">
-                                                            Kode: {pkg.code}
-                                                        </span>
-                                                    </div>
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <h3 className="text-base font-extrabold text-slate-900 dark:text-white">{pkg.title}</h3>
                                                     <StatusPill value={pkg.status} />
+                                                    <span className="rounded-md border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[11px] font-bold text-amber-800 dark:text-amber-300">{pkg.subject_name}</span>
+                                                    <span className="rounded-md bg-slate-100 px-2 py-0.5 font-mono text-[11px] font-bold text-slate-700 dark:bg-white/10 dark:text-slate-300">{pkg.code}</span>
                                                 </div>
 
-                                                <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-slate-600 dark:text-slate-300">
-                                                    <div className="rounded-lg bg-white dark:bg-slate-900 p-2 border border-slate-100 dark:border-white/5">
-                                                        <span className="block text-[10px] text-slate-400 uppercase font-semibold">Durasi</span>
-                                                        <span className="font-bold">{pkg.duration_minutes} Menit</span>
-                                                    </div>
-                                                    <div className="rounded-lg bg-white dark:bg-slate-900 p-2 border border-slate-100 dark:border-white/5">
-                                                        <span className="block text-[10px] text-slate-400 uppercase font-semibold">Butir Soal</span>
-                                                        <span className={`font-bold ${isComplete ? "text-emerald-500" : "text-amber-500"}`}>
-                                                            {pkg.question_count} Soal Aktif
-                                                        </span>
-                                                    </div>
+                                                <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                                                    <span><i className="fa-solid fa-list-check mr-1 text-slate-400" />{pkg.question_count} soal aktif</span>
+                                                    <span aria-hidden="true">·</span>
+                                                    <span><i className="fa-solid fa-clock mr-1 text-slate-400" />{pkg.passing_score === null ? "Durasi belum diimpor" : `${pkg.duration_minutes} menit`}</span>
+                                                    {pkg.passing_score !== null && <>
+                                                        <span aria-hidden="true">·</span>
+                                                        <span><i className="fa-solid fa-bullseye mr-1 text-slate-400" />Ambang &gt; {pkg.passing_score}</span>
+                                                    </>}
                                                 </div>
-                                                <p className="mt-2 text-xs text-slate-600 dark:text-slate-300">{pkg.question_count} soal aktif · tandai `aktif = ya` di XLSX untuk dimasukkan ke ujian.</p>
                                                 <p className="mt-2 text-xs text-slate-600 dark:text-slate-300">
                                                     {pkg.passing_score === null || pkg.allow_retry === null || pkg.show_result_to_participant === null
                                                         ? "Pengaturan paket belum lengkap — import XLSX sebelum paket diterbitkan."
-                                                        : `Ambang mapel > ${pkg.passing_score} · Ulang ${pkg.allow_retry ? "aktif" : "nonaktif"} · Nilai peserta ${pkg.show_result_to_participant ? "ditampilkan" : "disembunyikan"}`}
+                                                        : `Ulang ${pkg.allow_retry ? "aktif" : "nonaktif"} · Nilai peserta ${pkg.show_result_to_participant ? "ditampilkan" : "disembunyikan"}`}
                                                 </p>
 
-                                                <div className="mt-2.5">
-                                                    <div className="h-1.5 w-full rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
-                                                        <div
-                                                            className={`h-full rounded-full transition-all ${isComplete ? "bg-emerald-500" : "bg-amber-500"}`}
-                                                            style={{ width: isComplete ? "100%" : "0%" }}
-                                                        />
-                                                    </div>
-                                                </div>
                                             </div>
 
-                                            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200/60 dark:border-white/5 pt-3">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => void openQuestionManager(pkg)}
-                                                    className="inline-flex items-center gap-1.5 rounded-lg bg-slate-200/80 dark:bg-white/10 px-3 py-1.5 text-xs font-bold text-slate-800 dark:text-white hover:bg-slate-300 dark:hover:bg-white/20 transition-all"
+                                            <div className="flex flex-wrap items-center gap-2 border-t border-slate-200 pt-3 lg:max-w-[380px] lg:shrink-0 lg:justify-end lg:border-0 lg:pt-0 dark:border-white/10">
+                                                <Link
+                                                    href={route("admin.public-exams.packages.show", { package: pkg.id })}
+                                                    className="inline-flex min-h-10 max-w-full items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/30 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
                                                 >
                                                     <i className="fa-solid fa-file-import text-xs" />
-                                                    <span>Import XLSX &amp; Review Soal ({pkg.question_count})</span>
-                                                </button>
+                                                    <span>Kelola Soal</span>
+                                                </Link>
+                                                <a
+                                                    href={route("admin.exams.public-bank.packages.template.download", { package: pkg.id })}
+                                                    download
+                                                    className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-emerald-600/30 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-800 transition hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
+                                                >
+                                                    <i className="fa-solid fa-file-arrow-down text-xs" /> Template XLSX
+                                                </a>
 
                                                 <div className="flex items-center gap-1.5">
                                                     {pkg.status === "draft" && isComplete && pkg.passing_score !== null && pkg.allow_retry !== null && pkg.show_result_to_participant !== null && (
@@ -468,12 +402,12 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                                                             type="button"
                                                             onClick={() => void handlePublishPackage(pkg)}
                                                             disabled={busy}
-                                                            className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2.5 py-1.5 text-xs font-bold text-white hover:bg-emerald-500 transition-all"
+                                                            className="inline-flex min-h-10 items-center gap-1 rounded-lg border border-emerald-600/30 bg-emerald-50 px-3 text-xs font-bold text-emerald-800 transition hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
                                                         >
                                                             <i className="fa-solid fa-check text-xs" /> Terbitkan
                                                         </button>
                                                     )}
-                                                    <button type="button" onClick={() => void handleDeletePackage(pkg)} disabled={busy} className="rounded-lg border border-red-500/30 px-2.5 py-1.5 text-xs font-bold text-red-700 hover:bg-red-500/10 focus:outline-none focus:ring-2 focus:ring-red-500/40 disabled:opacity-50 dark:text-red-300" aria-label={`Hapus paket ${pkg.title}`}>
+                                                    <button type="button" onClick={() => void handleDeletePackage(pkg)} disabled={busy} className="inline-flex min-h-10 items-center rounded-lg border border-red-500/30 bg-red-50 px-3 text-xs font-bold text-red-800 transition hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500/40 disabled:opacity-50 dark:bg-red-500/10 dark:text-red-300" aria-label={`Hapus paket ${pkg.title}`}>
                                                         <i className="fa-solid fa-trash-can mr-1" aria-hidden="true" /> Hapus
                                                     </button>
                                                 </div>
@@ -494,35 +428,34 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                         role="dialog"
                         aria-modal="true"
                     >
-                        <div className="w-full max-w-lg rounded-2xl border border-slate-200 dark:border-amber-500/30 bg-white dark:bg-slate-900 p-6 shadow-2xl space-y-4">
+                        <div className="my-8 max-h-[90vh] w-full max-w-xl space-y-5 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-white/10 dark:bg-slate-900">
                             <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
                                 <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                                     <i className="fa-solid fa-box-archive text-amber-500" />
                                     Tambah Paket Soal Publik Baru
                                 </h3>
-                                <button type="button" onClick={closePackageModal} className="text-slate-400 hover:text-slate-600">
+                                <button type="button" onClick={closePackageModal} aria-label="Tutup formulir paket" className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-500/30 dark:text-slate-300 dark:hover:bg-slate-800">
                                     <i className="fa-solid fa-xmark text-sm" />
                                 </button>
                             </div>
 
                             <form onSubmit={handleSavePackage} className="space-y-3.5">
                                 <div>
-                                    <label className={labelClass}>Jenis Mata Pelajaran</label>
-                                    <select
-                                        value={formCategory}
-                                        onChange={(e) => setFormCategory(Number(e.target.value))}
-                                        className={inputClass}
-                                        required
-                                    >
-                                        {subjects.map((sub) => (
-                                            <option key={sub.id} value={sub.id}>{sub.name}</option>
-                                        ))}
-                                    </select>
+                                    <label className={labelClass} htmlFor="public-package-subject">Jenis Mata Pelajaran</label>
+                                    <Select
+                                        inputId="public-package-subject"
+                                        options={subjects.map(sub => ({ value: sub.id, label: sub.name }))}
+                                        value={subjects.map(sub => ({ value: sub.id, label: sub.name })).find(option => option.value === formCategory)}
+                                        onChange={option => setFormCategory(option?.value ?? 0)}
+                                        styles={selectStyles}
+                                        menuPortalTarget={typeof document !== "undefined" ? document.body : undefined}
+                                    />
                                 </div>
 
                                 <div>
-                                    <label className={labelClass}>Judul Paket</label>
+                                    <label className={labelClass} htmlFor="public-package-title">Judul Paket</label>
                                     <input
+                                        id="public-package-title"
                                         type="text"
                                         required
                                         value={formTitle}
@@ -533,8 +466,9 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                                 </div>
 
                                 <div>
-                                        <label className={labelClass}>Kode Paket</label>
+                                        <label className={labelClass} htmlFor="public-package-code">Kode Paket</label>
                                         <input
+                                            id="public-package-code"
                                             type="text"
                                             required
                                             value={formCode}
@@ -543,14 +477,16 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                                             className={inputClass}
                                         />
                                 </div>
-                                <p className="text-xs text-slate-600 dark:text-slate-300">Durasi, ambang mapel, izin ulang dan visibilitas hasil diambil dari XLSX saat import.</p>
-                                <p className="text-xs text-slate-600 dark:text-slate-300">Kategori pada file XLSX harus sama dengan jenis mapel yang dipilih. Sesuaikan file lama sebelum diunggah.</p>
+                                <div className="rounded-lg border border-amber-500/30 bg-amber-50 p-3 text-xs leading-5 text-amber-950 dark:bg-amber-500/10 dark:text-amber-100">
+                                    <p className="font-bold">Langkah berikutnya: import XLSX.</p>
+                                    <p>Durasi, ambang mapel, izin ulang dan visibilitas hasil diambil dari file. Kategori, judul, dan kode pada file harus cocok dengan paket ini.</p>
+                                </div>
 
                                 <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100 dark:border-white/10">
                                     <button type="button" onClick={closePackageModal} className={secondaryButtonClass}>
                                         Batal
                                     </button>
-                                    <button type="submit" disabled={busy} className={primaryButtonClass}>
+                                <button type="submit" disabled={busy || !formCategory} className={primaryButtonClass}>
                                         {busy ? "Menyimpan..." : "Simpan Paket"}
                                     </button>
                                 </div>
@@ -560,90 +496,6 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                 )}
 
                 {/* Modal Question Manager for a Package */}
-                {activePackageForQuestions && (
-                    <div
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm overflow-y-auto"
-                        onClick={(e) => { if (e.target === e.currentTarget) closeQuestionManager(); }}
-                        role="dialog"
-                        aria-modal="true"
-                    >
-                        <div className="w-full max-w-3xl rounded-2xl border border-slate-200 dark:border-amber-500/30 bg-white dark:bg-slate-900 p-6 shadow-2xl space-y-4 my-8">
-                            <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
-                                <div>
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-500">
-                                        {activePackageForQuestions.subject_name} · KODE: {activePackageForQuestions.code}
-                                    </span>
-                                    <h3 className="text-base font-black text-slate-900 dark:text-white">
-                                        Import & Review Soal: {activePackageForQuestions.title}
-                                    </h3>
-                                </div>
-                                <button type="button" onClick={closeQuestionManager} className="text-slate-400 hover:text-slate-600">
-                                    <i className="fa-solid fa-xmark text-sm" />
-                                </button>
-                            </div>
-
-                            {activePackageForQuestions.status === "draft" && questions.length === 0 && <form onSubmit={importQuestions} className="space-y-3 rounded-xl border border-amber-500/20 p-4">
-                                <label htmlFor="public-exam-import" className={labelClass}>Import soal dan konfigurasi dari XLSX</label>
-                                <input id="public-exam-import" type="file" accept=".xlsx" required onChange={event => setImportFile(event.target.files?.[0] ?? null)} className={inputClass} />
-                                <button type="submit" disabled={busy || !importFile} className={primaryButtonClass}>{busy ? "Mengimpor..." : "Validasi & Import XLSX"}</button>
-                            </form>}
-
-                            {loadingQuestions ? (
-                                <div className="py-12 text-center text-xs text-slate-400">
-                                    <i className="fa-solid fa-circle-notch fa-spin text-lg text-amber-500 mb-2" />
-                                    <p>Memuat butir soal...</p>
-                                </div>
-                            ) : (
-                                <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
-                                    {/* Existing Questions List */}
-                                    <div>
-                                        <div className="flex items-center justify-between mb-2">
-                                            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                                                Daftar Soal ({questions.length} Butir)
-                                            </span>
-                                            {questions.some((item) => item.is_active) ? (
-                                                <span className="text-xs font-bold text-emerald-500 flex items-center gap-1">
-                                                    <i className="fa-solid fa-circle-check" /> Soal aktif tersedia
-                                                </span>
-                                            ) : (
-                                                <span className="text-xs font-bold text-amber-500 flex items-center gap-1">
-                                                    <i className="fa-solid fa-triangle-exclamation" /> Belum ada soal aktif
-                                                </span>
-                                            )}
-                                        </div>
-
-                                        {questions.length === 0 ? (
-                                            <EmptyState
-                                                icon="fa-solid fa-list-ol"
-                                                title="Belum ada butir soal"
-                                                description="Upload XLSX dengan kategori, judul dan kode yang cocok. Konfigurasi serta jumlah soal aktif dibaca dari file."
-                                            />
-                                        ) : (
-                                            <div className="space-y-2">
-                                                {questions.map((q, idx) => (
-                                                    <div
-                                                        key={q.id}
-                                                        className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-slate-800/40 p-3 flex items-start justify-between gap-3"
-                                                    >
-                                                        <div className="flex items-start gap-2.5 min-w-0">
-                                                            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-xs font-bold text-amber-600 dark:text-amber-400">
-                                                                {idx + 1}
-                                                            </span>
-                                                            <div className="text-xs text-slate-900 dark:text-white min-w-0">
-                                                                <RichExamText text={q.question_text} />
-                                                                <div className="mt-1 text-slate-500">Kunci: {q.correct_answer} · {q.point} poin · {q.is_active ? "Aktif" : "Nonaktif"}</div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
             </ExamWorkspace>
         </>
     );

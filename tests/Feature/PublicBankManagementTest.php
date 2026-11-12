@@ -6,6 +6,23 @@ use Illuminate\Support\Facades\DB;
 use OpenSpout\Common\Entity\Row;
 use OpenSpout\Writer\XLSX\Writer;
 
+test('admin downloads a package-specific public XLSX template', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+    $subject = DB::table('exam_public_subjects')->insertGetId(['name' => 'Matematika', 'code' => 'MTK']);
+    $package = DB::table('exam_public_packages')->insertGetId([
+        'exam_public_subject_id' => $subject,
+        'title' => 'Tes Matematika Publik',
+        'code' => 'PUB-MTK-01',
+        'status' => 'draft',
+    ]);
+
+    $response = $this->actingAs($admin)->get(route('admin.exams.public-bank.packages.template.download', $package));
+
+    $response->assertOk();
+    expect($response->headers->get('content-type'))->toContain('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        ->and($response->headers->get('content-disposition'))->toContain('paket-soal-pub-mtk-01-tes-matematika-publik.xlsx');
+});
+
 test('admin creates a separate four-subject bank and publishes packages with active questions', function () {
     $admin = User::factory()->create(['role' => 'admin']);
     foreach (['IPAS', 'PAIBP', 'MTK', 'BINDO'] as $code) {
@@ -79,6 +96,11 @@ test('public XLSX import reads package settings and active flags without touchin
     try {
         $response = $this->postJson(route('admin.exams.public-bank.packages.import', $package), ['file' => $file]);
         $response->assertSuccessful()->assertJsonPath('imported', 2)->assertJsonPath('active', 1);
+        $this->get(route('admin.public-exams.packages.show', $package))->assertSuccessful()
+            ->assertInertia(fn ($page) => $page->has('imports', 1)
+                ->where('imports.0.metadata.status', 'completed')
+                ->where('imports.0.metadata.imported', 2)
+                ->where('imports.0.metadata.filename', 'mtk-paket-1.xlsx'));
         $record = DB::table('exam_public_packages')->where('id', $package)->first();
         expect((int) $record->duration_minutes)->toBe(30)
             ->and((float) $record->passing_score)->toBe(55.0)
@@ -106,6 +128,11 @@ test('public import rejects mismatched category and invalid rows without partial
     try {
         $this->postJson(route('admin.exams.public-bank.packages.import', $package), ['file' => $file])
             ->assertUnprocessable()->assertJsonValidationErrors('file');
+        $this->get(route('admin.public-exams.packages.show', $package))->assertSuccessful()
+            ->assertInertia(fn ($page) => $page->has('imports', 1)
+                ->where('imports.0.metadata.status', 'failed')
+                ->where('imports.0.metadata.imported', 0)
+                ->has('imports.0.metadata.errors.file', 1));
         expect(DB::table('exam_public_questions')->count())->toBe(0)
             ->and(DB::table('exam_public_packages')->where('id', $package)->value('passing_score'))->toBeNull();
     } finally {

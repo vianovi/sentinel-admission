@@ -17,6 +17,14 @@ test('public package, session, and result pages use isolated public tables', fun
         'exam_public_session_id' => $session, 'name' => 'Peserta Publik', 'school_origin' => 'SD Asal',
         'participant_code' => 'STUDENTCODE00001',
     ]);
+    DB::table('exam_public_session_packages')->insert([
+        'exam_public_session_id' => $session, 'exam_public_package_id' => $package,
+        'exam_public_subject_id' => $subject, 'sort_order' => 0,
+    ]);
+    DB::table('exam_public_questions')->insert([
+        'exam_public_package_id' => $package, 'question_text' => 'Soal untuk review',
+        'options' => json_encode(['A' => 'Satu', 'B' => 'Dua']), 'correct_answer' => 'B', 'point' => 1,
+    ]);
 
     $this->actingAs($admin)->get(route('admin.public-exams.packages.index'))->assertSuccessful()
         ->assertInertia(fn ($page) => $page->component('Dashboard/Admin/PublicExam/Packages')
@@ -24,6 +32,16 @@ test('public package, session, and result pages use isolated public tables', fun
     $this->get(route('admin.public-exams.sessions.index'))->assertSuccessful()
         ->assertInertia(fn ($page) => $page->component('Dashboard/Admin/PublicExam/Sessions')
             ->has('sessions', 1)->has('packages', 1));
+    $this->get(route('admin.public-exams.packages.show', $package))->assertSuccessful()
+        ->assertInertia(fn ($page) => $page->component('Dashboard/Admin/PublicExam/PackageShow')
+            ->where('examPackage.id', $package)->has('questions', 1)
+            ->where('questions.0.correct_answer', 'B')->where('sessions.0.id', $session));
+    $this->get(route('admin.public-exams.sessions.show', $session))->assertSuccessful()
+        ->assertInertia(fn ($page) => $page->component('Dashboard/Admin/PublicExam/Sessions')
+            ->where('detailMode', true)->has('sessions', 1)->where('sessions.0.id', $session)
+            ->where('sessions.0.packages.0.id', $package)->where('sessions.0.participants_count', 1));
+    $this->get(route('admin.public-exams.packages.show', 999999))->assertNotFound();
+    $this->get(route('admin.public-exams.sessions.show', 999999))->assertNotFound();
     $this->get(route('admin.public-exams.results.index', ['session' => $session]))->assertSuccessful()
         ->assertInertia(fn ($page) => $page->component('Dashboard/Admin/PublicExam/Results')
             ->has('participants.data', 1)->where('participants.data.0.name', 'Peserta Publik')
@@ -36,8 +54,8 @@ test('public package, session, and result pages use isolated public tables', fun
 
 test('only administrators can read public exam admin pages', function () {
     $staff = User::factory()->create(['role' => 'staff']);
-    foreach (['packages.index', 'sessions.index', 'results.index'] as $name) {
-        $url = route('admin.public-exams.'.$name);
+    foreach (['packages.index', 'sessions.index', 'results.index', 'packages.show', 'sessions.show'] as $name) {
+        $url = route('admin.public-exams.'.$name, str_ends_with($name, '.show') ? 1 : []);
         $this->get($url)->assertRedirect();
         $this->actingAs($staff)->get($url)->assertForbidden();
         $this->app['auth']->logout();

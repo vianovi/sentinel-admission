@@ -4,11 +4,19 @@ namespace App\Http\Controllers\Dashboard\Admin\Exam;
 
 use App\Http\Controllers\Controller;
 use App\Imports\Exam\ExamQuestionWorkbookReader;
+use App\Models\Exam\ExamPackage;
+use App\Models\Exam\ExamSubject;
+use App\Models\SystemActivityLog;
+use App\Services\Exam\ExamPackageTemplateService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class PublicBankController extends Controller
 {
@@ -22,6 +30,40 @@ class PublicBankController extends Controller
                 ->selectSub(DB::table('exam_public_questions')->selectRaw('count(*)')->whereColumn('exam_public_package_id', 'packages.id')->whereNull('deleted_at')->where('is_active', true), 'question_count')
                 ->orderBy('subjects.name')->orderBy('packages.title')->get(),
         ]);
+    }
+
+    public function downloadTemplate(int $package, ExamPackageTemplateService $templateService): BinaryFileResponse|HttpResponse
+    {
+        $record = DB::table('exam_public_packages as package')
+            ->join('exam_public_subjects as subject', 'subject.id', '=', 'package.exam_public_subject_id')
+            ->where('package.id', $package)
+            ->first(['package.id', 'package.title', 'package.code', 'package.status', 'subject.name as subject_name']);
+        abort_unless($record, 404);
+
+        $templatePackage = (new ExamPackage)->forceFill([
+            'id' => $record->id,
+            'title' => $record->title,
+            'code' => $record->code,
+            'status' => $record->status,
+            'description' => '-',
+        ])->setRelation('subject', (new ExamSubject)->forceFill(['name' => $record->subject_name]));
+
+        try {
+            $template = $templateService->generate($templatePackage);
+        } catch (\Throwable $exception) {
+            Log::error('Public exam package template download failed', ['package_id' => $package, 'error' => $exception->getMessage()]);
+
+            return response('Template soal belum dapat dibuat. Periksa dukungan XLSX/ZIP di server lalu coba lagi.', 503, [
+                'Content-Type' => 'text/plain; charset=UTF-8',
+                'X-Content-Type-Options' => 'nosniff',
+            ]);
+        }
+
+        $filename = 'paket-soal-'.trim(Str::slug($record->code).'-'.Str::slug($record->title), '-').'.xlsx';
+
+        return response()->download($template['path'], $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ])->deleteFileAfterSend(true);
     }
 
     public function storeSubject(Request $request): JsonResponse
@@ -87,7 +129,30 @@ class PublicBankController extends Controller
 
     public function importQuestions(Request $request, int $package, ExamQuestionWorkbookReader $reader): JsonResponse
     {
+        abort_unless(DB::table('exam_public_packages')->where('id', $package)->exists(), 404);
         $request->validate(['file' => ['required', 'file', 'mimes:xlsx', 'max:5120']]);
+        $filename = mb_substr($request->file('file')?->getClientOriginalName() ?? 'Tanpa file', 0, 255);
+
+        try {
+            return DB::transaction(function () use ($request, $package, $reader, $filename): JsonResponse {
+                $response = $this->importWorkbook($request, $package, $reader);
+                SystemActivityLog::log('public_exam.import.completed', 'public_exam', 'Import soal publik berhasil.', $filename,
+                    ['filename' => $filename, 'status' => 'completed', ...$response->getData(true), 'errors' => []],
+                    'PublicExamPackage', (string) $package);
+
+                return $response;
+            });
+        } catch (ValidationException $exception) {
+            SystemActivityLog::log('public_exam.import.failed', 'public_exam', 'Import soal publik ditolak; tidak ada soal disimpan.', $filename,
+                ['filename' => $filename, 'status' => 'failed', 'imported' => 0, 'active' => 0, 'errors' => $exception->errors()],
+                'PublicExamPackage', (string) $package);
+
+            throw $exception;
+        }
+    }
+
+    private function importWorkbook(Request $request, int $package, ExamQuestionWorkbookReader $reader): JsonResponse
+    {
         $file = $request->file('file');
         abort_unless($file && $file->isValid(), 422);
         $signature = file_get_contents($file->getRealPath(), false, null, 0, 4);

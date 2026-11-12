@@ -1,5 +1,42 @@
 # Audit Handoff
 
+## 2026-11-12 owner acceptance and commit authorization
+
+- Owner reviewed the current changes, reported them acceptable, and explicitly authorized committing all repository changes with updated documentation.
+- Pre-commit full regression: `php artisan test --compact` passed, 171 tests / 1453 assertions, 9 skipped (7.03s); SQLite in-memory configuration verified. `git diff --check` passed. Latest frontend build remains the verified 10.23s build from the preceding checkpoint.
+- Next authorized task: audit and map public session configuration relationships and production readiness before implementing further session changes. No production data or schema changes authorized by this checkpoint.
+
+## 2026-11-12 public package and session detail parity
+
+- Continued existing dirty work on `feature/public-exam-rebuild`, baseline `428b3ccb25e436450b3517c8a2270d6b99092f30`; no commits, production/demo writes, schema changes, or dependencies.
+- Added public package detail route/page; create redirects there and Kelola Soal replaces the old import modal. Detail includes configuration, XLSX workflow, all answer options/key/active flags, publication, and related sessions. Public imports remain atomic and cannot overwrite existing questions.
+- Persisted successful imports and validation failures in existing `SystemActivityLog`, scoped by public module/type/package ID. Successful report and question writes share a transaction. Package page displays expandable history; historical imports cannot be backfilled. No internal bank/import records are used. No batch-level delete or partial-row success semantics added.
+- Session detail route reuses the existing session component in scoped detail mode, exposing inline participant management and package links. Custom dropdowns can select four distinct subjects beyond the first four categories; only four distinct available subjects enable creation. Internal retired routes remain retired.
+- Verification: focused public admin/bank/session tests 19 passed, 326 assertions; Pint passed; build including TypeScript passed (7.96s), with final build after two small display/history-refresh changes pending. Diff check passed before final checkpoint.
+- Playwright MCP now works. Isolated SQLite `/tmp/sentinel-public-parity-pA7MN0/database.sqlite`, temporary HTTP server port 18767. Browser verified package create redirect, empty state/disabled import, successful XLSX import with full answer options, publish (also confirmed in fixture DB), wrong-package import rejected with no questions, persistent rejected report after reload, inline roster without dialog on session detail, desktop/mobile 390px layout and dark mode. No uncaught page errors observed; expected 422 console entry on rejected import. Server must be stopped at end. Synthetic workbook in ignored `.playwright-mcp/` only.
+- HUMAN VISUAL REVIEW REQUIRED; full four-subject session/participant end-to-end browser scenario and full regression suite were not run in this checkpoint.
+- Final verification: build including TypeScript passed (10.23s) after history refresh/display adjustments; `git diff --check` passed. Temporary server processes stopped; fixture retained outside the repository. No live/demo data was changed.
+
+## 2026-11-12 public Packages layout checkpoint
+
+- Branch `feature/public-exam-rebuild` at baseline `428b3ccb25e436450b3517c8a2270d6b99092f30`. Continued the existing uncommitted `Packages.tsx` work without resetting it. Public Packages now follows the internal page hierarchy: header, six-step workflow rail, one full-width filtered list, compact package metadata and actions. No route, backend, schema, dependency, or live database changes.
+- Verification after layout edit: `npx tsc --noEmit` exited 0; `php artisan test --compact tests/Feature/PublicExamAdminPagesTest.php` passed (3 tests, 80 assertions); `npm run build` exited 0 (Vite 12.06s); `git diff --check` exited 0. This is code/build verification, not visual approval. The previous full-suite and isolated-SQLite browser results predate this edit.
+- MCP: Graphify query and Context7 Tailwind v3 docs returned successfully. Playwright MCP `browser_tabs` failed to initialize headless Firefox after its 180-second timeout; current-layout desktop/mobile, theme, and interactions remain UNVERIFIED. Codex Playwright configuration was then aligned with Cline's installed Chromium executable; the running MCP server did not reload within a bounded recheck, so a session restart/reload is still needed. Stitch was not used because no new screen concept or theme was generated. Laravel Boost is not exposed in this session.
+- Next: restore Playwright MCP, inspect the current layout on isolated fixture at mobile/desktop and light/dark themes, get HUMAN VISUAL REVIEW REQUIRED approval from owner, then continue four-subject/session/participant flow. Do not commit without explicit owner instruction or mutate demo data.
+
+## 2026-11-12 public XLSX template checkpoint
+
+- Added the public package template download route and a Template XLSX action to the public Packages list. The endpoint reuses ExamPackageTemplateService and the existing master workbook, injecting the public package subject, title, code, and status; no public schema or import contract changed.
+- Verification: focused public bank/admin tests 15 passed, 210 assertions; Pint passed; TypeScript passed; npm run build passed in 9.76s; route list and git diff check passed. Current browser visual verification remains UNVERIFIED because Playwright MCP initialization is unavailable.
+- Follow-up: public download filename changed from `template-soal-...xlsx` to `paket-soal-{code}-{title}.xlsx`; internal exam filename remains unchanged. Focused filename regression passed (1 test, 3 assertions), Pint and diff check passed.
+
+## 2026-11-10 package UI review checkpoint
+
+- Branch `feature/public-exam-rebuild`, baseline `428b3cc`; only `resources/js/Pages/Dashboard/Admin/PublicExam/Packages.tsx` has an uncommitted code change. TypeScript (`npx tsc --noEmit`), frontend build (`npm run build`, 9.00s), `git diff --check`, focused public admin/bank tests (14 passed, 207 assertions), and full suite (170 passed, 9 skipped, 1372 assertions) passed.
+- Authenticated Playwright against isolated temporary SQLite on port 18766 verified creating a subject and draft package, status/search/subject/sort filters, light/dark theme, import dialog and disabled upload without file, and no horizontal overflow at 390px in both themes. This is functional smoke, not visual approval. Console reports refused connections to the absent local Reverb WebSocket on port 8085; no page-specific exception observed. No real XLSX import or production/demo data mutation. HUMAN VISUAL REVIEW REQUIRED.
+- Browser XLSX completion on the same isolated SQLite fixture: the owner workbook was uploaded and rejected with HTTP 422 plus the expected category-mismatch response; question count remained zero. A fresh, test-format-compatible temporary XLSX was then uploaded successfully (HTTP 200: `imported: 2`, `active: 1`), and fixture persistence confirmed duration 30, passing score 55, retry/result flags false, and two questions/one active. The temporary compatible workbook was created outside the repository; neither it nor the owner workbook was modified.
+- Final regression after this checkpoint: `php artisan test --compact` passed (170 passed, 9 skipped, 1372 assertions; 9.41s), `npm run build` passed (8.81s), `npx tsc --noEmit` and `git diff --check` passed. Working tree remains intentionally uncommitted: `Packages.tsx`, this handoff, and `CURRENT.md`. HUMAN VISUAL REVIEW REQUIRED; do not claim full production readiness.
+
 ## Autonomous readiness work — approved scope
 
 - Browser progress: isolated SQLite `/tmp/sentinel-exam-browser/database.sqlite`, server port 18765, fixture admin `sentinel-browser-admin@example.test` (credentials are ephemeral; do not copy to repository). Playwright logged in via `/staff/login`, visited public Categories, Packages, Sessions, Results; created MTK mapel and `TA01-MTK` draft package in fixture only; confirmed import modal and no console errors. No demo MariaDB changes. Actual XLSX upload/full exam scenario still UNVERIFIED.

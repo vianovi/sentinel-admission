@@ -141,6 +141,7 @@ Route::middleware(['auth', RoleMiddleware::class.':admin'])
         Route::post('/public-bank/packages', [AdminPublicBank::class, 'storePackage'])->name('public-bank.packages.store');
         Route::put('/public-bank/packages/{package}/settings', [AdminPublicBank::class, 'updatePackage'])->name('public-bank.packages.settings.update');
         Route::get('/public-bank/packages/{package}/questions', [AdminPublicBank::class, 'questions'])->name('public-bank.questions.index');
+        Route::get('/public-bank/packages/{package}/template', [AdminPublicBank::class, 'downloadTemplate'])->name('public-bank.packages.template.download');
         Route::post('/public-bank/packages/{package}/questions', [AdminPublicBank::class, 'storeQuestion'])->name('public-bank.questions.store');
         Route::post('/public-bank/packages/{package}/imports', [AdminPublicBank::class, 'importQuestions'])->middleware('throttle:upload')->name('public-bank.packages.import');
         Route::post('/public-bank/packages/{package}/publish', [AdminPublicBank::class, 'publish'])->name('public-bank.packages.publish');
@@ -202,6 +203,8 @@ Route::middleware(['auth', RoleMiddleware::class.':admin'])
         Route::put('/categories/{subject}', [\App\Http\Controllers\Dashboard\Admin\PublicExam\PublicExamCategoryController::class, 'update'])->name('categories.update');
         Route::delete('/categories/{subject}', [\App\Http\Controllers\Dashboard\Admin\PublicExam\PublicExamCategoryController::class, 'destroy'])->name('categories.destroy');
         Route::get('/packages', [\App\Http\Controllers\Dashboard\Admin\PublicExam\PublicExamPagesController::class, 'packages'])->name('packages.index');
+        Route::get('/packages/{package}', [\App\Http\Controllers\Dashboard\Admin\PublicExam\PublicExamPagesController::class, 'package'])->whereNumber('package')->name('packages.show');
         Route::get('/sessions', [\App\Http\Controllers\Dashboard\Admin\PublicExam\PublicExamPagesController::class, 'sessions'])->name('sessions.index');
+        Route::get('/sessions/{session}', [\App\Http\Controllers\Dashboard\Admin\PublicExam\PublicExamPagesController::class, 'sessions'])->whereNumber('session')->name('sessions.show');
         Route::get('/results', [\App\Http\Controllers\Dashboard\Admin\PublicExam\PublicExamPagesController::class, 'results'])->name('results.index');
     });
