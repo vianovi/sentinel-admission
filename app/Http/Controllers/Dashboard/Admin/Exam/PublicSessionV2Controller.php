@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard\Admin\Exam;
 
 use App\Http\Controllers\Controller;
+use App\Services\Exam\PublicExamAttemptSubmissionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +14,8 @@ use Inertia\Response;
 
 class PublicSessionV2Controller extends Controller
 {
+    public function __construct(private readonly PublicExamAttemptSubmissionService $submissions) {}
+
     public function page(): Response
     {
         return Inertia::render('Dashboard/Admin/Exam/PublicExam');
@@ -40,7 +43,7 @@ class PublicSessionV2Controller extends Controller
             'opens_at' => ['required', 'date'],
             'closes_at' => ['required', 'date', 'after:opens_at'],
             'order_type' => ['required', Rule::in(['free', 'sequential'])],
-            'package_ids' => ['required', 'array', 'size:4'],
+            'package_ids' => ['required', 'array', 'min:1', 'max:5'],
             'package_ids.*' => ['required', 'integer', 'distinct', Rule::exists('exam_public_packages', 'id')->where('status', 'published')],
         ]);
 
@@ -51,7 +54,7 @@ class PublicSessionV2Controller extends Controller
                 ->where('subject.is_active', true)
                 ->whereNotNull('package.passing_score')->whereNotNull('package.allow_retry')->whereNotNull('package.show_result_to_participant')
                 ->get(['package.id', 'package.exam_public_subject_id']);
-            abort_unless($packages->count() === 4 && $packages->unique('exam_public_subject_id')->count() === 4, 422, 'Pilih tepat satu paket dari empat mapel berbeda.');
+            abort_unless($packages->count() === count($data['package_ids']) && $packages->unique('exam_public_subject_id')->count() === $packages->count(), 422, 'Pilih 1–5 paket, masing-masing dari mapel berbeda dengan konfigurasi lengkap.');
 
             $sessionId = DB::table('exam_public_sessions')->insertGetId([
                 'title' => $data['title'],
@@ -102,7 +105,8 @@ class PublicSessionV2Controller extends Controller
         return DB::transaction(function () use ($session): JsonResponse {
             $record = DB::table('exam_public_sessions')->where('id', $session)->lockForUpdate()->first();
             abort_unless($record && $record->status === 'draft', 403);
-            abort_unless($record->closes_at > now() && DB::table('exam_public_session_packages as pivot')
+            $packageCount = DB::table('exam_public_session_packages')->where('exam_public_session_id', $session)->count();
+            abort_unless($packageCount >= 1 && $packageCount <= 5 && $record->closes_at > now() && DB::table('exam_public_session_packages as pivot')
                 ->join('exam_public_packages as package', 'package.id', '=', 'pivot.exam_public_package_id')
                 ->join('exam_public_subjects as subject', 'subject.id', '=', 'package.exam_public_subject_id')
                 ->where('subject.is_active', true)
@@ -111,7 +115,7 @@ class PublicSessionV2Controller extends Controller
                     ->where('question.is_active', true)->whereNull('question.deleted_at'))
                 ->where('pivot.exam_public_session_id', $session)->where('package.status', 'published')
                 ->whereNotNull('package.passing_score')->whereNotNull('package.allow_retry')->whereNotNull('package.show_result_to_participant')
-                ->count() === 4, 422, 'Sesi harus belum berakhir dan memiliki empat paket terbit dengan kategori aktif, konfigurasi lengkap, serta soal aktif.');
+                ->count() === $packageCount, 422, 'Sesi harus belum berakhir dan memiliki 1–5 paket terbit; semua paket wajib memiliki kategori aktif, konfigurasi lengkap, serta soal aktif.');
 
             DB::table('exam_public_sessions')->where('id', $session)->update(['status' => 'published', 'updated_at' => now()]);
 
@@ -146,7 +150,7 @@ class PublicSessionV2Controller extends Controller
     public function updatePackages(Request $request, int $session): JsonResponse
     {
         $data = $request->validate([
-            'package_ids' => ['required', 'array', 'size:4'],
+            'package_ids' => ['required', 'array', 'min:1', 'max:5'],
             'package_ids.*' => ['required', 'integer', 'distinct', Rule::exists('exam_public_packages', 'id')->where('status', 'published')],
         ]);
 
@@ -164,7 +168,7 @@ class PublicSessionV2Controller extends Controller
                 ->whereIn('package.id', $data['package_ids'])->where('package.status', 'published')->where('subject.is_active', true)
                 ->whereNotNull('package.passing_score')->whereNotNull('package.allow_retry')->whereNotNull('package.show_result_to_participant')
                 ->get(['package.id', 'package.exam_public_subject_id']);
-            abort_unless($packages->count() === 4 && $packages->unique('exam_public_subject_id')->count() === 4, 422, 'Pilih tepat satu paket dari empat jenis mapel berbeda.');
+            abort_unless($packages->count() === count($data['package_ids']) && $packages->unique('exam_public_subject_id')->count() === $packages->count(), 422, 'Pilih 1–5 paket, masing-masing dari mapel berbeda dengan konfigurasi lengkap.');
 
             DB::table('exam_public_session_tokens')->where('exam_public_session_id', $session)->delete();
             DB::table('exam_public_session_packages')->where('exam_public_session_id', $session)->delete();
@@ -186,11 +190,27 @@ class PublicSessionV2Controller extends Controller
 
     public function close(int $session): JsonResponse
     {
-        $updated = DB::table('exam_public_sessions')->where('id', $session)->where('status', 'published')
-            ->update(['status' => 'closed', 'updated_at' => now()]);
-        abort_unless($updated, 403);
+        return DB::transaction(function () use ($session): JsonResponse {
+            $record = DB::table('exam_public_sessions')->where('id', $session)->lockForUpdate()->first();
+            abort_unless($record && in_array($record->status, ['published', 'closed'], true), 403);
 
-        return response()->json(['status' => 'closed']);
+            if ($record->status === 'published') {
+                DB::table('exam_public_sessions')->where('id', $session)->update(['status' => 'closed', 'updated_at' => now()]);
+                $attemptIds = DB::table('exam_public_subject_attempts as attempt')
+                    ->join('exam_public_participants as participant', 'participant.id', '=', 'attempt.exam_public_participant_id')
+                    ->where('participant.exam_public_session_id', $session)
+                    ->where('attempt.status', 'in_progress')
+                    ->orderBy('attempt.id')
+                    ->lockForUpdate()
+                    ->pluck('attempt.id');
+
+                foreach ($attemptIds as $attemptId) {
+                    $this->submissions->submit($attemptId, force: true);
+                }
+            }
+
+            return response()->json(['status' => 'closed']);
+        });
     }
 
     public function token(Request $request, int $session): JsonResponse
@@ -199,19 +219,23 @@ class PublicSessionV2Controller extends Controller
             'label' => ['nullable', 'string', 'max:255'],
             'max_uses' => ['nullable', 'integer', 'min:1'],
         ]);
-        $record = DB::table('exam_public_sessions')->where('id', $session)->first();
-        abort_unless($record && $record->status === 'published', 403);
 
-        $code = Str::upper(Str::random(12));
-        DB::table('exam_public_session_tokens')->insert([
-            'exam_public_session_id' => $session,
-            'token' => $code,
-            'label' => $data['label'] ?? null,
-            'max_uses' => $data['max_uses'] ?? null,
-            'expires_at' => $record->closes_at,
-            'created_at' => now(), 'updated_at' => now(),
-        ]);
+        return DB::transaction(function () use ($session, $data): JsonResponse {
+            $record = DB::table('exam_public_sessions')->where('id', $session)->lockForUpdate()->first();
+            abort_unless($record && $record->status === 'published', 403);
 
-        return response()->json(['token' => $code], 201);
+            $revokedTokens = DB::table('exam_public_session_tokens')->where('exam_public_session_id', $session)->delete();
+            $code = Str::upper(Str::random(12));
+            DB::table('exam_public_session_tokens')->insert([
+                'exam_public_session_id' => $session,
+                'token' => $code,
+                'label' => $data['label'] ?? null,
+                'max_uses' => $data['max_uses'] ?? null,
+                'expires_at' => $record->closes_at,
+                'created_at' => now(), 'updated_at' => now(),
+            ]);
+
+            return response()->json(['token' => $code, 'revoked_tokens' => $revokedTokens], 201);
+        });
     }
 }

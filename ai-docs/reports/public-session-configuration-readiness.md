@@ -16,7 +16,7 @@ Classification: **NOT READY FOR PRODUCTION SIGN-OFF** — operational gaps and u
 
 ### Session-end update
 
-Owner paused execution and requested state/handoff documentation only. Force-close is the next decided behavior to implement after resume; a comparable Hasil Ujian module is a deferred idea requiring scope. No force-close or results-module code was added. See [latest handoff](../state/HANDOFF.md) for remaining tasks, preserved dirty files, verification limits and resume order. Original audit questions below are historical; D-010 settles the close-versus-continue choice but not the separate token policy.
+Owner resumed execution and clarified that force-close auto-submits active attempts and scores saved answers. This behavior is implemented locally with shared scoring, transactional/idempotent close, lock-order protection and focused/full SQLite-backed regression coverage. Owner also chose replacement-only room tokens: issuing a new token atomically revokes its predecessors, with an admin confirmation and accurate revoked-token feedback. MariaDB concurrency and browser behavior remain unverified because no isolated MariaDB/UI fixture was available. A comparable Hasil Ujian module is still deferred and requires scope. See [latest handoff](../state/HANDOFF.md) for current evidence and remaining tasks.
 
 ## Scope and evidence
 

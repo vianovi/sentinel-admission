@@ -93,7 +93,7 @@ export default function PublicSessions({ sessions, packages, stats, examTimezone
     const [formOpensAt, setFormOpensAt] = useState("");
     const [formClosesAt, setFormClosesAt] = useState("");
     const [formOrderType, setFormOrderType] = useState<"free" | "sequential">("free");
-    const [formPackageIds, setFormPackageIds] = useState<number[]>([0, 0, 0, 0]);
+    const [formPackageIds, setFormPackageIds] = useState<number[]>([0]);
     const [editingDraftSession, setEditingDraftSession] = useState<Session | null>(null);
 
     // Participant Manager modal state
@@ -162,8 +162,29 @@ export default function PublicSessions({ sessions, packages, stats, examTimezone
         setFormOpensAt("");
         setFormClosesAt("");
         setFormOrderType("free");
-        setFormPackageIds(packagesBySubject.slice(0, 4).map((g) => g.packages[0]?.id ?? 0));
+        setFormPackageIds([packagesBySubject[0]?.packages[0]?.id ?? 0]);
         setIsCreateModalOpen(true);
+    };
+
+    const toLocalDateTimeInput = (date: Date): string =>
+        new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+
+    const setStartShortcut = (hours: number) => {
+        const start = new Date();
+        start.setHours(start.getHours() + hours, hours === 0 ? start.getMinutes() : 0, 0, 0);
+        setFormOpensAt(toLocalDateTimeInput(start));
+        if (!formClosesAt) {
+            const end = new Date(start);
+            end.setHours(end.getHours() + 2);
+            setFormClosesAt(toLocalDateTimeInput(end));
+        }
+    };
+
+    const setEndShortcut = (hours: number) => {
+        const start = formOpensAt ? new Date(formOpensAt) : new Date();
+        const end = new Date(start);
+        end.setHours(end.getHours() + hours);
+        setFormClosesAt(toLocalDateTimeInput(end));
     };
 
     const openEditPackages = async (session: Session) => {
@@ -171,7 +192,7 @@ export default function PublicSessions({ sessions, packages, stats, examTimezone
         try {
             const response = await axios.get(route("admin.exams.public-v2.sessions.show", { session: session.id }));
             const selected = response.data.packages as { id: number; subject_name: string }[];
-            const selectedIds = Array.from({ length: 4 }, (_, index) => selected[index]?.id ?? 0);
+            const selectedIds = selected.length ? selected.map(pkg => pkg.id) : [0];
             setEditingDraftSession(session);
             setFormTitle(session.title);
             setFormDescription(session.description ?? "");
@@ -242,12 +263,20 @@ export default function PublicSessions({ sessions, packages, stats, examTimezone
     };
 
     const handleGenerateToken = async (sess: Session) => {
+        const confirmed = await confirmAction(
+            "Buat Token Ruang Baru?",
+            `Semua token lama untuk sesi "${sess.title}" akan langsung dicabut.`,
+            "Ya, Ganti Token"
+        );
+        if (!confirmed) return;
+
         setBusy(true);
         try {
-            const response = await axios.post<{ token: string }>(
+            const response = await axios.post<{ token: string; revoked_tokens: number }>(
                 route("admin.exams.public-v2.sessions.tokens.store", { session: sess.id })
             );
-            showSuccessToast(`Token ruang berhasil dibuat: ${response.data.token}`);
+            const revoked = response.data.revoked_tokens;
+            showSuccessToast(`Token ruang berhasil dibuat: ${response.data.token}${revoked > 0 ? ` · ${revoked} token lama dicabut` : ""}`);
             router.reload();
         } catch (err) {
             showErrorToast(axios.isAxiosError(err) ? err.response?.data?.message ?? "Gagal membuat token." : "Terjadi kesalahan.");
@@ -380,16 +409,16 @@ export default function PublicSessions({ sessions, packages, stats, examTimezone
                 <PageHeader
                     title={detailMode ? sessions[0].title : "Pengaturan Sesi Ujian Publik"}
                     badge="LANGKAH 3: JADWAL & AKSES PESERTA"
-                    description="Jadwalkan sesi ujian publik 4 mata pelajaran, aktifkan token ruang ujian, dan daftarkan peserta ujian."
+                    description="Jadwalkan sesi ujian publik 1–5 mata pelajaran, aktifkan token ruang ujian, dan daftarkan peserta ujian."
                     icon="fa-solid fa-calendar-check"
                     actions={
                         <div className="flex flex-wrap items-center gap-2.5">
-                            {detailMode ? <Link href={route("admin.public-exams.sessions.index")} className={secondaryButtonClass}>Kembali ke Sesi Ujian</Link> : packagesBySubject.length < 4 ? (
+                            {detailMode ? <Link href={route("admin.public-exams.sessions.index")} className={secondaryButtonClass}>Kembali ke Sesi Ujian</Link> : packagesBySubject.length < 1 ? (
                                 <Link
                                     href="/dashboard/admin/public-exams/packages"
                                     className="inline-flex items-center gap-2 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 px-4 py-2.5 text-xs font-extrabold hover:bg-amber-500/30 transition-all shadow-lg shadow-amber-500/10"
                                 >
-                                    <i className="fa-solid fa-box-open" /> Terbitkan 4 Paket Dahulu
+                                    <i className="fa-solid fa-box-open" /> Terbitkan Paket Dahulu
                                 </Link>
                             ) : (
                                 <button
@@ -438,7 +467,7 @@ export default function PublicSessions({ sessions, packages, stats, examTimezone
                         {
                             label: "Langkah 1",
                             title: "Buat Sesi",
-                            description: "Pilih 4 paket soal dari mapel berbeda (IPAS, PAIBP, MTK, B.INDO).",
+                            description: "Pilih 1–5 paket soal, masing-masing dari mapel berbeda.",
                             icon: "fa-solid fa-calendar-plus",
                             state: stats.total > 0 ? "done" : "active",
                         },
@@ -473,7 +502,7 @@ export default function PublicSessions({ sessions, packages, stats, examTimezone
                         {
                             label: "Langkah 6",
                             title: "Rekap Nilai",
-                            description: "Hitung rata-rata 4 mapel dan kelulusan (passing grade 65).",
+                            description: "Hitung rata-rata seluruh mapel sesi; lulus jika lebih dari 65.",
                             icon: "fa-solid fa-chart-column",
                             state: stats.total_participants > 0 ? "active" : "idle",
                         },
@@ -493,14 +522,14 @@ export default function PublicSessions({ sessions, packages, stats, examTimezone
                                     </span>
                                 </h2>
                                 <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                                    Atur jadwal sesi 4 mapel, kelola token ruang, daftarkan peserta, dan pantau kelulusan.
+                                    Atur jadwal sesi 1–5 mapel, kelola token ruang, daftarkan peserta, dan pantau kelulusan.
                                 </p>
                             </div>
 
                             <button
                                 type="button"
                                 onClick={openCreateModal}
-                                disabled={packagesBySubject.length < 4}
+                                disabled={packagesBySubject.length < 1}
                                 className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-4 py-2 text-xs font-black text-slate-950 hover:from-amber-400 hover:to-amber-500 transition-all shadow-md shadow-amber-500/20 whitespace-nowrap self-start sm:self-auto disabled:opacity-50"
                             >
                                 <i className="fa-solid fa-plus text-xs" /> Buat Sesi Baru
@@ -552,7 +581,7 @@ export default function PublicSessions({ sessions, packages, stats, examTimezone
                             <EmptyState
                                 icon="fa-solid fa-calendar-xmark"
                                 title="Tidak ada sesi ujian publik yang cocok"
-                                description="Buat sesi baru dengan memilih 4 paket mapel berbeda."
+                                description="Buat sesi baru dengan memilih 1–5 paket mapel berbeda."
                             />
                         ) : (
                             <div className="grid gap-4">
@@ -587,7 +616,7 @@ export default function PublicSessions({ sessions, packages, stats, examTimezone
                                                     <span>{formatDate(sess.opens_at)} — {formatDate(sess.closes_at)}</span>
                                                 </div>
 
-                                                {/* 4 Packages Badges */}
+                                                {/* Session packages */}
                                                 <div>
                                                     <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
                                                         {sess.packages.length} Paket Terhubung
@@ -741,7 +770,7 @@ export default function PublicSessions({ sessions, packages, stats, examTimezone
                             <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
                                 <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                                     <i className="fa-solid fa-calendar-plus text-amber-500" />
-                                    {editingDraftSession ? `Konfigurasi Sesi: ${editingDraftSession.title}` : "Buat Sesi Ujian Publik 4 Mata Pelajaran"}
+                                    {editingDraftSession ? `Konfigurasi Sesi: ${editingDraftSession.title}` : "Buat Sesi Ujian Publik"}
                                 </h3>
                                 <button type="button" onClick={closeCreateModal} className="text-slate-400 hover:text-slate-600">
                                     <i className="fa-solid fa-xmark text-sm" />
@@ -763,9 +792,15 @@ export default function PublicSessions({ sessions, packages, stats, examTimezone
                                 </div>
 
                                 <p className="text-xs text-slate-600 dark:text-slate-300">Input waktu mengikuti zona perangkat ({Intl.DateTimeFormat().resolvedOptions().timeZone}). Jadwal sesi ditampilkan dalam {examTimezone}.</p>
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                     <div>
-                                        <label className={labelClass}>Waktu Mulai</label>
+                                        <div className="mb-1 flex items-center justify-between gap-2">
+                                            <label className={labelClass}>Waktu mulai</label>
+                                            <span className="text-[11px] text-slate-500 dark:text-slate-400">Atur cepat</span>
+                                        </div>
+                                        <div className="mb-2 grid grid-cols-2 gap-1.5">
+                                            {[{ label: "Sekarang", hours: 0 }, { label: "1 jam lagi", hours: 1 }, { label: "2 jam lagi", hours: 2 }, { label: "Besok pagi", hours: 12 }].map(option => <button key={option.label} type="button" onClick={() => setStartShortcut(option.hours)} className="min-h-10 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs font-semibold text-slate-700 transition-colors hover:border-amber-400 hover:bg-amber-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:border-amber-400 dark:hover:bg-amber-500/10">{option.label}</button>)}
+                                        </div>
                                         <input
                                             type="datetime-local"
                                             required
@@ -775,7 +810,13 @@ export default function PublicSessions({ sessions, packages, stats, examTimezone
                                         />
                                     </div>
                                     <div>
-                                        <label className={labelClass}>Waktu Selesai</label>
+                                        <div className="mb-1 flex items-center justify-between gap-2">
+                                            <label className={labelClass}>Waktu berakhir</label>
+                                            <span className="text-[11px] text-slate-500 dark:text-slate-400">Dari waktu mulai</span>
+                                        </div>
+                                        <div className="mb-2 grid grid-cols-2 gap-1.5">
+                                            {[{ label: "2 jam", hours: 2 }, { label: "4 jam", hours: 4 }, { label: "1 hari", hours: 24 }, { label: "2 hari", hours: 48 }].map(option => <button key={option.label} type="button" onClick={() => setEndShortcut(option.hours)} className="min-h-10 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs font-semibold text-slate-700 transition-colors hover:border-amber-400 hover:bg-amber-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:border-amber-400 dark:hover:bg-amber-500/10">{option.label}</button>)}
+                                        </div>
                                         <input
                                             type="datetime-local"
                                             required
@@ -802,13 +843,13 @@ export default function PublicSessions({ sessions, packages, stats, examTimezone
                                     <textarea id="session-instructions" value={formInstructions} onChange={event => setFormInstructions(event.target.value)} maxLength={5000} className={inputClass} />
                                 </div>
 
-                                {/* 4 Package Selectors for 4 distinct subjects */}
+                                {/* One package per distinct subject */}
                                 <div className="space-y-2.5 pt-2 border-t border-slate-100 dark:border-white/10">
                                     <span className="block text-xs font-bold uppercase tracking-wider text-amber-500">
-                                        Pilih Tepat 4 Paket dari 4 Jenis Mapel Berbeda
+                                        Pilih 1–5 Paket dari Mapel Berbeda
                                     </span>
-
-                                    {Array.from({ length: 4 }, (_, idx) => {
+                                    <p className="text-xs text-slate-500 dark:text-slate-400">Nilai akhir adalah jumlah nilai efektif dibagi {formPackageIds.length} paket. Peserta wajib menyelesaikan semua paket.</p>
+                                    {formPackageIds.map((_, idx) => {
                                         const selected = packages.find(pkg => pkg.id === formPackageIds[idx]);
                                         const otherSubjects = formPackageIds.filter((_, index) => index !== idx).map(id => packages.find(pkg => pkg.id === id)?.subject_id);
                                         return <div key={idx}>
@@ -819,8 +860,10 @@ export default function PublicSessions({ sessions, packages, stats, examTimezone
                                                 placeholder="Pilih paket dari mapel berbeda"
                                                 onChange={option => setFormPackageIds(current => current.map((id, index) => index === idx ? option?.value ?? 0 : id))}
                                                 required />
+                                            {formPackageIds.length > 1 && <button type="button" className={secondaryButtonClass} onClick={() => setFormPackageIds(current => current.filter((_, index) => index !== idx))}>Hapus Paket {idx + 1}</button>}
                                         </div>;
                                     })}
+                                    <button type="button" className={secondaryButtonClass} disabled={formPackageIds.length >= 5 || formPackageIds.length >= packagesBySubject.length} onClick={() => setFormPackageIds(current => [...current, 0])}>Tambah Paket</button>
                                 </div>
 
                                 <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100 dark:border-white/10">
@@ -829,7 +872,7 @@ export default function PublicSessions({ sessions, packages, stats, examTimezone
                                     </button>
                                     <button
                                         type="submit"
-                                        disabled={busy || formPackageIds.length !== 4 || formPackageIds.some((id) => !id)}
+                                        disabled={busy || formPackageIds.length < 1 || formPackageIds.length > 5 || formPackageIds.some((id) => !id)}
                                         className={primaryButtonClass}
                                     >
                                         {busy ? "Menyimpan..." : editingDraftSession ? "Simpan Konfigurasi" : "Buat Sesi Draft"}

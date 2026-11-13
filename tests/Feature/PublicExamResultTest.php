@@ -3,7 +3,7 @@
 use App\Services\Exam\PublicExamResultService;
 use Illuminate\Support\Facades\DB;
 
-function publicResultFixture(array $scores): array
+function publicResultFixture(array $scores, array $codes = ['IPAS', 'PAIBP', 'MTK', 'BINDO']): array
 {
     $sessionId = DB::table('exam_public_sessions')->insertGetId([
         'title' => 'Ujian Masuk',
@@ -20,7 +20,7 @@ function publicResultFixture(array $scores): array
     ]);
 
     $subjects = [];
-    foreach (['IPAS', 'PAIBP', 'MTK', 'BINDO'] as $order => $code) {
+    foreach ($codes as $order => $code) {
         $subjectId = DB::table('exam_public_subjects')->insertGetId(['code' => $code, 'name' => $code]);
         $packageId = DB::table('exam_public_packages')->insertGetId([
             'exam_public_subject_id' => $subjectId,
@@ -62,6 +62,21 @@ test('results remain pending until all four subjects have a primary score', func
         ->and($result['is_passed'])->toBeNull()
         ->and(DB::table('exam_public_participants')->where('id', $participantId)->value('status'))->toBe('in_progress');
 });
+
+test('dynamic results preserve exact passing threshold and reject empty completion', function (array $scores, array $codes, ?float $average, ?bool $passed) {
+    [$participant] = publicResultFixture($scores, $codes);
+    $result = app(PublicExamResultService::class)->refresh($participant);
+    expect($result['average_score'])->toBe($average)
+        ->and($result['is_passed'])->toBe($passed)
+        ->and($result['completed'])->toBe($average !== null);
+})->with([
+    'empty' => [[], [], null, null],
+    'single threshold' => [['MTK' => 65], ['MTK'], 65.0, false],
+    'single above' => [['MTK' => 65.01], ['MTK'], 65.01, true],
+    'three threshold' => [['IPAS' => 60, 'MTK' => 65, 'BINDO' => 70], ['IPAS', 'MTK', 'BINDO'], 65.0, false],
+    'unrounded pass' => [['IPAS' => 65, 'MTK' => 65, 'BINDO' => 65.01], ['IPAS', 'MTK', 'BINDO'], 65.0, true],
+    'unfinished' => [['IPAS' => 100], ['IPAS', 'MTK'], null, null],
+]);
 
 test('exactly 65 is not passing and low subject is eligible for remedial', function () {
     [$participantId] = publicResultFixture(['IPAS' => 70, 'PAIBP' => 70, 'MTK' => 40, 'BINDO' => 80]);

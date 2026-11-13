@@ -141,7 +141,7 @@ export default function PublicResults({ participants, sessions, filters, stats }
                 <PageHeader
                     title="Hasil Ujian Publik"
                     badge="REKAP & EVALUASI KELULUSAN"
-                    description="Review agregat skor 4 mata pelajaran, status kelulusan (passing grade > 65), dan hasil remedial peserta ujian publik."
+                    description="Review agregat skor seluruh mata pelajaran sesi, status kelulusan (passing grade > 65), dan hasil remedial peserta ujian publik."
                     icon="fa-solid fa-square-poll-vertical"
                     actions={
                         <div className="flex flex-wrap items-center gap-2.5">
@@ -265,7 +265,7 @@ export default function PublicResults({ participants, sessions, filters, stats }
                                 </span>
                             </h2>
                             <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                                Skor akhir dihitung dari rata-rata 4 mata pelajaran dengan passing grade ambang batas 65.
+                                Skor akhir dihitung dari jumlah nilai efektif dibagi jumlah paket dalam sesi. Lulus jika rata-rata lebih dari 65.
                             </p>
                         </div>
                     </div>

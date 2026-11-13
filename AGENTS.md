@@ -185,6 +185,10 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 - Every change must be programmatically tested. Write a new test or update an existing test, then run the affected tests to make sure they pass.
 - Run the minimum number of tests needed to ensure code quality and speed. Use `php artisan test --compact` with a specific filename or filter.
+- Every bug fix must include a regression test that reproduces the bug and fails before the fix, then passes after it.
+- Assertions must verify the final state and relevant side effects (database records, status transitions, emitted events, files, or external calls), not only the HTTP status or absence of an exception.
+- Tests must cover the applicable happy path, validation/failure path, boundary or null path, authorization/security path, and idempotency/concurrency path for stateful or security-sensitive behavior.
+- When behavior depends on database locking, transaction isolation, foreign-key constraints, JSON support, collation, or engine-specific semantics, verify it on the same database engine used in production. SQLite-only success is not sufficient evidence for MariaDB behavior.
 
 === inertia-laravel/core rules ===
 

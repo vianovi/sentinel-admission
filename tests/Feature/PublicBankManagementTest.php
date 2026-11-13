@@ -236,6 +236,39 @@ test('package deletion refuses a participant already inside a related room befor
         ->and(DB::table('exam_public_sessions')->where('id', $session)->value('status'))->toBe('published');
 });
 
+test('admin can edit package settings, toggle or delete questions, and return package to draft', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+    $subject = DB::table('exam_public_subjects')->insertGetId(['name' => 'MTK', 'code' => 'MTK']);
+    $package = DB::table('exam_public_packages')->insertGetId(['exam_public_subject_id' => $subject, 'title' => 'MTK 1', 'code' => 'MTK-1', 'status' => 'published', 'passing_score' => 60, 'allow_retry' => false, 'show_result_to_participant' => false]);
+    $question = DB::table('exam_public_questions')->insertGetId(['exam_public_package_id' => $package, 'question_text' => '1+1?', 'options' => json_encode(['A' => '2', 'B' => '3']), 'correct_answer' => 'A', 'point' => 10]);
+    $session = DB::table('exam_public_sessions')->insertGetId(['title' => 'Sesi', 'status' => 'published', 'opens_at' => now(), 'closes_at' => now()->addHour()]);
+    DB::table('exam_public_session_packages')->insert(['exam_public_session_id' => $session, 'exam_public_package_id' => $package, 'exam_public_subject_id' => $subject, 'sort_order' => 0]);
+    DB::table('exam_public_session_tokens')->insert(['exam_public_session_id' => $session, 'token' => 'EDITROOM']);
+
+    $this->actingAs($admin)->putJson(route('admin.exams.public-bank.packages.settings.update', $package), ['passing_score' => 70, 'allow_retry' => true, 'show_result_to_participant' => true])->assertSuccessful();
+    $this->patchJson(route('admin.exams.public-bank.questions.toggle', $question), ['is_active' => false])->assertSuccessful();
+    expect((bool) DB::table('exam_public_questions')->where('id', $question)->value('is_active'))->toBeFalse();
+    $this->patchJson(route('admin.exams.public-bank.questions.toggle', $question), ['is_active' => true])->assertSuccessful();
+    $this->postJson(route('admin.exams.public-bank.packages.draft', $package))->assertSuccessful()->assertJsonPath('status', 'draft');
+    expect(DB::table('exam_public_packages')->where('id', $package)->value('status'))->toBe('draft')
+        ->and(DB::table('exam_public_sessions')->where('id', $session)->value('status'))->toBe('draft')
+        ->and(DB::table('exam_public_session_tokens')->where('token', 'EDITROOM')->exists())->toBeFalse();
+    $this->deleteJson(route('admin.exams.public-bank.questions.destroy', $question))->assertSuccessful();
+    expect(DB::table('exam_public_questions')->where('id', $question)->value('deleted_at'))->not->toBeNull();
+});
+
+test('package editing is blocked after an attempt exists', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+    $subject = DB::table('exam_public_subjects')->insertGetId(['name' => 'MTK', 'code' => 'MTK']);
+    $package = DB::table('exam_public_packages')->insertGetId(['exam_public_subject_id' => $subject, 'title' => 'MTK 1', 'code' => 'MTK-1']);
+    $participant = DB::table('exam_public_participants')->insertGetId(['exam_public_session_id' => DB::table('exam_public_sessions')->insertGetId(['title' => 'Sesi', 'opens_at' => now(), 'closes_at' => now()->addHour()]), 'name' => 'Anak', 'school_origin' => 'Sekolah', 'participant_code' => 'EDITBLOCK000001']);
+    $question = DB::table('exam_public_questions')->insertGetId(['exam_public_package_id' => $package, 'question_text' => '1+1?', 'options' => json_encode(['A' => '2', 'B' => '3']), 'correct_answer' => 'A', 'point' => 10]);
+    DB::table('exam_public_subject_attempts')->insert(['exam_public_participant_id' => $participant, 'exam_public_package_id' => $package, 'exam_public_subject_id' => $subject, 'started_at' => now(), 'expires_at' => now()->addHour()]);
+    $this->actingAs($admin)->patchJson(route('admin.exams.public-bank.questions.toggle', $question), ['is_active' => false])->assertStatus(409);
+    $this->postJson(route('admin.exams.public-bank.packages.draft', $package))->assertStatus(409);
+    expect(DB::table('exam_public_packages')->where('id', $package)->value('status'))->toBe('draft');
+});
+
 test('public bank rejects malformed answers and guest access', function () {
     $this->postJson(route('admin.exams.public-bank.subjects.store'), ['name' => 'IPAS', 'code' => 'IPAS'])
         ->assertUnauthorized();

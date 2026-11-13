@@ -1,5 +1,39 @@
 # Audit Handoff
 
+## 2026-11-13 package configuration UI polish — code verified, visual review pending
+
+- Owner scoped the task to Admin → Ujian Publik → Paket Soal configuration and requested Hallmark + Google Stitch with both light/dark themes. Baseline remains `1bf2ff9` on `feature/public-exam-rebuild`; prior uncommitted backend/package controls are preserved.
+- Stitch project `6664061836704842508` generated light/dark concepts. Implementation uses existing Sentinel fonts and amber/slate tokens, promotes configuration above import, separates publication/revert actions, and moves import history/session references below question review. Only the public package detail page is changed by this UI task.
+- Added local unsaved-state feedback, action-specific pending labels, inline save errors, and form values derived from refreshed props when no draft exists. Settings remain wired to existing guarded endpoints. No schema, dependency, live-data, commit or deployment changes.
+- Verification: focused `PublicExamAdminPagesTest.php` + `PublicBankManagementTest.php`: 16 passed / 295 assertions / 1 skipped (2.33s). `npx tsc --noEmit`, editor diagnostics, `npx vite build` (12.83s), and diff check passed. Node/esbuild/React SSR with mocked Inertia navigation, layout and toast boundaries: four initial fixture states (configured draft, incomplete/empty draft, published, zero threshold), 15 assertions passed. Palette calculation: 12 primary/helper/button/warning/error/success pairs pass WCAG 4.5:1, lowest 5.72:1. Final active-state styling rebuild passed (13.14s); final diff check passed.
+- Verification harness issues resolved without application changes: omitted CSS loader for KaTeX, then missing CommonJS filename; contrast script corrected to expand shorthand white. These were tooling errors, not application regressions. No browser or event interaction coverage is claimed by SSR.
+- Context7 React 18 and Tailwind v3 documentation used; Graphify graph returned older/internal package nodes, so current public page/imports and dirty controller diff were read directly. Boost search-docs is unavailable in this session.
+- Preserve the owner’s previous request to avoid Playwright due to token cost; live browser interaction, mobile widths 320/375/414/768 and human visual approval remain UNVERIFIED / HUMAN VISUAL REVIEW REQUIRED. No production readiness sign-off.
+
+## 2026-11-13 package management controls checkpoint
+
+- Owner requested package editing controls and explicitly asked not to use Playwright due to token cost.
+- Added guarded package settings editing, package revert-to-draft, question activate/deactivate, soft-delete question, and existing package deletion controls to the public package detail page. Reverting a package resets related sessions to draft and revokes their tokens; all mutations reject packages/sessions with participant attempts.
+- Dynamic 1–5 package support remains active: publish/join require every assigned package to be configured and ready; result completion and average use the assigned package count.
+- Verification: full suite 193 passed / 1740 assertions with 9 legacy skips; focused package/admin tests 17 passed / 302 assertions; isolated MariaDB dynamic tests 43 passed / 450 assertions; Pint, TypeScript, build (9.75s), and diff check passed. Playwright intentionally not used.
+
+## 2026-11-13 dynamic public session package count — in progress
+
+- Owner authorized production-oriented support for 1–5 packages per session (D-012). No deployment or commit authorized.
+- Baseline retains all previous dirty force-close/token changes at HEAD `1bf2ff9`.
+- New regression first reproduced the fixed-four restriction: 8 failed / 2 passed for counts 1–5 in free/sequential order. After implementation, focused public flow/session/result tests passed: 35 tests / 413 assertions. Further boundary tests and browser verification are in progress.
+- No schema or dependency changes. Existing per-package remedial policy is preserved.
+
+## 2026-11-12 force-close implementation checkpoint
+
+- Resumed from clean commit `1bf2ff9` on `feature/public-exam-rebuild`; the configuration hardening previously described as uncommitted was already committed after the prior handoff.
+- Owner clarified D-010: closing a public session must auto-submit active attempts and score their saved answers. Completed attempts/results remain unchanged.
+- Uncommitted implementation introduces one shared submission/scoring service used by participant submit and admin force-close. Close is transactional and idempotent, locks the session and active attempts in deterministic order, and start now locks the session before the participant so a concurrent close cannot admit a new attempt after closure.
+- Owner also settled D-011: issuing a new room token revokes all older tokens for that session. Issuance now validates and locks the published session, deletes predecessors and inserts the replacement atomically. The admin Sessions UI warns about revocation before issuance and reports the revoked-token count.
+- Regression covers saved-answer scoring, `auto_submitted`, preservation of a prior submitted attempt, repeat close, and rejection of answer/submit/start/token access after close.
+- Verification: focused `PublicSessionV2Test.php` + `PublicExamFlowTest.php` 16 passed / 186 assertions; full suite 173 passed / 1499 assertions with 9 existing legacy skips; Pint, TypeScript, production build (10.70s) and `git diff --check` passed. No schema, dependency, production/demo data or Hasil Ujian changes.
+- Browser check was attempted but `127.0.0.1:8000` had no running server. Remaining: verify real row-lock races on an isolated MariaDB fixture and browser-check force-close plus token-rotation feedback on an isolated UI fixture. Do not commit without owner instruction.
+
 ## 2026-11-12 FINAL HANDOFF — owner paused the chat
 
 This is the latest checkpoint and supersedes older statements that both policy questions are unanswered.

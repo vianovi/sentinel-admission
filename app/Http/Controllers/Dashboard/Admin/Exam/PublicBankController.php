@@ -118,6 +118,45 @@ class PublicBankController extends Controller
         return response()->json(['updated' => true]);
     }
 
+    public function revertToDraft(int $package): JsonResponse
+    {
+        return DB::transaction(function () use ($package): JsonResponse {
+            $record = DB::table('exam_public_packages')->where('id', $package)->lockForUpdate()->first();
+            abort_unless($record, 404);
+            $sessions = DB::table('exam_public_session_packages')->where('exam_public_package_id', $package)->pluck('exam_public_session_id');
+            DB::table('exam_public_sessions')->whereIn('id', $sessions)->orderBy('id')->lockForUpdate()->get();
+            abort_if(DB::table('exam_public_subject_attempts')->where('exam_public_package_id', $package)->exists(), 409, 'Paket sudah memiliki pengerjaan peserta.');
+            abort_if(DB::table('exam_public_participants')->whereIn('exam_public_session_id', $sessions)->whereNotNull('started_at')->exists(), 409, 'Peserta sudah masuk ke sesi terkait.');
+
+            DB::table('exam_public_session_tokens')->whereIn('exam_public_session_id', $sessions)->delete();
+            DB::table('exam_public_sessions')->whereIn('id', $sessions)->update(['status' => 'draft', 'updated_at' => now()]);
+            DB::table('exam_public_packages')->where('id', $package)->update(['status' => 'draft', 'updated_at' => now()]);
+
+            return response()->json(['status' => 'draft', 'sessions_reset' => $sessions->count()]);
+        });
+    }
+
+    public function toggleQuestion(Request $request, int $question): JsonResponse
+    {
+        $data = $request->validate(['is_active' => ['required', 'boolean']]);
+        $record = DB::table('exam_public_questions')->where('id', $question)->whereNull('deleted_at')->first();
+        abort_unless($record, 404);
+        abort_if(DB::table('exam_public_subject_attempts')->where('exam_public_package_id', $record->exam_public_package_id)->exists(), 409, 'Soal paket yang sudah dikerjakan tidak boleh diubah.');
+        DB::table('exam_public_questions')->where('id', $question)->update(['is_active' => $data['is_active'], 'updated_at' => now()]);
+
+        return response()->json(['is_active' => (bool) $data['is_active']]);
+    }
+
+    public function destroyQuestion(int $question): JsonResponse
+    {
+        $record = DB::table('exam_public_questions')->where('id', $question)->whereNull('deleted_at')->first();
+        abort_unless($record, 404);
+        abort_if(DB::table('exam_public_subject_attempts')->where('exam_public_package_id', $record->exam_public_package_id)->exists(), 409, 'Soal paket yang sudah dikerjakan tidak boleh dihapus.');
+        DB::table('exam_public_questions')->where('id', $question)->update(['deleted_at' => now(), 'updated_at' => now()]);
+
+        return response()->json(['deleted' => true]);
+    }
+
     public function questions(int $package): JsonResponse
     {
         abort_unless(DB::table('exam_public_packages')->where('id', $package)->exists(), 404);

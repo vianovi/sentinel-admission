@@ -54,10 +54,11 @@ class PublicExamResultService
                 ];
             }
 
-            $completed = $packages->count() === 4
+            $packageCount = $packages->count();
+            $completed = $packageCount >= 1 && $packageCount <= 5
                 && collect($subjects)->every(fn (array $subject): bool => $subject['primary_score'] !== null);
-            $average = $completed ? round(collect($subjects)->sum('effective_score') / 4, 2) : null;
-            $isPassed = $completed ? collect($subjects)->sum('effective_score') > (float) $session->passing_score * 4 : null;
+            $average = $completed ? round(collect($subjects)->sum('effective_score') / $packageCount, 2) : null;
+            $isPassed = $completed ? collect($subjects)->sum('effective_score') > (float) $session->passing_score * $packageCount : null;
 
             DB::table('exam_public_participants')->where('id', $participantId)->update([
                 'status' => $completed ? 'completed' : 'in_progress',

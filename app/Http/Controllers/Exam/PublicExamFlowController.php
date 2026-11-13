@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Exam;
 
 use App\Http\Controllers\Controller;
+use App\Services\Exam\PublicExamAttemptSubmissionService;
 use App\Services\Exam\PublicExamResultService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -14,7 +15,10 @@ use Inertia\Response;
 
 class PublicExamFlowController extends Controller
 {
-    public function __construct(private readonly PublicExamResultService $results) {}
+    public function __construct(
+        private readonly PublicExamResultService $results,
+        private readonly PublicExamAttemptSubmissionService $submissions,
+    ) {}
 
     public function page(): Response
     {
@@ -46,11 +50,12 @@ class PublicExamFlowController extends Controller
                 && $session->opens_at <= now() && $session->closes_at > now()
                 && (! $access->expires_at || $access->expires_at > now())
                 && ($access->max_uses === null || $access->used_count < $access->max_uses), 403);
-            abort_unless(DB::table('exam_public_session_packages as assignment')
+            $packageCount = DB::table('exam_public_session_packages')->where('exam_public_session_id', $session->id)->count();
+            abort_unless($packageCount >= 1 && $packageCount <= 5 && DB::table('exam_public_session_packages as assignment')
                 ->join('exam_public_packages as package', 'package.id', '=', 'assignment.exam_public_package_id')
                 ->where('assignment.exam_public_session_id', $session->id)
                 ->whereNotNull('package.passing_score')->whereNotNull('package.allow_retry')->whereNotNull('package.show_result_to_participant')
-                ->count() === 4, 422, 'Pengaturan paket sesi belum lengkap.');
+                ->count() === $packageCount, 422, 'Pengaturan paket sesi belum lengkap.');
 
             $person = DB::table('exam_public_participants')
                 ->where('exam_public_session_id', $session->id)
@@ -109,9 +114,10 @@ class PublicExamFlowController extends Controller
         $this->participant($request, $participant);
 
         $attemptId = DB::transaction(function () use ($participant, $package): int {
-            $person = DB::table('exam_public_participants')->where('id', $participant)->lockForUpdate()->firstOrFail();
-            $session = DB::table('exam_public_sessions')->where('id', $person->exam_public_session_id)->first();
+            $person = DB::table('exam_public_participants')->where('id', $participant)->firstOrFail();
+            $session = DB::table('exam_public_sessions')->where('id', $person->exam_public_session_id)->lockForUpdate()->first();
             abort_unless($session && $session->status === 'published' && $session->opens_at <= now() && $session->closes_at > now(), 403);
+            $person = DB::table('exam_public_participants')->where('id', $participant)->lockForUpdate()->firstOrFail();
             $assignment = DB::table('exam_public_session_packages as pivot')
                 ->join('exam_public_packages as package', 'package.id', '=', 'pivot.exam_public_package_id')
                 ->join('exam_public_subjects as subject', 'subject.id', '=', 'pivot.exam_public_subject_id')
@@ -226,45 +232,7 @@ class PublicExamFlowController extends Controller
     public function submit(Request $request, int $attempt): JsonResponse
     {
         $record = $this->attemptFor($request, $attempt);
-
-        DB::transaction(function () use ($record): void {
-            $record = DB::table('exam_public_subject_attempts')->where('id', $record->id)->lockForUpdate()->firstOrFail();
-            abort_unless($record->status === 'in_progress', 409);
-            $ids = collect(json_decode($record->question_order, true, 512, JSON_THROW_ON_ERROR));
-            $questions = DB::table('exam_public_questions')->whereIn('id', $ids)->get(['id', 'correct_answer', 'point'])->keyBy('id');
-            $answers = DB::table('exam_public_attempt_answers')->where('exam_public_subject_attempt_id', $record->id)->get()->keyBy('exam_public_question_id');
-            $score = 0;
-            $correct = 0;
-            $answered = 0;
-            $max = 0;
-
-            foreach ($ids as $id) {
-                $question = $questions->get($id);
-                abort_unless($question, 409, 'Soal ujian tidak tersedia.');
-                $max += (float) $question->point;
-                $answer = $answers->get($id);
-                if ($answer?->selected_option !== null) {
-                    $answered++;
-                    $isCorrect = $answer->selected_option === $question->correct_answer;
-                    $correct += (int) $isCorrect;
-                    $score += $isCorrect ? (float) $question->point : 0;
-                    DB::table('exam_public_attempt_answers')->where('id', $answer->id)
-                        ->update(['is_correct' => $isCorrect, 'point_awarded' => $isCorrect ? $question->point : 0]);
-                }
-            }
-
-            DB::table('exam_public_subject_attempts')->where('id', $record->id)->update([
-                'status' => $record->expires_at <= now() ? 'auto_submitted' : 'submitted',
-                'submitted_at' => now(),
-                'answered_questions' => $answered,
-                'correct_answers' => $correct,
-                'raw_score' => $score,
-                'max_score' => $max,
-                'percentage_score' => $max > 0 ? round($score / $max * 100, 2) : 0,
-                'updated_at' => now(),
-            ]);
-            $this->results->refresh($record->exam_public_participant_id);
-        });
+        $this->submissions->submit($record->id);
 
         return response()->json(['submitted' => true]);
     }

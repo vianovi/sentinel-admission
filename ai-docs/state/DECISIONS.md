@@ -1,5 +1,21 @@
 # Durable Audit Decisions
 
+## D-012 — Public sessions contain one to five distinct subjects
+
+- Date: 2026-11-13
+- Status: owner-approved and implemented locally; SQLite/MariaDB focused regression and build pass.
+- Supersedes the fixed-four-subject count requirement only. Each selected package must belong to a different subject; sessions require 1–5 published, configured packages.
+- The stored session assignments are the source of truth, with no duplicate count column. Publication requires every assigned package to be ready. Assignments remain immutable after publication or participant entry under the existing guards.
+- Completion requires primary scores for every assigned subject. Average equals the sum of effective subject scores divided by the assigned package count. Passing remains strictly above the session threshold using the unrounded aggregate. Existing per-package retry and score-visibility rules remain unchanged.
+
+## D-011 — Issuing a public room token revokes its predecessors
+
+- Date: 2026-11-12
+- Status: owner-approved and implemented locally; SQLite-backed regression and build pass, MariaDB concurrency pending.
+- Decision: Creating a new room token for a public exam session revokes all older room tokens for that session. The newest token is the only valid room token.
+- Reason: Token issuance is a security rotation boundary; a replacement must close access through previously distributed or leaked codes.
+- Constraints: Already-joined participants keep their hashed participant session secret and may continue only while the session remains published. Token replacement must be atomic with session-status validation and report how many tokens were revoked.
+
 ## D-010 — Closing a public session forcibly stops ongoing attempts
 
 - Date: 2026-11-12
@@ -8,8 +24,9 @@
 - Scope: Public Exam session close. Do not alter internal exam behavior.
 - Follow-up: Owner mentioned a similar feature/module under Hasil Ujian as a possible later addition. Its UI, per-participant/bulk scope and controls are not yet specified; do not treat this as authorization to build that module now.
 - Implementation constraints: Preserve previously saved answers and existing completed results. Trace and test scoring, finalization, idempotency, and concurrent answer/submit requests before claiming completion. Exact status representation and handling of unstarted subjects are not specified by this decision; raise material policy gaps before implementing assumptions.
-- Separate unresolved choice: whether newly issued room tokens revoke older tokens. No decision was supplied.
-- Pause: Owner requested ending the chat with documentation only. Do not implement this policy until work is resumed.
+- Separate token choice: settled by D-011; new issuance revokes all predecessors.
+- Scoring clarification (2026-11-12): Owner selected auto-submit and scoring from saved answers. Active attempts become `auto_submitted`, use the existing participant-submit scoring path, and refresh participant results. Already-finished attempts remain unchanged.
+- Implementation status: Implemented locally after owner resumed work; focused and full SQLite-backed regressions pass. MariaDB concurrency verification remains pending.
 
 ## D-001 — Main is human-controlled
 

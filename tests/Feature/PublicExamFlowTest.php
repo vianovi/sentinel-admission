@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\User;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\DB;
 
@@ -7,7 +8,39 @@ beforeEach(function () {
     $this->withoutMiddleware(ThrottleRequests::class);
 });
 
-function publicFlowFixture(string $order = 'free'): array
+test('public sessions support the configured package count from creation to final score', function (int $count, string $order) {
+    [, $packages] = publicFlowFixture($order, $count);
+    $admin = User::factory()->create(['role' => 'admin']);
+    $ids = array_column(array_values($packages), 0);
+    $session = $this->actingAs($admin)->postJson(route('admin.exams.public-v2.sessions.store'), [
+        'title' => 'Dynamic session', 'opens_at' => now()->subHour()->toISOString(),
+        'closes_at' => now()->addHour()->toISOString(), 'order_type' => $order, 'package_ids' => $ids,
+    ])->assertCreated()->json('id');
+    expect(DB::table('exam_public_session_packages')->where('exam_public_session_id', $session)->count())->toBe($count);
+    $this->postJson(route('admin.exams.public-v2.sessions.publish', $session))->assertSuccessful();
+    $token = $this->postJson(route('admin.exams.public-v2.sessions.tokens.store', $session))->assertCreated()->json('token');
+    DB::table('exam_public_participants')->where('participant_code', 'STUDENTCODE00001')->update(['exam_public_session_id' => $session]);
+    $this->app['auth']->logout();
+    $join = $this->postJson(route('public-exam.join', $token), ['participant_code' => 'STUDENTCODE00001'])->assertSuccessful();
+    $participant = $join->json('participant_id');
+    $secret = collect($join->headers->getCookies())->first(fn ($cookie) => $cookie->getName() === 'public_exam_session')->getValue();
+    $this->withHeader('X-Public-Exam-Session', $secret);
+    foreach (array_values($packages) as $index => [$package, $question]) {
+        $this->getJson(route('public-exam.dashboard', $participant))->assertJsonPath('result.completed', false);
+        $attempt = $this->postJson(route('public-exam.start', [$participant, $package]))->assertSuccessful()->json('attempt_id');
+        if ($index === 0) {
+            $this->postJson(route('public-exam.answer', $attempt), ['question_id' => $question, 'selected_option' => 'A'])->assertSuccessful();
+        }
+        $this->postJson(route('public-exam.submit', $attempt))->assertSuccessful();
+    }
+    $this->getJson(route('public-exam.dashboard', $participant))->assertJsonPath('result.completed', true);
+    $result = DB::table('exam_public_participants')->find($participant);
+    expect($result->status)->toBe('completed')
+        ->and((float) $result->average_score)->toBe(round(100 / $count, 2))
+        ->and((bool) $result->is_passed)->toBe(100 / $count > 65);
+})->with([1, 2, 3, 4, 5])->with(['free', 'sequential']);
+
+function publicFlowFixture(string $order = 'free', int $packageCount = 4): array
 {
     $session = DB::table('exam_public_sessions')->insertGetId([
         'title' => 'Ujian Publik', 'opens_at' => now()->subHour(), 'closes_at' => now()->addHours(3),
@@ -21,7 +54,7 @@ function publicFlowFixture(string $order = 'free'): array
         'school_origin' => 'SD Asal',
     ]);
     $packages = [];
-    foreach (['IPAS', 'PAIBP', 'MTK', 'BINDO'] as $index => $code) {
+    foreach (array_slice(['IPAS', 'PAIBP', 'MTK', 'BINDO', 'BING'], 0, $packageCount) as $index => $code) {
         $subject = DB::table('exam_public_subjects')->insertGetId(['name' => $code, 'code' => $code]);
         $package = DB::table('exam_public_packages')->insertGetId([
             'exam_public_subject_id' => $subject, 'title' => $code.' Paket 1', 'code' => $code.'-1', 'status' => 'published',
@@ -40,6 +73,40 @@ function publicFlowFixture(string $order = 'free'): array
 
     return [$session, $packages];
 }
+
+test('public session edits accept one to five packages but reject empty excessive or duplicate selections', function () {
+    [$session, $packages] = publicFlowFixture('free', 5);
+    DB::table('exam_public_sessions')->where('id', $session)->update(['status' => 'draft']);
+    $this->actingAs(User::factory()->create(['role' => 'admin']));
+    $ids = array_column(array_values($packages), 0);
+    foreach ([$ids, [$ids[0]]] as $selection) {
+        $this->putJson(route('admin.exams.public-v2.sessions.packages.update', $session), ['package_ids' => $selection])->assertSuccessful();
+        expect(DB::table('exam_public_session_packages')->where('exam_public_session_id', $session)->count())->toBe(count($selection));
+    }
+    foreach ([[], [...$ids, $ids[0]], [$ids[0], $ids[0]]] as $selection) {
+        $this->putJson(route('admin.exams.public-v2.sessions.packages.update', $session), ['package_ids' => $selection])->assertUnprocessable();
+        $this->postJson(route('admin.exams.public-v2.sessions.store'), [
+            'title' => 'Invalid', 'opens_at' => now()->toISOString(), 'closes_at' => now()->addHour()->toISOString(),
+            'order_type' => 'free', 'package_ids' => $selection,
+        ])->assertUnprocessable();
+        expect(DB::table('exam_public_session_packages')->where('exam_public_session_id', $session)->pluck('exam_public_package_id')->all())->toBe([$ids[0]]);
+    }
+    expect(DB::table('exam_public_sessions')->count())->toBe(1);
+});
+
+test('publish and join reject a session when any selected package is not ready', function () {
+    [$session, $packages] = publicFlowFixture('free', 5);
+    DB::table('exam_public_sessions')->where('id', $session)->update(['status' => 'draft']);
+    DB::table('exam_public_packages')->where('id', $packages['BING'][0])->update(['passing_score' => null]);
+    $this->actingAs(User::factory()->create(['role' => 'admin']))
+        ->postJson(route('admin.exams.public-v2.sessions.publish', $session))->assertUnprocessable();
+    expect(DB::table('exam_public_sessions')->where('id', $session)->value('status'))->toBe('draft');
+    DB::table('exam_public_sessions')->where('id', $session)->update(['status' => 'published']);
+    $this->app['auth']->logout();
+    $this->postJson(route('public-exam.join', 'ROOM01'), ['participant_code' => 'STUDENTCODE00001'])->assertUnprocessable();
+    expect(DB::table('exam_public_participants')->value('started_at'))->toBeNull()
+        ->and(DB::table('exam_public_session_tokens')->value('used_count'))->toBe(0);
+});
 
 test('public participant completes four packages in free order without seeing aggregate result', function () {
     [, $packages] = publicFlowFixture();
@@ -225,4 +292,40 @@ test('unconfigured published public package cannot be started', function () {
 
     $this->postJson(route('public-exam.start', [$join->json('participant_id'), $packages['MTK'][0]]))->assertUnprocessable();
     expect(DB::table('exam_public_subject_attempts')->count())->toBe(0);
+});
+
+test('closing a public session auto submits active attempts and is idempotent', function () {
+    [$session, $packages] = publicFlowFixture();
+    $join = $this->postJson(route('public-exam.join', 'ROOM01'), ['participant_code' => 'STUDENTCODE00001']);
+    $participant = $join->json('participant_id');
+    $secret = collect($join->headers->getCookies())->first(fn ($cookie) => $cookie->getName() === 'public_exam_session')->getValue();
+    $this->withHeader('X-Public-Exam-Session', $secret);
+
+    $completedAttempt = $this->postJson(route('public-exam.start', [$participant, $packages['IPAS'][0]]))->json('attempt_id');
+    $this->postJson(route('public-exam.submit', $completedAttempt))->assertSuccessful();
+    $activeAttempt = $this->postJson(route('public-exam.start', [$participant, $packages['MTK'][0]]))->json('attempt_id');
+    $this->postJson(route('public-exam.answer', $activeAttempt), [
+        'question_id' => $packages['MTK'][1],
+        'selected_option' => 'A',
+    ])->assertSuccessful();
+
+    $admin = User::factory()->create(['role' => 'admin']);
+    $this->actingAs($admin)->postJson(route('admin.exams.public-v2.sessions.close', $session))
+        ->assertSuccessful()->assertJsonPath('status', 'closed');
+
+    expect(DB::table('exam_public_sessions')->where('id', $session)->value('status'))->toBe('closed')
+        ->and(DB::table('exam_public_subject_attempts')->where('id', $completedAttempt)->value('status'))->toBe('submitted')
+        ->and(DB::table('exam_public_subject_attempts')->where('id', $activeAttempt)->value('status'))->toBe('auto_submitted')
+        ->and((float) DB::table('exam_public_subject_attempts')->where('id', $activeAttempt)->value('percentage_score'))->toBe(100.0)
+        ->and(DB::table('exam_public_attempt_answers')->where('exam_public_subject_attempt_id', $activeAttempt)->value('selected_option'))->toBe('A');
+
+    $this->postJson(route('admin.exams.public-v2.sessions.close', $session))->assertSuccessful();
+    $this->withHeader('X-Public-Exam-Session', $secret);
+    $this->postJson(route('public-exam.answer', $activeAttempt), [
+        'question_id' => $packages['MTK'][1],
+        'selected_option' => 'B',
+    ])->assertStatus(423);
+    $this->postJson(route('public-exam.submit', $activeAttempt))->assertStatus(409);
+    $this->postJson(route('public-exam.start', [$participant, $packages['BINDO'][0]]))->assertForbidden();
+    $this->getJson(route('public-exam.session', 'ROOM01'))->assertNotFound();
 });

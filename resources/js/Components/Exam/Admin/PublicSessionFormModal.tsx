@@ -19,6 +19,20 @@ type Props = {
 
 const MAX_PACKAGES = 5;
 
+const startShortcuts = [
+    { label: "Mulai sekarang", hours: 0 },
+    { label: "1 jam lagi", hours: 1 },
+    { label: "2 jam lagi", hours: 2 },
+    { label: "Besok pagi", hours: 12 },
+] as const;
+
+const endShortcuts = [
+    { label: "2 jam setelah mulai", hours: 2 },
+    { label: "4 jam setelah mulai", hours: 4 },
+    { label: "1 hari setelah mulai", hours: 24 },
+    { label: "2 hari setelah mulai", hours: 48 },
+] as const;
+
 export default function PublicSessionFormModal({
     show,
     onClose,
@@ -284,7 +298,7 @@ export default function PublicSessionFormModal({
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div className="relative">
                                 <div className="flex items-center justify-between mb-1">
-                                    <label className="block text-xs font-bold text-slate-300">Waktu Buka (WIB)</label>
+                                    <label className="block text-xs font-bold text-slate-300">Waktu mulai (WIB)</label>
                                     <div className="relative">
                                         <button
                                             type="button"
@@ -292,35 +306,32 @@ export default function PublicSessionFormModal({
                                                 setShowOpensQuick(!showOpensQuick);
                                                 setShowClosesQuick(false);
                                             }}
-                                            className="flex items-center gap-1.5 rounded-md bg-amber-500/10 hover:bg-amber-500/20 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-amber-400 transition-all border border-amber-500/20"
+                                            aria-expanded={showOpensQuick}
+                                            aria-haspopup="menu"
+                                            className="min-h-9 flex items-center gap-1.5 rounded-md border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-amber-300 transition-colors hover:bg-amber-500/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-300"
                                         >
                                             <i className="fa-solid fa-bolt text-amber-400" /> Cepat
                                         </button>
                                         {showOpensQuick && (
                                             <>
                                                 <div className="fixed inset-0 z-40" onClick={() => setShowOpensQuick(false)} />
-                                                <div className="absolute right-0 top-6 z-50 w-64 rounded-xl border border-white/10 bg-slate-900 p-3 shadow-xl text-slate-100">
-                                                    <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">Pilih Jam Hari Ini</div>
-                                                    <div className="grid grid-cols-3 gap-1 mb-2">
-                                                        {["Sekarang", "07:30", "08:00", "09:00", "10:00", "13:00", "14:00", "16:00", "19:00"].map((t) => (
+                                                <div role="menu" className="absolute right-0 top-11 z-50 w-64 rounded-xl border border-slate-700 bg-slate-900 p-3 text-slate-100 shadow-xl">
+                                                    <div className="mb-2 text-xs font-semibold text-slate-300">Pilih waktu mulai</div>
+                                                    <div className="grid gap-1">
+                                                        {startShortcuts.map(({ label, hours }) => (
                                                             <button
-                                                                key={t}
+                                                                key={label}
                                                                 type="button"
+                                                                role="menuitem"
                                                                 onClick={() => {
-                                                                    const newDate = sessionForm.data.opens_at ? new Date(sessionForm.data.opens_at) : new Date();
-                                                                    if (t !== "Sekarang") {
-                                                                        const [h, m] = t.split(":").map(Number);
-                                                                        newDate.setHours(h, m, 0, 0);
-                                                                    } else {
-                                                                        const now = new Date();
-                                                                        newDate.setHours(now.getHours(), now.getMinutes(), 0, 0);
-                                                                    }
+                                                                    const newDate = new Date();
+                                                                    newDate.setHours(newDate.getHours() + hours, hours === 0 ? newDate.getMinutes() : 0, 0, 0);
                                                                     sessionForm.setData("opens_at", formatToLocalDateTime(newDate));
                                                                     setShowOpensQuick(false);
                                                                 }}
-                                                                className="rounded-md bg-white/5 hover:bg-white/10 px-1 py-1 text-[11px] font-medium text-center border border-white/5 text-slate-200"
+                                                                className="min-h-11 rounded-lg border border-slate-700 bg-white/5 px-3 py-2 text-left text-sm font-medium text-slate-100 transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-300"
                                                             >
-                                                                {t}
+                                                                {label}
                                                             </button>
                                                         ))}
                                                     </div>
@@ -329,6 +340,7 @@ export default function PublicSessionFormModal({
                                         )}
                                     </div>
                                 </div>
+                                <p className="mb-2 text-[11px] text-slate-400">Pilih opsi cepat atau tentukan waktu sendiri.</p>
                                 <input
                                     type="datetime-local"
                                     required
@@ -340,7 +352,7 @@ export default function PublicSessionFormModal({
 
                             <div className="relative">
                                 <div className="flex items-center justify-between mb-1">
-                                    <label className="block text-xs font-bold text-slate-300">Waktu Tutup (WIB)</label>
+                                    <label className="block text-xs font-bold text-slate-300">Waktu berakhir (WIB)</label>
                                     <div className="relative">
                                         <button
                                             type="button"
@@ -348,30 +360,33 @@ export default function PublicSessionFormModal({
                                                 setShowClosesQuick(!showClosesQuick);
                                                 setShowOpensQuick(false);
                                             }}
-                                            className="flex items-center gap-1.5 rounded-md bg-amber-500/10 hover:bg-amber-500/20 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-amber-400 transition-all border border-amber-500/20"
+                                            aria-expanded={showClosesQuick}
+                                            aria-haspopup="menu"
+                                            className="min-h-9 flex items-center gap-1.5 rounded-md border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-amber-300 transition-colors hover:bg-amber-500/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-300"
                                         >
                                             <i className="fa-solid fa-bolt text-amber-400" /> Cepat
                                         </button>
                                         {showClosesQuick && (
                                             <>
                                                 <div className="fixed inset-0 z-40" onClick={() => setShowClosesQuick(false)} />
-                                                <div className="absolute right-0 top-6 z-50 w-64 rounded-xl border border-white/10 bg-slate-900 p-3 shadow-xl text-slate-100">
-                                                    <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">Tambah Waktu (dari Buka)</div>
-                                                    <div className="grid grid-cols-3 gap-1.5">
-                                                        {[1, 2, 3, 4, 6, 12, 24].map((h) => (
+                                                <div role="menu" className="absolute right-0 top-11 z-50 w-64 rounded-xl border border-slate-700 bg-slate-900 p-3 text-slate-100 shadow-xl">
+                                                    <div className="mb-2 text-xs font-semibold text-slate-300">Pilih waktu berakhir</div>
+                                                    <div className="grid gap-1">
+                                                        {endShortcuts.map(({ label, hours }) => (
                                                             <button
-                                                                key={h}
+                                                                key={label}
                                                                 type="button"
                                                                 onClick={() => {
                                                                     const baseStr = sessionForm.data.opens_at || formatToLocalDateTime(new Date());
                                                                     const baseDate = new Date(baseStr);
-                                                                    baseDate.setHours(baseDate.getHours() + h);
+                                                                    baseDate.setHours(baseDate.getHours() + hours);
                                                                     sessionForm.setData("closes_at", formatToLocalDateTime(baseDate));
                                                                     setShowClosesQuick(false);
                                                                 }}
-                                                                className="rounded-lg bg-white/5 hover:bg-white/10 px-2 py-1 text-xs font-medium text-center border border-white/5 text-slate-200"
+                                                                role="menuitem"
+                                                                className="min-h-11 rounded-lg border border-slate-700 bg-white/5 px-3 py-2 text-left text-sm font-medium text-slate-100 transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-300"
                                                             >
-                                                                +{h} Jam
+                                                                {label}
                                                             </button>
                                                         ))}
                                                     </div>
@@ -380,6 +395,7 @@ export default function PublicSessionFormModal({
                                         )}
                                     </div>
                                 </div>
+                                <p className="mb-2 text-[11px] text-slate-400">Durasi dihitung dari waktu mulai yang dipilih.</p>
                                 <input
                                     type="datetime-local"
                                     required

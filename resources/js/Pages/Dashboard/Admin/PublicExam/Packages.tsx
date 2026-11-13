@@ -67,6 +67,9 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
     const [formCode, setFormCode] = useState("");
 
     const [busy, setBusy] = useState(false);
+    const hasPackages = stats.total > 0;
+    const hasQuestions = stats.total_questions > 0;
+    const hasPublishedPackages = stats.published > 0;
 
     const filteredPackages = useMemo(() => {
         return packages
@@ -213,42 +216,42 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                             title: "Buat Paket",
                             description: `${stats.total.toLocaleString("id-ID")} paket, ${stats.total_subjects.toLocaleString("id-ID")} jenis mapel tersedia.`,
                             icon: "fa-solid fa-box-archive",
-                            state: stats.total > 0 ? "done" : "active",
+                            state: hasPackages ? "done" : "active",
                         },
                         {
                             label: "Langkah 2",
                             title: "Siapkan XLSX",
                             description: "Samakan jenis mapel, judul, dan kode pada file dengan paket.",
                             icon: "fa-solid fa-file-excel",
-                            state: stats.total > 0 ? "active" : "idle",
+                            state: hasPackages ? "done" : "idle",
                         },
                         {
                             label: "Langkah 3",
                             title: "Import Soal",
                             description: `${stats.total_questions.toLocaleString("id-ID")} soal aktif telah diimpor.`,
                             icon: "fa-solid fa-file-import",
-                            state: stats.total_questions > 0 ? "done" : stats.total > 0 ? "active" : "idle",
+                            state: hasQuestions ? "done" : hasPackages ? "active" : "idle",
                         },
                         {
                             label: "Langkah 4",
                             title: "Review Bank Soal",
                             description: "Periksa isi soal dan konfigurasi paket sebelum terbit.",
                             icon: "fa-solid fa-list-check",
-                            state: stats.total_questions > 0 ? "active" : "idle",
+                            state: hasPublishedPackages ? "done" : hasQuestions ? "active" : "idle",
                         },
                         {
                             label: "Langkah 5",
                             title: "Terbitkan Paket",
                             description: `${stats.published.toLocaleString("id-ID")} paket siap dimasukkan ke sesi.`,
                             icon: "fa-solid fa-circle-check",
-                            state: stats.published > 0 ? "done" : stats.total_questions > 0 ? "active" : "idle",
+                            state: hasPublishedPackages ? "done" : hasQuestions ? "active" : "idle",
                         },
                         {
                             label: "Langkah 6",
                             title: "Jadwalkan Sesi",
-                            description: "Pilih empat paket dari mapel berbeda untuk satu sesi publik.",
+                            description: "Pilih 1–5 paket dari mapel berbeda untuk satu sesi publik.",
                             icon: "fa-solid fa-calendar-check",
-                            state: stats.published >= 4 ? "active" : "idle",
+                            state: hasPublishedPackages ? "active" : "idle",
                         },
                     ]}
                 />

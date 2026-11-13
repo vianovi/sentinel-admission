@@ -140,9 +140,12 @@ Route::middleware(['auth', RoleMiddleware::class.':admin'])
         Route::post('/public-bank/subjects', [AdminPublicBank::class, 'storeSubject'])->name('public-bank.subjects.store');
         Route::post('/public-bank/packages', [AdminPublicBank::class, 'storePackage'])->name('public-bank.packages.store');
         Route::put('/public-bank/packages/{package}/settings', [AdminPublicBank::class, 'updatePackage'])->name('public-bank.packages.settings.update');
+        Route::post('/public-bank/packages/{package}/draft', [AdminPublicBank::class, 'revertToDraft'])->name('public-bank.packages.draft');
         Route::get('/public-bank/packages/{package}/questions', [AdminPublicBank::class, 'questions'])->name('public-bank.questions.index');
         Route::get('/public-bank/packages/{package}/template', [AdminPublicBank::class, 'downloadTemplate'])->name('public-bank.packages.template.download');
         Route::post('/public-bank/packages/{package}/questions', [AdminPublicBank::class, 'storeQuestion'])->name('public-bank.questions.store');
+        Route::patch('/public-bank/questions/{question}', [AdminPublicBank::class, 'toggleQuestion'])->name('public-bank.questions.toggle');
+        Route::delete('/public-bank/questions/{question}', [AdminPublicBank::class, 'destroyQuestion'])->name('public-bank.questions.destroy');
         Route::post('/public-bank/packages/{package}/imports', [AdminPublicBank::class, 'importQuestions'])->middleware('throttle:upload')->name('public-bank.packages.import');
         Route::post('/public-bank/packages/{package}/publish', [AdminPublicBank::class, 'publish'])->name('public-bank.packages.publish');
         Route::delete('/public-bank/packages/{package}', [AdminPublicBank::class, 'destroyPackage'])->name('public-bank.packages.destroy');
