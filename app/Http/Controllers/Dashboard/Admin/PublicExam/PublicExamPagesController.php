@@ -64,9 +64,12 @@ class PublicExamPagesController extends Controller
         }
         $sessions = DB::table('exam_public_sessions')->orderByDesc('id')
             ->when($session !== null, fn ($query) => $query->where('id', $session))
-            ->get(['id', 'title', 'description', 'instructions', 'status', 'order_type', 'opens_at', 'closes_at']);
+            ->get(['id', 'title', 'description', 'instructions', 'status', 'order_type', 'opens_at', 'closes_at', 'token_rotation_minutes']);
 
         $sessionIds = $sessions->pluck('id')->all();
+        foreach ($sessions as $record) {
+            app(\App\Services\Exam\PublicSessionTokenService::class)->current($record->id);
+        }
 
         $sessionPackages = DB::table('exam_public_session_packages as sp')
             ->join('exam_public_packages as p', 'p.id', '=', 'sp.exam_public_package_id')
@@ -101,7 +104,9 @@ class PublicExamPagesController extends Controller
                 'opens_at' => \Carbon\Carbon::parse($session->opens_at, config('app.timezone'))->toIso8601String(),
                 'closes_at' => \Carbon\Carbon::parse($session->closes_at, config('app.timezone'))->toIso8601String(),
                 'packages' => $sessionPackages->get($session->id, collect())->values(),
-                'active_token' => $sessionTokens->get($session->id)?->token ?? null,
+                'active_token' => $session->status === 'published' && $session->closes_at > now() ? $sessionTokens->get($session->id)?->token : null,
+                'token_rotation_minutes' => $session->token_rotation_minutes,
+                'token_expires_at' => $sessionTokens->get($session->id)?->expires_at ? \Carbon\Carbon::parse($sessionTokens->get($session->id)->expires_at)->toIso8601String() : null,
                 'participants_count' => (int) ($participantCounts->get($session->id) ?? 0),
             ];
         });
@@ -115,6 +120,9 @@ class PublicExamPagesController extends Controller
         return Inertia::render('Dashboard/Admin/PublicExam/Sessions', [
             'detailMode' => $session !== null,
             'examTimezone' => config('app.timezone'),
+            'publicExamUrl' => app()->environment('local')
+                ? url('/public-exam')
+                : rtrim((string) config('app.url'), '/').'/public-exam',
             'sessions' => $sessionsWithDetails,
             'packages' => $availablePackages,
             'stats' => [

@@ -27,11 +27,12 @@ test('admin creates a four-subject draft then publishes and issues a room token'
         ->assertInertia(fn ($page) => $page->component('Dashboard/Admin/PublicExam/Sessions'));
     expect(DB::table('exam_public_sessions')->where('id', $session)->value('closes_at'))->toBeGreaterThan(now()->toDateTimeString());
     $this->postJson(route('admin.exams.public-v2.sessions.publish', $session))->assertSuccessful()->assertJsonPath('status', 'published');
-    $token = $this->postJson(route('admin.exams.public-v2.sessions.tokens.store', $session))
-        ->assertCreated()->assertJsonPath('revoked_tokens', 0)->json('token');
-    expect(strlen($token))->toBe(12);
-    $replacement = $this->postJson(route('admin.exams.public-v2.sessions.tokens.store', $session))
-        ->assertCreated()->assertJsonPath('revoked_tokens', 1)->json('token');
+    $token = DB::table('exam_public_session_tokens')->where('exam_public_session_id', $session)->value('token');
+    expect(strlen($token))->toBe(5);
+    $this->postJson(route('admin.exams.public-v2.sessions.tokens.store', $session))->assertGone();
+    $this->travel(5)->minutes();
+    $this->artisan('exam:rotate-public-tokens')->assertSuccessful();
+    $replacement = DB::table('exam_public_session_tokens')->where('exam_public_session_id', $session)->value('token');
     $this->app['auth']->logout();
     expect(DB::table('exam_public_sessions')->where('id', $session)->value('status'))->toBe('published')
         ->and(DB::table('exam_public_session_tokens')->where('token', $token)->exists())->toBeFalse()

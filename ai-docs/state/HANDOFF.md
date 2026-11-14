@@ -1,5 +1,38 @@
 # Audit Handoff
 
+## 2026-11-14 public session page rebuild
+
+- Reworked only the public exam session page UI to follow the internal exam page patterns: `ExamWorkspace`, `PageHeader`, `StatCard`, `WorkflowRail`, shared form controls, session cards, detail view, and responsive roster table.
+- Public session access is presented as three copyable values: portal URL, token-prefilled URL, and token only. The page has no manual participant registration or manual token rotation control.
+- The portal URL is passed by `PublicExamPagesController`: local uses the current local host; non-local environments use `APP_URL` with `/public-exam`.
+- Verification: `npx tsc --noEmit`, `npm run build`, Pint, `git diff --check`, `PublicExamAdminPagesTest` (3 passed / 124 assertions), and Playwright checks at 320/375/414/768px with no horizontal overflow and no console errors.
+- Remaining earlier backend/token changes in the worktree were not expanded in this UI slice and require a separate review before promotion.
+
+## 2026-11-14 short public token and shared exam panel
+
+- Public room tokens now use five uppercase alphanumeric characters. Existing longer active tokens are replaced when the rotation service next evaluates the session; the public join endpoint is throttled to five attempts per minute.
+- `PublicExam.tsx` now reuses the internal exam panel components `CandidateQuestionWorkspace` and `QuestionPaletteNavigator`, with the public API adapted into the shared exam types. The public flow retains its own guest identity/session endpoints.
+- Verification: `PublicSessionAdminPagesTest`, `PublicSessionTokenRotationTest`, `PublicSessionV2Test`, and `PublicExamFlowTest`: 40 passed / 553 assertions; `npm run build`, TypeScript, Pint, and diff checks passed; Playwright reached the shared panel, saved an answer, and showed no horizontal overflow at 320/375/414/768px or current console errors.
+- Reference basis: Laravel 12 route throttling via Context7; NIST guidance requires effective rate limiting for short secrets. The five-character code is a short-lived room locator, not a durable account credential.
+
+## 2026-11-14 public panel header alignment
+
+- Corrected the public panel header after review: it now carries the same exam identity chrome as the internal attempt panel, including `/assets/icons/brand/exam-logo.png`, the Pondok Modern Sabilurrosyad Muhammadiyah Banjarnegara name, session title, participant name, timer, theme toggle, and submit action.
+- Route remains `Public/Exam/PublicExam`; the issue was the public component's header implementation, not a missing route. TypeScript, build, Pint, and diagnostics passed after the correction.
+- Dev-mode check confirmed Laravel serves Vite HMR assets from `http://localhost:5173`; the source returned by that server contains both logo references and the Pondok name. The pre-attempt portal header was also aligned so the branding is visible before entering a package.
+
+## 2026-11-14 public session access and automatic rotation follow-up
+
+- Owner requests public access sharing (portal URL, token-prefilled URL, token text), no admin participant registration, no manual token issuance/rotation, and one automatically rotating token per active session.
+- Read relevant source and scoped rules only, per owner request to skip the full startup documentation. Graphify was queried but returned legacy public flow nodes; current source was inspected directly. No application edits or tests were performed.
+- B-006 records the concrete schema proposal and required approval. Participant self-entry versus existing participant-code admission is pending owner clarification. Continue from the existing uncommitted Sessions page changes after resolving these boundaries.
+
+## 2026-11-14 public session management entry
+
+- Added an explicit Kelola Sesi button to public session cards and navigate to the existing detail route after successful creation using the returned session ID.
+- Detail view now shows session-specific status, assigned package count, participant count and token availability; the list-level workflow rail is hidden there. Existing schedule editing, publication, token rotation and participant controls remain wired to their existing APIs.
+- Verification: TypeScript and editor diagnostics passed; PublicExamAdminPagesTest: 3 passed / 124 assertions; diff check passed. Browser navigation and visual interaction await owner review; no asset build or commit.
+
 ## 2026-11-13 legacy public exam retirement — code verified, review pending
 
 - Owner authorized removal of the former guest public-exam flow that shared `exam_*` tables with internal candidate exams. The current separate public exam implementation remains intact: `public-exam.*` participant routes and `exam_public_*` tables. Candidate flow remains `dashboard/seleksi/*` and its authenticated assignment model.

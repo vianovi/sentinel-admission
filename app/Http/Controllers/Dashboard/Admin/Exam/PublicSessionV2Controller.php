@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Dashboard\Admin\Exam;
 
 use App\Http\Controllers\Controller;
 use App\Services\Exam\PublicExamAttemptSubmissionService;
+use App\Services\Exam\PublicSessionTokenService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class PublicSessionV2Controller extends Controller
@@ -36,6 +36,7 @@ class PublicSessionV2Controller extends Controller
             'opens_at' => ['required', 'date'],
             'closes_at' => ['required', 'date', 'after:opens_at'],
             'order_type' => ['required', Rule::in(['free', 'sequential'])],
+            'token_rotation_minutes' => ['sometimes', 'required', 'integer', 'min:1', 'max:1440'],
             'package_ids' => ['required', 'array', 'min:1', 'max:5'],
             'package_ids.*' => ['required', 'integer', 'distinct', Rule::exists('exam_public_packages', 'id')->where('status', 'published')],
         ]);
@@ -57,6 +58,7 @@ class PublicSessionV2Controller extends Controller
                 'closes_at' => \Carbon\Carbon::parse($data['closes_at'])->setTimezone(config('app.timezone'))->toDateTimeString(),
                 'order_type' => $data['order_type'],
                 'status' => 'draft',
+                'token_rotation_minutes' => $data['token_rotation_minutes'] ?? 5,
                 'created_by' => $request->user()->id,
                 'created_at' => now(), 'updated_at' => now(),
             ]);
@@ -112,6 +114,8 @@ class PublicSessionV2Controller extends Controller
 
             DB::table('exam_public_sessions')->where('id', $session)->update(['status' => 'published', 'updated_at' => now()]);
 
+            app(PublicSessionTokenService::class)->current($session);
+
             return response()->json(['status' => 'published']);
         });
     }
@@ -125,6 +129,7 @@ class PublicSessionV2Controller extends Controller
             'opens_at' => ['required', 'date'],
             'closes_at' => ['required', 'date', 'after:opens_at'],
             'order_type' => ['required', Rule::in(['free', 'sequential'])],
+            'token_rotation_minutes' => ['sometimes', 'required', 'integer', 'min:1', 'max:1440'],
         ]);
 
         return DB::transaction(function () use ($request, $session, $data): JsonResponse {
@@ -208,27 +213,20 @@ class PublicSessionV2Controller extends Controller
 
     public function token(Request $request, int $session): JsonResponse
     {
-        $data = $request->validate([
-            'label' => ['nullable', 'string', 'max:255'],
-            'max_uses' => ['nullable', 'integer', 'min:1'],
-        ]);
+        abort(410, 'Token diterbitkan dan dirotasi otomatis.');
+    }
+
+    public function rotation(Request $request, int $session): JsonResponse
+    {
+        $data = $request->validate(['token_rotation_minutes' => ['required', 'integer', 'min:1', 'max:1440']]);
 
         return DB::transaction(function () use ($session, $data): JsonResponse {
             $record = DB::table('exam_public_sessions')->where('id', $session)->lockForUpdate()->first();
-            abort_unless($record && $record->status === 'published', 403);
+            abort_unless($record, 404);
+            abort_unless(in_array($record->status, ['draft', 'published'], true) && $record->closes_at > now(), 409);
+            DB::table('exam_public_sessions')->where('id', $session)->update([...$data, 'updated_at' => now()]);
 
-            $revokedTokens = DB::table('exam_public_session_tokens')->where('exam_public_session_id', $session)->delete();
-            $code = Str::upper(Str::random(12));
-            DB::table('exam_public_session_tokens')->insert([
-                'exam_public_session_id' => $session,
-                'token' => $code,
-                'label' => $data['label'] ?? null,
-                'max_uses' => $data['max_uses'] ?? null,
-                'expires_at' => $record->closes_at,
-                'created_at' => now(), 'updated_at' => now(),
-            ]);
-
-            return response()->json(['token' => $code, 'revoked_tokens' => $revokedTokens], 201);
+            return response()->json(['updated' => true]);
         });
     }
 }

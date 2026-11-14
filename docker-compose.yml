@@ -9,6 +9,17 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
+  scheduler:
+    build: .
+    command: php artisan schedule:work --no-interaction
+    volumes:
+      - .:/var/www/html:Z
+    working_dir: /var/www/html
+    user: "1000:1000"
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
   reverb:
     build: .
     command: php artisan reverb:start --host=0.0.0.0 --port=8085

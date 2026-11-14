@@ -42,7 +42,7 @@ Route::get('/exam-media/{filename}', function (string $filename) {
 Route::prefix('public-exam')->name('public-exam.')->group(function () {
     Route::get('/', [PublicExamFlowController::class, 'page'])->name('page');
     Route::get('/sessions/{token}', [PublicExamFlowController::class, 'session'])->name('session')->middleware('throttle:30,1');
-    Route::post('/sessions/{token}/join', [PublicExamFlowController::class, 'join'])->name('join')->middleware('throttle:10,1');
+    Route::post('/sessions/{token}/join', [PublicExamFlowController::class, 'join'])->name('join')->middleware('throttle:5,1');
     Route::get('/participants/{participant}', [PublicExamFlowController::class, 'dashboard'])->name('dashboard');
     Route::post('/participants/{participant}/packages/{package}/start', [PublicExamFlowController::class, 'start'])->name('start')->middleware('throttle:10,1');
     Route::get('/attempts/{attempt}', [PublicExamFlowController::class, 'attempt'])->name('attempt');
@@ -139,6 +139,7 @@ Route::middleware(['auth', RoleMiddleware::class.':admin'])
         Route::put('/public-v2/sessions/{session}/packages', [AdminPublicSessionV2::class, 'updatePackages'])->name('public-v2.sessions.packages.update');
         Route::put('/public-v2/sessions/{session}', [AdminPublicSessionV2::class, 'update'])->name('public-v2.sessions.update');
         Route::post('/public-v2/sessions/{session}/close', [AdminPublicSessionV2::class, 'close'])->name('public-v2.sessions.close');
+        Route::put('/public-v2/sessions/{session}/rotation', [AdminPublicSessionV2::class, 'rotation'])->name('public-v2.sessions.rotation.update');
         Route::post('/public-v2/sessions/{session}/tokens', [AdminPublicSessionV2::class, 'token'])->name('public-v2.sessions.tokens.store');
 
         Route::get('/public-sessions/{session}/participants', [AdminPublicParticipant::class, 'index'])->name('public-sessions.participants.index');

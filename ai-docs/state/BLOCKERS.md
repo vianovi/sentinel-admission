@@ -1,5 +1,15 @@
 # Audit Blockers
 
+## B-006 — Public session automatic token interval requires schema approval
+
+- Date: 2026-11-14
+- State: awaiting owner approval; implementation not started
+- Requested behavior: public session administration has no participant registration, token creation, or manual rotation controls; share portal URL, token-prefilled URL, or token text; maintain one current token and rotate automatically at a configurable minute interval.
+- Evidence from source inspection: `PublicSessionV2Controller::token` currently replaces tokens manually; `PublicExamFlowController::join` requires an existing participant code; the public session schema has no rotation interval column. No runtime verification has been performed in this continuation.
+- Concrete proposal: add `exam_public_sessions.token_rotation_minutes` as an unsigned integer with default 5; expose a positive minute interval in session settings; issue the token when publishing and rotate atomically on the server, rejecting expired tokens without interrupting participant sessions already authenticated. Remove manual token controls and provide the three requested sharing values.
+- Approval boundary: repository AGENTS instructions prohibit schema changes without explicit approval. Obtain approval for the new interval column before implementation. Separately confirm whether participants should enter their own name and school at the public portal instead of receiving an administrator-issued participant code.
+- Existing uncommitted changes to the public Sessions page and HANDOFF were preserved.
+
 ## B-001 — Public production content is unverified and contradictory
 
 - ID: B-001

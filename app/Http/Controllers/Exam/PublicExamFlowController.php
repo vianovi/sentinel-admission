@@ -30,6 +30,7 @@ class PublicExamFlowController extends Controller
         $session = $this->validToken($token)->session;
 
         return response()->json(['session' => [
+            'id' => $session->id,
             'title' => $session->title,
             'instructions' => $session->instructions,
             'order_type' => $session->order_type,
@@ -39,13 +40,17 @@ class PublicExamFlowController extends Controller
     public function join(Request $request, string $token): JsonResponse
     {
         $data = $request->validate([
-            'participant_code' => ['required', 'string', 'size:16', 'alpha_num'],
+            'name' => ['required', 'string', 'max:255'],
+            'school_origin' => ['required', 'string', 'max:255'],
+            'entry_key' => ['required', 'uuid'],
         ]);
 
         [$participantId, $secret] = DB::transaction(function () use ($token, $data): array {
+            $sessionId = DB::table('exam_public_session_tokens')->where('token', $token)->value('exam_public_session_id');
+            abort_unless($sessionId, 403, 'Token tidak berlaku. Minta token terbaru kepada pengawas.');
+            $session = DB::table('exam_public_sessions')->where('id', $sessionId)->lockForUpdate()->first();
             $access = DB::table('exam_public_session_tokens')->where('token', $token)->lockForUpdate()->first();
-            abort_unless($access, 403);
-            $session = DB::table('exam_public_sessions')->where('id', $access->exam_public_session_id)->first();
+            abort_unless($access, 403, 'Token telah berganti. Gunakan token terbaru.');
             abort_unless($session && $session->status === 'published'
                 && $session->opens_at <= now() && $session->closes_at > now()
                 && (! $access->expires_at || $access->expires_at > now())
@@ -57,23 +62,24 @@ class PublicExamFlowController extends Controller
                 ->whereNotNull('package.passing_score')->whereNotNull('package.allow_retry')->whereNotNull('package.show_result_to_participant')
                 ->count() === $packageCount, 422, 'Pengaturan paket sesi belum lengkap.');
 
-            $person = DB::table('exam_public_participants')
-                ->where('exam_public_session_id', $session->id)
-                ->where('participant_code', Str::upper($data['participant_code']))
-                ->lockForUpdate()->first();
-            abort_unless($person && $person->started_at === null, 403, 'Kode peserta tidak valid atau sudah digunakan.');
+            $secret = hash_hmac('sha256', 'public-exam:'.$session->id.':'.$data['entry_key'], config('app.key'));
+            $person = DB::table('exam_public_participants')->where('session_secret', hash('sha256', $secret))->lockForUpdate()->first();
+            if ($person) {
+                return [$person->id, $secret];
+            }
 
-            $secret = Str::random(64);
-            DB::table('exam_public_participants')->where('id', $person->id)->update([
+            $participantId = DB::table('exam_public_participants')->insertGetId([
+                'exam_public_session_id' => $session->id,
                 'exam_public_session_token_id' => $access->id,
+                'participant_code' => Str::upper(Str::random(16)),
+                'name' => $data['name'], 'school_origin' => $data['school_origin'],
                 'session_secret' => hash('sha256', $secret),
-                'started_at' => now(),
-                'updated_at' => now(),
+                'started_at' => now(), 'created_at' => now(), 'updated_at' => now(),
             ]);
             DB::table('exam_public_session_tokens')->where('id', $access->id)->increment('used_count');
 
-            return [$person->id, $secret];
-        });
+            return [$participantId, $secret];
+        }, 3);
 
         return response()->json(['participant_id' => $participantId])
             ->cookie(cookie('public_exam_session', $secret, 300, '/', null, $request->isSecure(), true, false, 'strict'));

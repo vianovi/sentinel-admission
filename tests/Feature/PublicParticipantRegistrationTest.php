@@ -8,7 +8,7 @@ beforeEach(function () {
     $this->withoutMiddleware(ThrottleRequests::class);
 });
 
-test('admin pre-registers two children with the same name but distinct codes', function () {
+test('admin registration is retired and creates no participants', function () {
     $session = DB::table('exam_public_sessions')->insertGetId([
         'title' => 'Ujian Publik', 'opens_at' => now()->subHour(),
         'closes_at' => now()->addHour(), 'status' => 'published',
@@ -22,11 +22,9 @@ test('admin pre-registers two children with the same name but distinct codes', f
         'name' => 'Anak Sama', 'school_origin' => 'SD Asal', 'address' => 'Alamat B',
     ]);
 
-    $first->assertCreated();
-    $second->assertCreated();
-    expect($first->json('participant_code'))->not->toBe($second->json('participant_code'))
-        ->and(DB::table('exam_public_participants')->count())->toBe(2)
-        ->and(DB::table('exam_public_participants')->where('id', $first->json('id'))->value('started_at'))->toBeNull();
+    $first->assertGone();
+    $second->assertGone();
+    expect(DB::table('exam_public_participants')->count())->toBe(0);
 });
 
 test('guest cannot pre-register a public participant', function () {
@@ -45,9 +43,11 @@ test('admin exports one row per child including initial and remedial scores safe
         'title' => 'Ujian Publik', 'opens_at' => now()->subHour(), 'closes_at' => now()->addHour(),
     ]);
     $admin = User::factory()->create(['role' => 'admin']);
-    $participant = $this->actingAs($admin)->postJson(route('admin.exams.public-sessions.participants.store', $session), [
+    $this->actingAs($admin);
+    $participant = DB::table('exam_public_participants')->insertGetId([
+        'exam_public_session_id' => $session, 'participant_code' => 'CSVTEST000000001',
         'name' => '=1+1', 'school_origin' => 'SD Asal', 'address' => '@CMD',
-    ])->json('id');
+    ]);
     $subject = DB::table('exam_public_subjects')->insertGetId(['name' => 'MTK', 'code' => 'MTK']);
     $package = DB::table('exam_public_packages')->insertGetId(['exam_public_subject_id' => $subject, 'title' => 'MTK', 'code' => 'MTK-1', 'passing_score' => 60]);
     DB::table('exam_public_session_packages')->insert([
@@ -74,10 +74,10 @@ test('admin exports one row per child including initial and remedial scores safe
     expect($lines)->toHaveCount(2)
         ->and($lines[1][1])->toBe("'=1+1")
         ->and($lines[1][3])->toBe("'@CMD")
-        ->and($lines[1][4])->toBe('20')
-        ->and($lines[1][5])->toBe('80')
-        ->and($lines[1][6])->toBe('80')
-        ->and($lines[1][7])->toBe('60')
+        ->and((float) $lines[1][4])->toBe(20.0)
+        ->and((float) $lines[1][5])->toBe(80.0)
+        ->and((float) $lines[1][6])->toBe(80.0)
+        ->and((float) $lines[1][7])->toBe(60.0)
         ->and($lines[1][8])->toBe('LULUS MAPEL');
 });
 

@@ -1,102 +1,86 @@
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Head } from "@inertiajs/react";
 import axios from "axios";
-import { FormEvent, useEffect, useState } from "react";
-import RichExamText from "@/Components/Exam/Shared/RichExamText";
+import CandidateQuestionWorkspace from "@/Components/Exam/Candidate/CandidateQuestionWorkspace";
+import QuestionPaletteNavigator from "@/Components/Exam/Candidate/QuestionPaletteNavigator";
+import { useExamNavigation, useExamTimer } from "@/hooks/exam";
+import { confirmExamSubmission } from "@/utils/swal";
+import type { ExamAnswerState, ExamAttemptState, ExamMeta, ExamQuestion } from "@/types/exam";
 
 type Package = { id: number; title: string; subject_name: string; subject_id: number };
-type Attempt = { id: number; exam_public_subject_id: number; status: string; attempt_type: string };
-type Result = { completed: boolean; subjects: { subject_id: number; primary_score: number | null; remedial_score: number | null; remedial_available: boolean }[] };
-type Dashboard = { participant: { id: number; name: string }; session: { title: string; order_type: string }; packages: Package[]; attempts: Attempt[]; result: Result };
-type Question = { id: number; question_text: string; options: Record<string, string> };
-type Workspace = { attempt: { id: number; status: string; expires_at: string; total_questions: number }; questions: Question[]; answers: { exam_public_question_id: number; selected_option: string | null }[] };
-const input = "w-full rounded-xl border border-white/15 bg-slate-950 px-4 py-3 text-white focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none";
-const action = "rounded-xl bg-amber-500 px-5 py-3 font-bold text-slate-950 disabled:opacity-50";
+type AttemptSummary = { id: number; exam_public_subject_id: number; status: string; attempt_type: string };
+type Dashboard = { participant: { id: number; name: string; school_origin?: string }; session: { title: string; order_type: string }; packages: Package[]; attempts: AttemptSummary[]; result: { completed: boolean; subjects: { subject_id: number; primary_score: number | null; remedial_score: number | null; remedial_available: boolean }[] } };
+type SessionInfo = { id: number; title: string; instructions: string | null; order_type: string };
+type PublicAttempt = { attempt: { id: number; status: string; expires_at: string; total_questions: number }; questions: Array<{ id: number; question_text: string; options: Record<string, string | null> }>; answers: Array<{ exam_public_question_id: number; selected_option: string | null }> };
+
+const inputClass = "w-full rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 dark:border-white/10 dark:bg-slate-950 dark:text-white";
+const actionClass = "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-amber-500 px-4 text-sm font-black text-slate-950 transition hover:bg-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-500/20 disabled:cursor-not-allowed disabled:opacity-50";
 
 export default function PublicExam() {
-    const [token, setToken] = useState("");
-    const [code, setCode] = useState("");
-    const [session, setSession] = useState<{ title: string } | null>(null);
+    const [token, setToken] = useState(() => new URLSearchParams(window.location.search).get("token")?.toUpperCase() ?? "");
+    const [name, setName] = useState("");
+    const [school, setSchool] = useState("");
+    const [session, setSession] = useState<SessionInfo | null>(null);
     const [participant, setParticipant] = useState<number | null>(null);
     const [dashboard, setDashboard] = useState<Dashboard | null>(null);
-    const [workspace, setWorkspace] = useState<Workspace | null>(null);
-    const [answers, setAnswers] = useState<Record<number, string>>({});
-    const [activeQuestion, setActiveQuestion] = useState(0);
+    const [workspace, setWorkspace] = useState<PublicAttempt | null>(null);
+    const [activePackage, setActivePackage] = useState<Package | null>(null);
     const [error, setError] = useState("");
     const [busy, setBusy] = useState(false);
-    const [remaining, setRemaining] = useState(0);
 
-    const reloadDashboard = async (id: number) => {
-        const response = await axios.get<Dashboard>(route("public-exam.dashboard", { participant: id }));
-        setDashboard(response.data);
+    const run = async (operation: () => Promise<void>) => {
+        setError("");
+        setBusy(true);
+        try { await operation(); } catch (cause) { setError(axios.isAxiosError(cause) ? cause.response?.data?.message ?? "Permintaan gagal." : "Koneksi gagal. Coba lagi."); } finally { setBusy(false); }
     };
-    const loadAttempt = async (id: number) => {
-        const response = await axios.get<Workspace>(route("public-exam.attempt", { attempt: id }));
-        setWorkspace(response.data);
-        setActiveQuestion(0);
-        setAnswers(Object.fromEntries(response.data.answers.filter(item => item.selected_option).map(item => [item.exam_public_question_id, item.selected_option!]))) ;
-    };
-    useEffect(() => {
-        const remembered = sessionStorage.getItem("public-exam-participant");
-        if (remembered && /^\d+$/.test(remembered)) {
-            const id = Number(remembered);
-            reloadDashboard(id).then(() => setParticipant(id)).catch(() => { sessionStorage.removeItem("public-exam-participant"); });
-        }
-    }, []);
-    useEffect(() => {
-        if (!workspace || workspace.attempt.status !== "in_progress") return;
-        const tick = () => setRemaining(Math.max(0, Math.ceil((new Date(workspace.attempt.expires_at).getTime() - Date.now()) / 1000)));
-        tick(); const interval = window.setInterval(tick, 1000);
-        return () => window.clearInterval(interval);
-    }, [workspace]);
-    const run = async (actionFn: () => Promise<void>) => {
-        setError(""); setBusy(true);
-        try { await actionFn(); }
-        catch (cause) { setError(axios.isAxiosError(cause) ? (cause.response?.data?.message ?? "Permintaan gagal.") : "Koneksi gagal. Coba lagi."); }
-        finally { setBusy(false); }
-    };
-    const verify = (event: FormEvent) => { event.preventDefault(); void run(async () => {
-        const response = await axios.get(route("public-exam.session", { token: token.trim().toUpperCase() }));
-        setSession(response.data.session);
-    }); };
-    const join = (event: FormEvent) => { event.preventDefault(); void run(async () => {
-        const response = await axios.post(route("public-exam.join", { token: token.trim().toUpperCase() }), { participant_code: code.trim().toUpperCase() });
-        const id = Number(response.data.participant_id);
-        await reloadDashboard(id);
-        setParticipant(id);
-        sessionStorage.setItem("public-exam-participant", String(id));
-    }); };
-    const start = (id: number) => { if (!participant) return; void run(async () => {
-        const response = await axios.post(route("public-exam.start", { participant, package: id }));
-        await loadAttempt(Number(response.data.attempt_id));
-    }); };
-    const answer = (question: Question, choice: string) => { if (!workspace) return; void run(async () => {
-        await axios.post(route("public-exam.answer", { attempt: workspace.attempt.id }), { question_id: question.id, selected_option: choice });
-        setAnswers(current => ({ ...current, [question.id]: choice }));
-    }); };
-    const submit = () => { if (!workspace || !participant || !window.confirm("Kumpulkan jawaban mapel ini?")) return; void run(async () => {
-        await axios.post(route("public-exam.submit", { attempt: workspace.attempt.id }));
-        setWorkspace(null);
-        await reloadDashboard(participant);
-    }); };
+    const verifyToken = useCallback(() => run(async () => { setSession((await axios.get<{ session: SessionInfo }>(route("public-exam.session", { token: token.trim().toUpperCase() }))).data.session); }), [token]);
+    const reloadDashboard = async (id: number) => { setDashboard((await axios.get<Dashboard>(route("public-exam.dashboard", { participant: id }))).data); };
+    const loadAttempt = async (id: number, pack?: Package) => { setWorkspace((await axios.get<PublicAttempt>(route("public-exam.attempt", { attempt: id }))).data); if (pack) setActivePackage(pack); };
 
-    const active = workspace?.questions[activeQuestion];
-    return <div className="min-h-screen bg-slate-950 px-4 py-8 text-white sm:px-6"><Head title="Ujian Publik" /><main className="mx-auto max-w-5xl space-y-6">
-        <header className="rounded-3xl border border-amber-500/20 bg-slate-900 p-6"><span className="text-sm font-bold text-amber-400">Seleksi Masuk · Ujian Publik</span><h1 className="text-3xl font-black">Ruang Ujian Online</h1><p className="mt-2 text-sm text-slate-300">Kerjakan semua paket dalam sesi, satu per satu. Jawaban tersimpan di server.</p></header>
-        {error && <p role="alert" className="rounded-xl border border-red-500 p-4 text-red-300">{error}</p>}
-        {!participant && !session && <form onSubmit={verify} className="space-y-4 rounded-3xl border border-white/10 bg-slate-900 p-6"><h2 className="text-lg font-bold">Masukkan token ruang</h2><input className={input} required aria-label="Token ruang" value={token} onChange={e => setToken(e.target.value)} /><button className={action} disabled={busy}>Periksa token</button></form>}
-        {!participant && session && <form onSubmit={join} className="space-y-4 rounded-3xl border border-white/10 bg-slate-900 p-6"><h2 className="text-lg font-bold">{session.title}</h2><p className="text-sm text-slate-300">Masukkan kode peserta yang diberikan sekolah. Kode hanya dapat digunakan sekali.</p><input className={input} required aria-label="Kode peserta" maxLength={16} value={code} onChange={e => setCode(e.target.value)} /><button className={action} disabled={busy}>Masuk ujian</button></form>}
-        {dashboard && !workspace && <section className="space-y-5"><div className="rounded-2xl border border-white/10 bg-slate-900 p-5"><h2 className="text-xl font-bold">{dashboard.participant.name} · {dashboard.session.title}</h2><p className="text-sm text-slate-400">Urutan {dashboard.session.order_type === "sequential" ? "wajib berurutan" : "bebas memilih"}.</p></div><div className="grid gap-4 sm:grid-cols-2">{dashboard.packages.map((pack, index) => {
-            const attempts = dashboard.attempts.filter(item => item.exam_public_subject_id === pack.subject_id);
-            const activeAttempt = attempts.find(item => item.status === "in_progress");
-            const primary = attempts.find(item => item.attempt_type === "primary" && item.status !== "in_progress");
-            const subjectResult = dashboard.result.subjects.find(item => item.subject_id === pack.subject_id);
-            const eligible = subjectResult?.remedial_available;
-            const locked = dashboard.session.order_type === "sequential" && dashboard.packages.slice(0, index).some(previous => !dashboard.attempts.some(item => item.exam_public_subject_id === previous.subject_id && item.attempt_type === "primary" && item.status !== "in_progress"));
-            return <article key={pack.id} className="space-y-3 rounded-2xl border border-white/10 bg-slate-900 p-5"><h3 className="text-lg font-bold">{pack.subject_name}</h3><p className="text-sm text-slate-300">{pack.title} · {primary ? "Sudah dikerjakan" : "Belum dikerjakan"}</p>{subjectResult?.primary_score !== null && subjectResult?.primary_score !== undefined && <p className="text-sm text-amber-300">Nilai pertama: {subjectResult.primary_score}%{subjectResult.remedial_score !== null ? ` · Nilai ulang: ${subjectResult.remedial_score}%` : ""}</p>}{eligible && <p className="text-xs text-slate-300">Ragu dengan hasilmu? Kamu dapat mengerjakan sekali lagi.</p>}{(!primary || activeAttempt || eligible) && <button type="button" className={action} disabled={busy || (!activeAttempt && locked)} onClick={() => activeAttempt ? void run(() => loadAttempt(activeAttempt.id)) : start(pack.id)}>{activeAttempt ? "Lanjutkan / kumpulkan" : eligible ? "Kerjakan lagi" : locked ? "Selesaikan mapel sebelumnya" : "Mulai mapel"}</button>}</article>;
-        })}</div>{dashboard.result.completed && <p className="rounded-2xl border border-white/10 bg-slate-900 p-5 text-sm text-slate-300">Seluruh mapel pertama telah dikumpulkan. Hasil akhir tersedia pada laporan sekolah.</p>}</section>}
-        {workspace && <section className="space-y-5 rounded-3xl border border-white/10 bg-slate-900 p-6"><div className="flex items-center justify-between gap-4"><h2 className="text-xl font-bold">Soal {activeQuestion + 1} / {workspace.questions.length}</h2><p role="timer" className="font-bold text-amber-400">{Math.floor(remaining / 60)}:{String(remaining % 60).padStart(2, "0")}</p></div>
-            {active ? <><div className="text-lg font-medium"><RichExamText text={active.question_text} /></div><div className="space-y-3">{Object.entries(active.options).map(([key, value]) => <button key={key} type="button" disabled={busy || remaining === 0} className={`flex w-full items-start gap-3 rounded-xl border p-4 text-left focus:outline-none focus:ring-2 focus:ring-amber-500/20 ${answers[active.id] === key ? "border-amber-500 bg-amber-500/20" : "border-white/10 bg-slate-950"}`} onClick={() => answer(active, key)}><strong>{key}.</strong><RichExamText text={value} /></button>)}</div></> : <p>Waktu habis. Kumpulkan jawaban untuk melanjutkan.</p>}
-            <div className="flex flex-wrap gap-3"><button type="button" disabled={activeQuestion === 0} className={action} onClick={() => setActiveQuestion(i => i - 1)}>Sebelumnya</button><button type="button" disabled={activeQuestion >= workspace.questions.length - 1} className={action} onClick={() => setActiveQuestion(i => i + 1)}>Berikutnya</button><button type="button" disabled={busy} className="rounded-xl border border-amber-500 px-5 py-3 font-bold text-amber-400" onClick={submit}>Kumpulkan mapel</button></div>
-        </section>}
+    useEffect(() => { if (token.length === 5) void verifyToken(); }, []);
+    useEffect(() => { const remembered = sessionStorage.getItem("public-exam-participant"); if (remembered && /^\d+$/.test(remembered)) { const id = Number(remembered); reloadDashboard(id).then(() => setParticipant(id)).catch(() => sessionStorage.removeItem("public-exam-participant")); } }, []);
+
+    const join = async (event: FormEvent) => { event.preventDefault(); if (!session) return; await run(async () => { const storageKey = `public-exam-entry-${session.id}`; const entryKey = sessionStorage.getItem(storageKey) ?? crypto.randomUUID(); sessionStorage.setItem(storageKey, entryKey); const id = Number((await axios.post(route("public-exam.join", { token: token.trim().toUpperCase() }), { name: name.trim(), school_origin: school.trim(), entry_key: entryKey })).data.participant_id); sessionStorage.setItem("public-exam-participant", String(id)); await reloadDashboard(id); setParticipant(id); }); };
+    const start = async (pack: Package) => { if (!participant) return; await run(async () => { const attemptId = Number((await axios.post(route("public-exam.start", { participant, package: pack.id }))).data.attempt_id); await loadAttempt(attemptId, pack); }); };
+    const finish = async () => { if (!participant) return; setWorkspace(null); setActivePackage(null); await reloadDashboard(participant); };
+
+    return <div className="min-h-screen bg-slate-100 px-4 py-6 text-slate-900 dark:bg-slate-950 dark:text-white sm:px-6"><Head title="Ujian Publik" /><main className="mx-auto max-w-7xl space-y-5">
+        {!workspace && <header className="rounded-2xl border border-amber-500/20 bg-slate-900 p-5 text-white shadow-sm"><div className="flex items-center gap-3"><img src="/assets/icons/brand/exam-logo.png" alt="Logo Pondok" className="h-12 w-12 shrink-0 rounded-xl border border-amber-500/30 bg-white/10 object-contain p-0.5 shadow-sm" /><div className="min-w-0"><p className="truncate text-xs font-extrabold tracking-wide text-amber-400 sm:text-sm">Pondok Modern Sabilurrosyad Muhammadiyah Banjarnegara</p><h1 className="mt-1 text-2xl font-black sm:text-3xl">Ruang Ujian Online</h1></div></div><p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">Masuk dengan token ruang, isi identitas, lalu kerjakan semua paket melalui panel ujian yang sama dengan exam internal.</p></header>}
+        {error && <div role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-700 dark:text-red-200"><p>{error}</p>{!participant && <p className="mt-1 text-xs">Pastikan kode terdiri dari 5 karakter dan masih aktif.</p>}</div>}
+        {!participant && <ol aria-label="Langkah masuk ujian" className="flex flex-wrap gap-3 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400"><li className={!session ? "text-amber-600 dark:text-amber-300" : ""}>1. Periksa token</li><li className={session ? "text-amber-600 dark:text-amber-300" : ""}>2. Isi identitas</li><li>3. Kerjakan ujian</li></ol>}
+        {!participant && !session && <form onSubmit={(event) => { event.preventDefault(); void verifyToken(); }} className="mx-auto w-full max-w-lg space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900"><div><h2 className="text-lg font-black">Masuk ke sesi ujian</h2><p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Masukkan kode akses 5 karakter dari pengawas.</p></div><div><label htmlFor="room-token" className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500">Token ruang</label><input id="room-token" required maxLength={5} minLength={5} autoComplete="off" value={token} onChange={(event) => setToken(event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))} className={`${inputClass} font-mono uppercase tracking-[0.35em]`} placeholder="A7K3Q" /></div><button className={`${actionClass} w-full`} disabled={busy || token.length !== 5}>{busy ? "Memeriksa…" : "Periksa token"}</button></form>}
+        {!participant && session && <form onSubmit={join} className="mx-auto w-full max-w-lg space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900"><div><p className="text-xs font-bold uppercase tracking-wide text-amber-600 dark:text-amber-300">Identitas peserta</p><h2 className="mt-1 text-xl font-black">{session.title}</h2><p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Nama dan asal sekolah ini akan muncul pada roster hasil ujian.</p></div>{session.instructions && <div className="whitespace-pre-wrap rounded-lg bg-slate-50 p-4 text-sm leading-6 text-slate-600 dark:bg-white/[0.03] dark:text-slate-300">{session.instructions}</div>}<div><label htmlFor="participant-name" className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500">Nama lengkap</label><input id="participant-name" required maxLength={255} autoComplete="name" value={name} onChange={(event) => setName(event.target.value)} className={inputClass} /></div><div><label htmlFor="participant-school" className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500">Asal sekolah</label><input id="participant-school" required maxLength={255} autoComplete="organization" value={school} onChange={(event) => setSchool(event.target.value)} className={inputClass} /></div><div className="flex flex-wrap gap-2"><button type="button" className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-200 px-4 text-sm font-bold dark:border-white/10" onClick={() => { setSession(null); setError(""); }}>Ganti token</button><button className={`${actionClass} flex-1`} disabled={busy}>{busy ? "Menyiapkan…" : "Masuk ujian"}</button></div></form>}
+        {dashboard && !workspace && <DashboardView dashboard={dashboard} busy={busy} start={start} loadAttempt={loadAttempt} />}
+        {workspace && activePackage && dashboard && <PublicAttemptPanel workspace={workspace} packageInfo={activePackage} sessionTitle={dashboard.session.title} participantName={dashboard.participant.name} onComplete={finish} onError={setError} />}
     </main></div>;
 }
+
+function DashboardView({ dashboard, busy, start, loadAttempt }: { dashboard: Dashboard; busy: boolean; start: (pack: Package) => Promise<void>; loadAttempt: (id: number, pack?: Package) => Promise<void> }) {
+    return <section className="space-y-5"><div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-slate-900"><p className="text-xs font-bold uppercase tracking-wide text-amber-600 dark:text-amber-300">Peserta</p><h2 className="mt-1 text-xl font-black">{dashboard.participant.name}</h2><p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{dashboard.participant.school_origin} · {dashboard.session.title}</p></div><div className="grid gap-4 md:grid-cols-2">{dashboard.packages.map((pack, index) => { const attempts = dashboard.attempts.filter((item) => item.exam_public_subject_id === pack.subject_id); const active = attempts.find((item) => item.status === "in_progress"); const completed = attempts.some((item) => item.attempt_type === "primary" && item.status !== "in_progress"); const result = dashboard.result.subjects.find((item) => item.subject_id === pack.subject_id); const locked = dashboard.session.order_type === "sequential" && dashboard.packages.slice(0, index).some((previous) => !dashboard.attempts.some((item) => item.exam_public_subject_id === previous.subject_id && item.attempt_type === "primary" && item.status !== "in_progress")); return <article key={pack.id} className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-slate-900"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-wide text-amber-600 dark:text-amber-300">Mapel {index + 1}</p><h3 className="mt-1 text-lg font-black">{pack.subject_name}</h3><p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{pack.title}</p></div><span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-bold dark:bg-white/10">{completed ? "Selesai" : "Belum mulai"}</span></div>{result?.primary_score !== null && result?.primary_score !== undefined && <p className="mt-4 text-sm font-bold text-amber-600 dark:text-amber-300">Nilai: {result.primary_score}%</p>}<button type="button" disabled={busy || (!active && locked)} onClick={() => active ? void loadAttempt(active.id, pack) : void start(pack)} className={`${actionClass} mt-5 w-full`}>{active ? "Lanjutkan ujian" : locked ? "Selesaikan mapel sebelumnya" : result?.remedial_available ? "Kerjakan ulang" : "Mulai mapel"}</button></article>; })}</div></section>;
+}
+
+function PublicAttemptPanel({ workspace, packageInfo, sessionTitle, participantName, onComplete, onError }: { workspace: PublicAttempt; packageInfo: Package; sessionTitle: string; participantName: string; onComplete: () => Promise<void>; onError: (message: string) => void }) {
+    const [theme, setTheme] = useState<"light" | "dark">(() => document.documentElement.classList.contains("dark") ? "dark" : "light");
+    const toggleTheme = () => { const next = theme === "dark" ? "light" : "dark"; document.documentElement.classList.toggle("dark", next === "dark"); setTheme(next); };
+    const questions: ExamQuestion[] = workspace.questions.map((question) => ({ ...question, point: 1, difficulty: "-" }));
+    const initialAnswers: Record<string, ExamAnswerState> = Object.fromEntries(workspace.answers.map((answer) => [answer.exam_public_question_id, { question_id: answer.exam_public_question_id, selected_option: answer.selected_option, is_marked_for_review: false, saved_at: null }]));
+    const [attemptState, setAttemptState] = useState<ExamAttemptState>(() => mapAttempt(workspace.attempt));
+    const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "failed" | "locked">("idle");
+    const [saveMessage, setSaveMessage] = useState<string | null>(null);
+    const { activeIndex, activeQuestion, answeredCount, answerMap, setActiveIndex, goNext, goPrev, updateAnswer, patchAnswer, saveTimers } = useExamNavigation({ questions, initialAnswers });
+    const exam: ExamMeta = { session_id: 0, session_title: "Ujian Publik", package_title: packageInfo.title, subject_name: packageInfo.subject_name, duration_minutes: null, passing_score: null, show_result_to_candidate: false };
+    const isRunning = attemptState.status === "in_progress" && !attemptState.is_locked && questions.length > 0;
+    const syncAttempt = useCallback(async () => { try { const response = await axios.get<PublicAttempt>(route("public-exam.attempt", { attempt: workspace.attempt.id })); const next = mapAttempt(response.data.attempt); setAttemptState(next); if (next.status !== "in_progress") { setSaveState("locked"); setSaveMessage("Ujian sudah dikunci oleh server."); } } catch { setSaveState("failed"); setSaveMessage("Gagal sinkronisasi waktu server."); } }, [workspace.attempt.id]);
+    const { remaining } = useExamTimer({ attempt: attemptState, isRunning, onExpired: () => void syncAttempt(), onSync: syncAttempt });
+    const persist = useCallback(async (answer: ExamAnswerState) => { setSaveState("saving"); setSaveMessage("Menyimpan jawaban…"); try { await axios.post(route("public-exam.answer", { attempt: workspace.attempt.id }), { question_id: answer.question_id, selected_option: answer.selected_option }); setSaveState("saved"); setSaveMessage("Jawaban tersimpan"); } catch (cause) { setSaveState("failed"); setSaveMessage(axios.isAxiosError(cause) ? cause.response?.data?.message ?? "Gagal menyimpan jawaban." : "Gagal menyimpan jawaban."); } }, [workspace.attempt.id]);
+    const changeAnswer = (questionId: number, patch: Partial<ExamAnswerState>) => { if (!isRunning) return; const next = patchAnswer(questionId, patch); if (saveTimers.current[questionId]) window.clearTimeout(saveTimers.current[questionId]); saveTimers.current[questionId] = window.setTimeout(() => void persist(next), 500); };
+    const submit = async () => { if (!await confirmExamSubmission({ answeredCount, totalQuestions: questions.length })) return; try { await axios.post(route("public-exam.submit", { attempt: workspace.attempt.id })); await onComplete(); } catch (cause) { onError(axios.isAxiosError(cause) ? cause.response?.data?.message ?? "Gagal mengumpulkan ujian." : "Gagal mengumpulkan ujian."); } };
+    const activeAnswer = activeQuestion ? answerMap[activeQuestion.id] : null;
+    if (!activeQuestion) return <section className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-white/10 dark:bg-slate-900">Tidak ada soal aktif.</section>;
+    return <div className="space-y-4"><section className="sticky top-0 z-20 -mx-4 border-b border-slate-200 bg-white/95 px-4 py-2.5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-950/95 sm:-mx-6 sm:px-6"><div className="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:justify-between"><div className="min-w-0 flex items-center gap-3"><img src="/assets/icons/brand/exam-logo.png" alt="Logo Pondok" className="h-10 w-10 shrink-0 rounded-xl border border-amber-500/30 bg-white/10 object-contain p-0.5 shadow-sm dark:bg-white/5" /><div className="min-w-0"><span className="block truncate text-xs font-extrabold tracking-wide text-amber-600 dark:text-amber-400 sm:text-sm">Pondok Modern Sabilurrosyad Muhammadiyah Banjarnegara</span><h1 className="mt-0.5 truncate text-sm font-black leading-tight text-slate-900 dark:text-white sm:text-base">{sessionTitle}</h1><p className="hidden text-xs text-slate-500 dark:text-slate-400 sm:block">Peserta: <strong>{participantName}</strong> · {packageInfo.subject_name} · {packageInfo.title}</p></div></div><div className="flex flex-wrap items-center justify-between gap-2 sm:justify-end"><button type="button" onClick={toggleTheme} className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 dark:border-white/10" aria-label="Ganti tema"><i className={`fa-solid ${theme === "dark" ? "fa-sun text-amber-400" : "fa-moon text-indigo-500"}`} /></button><div className={`rounded-lg px-2.5 py-1.5 text-center font-mono text-sm font-black ${remaining <= 300 ? "animate-pulse bg-red-500 text-white" : "bg-slate-900 text-white dark:bg-white dark:text-slate-950"}`}><span className="mr-1.5 hidden text-[8px] font-bold uppercase tracking-wide opacity-75 sm:inline">Sisa waktu</span>{formatTime(remaining)}</div><button type="button" onClick={submit} className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-emerald-500 px-3 text-xs font-bold text-white"><i className="fa-solid fa-paper-plane text-[10px]" /> Kumpulkan</button></div></div>{saveMessage && <p className={`mt-1.5 text-[11px] font-semibold ${saveState === "failed" ? "text-red-500" : "text-slate-500"}`}>{saveMessage}</p>}</section><div className="grid gap-4 xl:grid-cols-[1fr_320px]"><CandidateQuestionWorkspace activeQuestion={activeQuestion} activeAnswer={activeAnswer} activeIndex={activeIndex} totalQuestions={questions.length} changeAnswer={changeAnswer} goPrev={goPrev} goNext={goNext} /><aside><QuestionPaletteNavigator questions={questions} answerMap={answerMap} activeIndex={activeIndex} answeredCount={answeredCount} theme={theme} exam={exam} attemptState={attemptState} setActiveIndex={setActiveIndex} /></aside></div></div>;
+}
+
+function mapAttempt(attempt: PublicAttempt["attempt"]): ExamAttemptState { return { id: attempt.id, status: attempt.status, attempt_number: 1, started_at: null, started_at_iso: null, expires_at: attempt.expires_at, expires_at_iso: attempt.expires_at, submitted_at: null, remaining_seconds: Math.max(0, Math.floor((new Date(attempt.expires_at).getTime() - Date.now()) / 1000)), is_locked: attempt.status !== "in_progress", total_questions: attempt.total_questions, answered_questions: 0, blank_questions: attempt.total_questions, score_visible: false, percentage_score: null, passing_score: null, passed: null };
+}
+
+function formatTime(seconds: number): string { const safe = Math.max(0, seconds); return [Math.floor(safe / 3600), Math.floor((safe % 3600) / 60), safe % 60].map((value) => value.toString().padStart(2, "0")).join(":"); }
