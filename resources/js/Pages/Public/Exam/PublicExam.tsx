@@ -2,6 +2,8 @@
 
 import PublicExamQuestionWorkspace from '@/Components/Exam/Public/PublicExamQuestionWorkspace';
 import PublicQuestionPalette from '@/Components/Exam/Public/PublicQuestionPalette';
+import PublicGuestIdentityForm from '@/Components/Exam/Public/PublicGuestIdentityForm';
+import PublicTokenLoginForm from '@/Components/Exam/Public/PublicTokenLoginForm';
 import {
     useExamNavigation,
     useExamTimer,
@@ -71,8 +73,6 @@ type PublicAttempt = {
     }>;
 };
 
-const inputClass =
-    'w-full rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 dark:border-white/10 dark:bg-slate-950 dark:text-white';
 const actionClass =
     'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-amber-500 px-4 text-sm font-black text-slate-950 transition hover:bg-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-500/20 disabled:cursor-not-allowed disabled:opacity-50';
 
@@ -92,6 +92,34 @@ export default function PublicExam() {
     const [activePackage, setActivePackage] = useState<Package | null>(null);
     const [error, setError] = useState('');
     const [busy, setBusy] = useState(false);
+    const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+    const [serverTime, setServerTime] = useState('');
+
+    useEffect(() => {
+        const saved = localStorage.getItem('sentinel-theme') as
+            | 'dark'
+            | 'light'
+            | null;
+        const initial = saved ?? 'dark';
+        document.documentElement.classList.toggle('dark', initial === 'dark');
+        setTheme(initial);
+        const updateClock = () => {
+            const now = new Date();
+            setServerTime(
+                `${now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Jakarta' })} · ${now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: 'Asia/Jakarta' })} WIB`,
+            );
+        };
+        updateClock();
+        const interval = window.setInterval(updateClock, 1000);
+        return () => window.clearInterval(interval);
+    }, []);
+
+    const toggleTheme = () => {
+        const next = theme === 'dark' ? 'light' : 'dark';
+        document.documentElement.classList.toggle('dark', next === 'dark');
+        localStorage.setItem('sentinel-theme', next);
+        setTheme(next);
+    };
 
     const run = async (operation: () => Promise<void>) => {
         setError('');
@@ -216,205 +244,74 @@ export default function PublicExam() {
         setActivePackage(null);
         await reloadDashboard(participant);
     };
+    const pasteToken = async () => {
+        try {
+            const pasted = await navigator.clipboard.readText();
+            setToken(pasted.trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5));
+        } catch {
+            setError('Izin papan klip tidak tersedia. Silakan ketik token secara manual.');
+        }
+    };
+    const submitToken = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        void verifyToken();
+    };
+
+    const isDark = theme === 'dark';
+    const portalCard = 'rounded-3xl border p-6 shadow-xl backdrop-blur-xl transition-colors sm:p-8';
 
     return (
-        <div
-            className={
-                workspace
-                    ? 'min-h-screen'
-                    : 'min-h-screen bg-slate-100 px-4 py-6 text-slate-900 dark:bg-slate-950 dark:text-white sm:px-6'
-            }
-        >
+        <div className={workspace ? 'min-h-screen' : `relative min-h-screen overflow-x-clip transition-colors duration-300 ${isDark ? 'bg-slate-950 text-slate-100 selection:bg-amber-500 selection:text-white' : 'bg-slate-50 text-slate-900 selection:bg-amber-500 selection:text-slate-950'}`}>
             <Head title="Ujian Publik" />
-            <main className={workspace ? '' : 'mx-auto max-w-7xl space-y-5'}>
+            {!workspace && <>
+                <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-25" style={{ backgroundImage: `radial-gradient(circle at 1px 1px, ${isDark ? '#f59e0b' : '#d97706'} 1px, transparent 0)`, backgroundSize: '32px 32px' }} />
+                <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden"><div className="absolute -left-20 -top-20 h-[500px] w-[500px] rounded-full bg-amber-500/10 blur-[120px]" /><div className="absolute right-0 top-1/4 h-[600px] w-[600px] rounded-full bg-emerald-500/10 blur-[140px]" /><div className="absolute bottom-10 left-1/3 h-[400px] w-[400px] rounded-full bg-violet-500/10 blur-[100px]" /></div>
+                <header className={`sticky top-0 z-20 border-b backdrop-blur-md ${isDark ? 'border-white/10 bg-slate-900/80 shadow-2xl shadow-slate-950/20' : 'border-slate-200/80 bg-white/85 shadow-sm'}`}>
+                    <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3.5 sm:px-6">
+                        <div className="flex min-w-0 items-center gap-3"><img src="/assets/icons/brand/exam-logo.png" alt="Logo Pondok Modern Sabilurrosyad" className="h-12 w-12 shrink-0 rounded-xl border border-amber-500/30 bg-white/10 object-contain p-0.5 shadow-md shadow-amber-500/10" /><div className="min-w-0"><span className="block max-w-xs truncate bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 bg-clip-text text-sm font-extrabold leading-tight tracking-wide text-transparent sm:max-w-xl sm:text-base">Pondok Modern Sabilurrosyad Muhammadiyah Banjarnegara</span><span className={`mt-1 inline-block rounded-md border px-2 py-0.5 text-[11px] font-bold ${isDark ? 'border-amber-500/20 bg-amber-500/10 text-amber-400' : 'border-amber-500/30 bg-amber-500/5 text-amber-700'}`}>Portal Ujian Masuk Santri Baru (SPMB)</span></div></div>
+                        <div className="flex shrink-0 items-center gap-3 sm:gap-4"><div className="hidden text-right md:block"><span className={`block text-xs font-bold tracking-wide ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>Waktu Server SPMB</span><span className={`mt-0.5 block font-mono text-[11px] font-medium ${isDark ? 'text-amber-400' : 'text-amber-600'}`}><i className="fa-regular fa-clock mr-1" aria-hidden="true" />{serverTime || 'Memuat waktu…'}</span></div><button type="button" onClick={toggleTheme} aria-label={`Aktifkan mode ${isDark ? 'terang' : 'gelap'}`} className={`flex min-h-10 items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold shadow-sm transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-amber-500/30 ${isDark ? 'border-white/10 bg-slate-900 text-amber-300 hover:border-amber-500/40 hover:bg-slate-800' : 'border-slate-300 bg-white text-slate-800 hover:border-amber-600/40 hover:bg-slate-50'}`}><i className={`fa-solid ${isDark ? 'fa-sun text-amber-400' : 'fa-moon text-indigo-600'}`} aria-hidden="true" /><span className="hidden sm:inline">Mode {isDark ? 'Terang' : 'Gelap'}</span></button></div>
+                    </div>
+                </header>
+            </>}
+            <main className={workspace ? '' : 'relative z-10 mx-auto max-w-5xl space-y-10 px-4 py-10 sm:px-6'}>
                 {!workspace && (
-                    <header className="rounded-2xl border border-amber-500/20 bg-slate-900 p-5 text-white shadow-sm">
-                        <div className="flex items-center gap-3">
-                            <img
-                                src="/assets/icons/brand/exam-logo.png"
-                                alt="Logo Pondok"
-                                className="h-12 w-12 shrink-0 rounded-xl border border-amber-500/30 bg-white/10 object-contain p-0.5 shadow-sm"
-                            />
-                            <div className="min-w-0">
-                                <p className="truncate text-xs font-extrabold tracking-wide text-amber-400 sm:text-sm">
-                                    Pondok Modern Sabilurrosyad Muhammadiyah
-                                    Banjarnegara
-                                </p>
-                                <h1 className="mt-1 text-2xl font-black sm:text-3xl">
-                                    Ruang Ujian Online
-                                </h1>
-                            </div>
-                        </div>
-                    </header>
+                    <section className="space-y-3.5 text-center"><span className={`inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-bold transition-colors sm:text-sm ${isDark ? 'border-amber-500/20 bg-amber-500/10 text-amber-400' : 'border-amber-500/30 bg-amber-500/5 text-amber-700'}`}><i className="fa-solid fa-graduation-cap text-amber-500" aria-hidden="true" />Ujian Seleksi Masuk Santri Baru</span><h1 className={`text-3xl font-black leading-tight tracking-tight sm:text-5xl ${isDark ? 'text-white' : 'text-slate-950'}`}>Ruang Ujian <span className="bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 bg-clip-text text-transparent">Online Santri</span></h1><p className={`mx-auto max-w-2xl text-sm leading-relaxed sm:text-base ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Selamat datang di ruang ujian seleksi Pondok Modern Sabilurrosyad Muhammadiyah Banjarnegara. Masukkan kode token dari pengawas ujian untuk memulai. Kerjakan dengan tenang, teliti, dan penuh kejujuran.</p></section>
                 )}
-                {error && !workspace && (
-                    <div
-                        role="alert"
-                        className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-700 dark:text-red-200"
-                    >
-                        <p>{error}</p>
-                        {!participant && (
-                            <p className="mt-1 text-xs">
-                                Pastikan kode terdiri dari 5 karakter dan masih
-                                aktif.
-                            </p>
-                        )}
+                {!participant && !workspace && !session && (
+                    <div className="mx-auto grid w-full max-w-4xl items-start gap-8 lg:grid-cols-12">
+                        <div className="w-full lg:col-span-7">
+                            <PublicTokenLoginForm
+                                token={token}
+                                themeMode={theme}
+                                clientTime={serverTime}
+                                busy={busy}
+                                error={error}
+                                onTokenChange={setToken}
+                                onVerify={submitToken}
+                                onPaste={() => void pasteToken()}
+                            />
+                        </div>
+                        <PublicExamSecurityInfo isDark={isDark} />
                     </div>
                 )}
-                {!participant && (
-                    <ol
-                        aria-label="Langkah masuk ujian"
-                        className="flex flex-wrap gap-3 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400"
-                    >
-                        <li
-                            className={
-                                !session
-                                    ? 'text-amber-600 dark:text-amber-300'
-                                    : ''
-                            }
-                        >
-                            1. Periksa token
-                        </li>
-                        <li
-                            className={
-                                session
-                                    ? 'text-amber-600 dark:text-amber-300'
-                                    : ''
-                            }
-                        >
-                            2. Isi identitas
-                        </li>
-                        <li>3. Kerjakan ujian</li>
-                    </ol>
-                )}
-                {!participant && !session && (
-                    <form
-                        onSubmit={(event) => {
-                            event.preventDefault();
-                            void verifyToken();
-                        }}
-                        className="mx-auto w-full max-w-lg space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900"
-                    >
-                        <div>
-                            <h2 className="text-lg font-black">
-                                Masuk ke sesi ujian
-                            </h2>
-                            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                                Masukkan kode akses 5 karakter dari pengawas.
-                            </p>
-                        </div>
-                        <div>
-                            <label
-                                htmlFor="room-token"
-                                className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500"
-                            >
-                                Token ruang
-                            </label>
-                            <input
-                                id="room-token"
-                                required
-                                maxLength={5}
-                                minLength={5}
-                                autoComplete="off"
-                                value={token}
-                                onChange={(event) =>
-                                    setToken(
-                                        event.target.value
-                                            .toUpperCase()
-                                            .replace(/[^A-Z0-9]/g, ''),
-                                    )
-                                }
-                                className={`${inputClass} font-mono uppercase tracking-[0.35em]`}
-                                placeholder="A7K3Q"
-                            />
-                        </div>
-                        <button
-                            className={`${actionClass} w-full`}
-                            disabled={busy || token.length !== 5}
-                        >
-                            {busy ? 'Memeriksa…' : 'Periksa token'}
-                        </button>
-                    </form>
-                )}
-                {!participant && session && (
-                    <form
-                        onSubmit={join}
-                        className="mx-auto w-full max-w-lg space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900"
-                    >
-                        <div>
-                            <p className="text-xs font-bold uppercase tracking-wide text-amber-600 dark:text-amber-300">
-                                Identitas peserta
-                            </p>
-                            <h2 className="mt-1 text-xl font-black">
-                                {session.title}
-                            </h2>
-                            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                                Nama dan asal sekolah ini akan muncul pada
-                                roster hasil ujian.
-                            </p>
-                        </div>
-                        {session.instructions && (
-                            <div className="whitespace-pre-wrap rounded-lg bg-slate-50 p-4 text-sm leading-6 text-slate-600 dark:bg-white/[0.03] dark:text-slate-300">
-                                {session.instructions}
-                            </div>
-                        )}
-                        <div>
-                            <label
-                                htmlFor="participant-name"
-                                className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500"
-                            >
-                                Nama lengkap
-                            </label>
-                            <input
-                                id="participant-name"
-                                required
-                                maxLength={255}
-                                autoComplete="name"
-                                value={name}
-                                onChange={(event) =>
-                                    setName(event.target.value)
-                                }
-                                className={inputClass}
-                            />
-                        </div>
-                        <div>
-                            <label
-                                htmlFor="participant-school"
-                                className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500"
-                            >
-                                Asal sekolah
-                            </label>
-                            <input
-                                id="participant-school"
-                                required
-                                maxLength={255}
-                                autoComplete="organization"
-                                value={school}
-                                onChange={(event) =>
-                                    setSchool(event.target.value)
-                                }
-                                className={inputClass}
-                            />
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                            <button
-                                type="button"
-                                className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-200 px-4 text-sm font-bold dark:border-white/10"
-                                onClick={() => {
-                                    setSession(null);
-                                    setError('');
-                                }}
-                            >
-                                Ganti token
-                            </button>
-                            <button
-                                className={`${actionClass} flex-1`}
-                                disabled={busy}
-                            >
-                                {busy ? 'Menyiapkan…' : 'Masuk ujian'}
-                            </button>
-                        </div>
-                    </form>
+                {!participant && !workspace && session && (
+                    <div className="mx-auto w-full max-w-4xl">
+                        <PublicGuestIdentityForm
+                            session={session}
+                            name={name}
+                            school={school}
+                            themeMode={theme}
+                            busy={busy}
+                            error={error}
+                            onNameChange={setName}
+                            onSchoolChange={setSchool}
+                            onSubmit={join}
+                            onChangeToken={() => {
+                                setSession(null);
+                                setError('');
+                            }}
+                        />
+                    </div>
                 )}
                 {dashboard && !workspace && (
                     <DashboardView
@@ -438,6 +335,49 @@ export default function PublicExam() {
                 )}
             </main>
         </div>
+    );
+}
+
+function PublicExamSecurityInfo({ isDark }: { isDark: boolean }) {
+    const [activeTab, setActiveTab] = useState<'flow' | 'answers' | 'conduct'>('flow');
+    const card = isDark
+        ? 'border-white/10 bg-slate-900/60 text-slate-300'
+        : 'border-slate-200 bg-white text-slate-800';
+    const title = isDark ? 'text-slate-100' : 'text-slate-900';
+    const tabs: Array<{ id: typeof activeTab; label: string; icon: string }> = [
+        { id: 'flow', label: 'Alur', icon: 'fa-route' },
+        { id: 'answers', label: 'Jawaban', icon: 'fa-floppy-disk' },
+        { id: 'conduct', label: 'Tertib', icon: 'fa-shield-halved' },
+    ];
+
+    return (
+        <aside className="w-full space-y-4 lg:col-span-5" aria-label="Panduan ujian">
+            <section className={`rounded-3xl border p-6 shadow-xl backdrop-blur-xl ${card}`}>
+                <h2 className={`mb-4 flex items-center gap-2 border-b pb-3.5 text-sm font-extrabold uppercase tracking-wider ${isDark ? 'border-white/10 text-white' : 'border-slate-200 text-slate-950'}`}>
+                    <i className="fa-solid fa-circle-question text-base text-amber-500" aria-hidden="true" />Panduan Mengerjakan Ujian
+                </h2>
+                <div className="mb-5 grid grid-cols-3 gap-1.5 rounded-2xl border border-slate-200 bg-slate-100 p-1.5 dark:border-white/5 dark:bg-slate-950/70" role="tablist" aria-label="Panduan ujian">
+                    {tabs.map((tab) => <button key={tab.id} id={`public-guide-tab-${tab.id}`} type="button" role="tab" aria-controls="public-guide-panel" aria-selected={activeTab === tab.id} onClick={() => setActiveTab(tab.id)} className={`flex min-h-16 flex-col items-center justify-center gap-1.5 rounded-xl px-2 py-2.5 text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 ${activeTab === tab.id ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'}`}><i className={`fa-solid ${tab.icon} text-sm`} aria-hidden="true" /><span>{tab.label}</span></button>)}
+                </div>
+                <div id="public-guide-panel" role="tabpanel" aria-labelledby={`public-guide-tab-${activeTab}`} className="min-h-[200px] space-y-4">
+                    {activeTab === 'flow' && <><p className="text-xs leading-relaxed text-slate-400">Ikuti 3 langkah berikut untuk memulai ujian:</p><ol className="relative mt-2 space-y-4 border-l-2 border-amber-500/30 pl-6">{[
+                        ['Tempel / Ketik Token', 'Masukkan 5 karakter token yang diberikan pengawas ujian.'],
+                        ['Lengkapi Nama & Sekolah', 'Isi nama lengkap dan asal sekolah dengan benar.'],
+                        ['Kerjakan dengan Tenang', 'Ikuti petunjuk di layar dan selesaikan setiap mapel.'],
+                    ].map(([heading, copy], index) => <li key={heading} className="relative"><span className="absolute -left-[31px] top-0 flex h-6 w-6 items-center justify-center rounded-full bg-amber-500 text-xs font-black text-slate-950">{index + 1}</span><h3 className={`text-sm font-bold ${title}`}>{heading}</h3><p className="mt-1 text-xs text-slate-400">{copy}</p></li>)}</ol></>}
+                    {activeTab === 'answers' && <div className="space-y-4">{[
+                        ['fa-cloud-arrow-up', 'Jawaban Tersimpan', 'Jawaban disimpan ke server saat kamu memilih opsi.'],
+                        ['fa-wifi', 'Periksa Koneksi', 'Pastikan koneksi internet stabil selama ujian berlangsung.'],
+                        ['fa-rotate-right', 'Sesi Dapat Dilanjutkan', 'Jika terputus, masuk kembali dengan perangkat dan sesi yang sama.'],
+                    ].map(([icon, heading, copy]) => <div key={heading} className="flex items-start gap-3.5"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-emerald-500/20 bg-emerald-500/15 text-emerald-500"><i className={`fa-solid ${icon}`} aria-hidden="true" /></span><div><h3 className={`text-sm font-bold ${title}`}>{heading}</h3><p className="mt-1 text-xs leading-relaxed text-slate-400">{copy}</p></div></div>)}</div>}
+                    {activeTab === 'conduct' && <div className="space-y-4">{[
+                        ['fa-expand', 'Mode Layar Penuh', 'Ujian berjalan dalam layar penuh untuk membantu menjaga fokus.'],
+                        ['fa-shield-halved', 'Jaga Ketertiban', 'Jangan membuka tab lain atau menggunakan bantuan yang tidak diizinkan.'],
+                    ].map(([icon, heading, copy]) => <div key={heading} className="flex items-start gap-3.5"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-amber-500/20 bg-amber-500/15 text-amber-500"><i className={`fa-solid ${icon}`} aria-hidden="true" /></span><div><h3 className={`text-sm font-bold ${title}`}>{heading}</h3><p className="mt-1 text-xs leading-relaxed text-slate-400">{copy}</p></div></div>)}</div>}
+                </div>
+            </section>
+            <section className={`rounded-2xl border p-4 text-xs leading-relaxed ${isDark ? 'border-white/5 bg-slate-900/30 text-slate-400' : 'border-slate-200 bg-slate-100 text-slate-600'}`}><h3 className="mb-1 flex items-center gap-1.5 font-bold text-amber-500"><i className="fa-solid fa-lightbulb" aria-hidden="true" />Tips Ujian Lancar</h3><ul className="mt-1 list-disc space-y-1 pl-4 text-[11px] sm:text-xs"><li>Gunakan browser versi terbaru.</li><li>Pastikan baterai perangkat terisi penuh atau tersambung ke pengisi daya.</li><li>Awali pengerjaan dengan membaca Basmalah dan berdoa.</li></ul></section>
+        </aside>
     );
 }
 

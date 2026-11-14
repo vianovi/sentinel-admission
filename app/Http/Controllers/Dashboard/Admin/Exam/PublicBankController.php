@@ -223,9 +223,11 @@ class PublicBankController extends Controller
 
         $questions = [];
         foreach ($book['rows'] as $row) {
-            $values = array_combine($headings, array_map(static function ($value): string {
-                return $value instanceof \DateTimeInterface ? $value->format('Y-m-d H:i:s') : (is_scalar($value) ? trim((string) $value) : '');
-            }, array_slice(array_pad($row['values'], count($headings), ''), 0, count($headings))));
+            $values = array_combine($headings, array_map(
+                fn ($value, $index): string => $this->workbookValue($value, $headings[$index] ?? ''),
+                array_slice(array_pad($row['values'], count($headings), ''), 0, count($headings)),
+                array_keys($headings),
+            ));
             $text = trim((string) ($values['teks_soal'] ?? ''));
             if ($text === '' && trim((string) ($values['jawaban_benar'] ?? '')) === '') {
                 continue;
@@ -285,6 +287,19 @@ class PublicBankController extends Controller
 
             return response()->json(['imported' => count($questions), 'active' => collect($questions)->where('is_active', true)->count()]);
         });
+    }
+
+    private function workbookValue(mixed $value, string $heading): string
+    {
+        if ($value instanceof \DateTimeInterface) {
+            if (preg_match('/^opsi_[a-e]$/', $heading) === 1) {
+                return $value->format('n/j');
+            }
+
+            return $value->format('Y-m-d H:i:s');
+        }
+
+        return is_scalar($value) ? trim((string) $value) : '';
     }
 
     public function storeQuestion(Request $request, int $package): JsonResponse

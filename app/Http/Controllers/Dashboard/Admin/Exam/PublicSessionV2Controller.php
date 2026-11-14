@@ -95,6 +95,25 @@ class PublicSessionV2Controller extends Controller
         ]);
     }
 
+    public function destroy(int $session): JsonResponse
+    {
+        return DB::transaction(function () use ($session): JsonResponse {
+            $record = DB::table('exam_public_sessions')->where('id', $session)->lockForUpdate()->first();
+            abort_unless($record, 404);
+            abort_unless($record->status === 'draft', 409, 'Hanya sesi draf yang dapat dihapus.');
+            abort_if(DB::table('exam_public_participants')->where('exam_public_session_id', $session)->exists(), 409, 'Sesi sudah memiliki peserta dan tidak dapat dihapus.');
+            abort_if(DB::table('exam_public_subject_attempts as attempt')
+                ->join('exam_public_participants as participant', 'participant.id', '=', 'attempt.exam_public_participant_id')
+                ->where('participant.exam_public_session_id', $session)->exists(), 409, 'Sesi sudah memiliki pengerjaan peserta.');
+
+            DB::table('exam_public_session_tokens')->where('exam_public_session_id', $session)->delete();
+            DB::table('exam_public_session_packages')->where('exam_public_session_id', $session)->delete();
+            DB::table('exam_public_sessions')->where('id', $session)->delete();
+
+            return response()->json(['deleted' => true]);
+        });
+    }
+
     public function publish(int $session): JsonResponse
     {
         return DB::transaction(function () use ($session): JsonResponse {

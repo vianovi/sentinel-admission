@@ -1,5 +1,53 @@
 # Audit Handoff
 
+## 2026-11-14 public draft session deletion
+
+- Added `DELETE admin.exams.public-v2.sessions.destroy`. It locks the session, permits deletion only while status is `draft`, rejects any session with participants or attempts, and transactionally removes session tokens, package pivots, and the session row.
+- Added a `Hapus` action to the public session configuration card with confirmation; it is shown only for draft sessions. Published and attended sessions remain protected from accidental deletion.
+- Regression coverage: `PublicSessionV2Test` -> 7 passed / 79 assertions. `vendor/bin/pint --dirty --format agent` and `npm run build` passed; `git diff --check` passed. No browser page was available in this turn, so UI interaction remains unverified in-browser. No commit.
+
+## 2026-11-14 public option date import and submit confirmation
+
+- Screenshot values are actual text from question options, not a VS Code rendering artifact: `PublicExamQuestionWorkspace` feeds option text directly to `RichExamText`, which does no date formatting; the public attempt endpoint returns decoded stored option strings. The public XLSX importer was converting date-typed option cells into `Y-m-d H:i:s` strings. It now restores those cells as month/day text (`2026-01-04` -> `1/4`) so the existing fraction renderer can show a fraction bar. No stored question/participant/attempt data was edited; already-imported options still need a safe correction at source.
+- Repo docs do not record a separate user decision specifically about the participant submit popup. The shared `confirmExamSubmission` helper and frontend standard establish confirmation-dialog behavior; the helper already supplied the answered/unanswered summary. It now uses SweetAlert2 `topLayer` so the popup can be interacted with while the exam root is fullscreen.
+- Regression: `PublicBankManagementTest` -> 15 passed / 185 assertions, including date-cell fraction recovery. Pint and TypeScript/Vite build passed. Focused ESLint passed with only the repository's Prettier rule disabled; `git diff --check` passed. Standard ESLint reports existing Prettier-format violations across `resources/js/utils/swal.ts`, including untouched lines.
+- Browser full-screen attempt/submit interaction remains UNVERIFIED: the shared participant page is not available to browser tools in this turn, and no eligible attempt was created or submitted. No schema, dependency, or existing participant data changes; no commit.
+
+## 2026-11-14 public portal focus-layout continuation
+
+- Adapted the focus-layout reference's token-entry and two-column identity-entry presentation in `PublicExam.tsx` using new `PublicTokenLoginForm.tsx` and `PublicGuestIdentityForm.tsx`. Existing public API calls, five-character token, participant cookies/session, dashboard and package/attempt routing are preserved; no legacy internal exam endpoint was copied.
+- Kept the already ported public attempt workspace/palette and responsive/accessibility improvements.
+- Verification: `npm run build` passed (existing stale Browserslist data warning); `php artisan test --compact tests/Feature/PublicExamFlowTest.php` passed (25 tests / 327 assertions); `git diff --check` passed. Playwright checked `/public-exam` at 320/375/414/768px: document/body widths match viewport, zero horizontal overflow; current console reported 0 errors.
+- No participant entry/submission was performed because there is no eligible token/session in the browser. The authenticated identity-to-attempt panel flow remains UNVERIFIED. No routes, schema, dependencies, or participant data changed; no commit.
+
+## 2026-11-14 approved local public-exam migration
+
+- Owner approved applying the pending security migration, noting the local backup data was empty. Confirmed Laravel environment `local`, connection `mariadb`, database `sentinel_admission_db` before action.
+- Applied only `2026_11_14_135419_add_security_tracking_to_exam_public_subject_attempts_table.php` with `php artisan migrate --path=... --force --no-interaction`; command completed `DONE`. Follow-up migration status reports `[6] Ran`.
+- `php artisan test --compact tests/Feature/PublicExamFlowTest.php`: 25 passed / 327 assertions. Opened `http://localhost:8080/public-exam`; portal renders normally. No participant/exam rows were created or altered. B-007 is resolved locally.
+- A valid participant/token was not available, so the actual start → attempt-panel browser interaction remains unverified. Owner should retry; if still broken, capture exact request/response and server error. No code change or commit in this follow-up.
+
+## 2026-11-14 local public attempt start investigation
+
+- Owner reports local public exam cannot start. Read-only `php artisan migrate:status --no-ansi` shows `2026_11_14_135419_add_security_tracking_to_exam_public_subject_attempts_table` is `Pending`.
+- Source trace: public start returns an attempt ID; frontend immediately loads its attempt endpoint; that endpoint reads `violations_count`, a column created by the pending migration. This likely makes the panel load fail immediately after attempt creation. The active browser session was unavailable (`about:blank`), so no exact HTTP/console exception was observed.
+- Recorded blocker B-007. Applying the existing migration changes the active local database schema and requires owner approval under repository instructions. No attempt/participant rows, data or schema were modified. Next: obtain explicit approval, apply only this migration to local/dev, then retest with an eligible participant and inspect network/server output.
+
+## 2026-11-14 public attempt panel responsive/accessibility pass
+
+- Continued the focus-layout public exam presentation through the question workspace and question palette. The workspace now uses an article landmark (avoiding a nested `main`), answer buttons expose pressed state, and navigation labels shorten on narrow screens. The palette now wraps its heading/help text responsively, announces each question's active/answered/review state, and exposes answer progress as a progressbar.
+- Verification after the changes: `php artisan test --compact tests/Feature/PublicExamFlowTest.php` -> 25 passed / 327 assertions; `npm run build` -> TypeScript and Vite passed (existing stale Browserslist data warning); `git diff --check` passed.
+- The shared Playwright browser remains on the pre-entry `/public-exam` page. No eligible local participant attempt is configured, so the running attempt panel has not been visually exercised in-browser. No participant/demo data was created or altered. Panel screenshot/review remains UNVERIFIED pending a safe eligible session.
+- No backend, route, schema, dependency, or live-data changes; no commit.
+
+## 2026-11-14 public portal presentation copied from focus-layout branch
+
+- Switched from `feature/exam-panel-focus-layout` back to `feature/public-exam-rebuild` at the owner's request. The untracked `database/backups/` directory was preserved and not modified.
+- Rebuilt the pre-entry public portal in the existing `resources/js/Pages/Public/Exam/PublicExam.tsx` around the actual current public flow: copied the prior portal's logo header, WIB clock, theme switch, hero, token-entry card, and tabbed guidance layout. Kept the five-character token and `public-exam.*` API flow; did not restore legacy `/exam/*` routes, localStorage recovery tokens, or guest controllers. Updated copy to match current five-character tokens and current server-side answer/session behavior.
+- Used Graphify to trace public flow boundaries, Context7 for Inertia v2/Tailwind v3 guidance, and Stitch MCP to inspect the project theme reference; did not create or change a Stitch design asset because the existing source branch and user screenshot are the requested fidelity target.
+- Verification: `php artisan test --compact tests/Feature/PublicExamFlowTest.php` -> 25 passed / 327 assertions; `npm run build` -> TypeScript and Vite passed; Playwright MCP confirmed the rendered portal and its Jawaban tab, 0 current console errors, and no horizontal overflow at 320/375/414/768px; `git diff --check` passed. The portal is available at `http://localhost:8080/public-exam`.
+- No backend/API/schema/data changes and no commit. Human visual review is still required. Build emitted the existing stale Browserslist database warning; it did not block the build.
+
 ## 2026-11-14 public panel presentation aligned with focus-layout branch
 
 - Compared `feature/exam-panel-focus-layout` legacy public `AttemptShow.tsx` against the separate current public flow. Its presentation was ported into `Public/Exam/PublicExam.tsx` without restoring legacy routes, models, guest cookies, or shared internal tables.

@@ -62,6 +62,57 @@ test('duplicate mapel is rejected and guests cannot manage public sessions', fun
     expect(DB::table('exam_public_sessions')->count())->toBe(0);
 });
 
+test('admin can delete an unused draft session and its configuration rows', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+    $packages = [];
+    foreach (range(1, 4) as $number) {
+        $subject = DB::table('exam_public_subjects')->insertGetId(['name' => 'Mapel '.$number, 'code' => 'DEL'.$number]);
+        $packages[] = DB::table('exam_public_packages')->insertGetId([
+            'exam_public_subject_id' => $subject, 'title' => 'Paket '.$number, 'code' => 'DEL-'.$number,
+            'status' => 'published', 'passing_score' => 50, 'allow_retry' => false, 'show_result_to_participant' => false,
+        ]);
+    }
+    $session = $this->actingAs($admin)->postJson(route('admin.exams.public-v2.sessions.store'), [
+        'title' => 'Sesi Sampah', 'opens_at' => now()->toISOString(), 'closes_at' => now()->addHour()->toISOString(),
+        'order_type' => 'free', 'package_ids' => $packages,
+    ])->assertCreated()->json('id');
+    DB::table('exam_public_session_tokens')->insert(['exam_public_session_id' => $session, 'token' => 'DELTEST']);
+
+    $this->deleteJson(route('admin.exams.public-v2.sessions.destroy', $session))
+        ->assertSuccessful()->assertJsonPath('deleted', true);
+
+    expect(DB::table('exam_public_sessions')->where('id', $session)->exists())->toBeFalse()
+        ->and(DB::table('exam_public_session_packages')->where('exam_public_session_id', $session)->exists())->toBeFalse()
+        ->and(DB::table('exam_public_session_tokens')->where('exam_public_session_id', $session)->exists())->toBeFalse();
+});
+
+test('public session deletion rejects published and attended sessions', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+    $packages = [];
+    foreach (range(1, 4) as $number) {
+        $subject = DB::table('exam_public_subjects')->insertGetId(['name' => 'Mapel '.$number, 'code' => 'GUARD'.$number]);
+        $packages[] = DB::table('exam_public_packages')->insertGetId([
+            'exam_public_subject_id' => $subject, 'title' => 'Paket '.$number, 'code' => 'GUARD-'.$number,
+            'status' => 'published', 'passing_score' => 50, 'allow_retry' => false, 'show_result_to_participant' => false,
+        ]);
+    }
+    $create = fn (string $title) => $this->actingAs($admin)->postJson(route('admin.exams.public-v2.sessions.store'), [
+        'title' => $title, 'opens_at' => now()->toISOString(), 'closes_at' => now()->addHour()->toISOString(),
+        'order_type' => 'free', 'package_ids' => $packages,
+    ])->assertCreated()->json('id');
+    $published = $create('Sudah Terbit');
+    addPublicSessionQuestions($packages);
+    $this->postJson(route('admin.exams.public-v2.sessions.publish', $published))->assertSuccessful();
+    $this->deleteJson(route('admin.exams.public-v2.sessions.destroy', $published))->assertConflict();
+
+    $attended = $create('Sudah Ada Peserta');
+    DB::table('exam_public_participants')->insert([
+        'exam_public_session_id' => $attended, 'participant_code' => 'DELETEGUARD0001',
+        'name' => 'Peserta', 'school_origin' => 'Sekolah',
+    ]);
+    $this->deleteJson(route('admin.exams.public-v2.sessions.destroy', $attended))->assertConflict();
+});
+
 test('session timestamps with an explicit offset are stored in the application timezone', function () {
     $admin = User::factory()->create(['role' => 'admin']);
     $ids = [];

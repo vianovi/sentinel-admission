@@ -56,6 +56,11 @@ export default function PublicQuestionPalette({
                 </div>
                 <div
                     className={`mt-3 h-2 overflow-hidden rounded-full ${isDark ? 'bg-slate-950' : 'bg-slate-200'}`}
+                    role="progressbar"
+                    aria-label="Kemajuan menjawab soal"
+                    aria-valuemin={0}
+                    aria-valuemax={questions.length}
+                    aria-valuenow={answeredCount}
                 >
                     <div
                         className="h-full rounded-full bg-gradient-to-r from-amber-500 via-amber-400 to-emerald-500 transition-all duration-300"
@@ -66,7 +71,7 @@ export default function PublicQuestionPalette({
             <div
                 className={`space-y-4 rounded-3xl border p-5 shadow-xl backdrop-blur-xl transition-colors ${isDark ? 'border-white/10 bg-slate-900/85' : 'border-slate-200 bg-white'}`}
             >
-                <div className="flex items-center justify-between border-b border-slate-200 pb-3 dark:border-white/10">
+                <div className="flex flex-col gap-1 border-b border-slate-200 pb-3 dark:border-white/10 sm:flex-row sm:items-center sm:justify-between">
                     <span
                         className={`text-xs font-extrabold uppercase tracking-wider ${isDark ? 'text-slate-200' : 'text-slate-800'}`}
                     >
@@ -88,7 +93,8 @@ export default function PublicQuestionPalette({
                                 key={question.id}
                                 type="button"
                                 onClick={() => setActiveIndex(index)}
-                                title={`Soal nomor ${index + 1}`}
+                                aria-label={`Soal nomor ${index + 1}${active ? ', sedang dibuka' : ''}${answered ? ', sudah dijawab' : ', belum dijawab'}${marked ? ', ditandai ragu-ragu' : ''}`}
+                                aria-current={active ? 'step' : undefined}
                                 className={`relative z-0 flex h-11 items-center justify-center rounded-2xl text-sm font-black shadow-sm transition-all sm:h-12 sm:text-base ${active ? 'z-10 scale-105 bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/30 ring-4 ring-amber-400/40' : answered ? 'border-2 border-emerald-500/40 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30' : isDark ? 'border border-white/10 bg-slate-950 text-slate-300 hover:border-white/30' : 'border border-slate-200 bg-slate-100 text-slate-700 hover:border-amber-300'}`}
                             >
                                 {index + 1}

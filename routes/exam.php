@@ -137,6 +137,7 @@ Route::middleware(['auth', RoleMiddleware::class.':admin'])
         Route::get('/public-v2/sessions', [AdminPublicSessionV2::class, 'index'])->name('public-v2.sessions.index');
         Route::post('/public-v2/sessions', [AdminPublicSessionV2::class, 'store'])->name('public-v2.sessions.store');
         Route::get('/public-v2/sessions/{session}', [AdminPublicSessionV2::class, 'show'])->name('public-v2.sessions.show');
+        Route::delete('/public-v2/sessions/{session}', [AdminPublicSessionV2::class, 'destroy'])->name('public-v2.sessions.destroy');
         Route::post('/public-v2/sessions/{session}/publish', [AdminPublicSessionV2::class, 'publish'])->name('public-v2.sessions.publish');
         Route::put('/public-v2/sessions/{session}/packages', [AdminPublicSessionV2::class, 'updatePackages'])->name('public-v2.sessions.packages.update');
         Route::put('/public-v2/sessions/{session}', [AdminPublicSessionV2::class, 'update'])->name('public-v2.sessions.update');

@@ -1,5 +1,16 @@
 # Audit Blockers
 
+## B-007 — Local public exam attempt panel failed on unapplied security migration
+
+- Date: 2026-11-14
+- State: resolved locally on 2026-11-14 with explicit owner approval
+- Severity: medium — participants may be unable to open a newly started attempt in local/dev mode
+- Evidence: `php artisan migrate:status --no-ansi` reports `2026_11_14_135419_add_security_tracking_to_exam_public_subject_attempts_table` as `Pending`. `PublicExamFlowController::attempt()` reads `$record->violations_count`, and the frontend loads that endpoint immediately after `POST public-exam.start` returns an attempt ID. The pending migration adds `violations_count` and `metadata` to `exam_public_subject_attempts`.
+- Root-cause assessment: without the column, Laravel can fail while serializing the attempt response after the start endpoint has created the attempt. The browser console/network could not be inspected in this turn because the available browser session was `about:blank`; this exact runtime exception is therefore strongly indicated, not directly observed.
+- Resolution: after owner approval, applied only `2026_11_14_135419_add_security_tracking_to_exam_public_subject_attempts_table.php` to environment `local`, database `sentinel_admission_db`. `php artisan migrate:status --no-ansi` now reports it as `[6] Ran`. `PublicExamFlowTest.php` passes (25 tests / 327 assertions), and `/public-exam` renders in the local browser.
+- Remaining verification: opening a real attempt in the browser was not exercised because no valid participant/token session was available. The migration mismatch is fixed; do not claim a complete end-to-end start until tested with a valid session.
+- No participant or exam rows were created or modified.
+
 ## B-006 — Public session automatic token interval requires schema approval
 
 - Date: 2026-11-14

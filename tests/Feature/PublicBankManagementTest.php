@@ -4,6 +4,7 @@ use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use OpenSpout\Common\Entity\Row;
+use OpenSpout\Common\Entity\Style\Style;
 use OpenSpout\Writer\XLSX\Writer;
 
 test('admin downloads a package-specific public XLSX template', function () {
@@ -117,6 +118,29 @@ test('public XLSX import reads package settings and active flags without touchin
     }
 });
 
+test('public XLSX import restores answer options that spreadsheet software converted to dates', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+    $subject = DB::table('exam_public_subjects')->insertGetId(['name' => 'MTK', 'code' => 'MTK']);
+    $package = $this->actingAs($admin)->postJson(route('admin.exams.public-bank.packages.store'), [
+        'exam_public_subject_id' => $subject, 'title' => 'MTK-PAKET 1', 'code' => 'TA01-MTK',
+    ])->assertCreated()->json('id');
+
+    $file = publicPackageWorkbook([
+        new DateTimeImmutable('2026-01-04 00:00:00'), 'Salah', 'Mungkin', 'Tidak', '',
+    ]);
+
+    try {
+        $this->postJson(route('admin.exams.public-bank.packages.import', $package), ['file' => $file])
+            ->assertSuccessful()
+            ->assertJsonPath('imported', 2);
+
+        $question = DB::table('exam_public_questions')->where('exam_public_package_id', $package)->where('sort_order', 1)->first();
+        expect(json_decode($question->options, true))->toMatchArray(['A' => '1/4', 'B' => 'Salah']);
+    } finally {
+        @unlink($file->getRealPath());
+    }
+});
+
 test('public import rejects mismatched category and invalid rows without partial writes', function () {
     $admin = User::factory()->create(['role' => 'admin']);
     $subject = DB::table('exam_public_subjects')->insertGetId(['name' => 'IPAS', 'code' => 'IPAS']);
@@ -159,7 +183,7 @@ test('original MTK workbook is rejected for mismatched public subject without mo
         ->and(DB::table('exam_public_packages')->where('id', $package)->value('passing_score'))->toBeNull();
 });
 
-function publicPackageWorkbook(): UploadedFile
+function publicPackageWorkbook(array $firstRowOptions = ['Benar', 'Salah', 'Mungkin', 'Tidak', '']): UploadedFile
 {
     $path = tempnam(sys_get_temp_dir(), 'public-exam-').'.xlsx';
     $writer = new Writer;
@@ -170,10 +194,12 @@ function publicPackageWorkbook(): UploadedFile
         ['KONFIGURASI PAKET'], ['kategori', 'MTK'], ['judul_paket', 'MTK-PAKET 1'], ['kode_paket', 'TA01-MTK'],
         ['KONFIGURASI UJIAN'], ['durasi_menit', '30'], ['ambang_lulus_persen', '55'], ['tampilkan_hasil', 'tidak'], ['izinkan_ujian_ulang', 'tidak'],
         ['DATA SOAL'], ['nomor', 'teks_soal', 'opsi_a', 'opsi_b', 'opsi_c', 'opsi_d', 'opsi_e', 'jawaban_benar', 'poin', 'aktif'],
-        ['1', 'Pertanyaan pertama?', 'Benar', 'Salah', 'Mungkin', 'Tidak', '', 'A', '10', 'ya'],
+        ['1', 'Pertanyaan pertama?', ...$firstRowOptions, 'A', '10', 'ya'],
         ['2', 'Pertanyaan kedua?', 'Benar', 'Salah', 'Mungkin', 'Tidak', '', 'B', '10', 'tidak'],
-    ] as $row) {
-        $writer->addRow(Row::fromValues($row));
+    ] as $index => $row) {
+        $writer->addRow($index === 11 && $firstRowOptions[0] instanceof DateTimeInterface
+            ? Row::fromValuesWithStyles($row, [2 => new Style(format: 'yyyy-mm-dd hh:mm:ss')])
+            : Row::fromValues($row));
     }
     $writer->close();
 

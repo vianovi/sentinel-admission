@@ -100,6 +100,7 @@ export const confirmExamSubmission = async ({
 
     const result = await swalDark.fire({
         target,
+        topLayer: true,
         title: "Kumpulkan Jawaban Ujian?",
         html: htmlContent,
         icon: remaining > 0 ? "warning" : "question",

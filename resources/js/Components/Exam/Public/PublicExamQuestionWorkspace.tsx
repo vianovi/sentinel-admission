@@ -25,7 +25,8 @@ export default function PublicExamQuestionWorkspace({
     const isDark = themeMode === 'dark';
 
     return (
-        <main
+        <article
+            aria-label={`Soal nomor ${activeIndex + 1} dari ${totalQuestions}`}
             className={`flex min-h-[calc(100vh-12rem)] flex-col justify-between rounded-3xl border p-6 shadow-xl backdrop-blur-xl transition-colors sm:p-8 xl:min-h-0 ${isDark ? 'border-white/10 bg-slate-900/85' : 'border-slate-200 bg-white'}`}
         >
             <div className="flex flex-1 flex-col justify-start">
@@ -58,6 +59,7 @@ export default function PublicExamQuestionWorkspace({
                                 <button
                                     key={key}
                                     type="button"
+                                    aria-pressed={activeAnswer?.selected_option === key}
                                     onClick={() =>
                                         changeAnswer(activeQuestion.id, {
                                             selected_option:
@@ -100,27 +102,29 @@ export default function PublicExamQuestionWorkspace({
                     />
                     <span>Ragu-ragu / Tandai Ditinjau</span>
                 </label>
-                <div className="flex items-center gap-3">
+                <div className="flex w-full items-center gap-3 sm:w-auto">
                     <button
                         type="button"
                         onClick={goPrev}
                         disabled={activeIndex === 0}
-                        className={`inline-flex min-h-12 items-center gap-2 rounded-2xl border px-5 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-30 ${isDark ? 'border-white/15 bg-slate-950 text-slate-200 hover:bg-slate-800' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'}`}
+                        className={`inline-flex min-h-12 min-w-0 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-2xl border px-3 text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-30 sm:flex-none sm:px-5 sm:text-sm ${isDark ? 'border-white/15 bg-slate-950 text-slate-200 hover:bg-slate-800' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'}`}
                     >
-                        <i className="fa-solid fa-arrow-left text-xs" /> Soal
-                        Sebelumnya
+                        <i className="fa-solid fa-arrow-left text-xs" />
+                        <span className="sm:hidden">Sebelum</span>
+                        <span className="hidden sm:inline">Soal Sebelumnya</span>
                     </button>
                     <button
                         type="button"
                         onClick={goNext}
                         disabled={activeIndex === totalQuestions - 1}
-                        className="inline-flex min-h-12 items-center gap-2 rounded-2xl bg-amber-500 px-6 text-sm font-black text-slate-950 shadow-lg shadow-amber-500/25 transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-30"
+                        className="inline-flex min-h-12 min-w-0 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-2xl bg-amber-500 px-3 text-xs font-black text-slate-950 shadow-lg shadow-amber-500/25 transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-30 sm:flex-none sm:px-6 sm:text-sm"
                     >
-                        Soal Berikutnya{' '}
+                        <span className="sm:hidden">Berikutnya</span>
+                        <span className="hidden sm:inline">Soal Berikutnya</span>
                         <i className="fa-solid fa-arrow-right text-xs" />
                     </button>
                 </div>
             </div>
-        </main>
+        </article>
     );
 }
