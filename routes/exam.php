@@ -47,6 +47,7 @@ Route::prefix('public-exam')->name('public-exam.')->group(function () {
     Route::post('/participants/{participant}/packages/{package}/start', [PublicExamFlowController::class, 'start'])->name('start')->middleware('throttle:10,1');
     Route::get('/attempts/{attempt}', [PublicExamFlowController::class, 'attempt'])->name('attempt');
     Route::post('/attempts/{attempt}/answers', [PublicExamFlowController::class, 'answer'])->name('answer')->middleware('throttle:60,1');
+    Route::post('/attempts/{attempt}/violations', [PublicExamFlowController::class, 'violation'])->name('violation')->middleware('throttle:60,1');
     Route::post('/attempts/{attempt}/submit', [PublicExamFlowController::class, 'submit'])->name('submit')->middleware('throttle:60,1');
 });
 

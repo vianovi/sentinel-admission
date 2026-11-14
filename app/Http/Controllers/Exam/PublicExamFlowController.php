@@ -201,6 +201,7 @@ class PublicExamFlowController extends Controller
                 'status' => $record->status,
                 'expires_at' => \Carbon\Carbon::parse($record->expires_at, config('app.timezone'))->toISOString(),
                 'total_questions' => $record->total_questions,
+                'violations_count' => $record->violations_count,
             ],
             'questions' => $questions,
             'answers' => DB::table('exam_public_attempt_answers')->where('exam_public_subject_attempt_id', $attempt)
@@ -241,6 +242,32 @@ class PublicExamFlowController extends Controller
         $this->submissions->submit($record->id);
 
         return response()->json(['submitted' => true]);
+    }
+
+    public function violation(Request $request, int $attempt): JsonResponse
+    {
+        $this->attemptFor($request, $attempt);
+        $data = $request->validate([
+            'type' => ['required', Rule::in(['exit_fullscreen', 'tab_switch'])],
+        ]);
+
+        $count = DB::transaction(function () use ($attempt, $data): int {
+            $record = DB::table('exam_public_subject_attempts')->where('id', $attempt)->lockForUpdate()->firstOrFail();
+            abort_unless($record->status === 'in_progress' && $record->expires_at > now(), 423, 'Ujian sudah dikunci.');
+            $metadata = json_decode($record->metadata ?: '{}', true) ?: [];
+            $metadata['violations_log'][] = ['type' => $data['type'], 'at' => now()->toISOString()];
+            $count = $record->violations_count + 1;
+
+            DB::table('exam_public_subject_attempts')->where('id', $record->id)->update([
+                'violations_count' => $count,
+                'metadata' => json_encode($metadata, JSON_THROW_ON_ERROR),
+                'updated_at' => now(),
+            ]);
+
+            return $count;
+        });
+
+        return response()->json(['violations_count' => $count]);
     }
 
     private function validToken(string $token): object

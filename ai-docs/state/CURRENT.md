@@ -7,9 +7,9 @@
 - Slice phase: `implemented_code_verified`
 - Repository root: `/home/silinux/Documents/MyPlaygraund/Laravel-Project/sentinel-admission`
 - Current branch: `feature/public-exam-rebuild`
-- Latest work: `The visible public Hasil Ujian at dashboard/admin/public-exams/results now has confirmed force-stop and delete-history controls per participant, with audit records. The earlier internal result controls remain separate.`
-- Last successful verification: `2026-11-14 public result controls: PublicExamAdminPagesTest passed (5 tests, 130 assertions); TypeScript, Pint, production build, route listing, and diff check passed. Browser verification remains unavailable in this session.`
-- Current blocker: `No policy blocker. Owner chose revoking all previous room tokens when a replacement is issued. MariaDB concurrency and browser verification remain pending.`
+- Latest work: `Committed security/result controls as 23231c8. Public attempts now require fullscreen entry, record fullscreen/tab violations, and expose the log in public results; the public portal no longer describes the internal exam panel.`
+- Last successful verification: `2026-11-14 public flow/security: 77 focused public feature tests passed (757 assertions); Pint, TypeScript, production build, MariaDB migration preview, editor diagnostics, and diff check passed.`
+- Current blocker: `The new public-attempt security migration is not applied to the active database. Full authenticated participant browser flow remains pending because no active local fixture/session is configured.`
 - Human visual review: `Owner reviewed the current UI and reported it acceptable on 2026-11-12. This acceptance covers the reviewed package/session-detail changes, not complete production readiness or four-subject participant execution.`
-- Next exact action: `Owner reviews the uncommitted legacy-public retirement diff. Live browser interaction/mobile layout remain UNVERIFIED. Do not commit without owner instruction.`
+- Next exact action: `Owner applies/reviews the public-attempt security migration as part of deployment, then reviews the uncommitted audit/security diff. Do not commit without owner instruction.`
 - Last updated: `2026-11-14`

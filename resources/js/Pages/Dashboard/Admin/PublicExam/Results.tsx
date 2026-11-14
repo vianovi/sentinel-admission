@@ -28,6 +28,7 @@ type Participant = {
     completed_at: string | null;
     exam_public_session_id: number;
     session_title: string;
+    violations: { type: string; at: string }[];
     subjects: {
         name: string;
         package: string;
@@ -385,6 +386,7 @@ export default function PublicResults({ participants, sessions, filters, stats }
                                                     </td>
                                                 </tr>
                                                 {expanded === p.id && <tr key={`${p.id}-details`}><td colSpan={8} className="bg-slate-50 p-4 dark:bg-slate-950">
+                                                    {p.violations.length > 0 && <div className="mb-3 rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-800 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-200"><p className="font-bold"><i className="fa-solid fa-triangle-exclamation mr-1.5" />Pelanggaran keamanan ({p.violations.length})</p><ul className="mt-1 space-y-1">{p.violations.map((violation, index) => <li key={`${violation.at}-${index}`}>{violation.type === "tab_switch" ? "Berpindah tab" : "Keluar dari layar penuh"} · {formatDate(violation.at)}</li>)}</ul></div>}
                                                     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                                                         {p.subjects.map((subject, index) => <section key={index} className="rounded-xl border border-slate-200 bg-white p-3 dark:border-white/10 dark:bg-slate-900">
                                                             <h3 className="font-bold text-slate-900 dark:text-white">{subject.name} · {subject.package}</h3>

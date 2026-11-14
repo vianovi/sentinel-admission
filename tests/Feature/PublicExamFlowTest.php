@@ -223,6 +223,28 @@ test('answers cannot use a question outside the frozen attempt', function () {
     expect(DB::table('exam_public_attempt_answers')->count())->toBe(0);
 });
 
+test('public attempt records fullscreen and tab violations while it remains active', function () {
+    [, $packages] = publicFlowFixture();
+    $join = $this->postJson(route('public-exam.join', 'ROOM01'), ['name' => 'Anak A', 'school_origin' => 'SD Asal', 'entry_key' => (string) \Illuminate\Support\Str::uuid()]);
+    $secret = collect($join->headers->getCookies())->first(fn ($cookie) => $cookie->getName() === 'public_exam_session')->getValue();
+    $this->withHeader('X-Public-Exam-Session', $secret);
+    $attempt = $this->postJson(route('public-exam.start', [$join->json('participant_id'), $packages['IPAS'][0]]))->json('attempt_id');
+
+    $this->postJson(route('public-exam.violation', $attempt), ['type' => 'exit_fullscreen'])
+        ->assertSuccessful()
+        ->assertJsonPath('violations_count', 1);
+    $this->postJson(route('public-exam.violation', $attempt), ['type' => 'tab_switch'])
+        ->assertSuccessful()
+        ->assertJsonPath('violations_count', 2);
+
+    $record = DB::table('exam_public_subject_attempts')->find($attempt);
+    expect($record->violations_count)->toBe(2)
+        ->and(json_decode($record->metadata, true)['violations_log'])->toHaveCount(2);
+
+    $this->postJson(route('public-exam.submit', $attempt))->assertSuccessful();
+    $this->postJson(route('public-exam.violation', $attempt), ['type' => 'tab_switch'])->assertStatus(423);
+});
+
 test('an expired attempt must be submitted before another subject starts', function () {
     [, $packages] = publicFlowFixture();
     $join = $this->postJson(route('public-exam.join', 'ROOM01'), ['name' => 'Anak A', 'school_origin' => 'SD Asal', 'entry_key' => (string) \Illuminate\Support\Str::uuid()]);

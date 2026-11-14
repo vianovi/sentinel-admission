@@ -175,13 +175,15 @@ it('allows admin to delete media and cleans tags from public exam questions', fu
         ->and($cleanedText)->toBe('Simak sebelum menjawab.');
 });
 
-it('verifies all internal exam submenus return 404', function () {
+it('verifies retired internal exam submenus return 404 while results remain available', function () {
     $this->actingAs($this->admin)->get('/dashboard/admin/exams')->assertNotFound();
     $this->actingAs($this->admin)->get('/dashboard/admin/exams/media')->assertNotFound();
     $this->actingAs($this->admin)->get('/dashboard/admin/exams/subjects')->assertNotFound();
     $this->actingAs($this->admin)->get('/dashboard/admin/exams/packages')->assertNotFound();
     $this->actingAs($this->admin)->get('/dashboard/admin/exams/sessions')->assertNotFound();
-    $this->actingAs($this->admin)->get('/dashboard/admin/exams/results')->assertNotFound();
+    $this->actingAs($this->admin)->get('/dashboard/admin/exams/results')
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page->component('Dashboard/Admin/Exam/Results'));
     $this->actingAs($this->admin)->get('/dashboard/admin/exams/monitoring')->assertNotFound();
 });
 

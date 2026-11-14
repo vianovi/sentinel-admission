@@ -182,12 +182,18 @@ class PublicExamPagesController extends Controller
         $attempts = DB::table('exam_public_subject_attempts')
             ->whereIn('exam_public_participant_id', $participants->getCollection()->pluck('id'))
             ->orderBy('attempt_number')
-            ->get(['exam_public_participant_id', 'exam_public_subject_id', 'attempt_number', 'attempt_type', 'status', 'percentage_score'])
+            ->get(['exam_public_participant_id', 'exam_public_subject_id', 'attempt_number', 'attempt_type', 'status', 'percentage_score', 'violations_count', 'metadata'])
             ->groupBy('exam_public_participant_id');
 
         $participants->getCollection()->transform(function ($participant) use ($assigned, $attempts) {
             $participant->is_passed = $participant->is_passed === null ? null : (bool) $participant->is_passed;
             $bySubject = $attempts->get($participant->id, collect())->groupBy('exam_public_subject_id');
+            $participant->violations = $attempts->get($participant->id, collect())
+                ->flatMap(function ($attempt) {
+                    $metadata = json_decode($attempt->metadata ?: '{}', true) ?: [];
+
+                    return $metadata['violations_log'] ?? [];
+                })->values();
             $participant->subjects = $assigned->get($participant->exam_public_session_id, collect())->map(function ($subject) use ($bySubject, $participant) {
                 $history = $bySubject->get($subject->exam_public_subject_id, collect())
                     ->map(fn ($attempt) => [

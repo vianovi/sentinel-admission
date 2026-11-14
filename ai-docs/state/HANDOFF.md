@@ -1,5 +1,20 @@
 # Audit Handoff
 
+## 2026-11-14 public flow audit and production-copy correction
+
+- Committed the preceding internal/public result and participant security work as `23231c8 feat: secure exam attempts and result controls` after Pint, TypeScript, focused security/admin tests (13 tests / 156 assertions), and diff check.
+- Removed the public landing copy that exposed implementation detail: it no longer says that packages are completed through the same panel as the internal exam. The HTTPS portal smoke check confirmed the header now only presents the Pondok identity, `Ruang Ujian Online`, entry steps, and token form.
+- Re-ran the isolated public suite: 76 passed / 749 assertions. Production build, TypeScript, and diff check passed. Updated the retired-menu regression test because `/dashboard/admin/exams/results` was intentionally re-enabled while other retired internal management routes remain 404.
+- Audited route/controller/client flow: short room-token lookup (30/min), join (5/min), HttpOnly strict participant secret, participant/attempt ownership guards, frozen question order, server-side answer validation, submission/scoring, force close, package/session guards, and public-table isolation are covered by focused tests.
+- `feature/exam-panel-focus-layout` contains the pre-isolated legacy public pages (`Landing.tsx`, `AttemptShow.tsx`). Current public flow was introduced at `a7bd858` with separate `exam_public_*` storage and reuses only shared question-workspace components; it is not the internal exam flow.
+- Deployment gap: `Public/Exam/PublicExam.tsx` does not use the existing fullscreen/violation hook or expose a public violation endpoint. Internal candidate attempts do. Owner decision is required before adding this security boundary. Full authenticated public participant browser flow remains unverified because no active local fixture/session is configured. Current text/test/documentation changes are uncommitted.
+
+## 2026-11-14 public fullscreen and violation tracking
+
+- Owner authorized the audit finding. Public subject attempts now use the same fullscreen prompt/warning UX as internal candidate attempts. Leaving fullscreen or switching tabs posts a throttled, participant-owned violation event.
+- New migration `2026_11_14_135419_add_security_tracking_to_exam_public_subject_attempts_table` adds `violations_count` and JSON `metadata`; the log is displayed in the expanded row on public Hasil Ujian. The migration was previewed against MariaDB but deliberately not applied to the active database.
+- Regression covers two recorded event types and rejects events after submission. Verification: focused flow/admin/media tests 41 passed / 550 assertions; full public suite 77 passed / 757 assertions; Pint, TypeScript, production build, migration preview, editor diagnostics, and diff check passed. No live database action, commit, or deployment occurred.
+
 ## 2026-11-14 correction: public Hasil Ujian controls
 
 - The owner-visible menu is dashboard/admin/public-exams/results, not the internal result page. Added its force-stop and destructive history-delete controls, confirmations, activity logs, table action column, and table accessibility semantics.
