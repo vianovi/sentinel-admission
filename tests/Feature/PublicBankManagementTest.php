@@ -176,7 +176,7 @@ test('public import explains the exact Excel row and validation reasons', functi
         $message = $this->postJson(route('admin.exams.public-bank.packages.import', $package), ['file' => $file])
             ->assertUnprocessable()->json('errors.file.0');
 
-        expect($message)->toContain('Baris Excel 12')
+        expect($message)->toContain('Sheet Data Soal · Baris Excel 12')
             ->toContain('Minimal 2 opsi jawaban harus diisi')
             ->toContain('Import dibatalkan');
     } finally {

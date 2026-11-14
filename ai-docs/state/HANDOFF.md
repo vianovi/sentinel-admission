@@ -4,7 +4,13 @@
 
 - The importer now reports specific causes per invalid question row: empty question, too few options, oversized text, missing/unknown correct answer, invalid points, or invalid active flag.
 - Messages use `Baris Excel N`, where `N` is the actual worksheet row returned by the XLSX reader; it includes the header and is not the question number. The package page explicitly explains this in the error panel.
-- Regression: `PublicBankManagementTest` -> 16 passed / 190 assertions. Pint, build, targeted ESLint, and diff check passed. The earlier public/session work is committed as `09af37e`; these import-detail changes remain uncommitted.
+- Regression: `PublicBankManagementTest` -> 16 passed / 190 assertions. Pint, build, targeted ESLint, and diff check passed. The earlier public/session work is committed as `09af37e`; the import-detail work is committed as `a84f891`.
+
+## 2026-11-14 public import notification layout correction
+
+- Compared the reference branch's `FlashMessage` pattern and found the corner toast had been removed when the detailed inline error panel was introduced. Restored `FlashMessage` and kept the detailed panel, so administrators get both immediate notification and persistent readable context.
+- Error text now includes `Sheet Data Soal · Baris Excel N`. Inspection of the original MTK workbook confirmed row 18 is a valid first question; date-like option values occur later (for example row 20), so a row-18 error likely comes from another upload/history record rather than that source file.
+- Verification: `PublicBankManagementTest` 16 passed / 190 assertions, Pint, targeted ESLint, build, and diff check passed. Committed as `a84f891`.
 
 ## 2026-11-14 public draft session deletion
 

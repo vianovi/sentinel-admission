@@ -268,7 +268,7 @@ class PublicBankController extends Controller
                 $rowErrors[] = 'Aktif harus diisi Ya atau Tidak';
             }
             if ($rowErrors !== []) {
-                throw ValidationException::withMessages(['file' => 'Baris Excel '.$row['row_number'].' tidak valid: '.implode('; ', $rowErrors).'. Import dibatalkan; tidak ada soal yang disimpan.']);
+                throw ValidationException::withMessages(['file' => 'Sheet '.($book['sheet_name'] ?? 'Data Soal').' · Baris Excel '.$row['row_number'].' tidak valid: '.implode('; ', $rowErrors).'. Import dibatalkan; tidak ada soal yang disimpan.']);
             }
             $questions[] = [
                 'exam_public_package_id' => $package,
