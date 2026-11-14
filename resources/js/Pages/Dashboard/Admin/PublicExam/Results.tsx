@@ -15,6 +15,7 @@ import {
     BackLink,
 } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
 import type { PageProps } from "@/types";
+import { confirmAction, showErrorToast } from "@/utils/swal";
 
 type Participant = {
     id: number;
@@ -91,6 +92,7 @@ export default function PublicResults({ participants, sessions, filters, stats }
     const [passed, setPassed] = useState(filters.passed ?? "");
     const [session, setSession] = useState(filters.session ? String(filters.session) : "");
     const [expanded, setExpanded] = useState<number | null>(null);
+    const [busyParticipantId, setBusyParticipantId] = useState<number | null>(null);
 
     const applyFilters = (event: FormEvent) => {
         event.preventDefault();
@@ -116,6 +118,32 @@ export default function PublicResults({ participants, sessions, filters, stats }
         setPassed("");
         setSession("");
         router.get("/dashboard/admin/public-exams/results", {}, { preserveState: true, preserveScroll: true });
+    };
+
+    const forceStop = async (participant: Participant) => {
+        if (!await confirmAction("Hentikan ujian peserta?", "Pengerjaan aktif " + participant.name + " akan langsung dinilai. Peserta tidak dapat melanjutkan ujian.", "Ya, hentikan ujian")) {
+            return;
+        }
+
+        setBusyParticipantId(participant.id);
+        router.post(route("admin.public-exams.results.participants.force-stop", { participant: participant.id }), {}, {
+            preserveScroll: true,
+            onError: () => showErrorToast("Ujian tidak dapat dihentikan. Muat ulang data lalu coba kembali."),
+            onFinish: () => setBusyParticipantId(null),
+        });
+    };
+
+    const deleteHistory = async (participant: Participant) => {
+        if (!await confirmAction("Hapus riwayat peserta?", "Identitas dan seluruh riwayat ujian " + participant.name + " akan dihapus. Peserta harus masuk kembali melalui portal ujian. Tindakan ini tidak dapat dibatalkan.", "Ya, hapus riwayat")) {
+            return;
+        }
+
+        setBusyParticipantId(participant.id);
+        router.delete(route("admin.public-exams.results.participants.destroy", { participant: participant.id }), {
+            preserveScroll: true,
+            onError: () => showErrorToast("Riwayat tidak dapat dihapus. Hentikan dahulu ujian yang masih berlangsung."),
+            onFinish: () => setBusyParticipantId(null),
+        });
     };
 
     const formatDate = (isoString: string | null) => {
@@ -278,22 +306,25 @@ export default function PublicResults({ participants, sessions, filters, stats }
                                 description="Peserta yang menyelesaikan ujian publik akan muncul di sini."
                             />
                         ) : (
-                            <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-white/10">
+                            <div role="region" aria-label="Daftar evaluasi peserta ujian publik" tabIndex={0} className="overflow-x-auto rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500/30 dark:border-white/10">
                                 <table className="min-w-full text-left text-xs dark:text-white">
+                                    <caption className="sr-only">Daftar hasil, status pengerjaan, dan tindakan administrasi peserta ujian publik.</caption>
                                     <thead className="bg-slate-50 dark:bg-white/5 text-slate-500 uppercase font-bold tracking-wider">
                                         <tr>
-                                            <th className="p-3">Kode Peserta</th>
-                                            <th className="p-3">Nama Siswa & Sekolah</th>
-                                            <th className="p-3">Sesi Ujian</th>
-                                            <th className="p-3 text-center">Rata-rata Skor</th>
-                                            <th className="p-3 text-center">Kelulusan</th>
-                                            <th className="p-3 text-center">Status</th>
-                                            <th className="p-3">Waktu Selesai</th>
+                                            <th scope="col" className="p-3">Kode Peserta</th>
+                                            <th scope="col" className="p-3">Nama Siswa & Sekolah</th>
+                                            <th scope="col" className="p-3">Sesi Ujian</th>
+                                            <th scope="col" className="p-3 text-center">Rata-rata Skor</th>
+                                            <th scope="col" className="p-3 text-center">Kelulusan</th>
+                                            <th scope="col" className="p-3 text-center">Status</th>
+                                            <th scope="col" className="p-3">Waktu Selesai</th>
+                                            <th scope="col" className="p-3 text-right">Tindakan</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100 dark:divide-white/5">
                                         {participants.data.map((p) => {
                                             const isPassed = p.is_passed;
+                                            const isBusy = busyParticipantId === p.id;
                                             return (
                                                 <Fragment key={p.id}>
                                                 <tr key={p.id} className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-all">
@@ -339,8 +370,21 @@ export default function PublicResults({ participants, sessions, filters, stats }
                                                     <td className="p-3 text-slate-400">
                                                         {formatDate(p.completed_at)}
                                                     </td>
+                                                    <td className="p-3">
+                                                        <div className="flex min-w-48 flex-wrap justify-end gap-2">
+                                                            {p.status === "in_progress" ? (
+                                                                <button type="button" disabled={isBusy} onClick={() => forceStop(p)} className="inline-flex min-h-9 items-center gap-2 rounded-lg bg-red-600 px-3 text-xs font-bold text-white transition hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-400/50 disabled:cursor-not-allowed disabled:opacity-60" aria-label={"Hentikan paksa ujian " + p.name}>
+                                                                    <i className="fa-solid fa-stop" aria-hidden="true" /> Hentikan
+                                                                </button>
+                                                            ) : (
+                                                                <button type="button" disabled={isBusy} onClick={() => deleteHistory(p)} className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-red-200 px-3 text-xs font-bold text-red-700 transition hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-400/50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10" aria-label={"Hapus riwayat " + p.name}>
+                                                                    <i className="fa-solid fa-trash-can" aria-hidden="true" /> Hapus riwayat
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </td>
                                                 </tr>
-                                                {expanded === p.id && <tr key={`${p.id}-details`}><td colSpan={7} className="bg-slate-50 p-4 dark:bg-slate-950">
+                                                {expanded === p.id && <tr key={`${p.id}-details`}><td colSpan={8} className="bg-slate-50 p-4 dark:bg-slate-950">
                                                     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                                                         {p.subjects.map((subject, index) => <section key={index} className="rounded-xl border border-slate-200 bg-white p-3 dark:border-white/10 dark:bg-slate-900">
                                                             <h3 className="font-bold text-slate-900 dark:text-white">{subject.name} · {subject.package}</h3>

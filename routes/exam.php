@@ -64,6 +64,7 @@ Route::middleware(['auth', RoleMiddleware::class.':candidate'])
         Route::get('/attempts/{attempt}', [CandidateExamAttempt::class, 'show'])->name('attempts.show');
         Route::get('/attempts/{attempt}/sync', [CandidateExamAttempt::class, 'sync'])->name('attempts.sync');
         Route::post('/attempts/{attempt}/answers', [CandidateExamAttempt::class, 'saveAnswer'])->name('attempts.answers.save');
+        Route::post('/attempts/{attempt}/violations', [CandidateExamAttempt::class, 'violation'])->name('attempts.violations');
         Route::post('/attempts/{attempt}/submit', [CandidateExamAttempt::class, 'submit'])->name('attempts.submit');
     });
 
@@ -149,8 +150,10 @@ Route::middleware(['auth', RoleMiddleware::class.':admin'])
         Route::resource('sessions', AdminExamSession::class)->except(['index']);
         Route::get('/sessions', fn () => abort(404))->name('sessions.index');
 
-        Route::get('/results', fn () => abort(404))->name('results.index');
+        Route::get('/results', [AdminExamResult::class, 'index'])->name('results.index');
         Route::get('/results/{attempt}', [AdminExamResult::class, 'show'])->name('results.show');
+        Route::post('/results/{attempt}/force-stop', [AdminExamResult::class, 'forceStop'])->name('results.force-stop');
+        Route::delete('/results/{attempt}/history', [AdminExamResult::class, 'destroyHistory'])->name('results.history.destroy');
     });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -179,4 +182,6 @@ Route::middleware(['auth', RoleMiddleware::class.':admin'])
         Route::get('/sessions', [\App\Http\Controllers\Dashboard\Admin\PublicExam\PublicExamPagesController::class, 'sessions'])->name('sessions.index');
         Route::get('/sessions/{session}', [\App\Http\Controllers\Dashboard\Admin\PublicExam\PublicExamPagesController::class, 'sessions'])->whereNumber('session')->name('sessions.show');
         Route::get('/results', [\App\Http\Controllers\Dashboard\Admin\PublicExam\PublicExamPagesController::class, 'results'])->name('results.index');
+        Route::post('/results/participants/{participant}/force-stop', [\App\Http\Controllers\Dashboard\Admin\PublicExam\PublicExamPagesController::class, 'forceStopParticipant'])->name('results.participants.force-stop');
+        Route::delete('/results/participants/{participant}', [\App\Http\Controllers\Dashboard\Admin\PublicExam\PublicExamPagesController::class, 'destroyParticipantHistory'])->name('results.participants.destroy');
     });

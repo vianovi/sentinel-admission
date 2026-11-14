@@ -41,6 +41,21 @@ function renderRichText(text: string, imageSize: "sm" | "md" | "lg" = "md"): Rea
     while (index < text.length) {
         const char = text[index];
 
+        // Numeric fractions such as 1/2 are math, not dates.
+        const fraction = text.slice(index).match(/^(\d+)\s*\/\s*(\d+)(?![\w/])/);
+        const previousChar = text[index - 1];
+        if (fraction && (!previousChar || !/[\w/]/.test(previousChar))) {
+            flush();
+            nodes.push(
+                <InlineMath
+                    key={`fraction-${index}`}
+                    math={`\\frac{${fraction[1]}}{${fraction[2]}}`}
+                />,
+            );
+            index += fraction[0].length;
+            continue;
+        }
+
         if (char === "\n") {
             flush();
             nodes.push(<br key={`br-${index}`} />);

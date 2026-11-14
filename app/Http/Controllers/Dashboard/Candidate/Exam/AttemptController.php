@@ -191,6 +191,36 @@ class AttemptController extends Controller
         ]);
     }
 
+    public function violation(Request $request, ExamAttempt $attempt): JsonResponse
+    {
+        $candidate = $this->candidateOrFail($request);
+        $gate = $this->examGate($candidate, $request);
+
+        if (! $gate['allowed']) {
+            return response()->json(['message' => $gate['reason'] ?? 'Ujian seleksi masih terkunci.'], 403);
+        }
+
+        $attempt = $this->ownedAttempt($attempt, $candidate);
+        $validated = $request->validate([
+            'type' => ['required', 'string', Rule::in(['exit_fullscreen', 'tab_switch'])],
+        ]);
+
+        abort_unless($attempt->isInProgress(), 423, 'Ujian sudah dikunci.');
+
+        $metadata = is_array($attempt->metadata) ? $attempt->metadata : [];
+        $metadata['violations_log'] = array_values([
+            ...($metadata['violations_log'] ?? []),
+            ['type' => $validated['type'], 'at' => now()->toISOString()],
+        ]);
+        $attempt->update([
+            'violations_count' => $attempt->violations_count + 1,
+            'metadata' => $metadata,
+            'last_activity_at' => now(),
+        ]);
+
+        return response()->json(['violations_count' => $attempt->violations_count]);
+    }
+
     public function submit(Request $request, ExamAttempt $attempt): RedirectResponse
     {
         $candidate = $this->candidateOrFail($request);
@@ -262,6 +292,7 @@ class AttemptController extends Controller
             'is_locked' => $attempt->isLocked(),
             'total_questions' => $attempt->total_questions,
             'answered_questions' => $attempt->answered_questions,
+            'violations_count' => $attempt->violations_count,
             'blank_questions' => $attempt->blank_questions,
             'score_visible' => $showScore,
             'percentage_score' => $showScore && $attempt->percentage_score !== null ? (float) $attempt->percentage_score : null,

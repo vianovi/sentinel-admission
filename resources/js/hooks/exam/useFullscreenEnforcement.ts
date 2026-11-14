@@ -43,6 +43,7 @@ export function useFullscreenEnforcement({
 
     // Cooldown ref: prevents double-counting when Esc fires both keydown + fullscreenchange
     const violationCooldown = useRef(false);
+    const wasFullscreen = useRef(false);
 
     const enterFullscreen = useCallback(() => {
         if (document.documentElement.requestFullscreen) {
@@ -78,6 +79,10 @@ export function useFullscreenEnforcement({
         // Sync fullscreen state without recording a violation
         const handleFullscreenChange = () => {
             const isFS = Boolean(document.fullscreenElement);
+            if (wasFullscreen.current && !isFS) {
+                void reportViolation("exit_fullscreen");
+            }
+            wasFullscreen.current = isFS;
             setIsFullscreen(isFS);
             // If user re-enters fullscreen after a violation, mark initial prompt as dismissed
             if (isFS) {
@@ -104,7 +109,9 @@ export function useFullscreenEnforcement({
         document.addEventListener("keydown", handleKeyDown);
         document.addEventListener("visibilitychange", handleVisibilityChange);
 
-        setIsFullscreen(Boolean(document.fullscreenElement));
+        const initialFullscreen = Boolean(document.fullscreenElement);
+        wasFullscreen.current = initialFullscreen;
+        setIsFullscreen(initialFullscreen);
 
         return () => {
             document.removeEventListener("fullscreenchange", handleFullscreenChange);

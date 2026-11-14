@@ -350,3 +350,98 @@ it('calculates scores from server-side answer keys only', function () {
         ->and($scored->wrong_answers)->toBe(1)
         ->and($scored->passed)->toBeTrue();
 });
+
+it('records fullscreen and tab violations against the owned attempt', function () {
+    $user = User::factory()->create(['role' => 'candidate']);
+    $candidate = examSecurityCandidate($user);
+    $package = examSecurityPackage();
+    $session = examSecuritySession($package);
+    $question = examSecurityQuestion($package);
+    $assignment = examSecurityAssignment($session, $candidate);
+    $attempt = examSecurityAttempt($session, $package, $assignment, $candidate, [$question->id]);
+
+    $this->actingAs($user)
+        ->postJson("/dashboard/seleksi/attempts/{$attempt->id}/violations", ['type' => 'exit_fullscreen'])
+        ->assertSuccessful()
+        ->assertJsonPath('violations_count', 1);
+
+    expect($attempt->fresh()->violations_count)->toBe(1)
+        ->and($attempt->fresh()->metadata['violations_log'][0]['type'])->toBe('exit_fullscreen');
+});
+
+it('allows an admin to force stop an active attempt and score saved answers', function () {
+    $admin = User::factory()->admin()->create();
+    $candidate = examSecurityCandidate();
+    $package = examSecurityPackage();
+    $session = examSecuritySession($package);
+    $question = examSecurityQuestion($package);
+    $assignment = examSecurityAssignment($session, $candidate);
+    $attempt = examSecurityAttempt($session, $package, $assignment, $candidate, [$question->id]);
+
+    ExamAttemptAnswer::create([
+        'exam_attempt_id' => $attempt->id,
+        'exam_question_id' => $question->id,
+        'selected_option' => 'B',
+        'answered_at' => now(),
+        'saved_at' => now(),
+    ]);
+
+    $this->actingAs($admin)
+        ->post("/dashboard/admin/exams/results/{$attempt->id}/force-stop")
+        ->assertRedirect();
+
+    expect($attempt->fresh()->status)->toBe(ExamAttempt::STATUS_AUTO_SUBMITTED)
+        ->and((float) $attempt->fresh()->raw_score)->toBe(1.0);
+});
+
+it('allows an admin to delete a completed participant history and restore eligibility', function () {
+    $admin = User::factory()->admin()->create();
+    $candidate = examSecurityCandidate();
+    $package = examSecurityPackage();
+    $session = examSecuritySession($package);
+    $question = examSecurityQuestion($package);
+    $assignment = examSecurityAssignment($session, $candidate);
+    $attempt = examSecurityAttempt($session, $package, $assignment, $candidate, [$question->id], [
+        'status' => ExamAttempt::STATUS_SUBMITTED,
+        'submitted_at' => now(),
+        'finalized_at' => now(),
+    ]);
+
+    ExamAttemptAnswer::create([
+        'exam_attempt_id' => $attempt->id,
+        'exam_question_id' => $question->id,
+        'selected_option' => 'B',
+        'answered_at' => now(),
+        'saved_at' => now(),
+    ]);
+
+    $this->actingAs($admin)
+        ->delete("/dashboard/admin/exams/results/{$attempt->id}/history")
+        ->assertRedirect();
+
+    expect(ExamAttempt::query()->where('exam_session_candidate_id', $assignment->id)->exists())->toBeFalse()
+        ->and($assignment->fresh()->status)->toBe(ExamSessionCandidate::STATUS_ELIGIBLE);
+
+    $this->assertDatabaseHas('exam_audit_logs', [
+        'event_type' => 'attempt_history_deleted',
+        'candidate_id' => $candidate->id,
+        'actor_user_id' => $admin->id,
+    ]);
+});
+
+it('does not delete a history while an attempt is still active', function () {
+    $admin = User::factory()->admin()->create();
+    $candidate = examSecurityCandidate();
+    $package = examSecurityPackage();
+    $session = examSecuritySession($package);
+    $question = examSecurityQuestion($package);
+    $assignment = examSecurityAssignment($session, $candidate);
+    $attempt = examSecurityAttempt($session, $package, $assignment, $candidate, [$question->id]);
+
+    $this->actingAs($admin)
+        ->delete("/dashboard/admin/exams/results/{$attempt->id}/history")
+        ->assertUnprocessable();
+
+    expect($attempt->fresh()->exists)->toBeTrue()
+        ->and($assignment->fresh()->status)->toBe(ExamSessionCandidate::STATUS_ELIGIBLE);
+});

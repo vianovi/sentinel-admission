@@ -3,7 +3,7 @@ import axios from "axios";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import { BackLink, FlashMessage, PageHeader, StatusPill } from "@/Components/Dashboard/Candidate/Exam/ExamCandidateUi";
-import { useExamTimer, useExamNavigation } from "@/hooks/exam";
+import { useExamTimer, useExamNavigation, useFullscreenEnforcement } from "@/hooks/exam";
 import { useTheme } from "@/context/ThemeContext";
 import QuestionPaletteNavigator from "@/Components/Exam/Candidate/QuestionPaletteNavigator";
 import CandidateQuestionWorkspace from "@/Components/Exam/Candidate/CandidateQuestionWorkspace";
@@ -28,6 +28,13 @@ export default function CandidateAttemptShow({ candidate, exam, attempt, questio
     const { theme, toggleTheme } = useTheme();
 
     const isRunning = attemptState.status === "in_progress" && !attemptState.is_locked && questions.length > 0;
+
+    const { isFullscreen, needsInitialFullscreen, violationsCount, enterFullscreen } = useFullscreenEnforcement({
+        isRunning,
+        attemptId: attempt.id,
+        violationRoute: `/dashboard/seleksi/attempts/${attempt.id}/violations`,
+        initialViolations: attempt.violations_count ?? 0,
+    });
 
     const { activeIndex, activeQuestion, answeredCount, answerMap, setActiveIndex, goNext, goPrev, updateAnswer, patchAnswer, saveTimers } = useExamNavigation({
         questions,
@@ -167,6 +174,25 @@ export default function CandidateAttemptShow({ candidate, exam, attempt, questio
             <Head title="Ruang Ujian" />
 
             <div className="space-y-4 pb-8">
+                {needsInitialFullscreen ? (
+                    <section className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <p className="font-bold">Aktifkan layar penuh sebelum mengerjakan</p>
+                                <p className="mt-1 text-sm opacity-80">Keluar dari layar penuh atau berpindah tab akan dicatat sebagai pelanggaran.</p>
+                            </div>
+                            <button type="button" onClick={enterFullscreen} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-amber-500 px-4 text-sm font-bold text-slate-950">
+                                <i className="fa-solid fa-expand" /> Masuk layar penuh
+                            </button>
+                        </div>
+                    </section>
+                ) : null}
+                {!isFullscreen && !needsInitialFullscreen && isRunning ? (
+                    <div className="flex items-center justify-between gap-3 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-200">
+                        <span><i className="fa-solid fa-triangle-exclamation mr-2" />Layar penuh telah ditinggalkan. Pelanggaran tercatat: {violationsCount}.</span>
+                        <button type="button" onClick={enterFullscreen} className="font-bold underline">Kembali</button>
+                    </div>
+                ) : null}
                 <section className="sticky top-0 z-10 -mx-4 border-b border-slate-200 bg-light px-4 py-2.5 dark:border-white/10 dark:bg-slate-950 sm:-mx-6 sm:px-6">
                     <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:justify-between">
                         <div className="min-w-0 flex items-center gap-3">

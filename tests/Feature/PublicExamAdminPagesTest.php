@@ -99,3 +99,60 @@ test('admin result details distinguish a low subject from a passing overall aver
         ->where('participants.data.0.subjects.0.allow_retry', false)
         ->where('participants.data.0.subjects.1.passed', true));
 });
+
+test('admin can force stop an active public exam participant', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+    $subject = DB::table('exam_public_subjects')->insertGetId(['name' => 'Matematika', 'code' => 'MTK']);
+    $package = DB::table('exam_public_packages')->insertGetId([
+        'exam_public_subject_id' => $subject, 'title' => 'Paket MTK', 'code' => 'MTK-01',
+        'status' => 'published', 'passing_score' => 65, 'allow_retry' => false, 'show_result_to_participant' => false,
+    ]);
+    $session = DB::table('exam_public_sessions')->insertGetId([
+        'title' => 'Sesi Hentikan', 'status' => 'published', 'opens_at' => now()->subHour(), 'closes_at' => now()->addHour(),
+    ]);
+    DB::table('exam_public_session_packages')->insert([
+        'exam_public_session_id' => $session, 'exam_public_package_id' => $package, 'exam_public_subject_id' => $subject, 'sort_order' => 0,
+    ]);
+    $question = DB::table('exam_public_questions')->insertGetId([
+        'exam_public_package_id' => $package, 'question_text' => 'Dua tambah dua?', 'options' => json_encode(['A' => '3', 'B' => '4']),
+        'correct_answer' => 'B', 'point' => 1,
+    ]);
+    $participant = DB::table('exam_public_participants')->insertGetId([
+        'exam_public_session_id' => $session, 'participant_code' => 'STUDENTCODE00003',
+        'name' => 'Peserta Aktif', 'school_origin' => 'Sekolah Aktif', 'session_secret' => hash('sha256', 'participant-active'), 'started_at' => now(),
+    ]);
+    $attempt = DB::table('exam_public_subject_attempts')->insertGetId([
+        'exam_public_participant_id' => $participant, 'exam_public_package_id' => $package, 'exam_public_subject_id' => $subject,
+        'started_at' => now(), 'expires_at' => now()->addHour(), 'question_order' => json_encode([$question]), 'total_questions' => 1,
+    ]);
+
+    $this->actingAs($admin)
+        ->post(route('admin.public-exams.results.participants.force-stop', $participant))
+        ->assertRedirect();
+
+    expect(DB::table('exam_public_subject_attempts')->where('id', $attempt)->value('status'))->toBe('auto_submitted')
+        ->and(DB::table('exam_public_participants')->where('id', $participant)->value('status'))->toBe('completed');
+});
+
+test('admin can delete a completed public participant history', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+    $session = DB::table('exam_public_sessions')->insertGetId([
+        'title' => 'Sesi Hapus Riwayat', 'status' => 'published', 'opens_at' => now()->subHour(), 'closes_at' => now()->addHour(),
+    ]);
+    $participant = DB::table('exam_public_participants')->insertGetId([
+        'exam_public_session_id' => $session, 'participant_code' => 'STUDENTCODE00004',
+        'name' => 'Peserta Selesai', 'school_origin' => 'Sekolah Selesai', 'session_secret' => hash('sha256', 'participant-completed'),
+        'status' => 'completed', 'started_at' => now(), 'completed_at' => now(),
+    ]);
+
+    $this->actingAs($admin)
+        ->delete(route('admin.public-exams.results.participants.destroy', $participant))
+        ->assertRedirect();
+
+    $this->assertDatabaseMissing('exam_public_participants', ['id' => $participant]);
+    $this->assertDatabaseHas('system_activity_logs', [
+        'action' => 'public_exam.participant.history_deleted',
+        'target_id' => (string) $participant,
+        'actor_id' => $admin->id,
+    ]);
+});

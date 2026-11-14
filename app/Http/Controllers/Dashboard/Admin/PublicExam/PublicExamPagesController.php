@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Dashboard\Admin\PublicExam;
 
 use App\Http\Controllers\Controller;
 use App\Models\SystemActivityLog;
+use App\Services\Exam\PublicExamAttemptSubmissionService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -11,6 +13,8 @@ use Inertia\Response;
 
 class PublicExamPagesController extends Controller
 {
+    public function __construct(private readonly PublicExamAttemptSubmissionService $attempts) {}
+
     public function package(int $package): Response
     {
         $record = DB::table('exam_public_packages as package')
@@ -236,5 +240,71 @@ class PublicExamPagesController extends Controller
                 'average_score' => $averageScore ? round((float) $averageScore, 1) : 0,
             ],
         ]);
+    }
+
+    public function forceStopParticipant(Request $request, int $participant): RedirectResponse
+    {
+        DB::transaction(function () use ($participant, $request): void {
+            $record = DB::table('exam_public_participants')->where('id', $participant)->lockForUpdate()->first();
+            abort_unless($record, 404);
+
+            $activeAttemptIds = DB::table('exam_public_subject_attempts')
+                ->where('exam_public_participant_id', $record->id)
+                ->where('status', 'in_progress')
+                ->lockForUpdate()
+                ->pluck('id');
+
+            abort_if($activeAttemptIds->isEmpty(), 422, 'Peserta tidak memiliki ujian yang sedang berlangsung.');
+
+            foreach ($activeAttemptIds as $attemptId) {
+                $this->attempts->submit($attemptId, true);
+            }
+
+            SystemActivityLog::log(
+                'public_exam.participant.force_stopped',
+                'public_exam',
+                "Ujian peserta {$record->participant_code} dihentikan paksa.",
+                $record->name,
+                ['participant_id' => $record->id, 'attempt_ids' => $activeAttemptIds->all()],
+                'PublicExamParticipant',
+                (string) $record->id,
+                $request->user()
+            );
+        });
+
+        return back()->with('success', 'Ujian aktif peserta dihentikan paksa dan jawaban tersimpan telah dinilai.');
+    }
+
+    public function destroyParticipantHistory(Request $request, int $participant): RedirectResponse
+    {
+        DB::transaction(function () use ($participant, $request): void {
+            $record = DB::table('exam_public_participants')->where('id', $participant)->lockForUpdate()->first();
+            abort_unless($record, 404);
+
+            abort_if(
+                DB::table('exam_public_subject_attempts')
+                    ->where('exam_public_participant_id', $record->id)
+                    ->where('status', 'in_progress')
+                    ->lockForUpdate()
+                    ->exists(),
+                422,
+                'Hentikan paksa ujian yang masih berlangsung sebelum menghapus riwayat peserta.'
+            );
+
+            DB::table('exam_public_participants')->where('id', $record->id)->delete();
+
+            SystemActivityLog::log(
+                'public_exam.participant.history_deleted',
+                'public_exam',
+                "Riwayat ujian peserta {$record->participant_code} dihapus.",
+                $record->name,
+                ['participant_id' => $record->id, 'session_id' => $record->exam_public_session_id],
+                'PublicExamParticipant',
+                (string) $record->id,
+                $request->user()
+            );
+        });
+
+        return back()->with('success', 'Riwayat peserta telah dihapus. Peserta dapat masuk kembali melalui portal ujian.');
     }
 }

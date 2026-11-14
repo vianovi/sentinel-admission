@@ -1,5 +1,17 @@
 # Audit Handoff
 
+## 2026-11-14 correction: public Hasil Ujian controls
+
+- The owner-visible menu is dashboard/admin/public-exams/results, not the internal result page. Added its force-stop and destructive history-delete controls, confirmations, activity logs, table action column, and table accessibility semantics.
+- Force-stop submits every active subject attempt through the existing public scoring service. History delete removes the public participant and cascaded attempt/answer history only after no active attempt remains; the participant may re-enter through the public portal.
+- Verification: PublicExamAdminPagesTest passed (5 tests / 130 assertions), Pint, TypeScript, production build, public-result route list, and diff check passed. No commit, schema change, dependency change, or live-data action occurred.
+
+## 2026-11-14 internal exam result controls and accessibility
+
+- Re-enabled only the internal Hasil Ujian index route, not the previously retired internal package/session menu routes. The page now has summary counters, React Select filters, keyboard-focusable table region, table semantics, labels, and clear participant/security/progress/score data.
+- Admins can force-stop an active attempt after confirmation. For a completed attempt, they can delete the participant's full history for that session assignment after a destructive confirmation; the assignment returns to eligible. Active histories are rejected, and deletion is audit-logged as `attempt_history_deleted`.
+- Verification: `OnlineSelectionExamSecurityTest` passed (8 tests / 26 assertions), Pint, TypeScript, production build, route list, and diff check passed. Browser interaction/visual review is UNVERIFIED because the demo HTTPS browser is not available to this session. No commit, schema change, dependency change, or live-data action occurred.
+
 ## 2026-11-14 public session page rebuild
 
 - Reworked only the public exam session page UI to follow the internal exam page patterns: `ExamWorkspace`, `PageHeader`, `StatCard`, `WorkflowRail`, shared form controls, session cards, detail view, and responsive roster table.

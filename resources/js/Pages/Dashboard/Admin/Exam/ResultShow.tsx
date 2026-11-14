@@ -1,7 +1,8 @@
-import { Head, Link } from "@inertiajs/react";
+import { Head, Link, router } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import { BackLink, ExamWorkspace, PageHeader, StatCard, StatusPill, secondaryButtonClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
 import RichExamText from "@/Components/Dashboard/Exam/RichExamText";
+import { confirmAction, showErrorToast } from "@/utils/swal";
 
 type CandidateSummary = {
     id: number | null;
@@ -40,6 +41,8 @@ type AttemptDetail = {
     percentage_score: number | null;
     passing_score: number | null;
     passed: boolean | null;
+    violations_count: number;
+    violations_log: { type: string; at: string }[];
     started_at: string | null;
     submitted_at: string | null;
     finalized_at: string | null;
@@ -53,6 +56,25 @@ type Props = {
 
 export default function ExamResultShow({ attempt }: Props) {
     const passLabel = attempt.passed === null ? "pending" : attempt.passed ? "lulus" : "belum lulus";
+    const forceStop = async () => {
+        if (!await confirmAction("Hentikan ujian peserta?", "Jawaban yang sudah tersimpan akan langsung dinilai dan peserta tidak dapat melanjutkan.", "Ya, hentikan ujian")) {
+            return;
+        }
+
+        router.post(`/dashboard/admin/exams/results/${attempt.id}/force-stop`, {}, {
+            onError: () => showErrorToast("Ujian tidak dapat dihentikan. Muat ulang data lalu coba kembali."),
+        });
+    };
+
+    const deleteHistory = async () => {
+        if (!await confirmAction("Hapus riwayat ujian peserta?", "Seluruh attempt peserta pada sesi ini akan dihapus. Akses ujian akan dibuka kembali. Tindakan ini tidak dapat dibatalkan.", "Ya, hapus riwayat")) {
+            return;
+        }
+
+        router.delete(`/dashboard/admin/exams/results/${attempt.id}/history`, {
+            onError: () => showErrorToast("Riwayat tidak dapat dihapus. Pastikan tidak ada ujian peserta yang masih berlangsung."),
+        });
+    };
 
     return (
         <>
@@ -71,6 +93,15 @@ export default function ExamResultShow({ attempt }: Props) {
                                     <i className="fa-solid fa-user text-xs" /> Profil Kandidat
                                 </Link>
                             ) : null}
+                            {attempt.status === "in_progress" ? (
+                                <button type="button" onClick={forceStop} className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-red-600 px-3 text-sm font-bold text-white hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-400/50">
+                                    <i className="fa-solid fa-stop" /> Hentikan paksa
+                                </button>
+                            ) : (
+                                <button type="button" onClick={deleteHistory} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-red-200 px-3 text-sm font-bold text-red-700 transition hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-400/50 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10">
+                                    <i className="fa-solid fa-trash-can" /> Hapus riwayat
+                                </button>
+                            )}
                         </>
                     }
                 />
@@ -111,6 +142,18 @@ export default function ExamResultShow({ attempt }: Props) {
                     <StatCard label="Benar" value={attempt.correct_answers} icon="fa-solid fa-circle-check" tone="text-emerald-500" />
                     <StatCard label="Salah" value={attempt.wrong_answers} icon="fa-solid fa-circle-xmark" tone="text-red-500" />
                 </div>
+
+                <section className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/20 dark:bg-amber-500/10">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                            <h2 className="text-sm font-bold text-amber-900 dark:text-amber-100">Keamanan ujian</h2>
+                            <p className="mt-1 text-sm text-amber-800 dark:text-amber-200">Pelanggaran tercatat: {attempt.violations_count}</p>
+                        </div>
+                        <div className="text-left text-xs text-amber-800 dark:text-amber-200 sm:text-right">
+                            {attempt.violations_log.length === 0 ? "Belum ada catatan pelanggaran." : attempt.violations_log.map((violation, index) => <p key={`${violation.at}-${index}`}>{violation.type} · {violation.at}</p>)}
+                        </div>
+                    </div>
+                </section>
 
                 <section className="rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-900">
                     <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
