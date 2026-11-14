@@ -242,8 +242,33 @@ class PublicBankController extends Controller
             $correct = strtoupper(trim((string) ($values['jawaban_benar'] ?? '')));
             $active = $boolean[strtolower(trim((string) ($values['aktif'] ?? '')))] ?? null;
             $point = $values['poin'] ?? null;
-            if ($text === '' || mb_strlen($text) > 20000 || count($options) < 2 || collect($options)->contains(fn ($value) => mb_strlen($value) > 5000) || ! isset($options[$correct]) || ! is_numeric($point) || (float) $point <= 0 || (float) $point > 9999 || $active === null) {
-                throw ValidationException::withMessages(['file' => 'Soal pada baris '.$row['row_number'].' tidak valid; tidak ada data yang diimpor.']);
+            $rowErrors = [];
+            if ($text === '') {
+                $rowErrors[] = 'Teks soal kosong';
+            } elseif (mb_strlen($text) > 20000) {
+                $rowErrors[] = 'Teks soal melebihi 20.000 karakter';
+            }
+            if (count($options) < 2) {
+                $rowErrors[] = 'Minimal 2 opsi jawaban harus diisi';
+            }
+            foreach ($options as $letter => $option) {
+                if (mb_strlen($option) > 5000) {
+                    $rowErrors[] = 'Opsi '.$letter.' melebihi 5.000 karakter';
+                }
+            }
+            if ($correct === '') {
+                $rowErrors[] = 'Jawaban benar kosong';
+            } elseif (! isset($options[$correct])) {
+                $rowErrors[] = 'Jawaban benar “'.$correct.'” tidak ditemukan pada opsi yang diisi';
+            }
+            if (! is_numeric($point) || (float) $point <= 0 || (float) $point > 9999) {
+                $rowErrors[] = 'Poin harus berupa angka lebih dari 0 dan maksimal 9.999';
+            }
+            if ($active === null) {
+                $rowErrors[] = 'Aktif harus diisi Ya atau Tidak';
+            }
+            if ($rowErrors !== []) {
+                throw ValidationException::withMessages(['file' => 'Baris Excel '.$row['row_number'].' tidak valid: '.implode('; ', $rowErrors).'. Import dibatalkan; tidak ada soal yang disimpan.']);
             }
             $questions[] = [
                 'exam_public_package_id' => $package,

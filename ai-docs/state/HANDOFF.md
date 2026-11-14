@@ -1,5 +1,11 @@
 # Audit Handoff
 
+## 2026-11-14 public import error detail
+
+- The importer now reports specific causes per invalid question row: empty question, too few options, oversized text, missing/unknown correct answer, invalid points, or invalid active flag.
+- Messages use `Baris Excel N`, where `N` is the actual worksheet row returned by the XLSX reader; it includes the header and is not the question number. The package page explicitly explains this in the error panel.
+- Regression: `PublicBankManagementTest` -> 16 passed / 190 assertions. Pint, build, targeted ESLint, and diff check passed. The earlier public/session work is committed as `09af37e`; these import-detail changes remain uncommitted.
+
 ## 2026-11-14 public draft session deletion
 
 - Added `DELETE admin.exams.public-v2.sessions.destroy`. It locks the session, permits deletion only while status is `draft`, rejects any session with participants or attempts, and transactionally removes session tokens, package pivots, and the session row.

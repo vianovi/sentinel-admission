@@ -102,7 +102,7 @@ export default function PublicPackageShow({ examPackage: pkg, questions, session
     };
 
     const toggleQuestion = async (question: (typeof questions)[number]) => {
-        setPendingAction(`toggle-${question.id}`); setError(null); try { await axios.patch(route("admin.exams.public-bank.questions.toggle", { question: question.id }), { is_active: !Boolean(question.is_active) }); router.reload(); } catch (err) { setError(axios.isAxiosError(err) ? err.response?.data?.message ?? "Status soal gagal diubah." : "Status soal gagal diubah."); } finally { setPendingAction(null); }
+        setPendingAction(`toggle-${question.id}`); setError(null); try { await axios.patch(route("admin.exams.public-bank.questions.toggle", { question: question.id }), { is_active: !question.is_active }); router.reload(); } catch (err) { setError(axios.isAxiosError(err) ? err.response?.data?.message ?? "Status soal gagal diubah." : "Status soal gagal diubah."); } finally { setPendingAction(null); }
     };
 
     const deleteQuestion = async (question: (typeof questions)[number]) => {
@@ -130,6 +130,7 @@ export default function PublicPackageShow({ examPackage: pkg, questions, session
                 </dl>
             </header>
             <FlashMessage value={error} />
+            {error && <div role="alert" className="mb-5 rounded-xl border border-rose-300 bg-rose-50 p-4 text-sm text-rose-900 dark:border-rose-900/70 dark:bg-rose-950/40 dark:text-rose-100"><div className="flex items-start gap-3"><i aria-hidden="true" className="fa-solid fa-circle-exclamation mt-0.5 text-rose-600 dark:text-rose-300" /><div><p className="font-bold">Import ditolak</p><p className="mt-1 leading-6">{error}</p><p className="mt-2 text-xs leading-5 text-rose-700 dark:text-rose-200">Nomor baris yang disebut adalah nomor baris pada sheet Data Soal di file Excel, termasuk baris judul kolom.</p></div></div></div>}
             <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
                 <section aria-labelledby="package-settings-heading" className={panel}>
                     <h2 id="package-settings-heading" className="font-display text-base font-semibold">Konfigurasi ujian</h2>

@@ -164,6 +164,26 @@ test('public import rejects mismatched category and invalid rows without partial
     }
 });
 
+test('public import explains the exact Excel row and validation reasons', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+    $subject = DB::table('exam_public_subjects')->insertGetId(['name' => 'MTK', 'code' => 'MTK']);
+    $package = $this->actingAs($admin)->postJson(route('admin.exams.public-bank.packages.store'), [
+        'exam_public_subject_id' => $subject, 'title' => 'MTK-PAKET 1', 'code' => 'TA01-MTK',
+    ])->assertCreated()->json('id');
+    $file = publicPackageWorkbook(['Benar', '', '', '', '']);
+
+    try {
+        $message = $this->postJson(route('admin.exams.public-bank.packages.import', $package), ['file' => $file])
+            ->assertUnprocessable()->json('errors.file.0');
+
+        expect($message)->toContain('Baris Excel 12')
+            ->toContain('Minimal 2 opsi jawaban harus diisi')
+            ->toContain('Import dibatalkan');
+    } finally {
+        @unlink($file->getRealPath());
+    }
+});
+
 test('original MTK workbook is rejected for mismatched public subject without modifying either bank', function () {
     $source = '/home/silinux/Desktop/Paket Ujian PSB/Soal/MTK/Soal-ta01-mtk-mtk-paket-1.xlsx';
     if (! is_file($source)) {
