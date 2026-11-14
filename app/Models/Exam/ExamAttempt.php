@@ -26,12 +26,6 @@ class ExamAttempt extends Model
         'exam_session_candidate_id',
         'exam_package_id',
         'candidate_id',
-        'exam_session_token_id',
-        'guest_name',
-        'guest_school',
-        'guest_email',
-        'guest_phone',
-        'guest_session_token',
         'attempt_number',
         'status',
         'started_at',
@@ -86,11 +80,6 @@ class ExamAttempt extends Model
         return $this->belongsTo(ExamSessionCandidate::class, 'exam_session_candidate_id');
     }
 
-    public function token(): BelongsTo
-    {
-        return $this->belongsTo(ExamSessionToken::class, 'exam_session_token_id');
-    }
-
     public function package(): BelongsTo
     {
         return $this->belongsTo(ExamPackage::class, 'exam_package_id');
@@ -106,19 +95,14 @@ class ExamAttempt extends Model
         return $this->hasMany(ExamAttemptAnswer::class);
     }
 
-    public function isGuest(): bool
-    {
-        return $this->candidate_id === null;
-    }
-
     public function participantName(): string
     {
-        return $this->candidate?->full_name ?? $this->guest_name ?? 'Peserta Tamu';
+        return $this->candidate?->full_name ?? 'Kandidat';
     }
 
     public function participantEmail(): ?string
     {
-        return $this->candidate?->user?->email ?? $this->guest_email;
+        return $this->candidate?->user?->email;
     }
 
     public function isInProgress(): bool

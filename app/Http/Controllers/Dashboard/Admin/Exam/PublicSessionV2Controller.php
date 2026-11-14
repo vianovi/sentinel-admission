@@ -9,17 +9,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-use Inertia\Inertia;
-use Inertia\Response;
 
 class PublicSessionV2Controller extends Controller
 {
     public function __construct(private readonly PublicExamAttemptSubmissionService $submissions) {}
-
-    public function page(): Response
-    {
-        return Inertia::render('Dashboard/Admin/Exam/PublicExam');
-    }
 
     public function index(): JsonResponse
     {

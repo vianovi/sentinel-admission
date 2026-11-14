@@ -32,8 +32,6 @@ class ExamSession extends Model
         'passing_score',
         'max_attempts',
         'show_result_to_candidate',
-        'is_public',
-        'public_access_type',
         'package_order_type',
         'status',
     ];
@@ -45,7 +43,6 @@ class ExamSession extends Model
         'passing_score' => 'decimal:2',
         'max_attempts' => 'integer',
         'show_result_to_candidate' => 'boolean',
-        'is_public' => 'boolean',
     ];
 
     public function package(): BelongsTo
@@ -74,16 +71,6 @@ class ExamSession extends Model
     public function candidates(): HasMany
     {
         return $this->hasMany(ExamSessionCandidate::class);
-    }
-
-    public function publicTokens(): HasMany
-    {
-        return $this->hasMany(ExamSessionToken::class);
-    }
-
-    public function tokens(): HasMany
-    {
-        return $this->hasMany(ExamSessionToken::class);
     }
 
     public function attempts(): HasMany

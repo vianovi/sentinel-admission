@@ -9,7 +9,6 @@
 use App\Http\Controllers\Dashboard\Admin\Exam\PackageController as AdminExamPackage;
 use App\Http\Controllers\Dashboard\Admin\Exam\PublicBankController as AdminPublicBank;
 use App\Http\Controllers\Dashboard\Admin\Exam\PublicParticipantController as AdminPublicParticipant;
-use App\Http\Controllers\Dashboard\Admin\Exam\PublicSessionController as AdminPublicExamSession;
 use App\Http\Controllers\Dashboard\Admin\Exam\PublicSessionV2Controller as AdminPublicSessionV2;
 use App\Http\Controllers\Dashboard\Admin\Exam\QuestionImportController as AdminExamImport;
 use App\Http\Controllers\Dashboard\Admin\Exam\ResultController as AdminExamResult;
@@ -18,9 +17,7 @@ use App\Http\Controllers\Dashboard\Admin\Exam\SubjectController as AdminExamSubj
 use App\Http\Controllers\Dashboard\Candidate\Exam\AttemptController as CandidateExamAttempt;
 use App\Http\Controllers\Dashboard\Candidate\Exam\ExamController as CandidateExam;
 use App\Http\Controllers\Dashboard\Staff\Exam\ResultController as StaffExamResult;
-use App\Http\Controllers\Exam\PublicExamController;
 use App\Http\Controllers\Exam\PublicExamFlowController;
-use App\Http\Middleware\RetireLegacyPublicExam;
 use App\Http\Middleware\RoleMiddleware;
 use Illuminate\Support\Facades\Route;
 
@@ -41,21 +38,6 @@ Route::get('/exam-media/{filename}', function (string $filename) {
 
     abort(404);
 })->where('filename', '[a-zA-Z0-9_\-\.]+')->name('exam.images.serve');
-
-// ─────────────────────────────────────────────────────────────────────────────
-// PUBLIC EXAM — Guest access via token (Cloudflare Tunnel compatible)
-// ─────────────────────────────────────────────────────────────────────────────
-
-Route::prefix('exam')->name('exam.public.')->middleware(RetireLegacyPublicExam::class)->group(function () {
-    Route::get('/p/{token?}', [PublicExamController::class, 'showLanding'])->name('landing');
-    Route::post('/p/{token}/start', [PublicExamController::class, 'start'])->name('start')->middleware('throttle:10,1');
-    Route::get('/attempts/{attempt}', [PublicExamController::class, 'showAttempt'])->name('attempts.show');
-    Route::post('/attempts/{attempt}/resume', [PublicExamController::class, 'resume'])->name('attempts.resume')->middleware('throttle:10,1');
-    Route::post('/attempts/{attempt}/sync', [PublicExamController::class, 'sync'])->name('attempts.sync');
-    Route::post('/attempts/{attempt}/save-answer', [PublicExamController::class, 'saveAnswer'])->name('attempts.save-answer')->middleware('throttle:60,1');
-    Route::post('/attempts/{attempt}/violation', [PublicExamController::class, 'logViolation'])->name('attempts.violation');
-    Route::post('/attempts/{attempt}/submit', [PublicExamController::class, 'submit'])->name('attempts.submit');
-});
 
 Route::prefix('public-exam')->name('public-exam.')->group(function () {
     Route::get('/', [PublicExamFlowController::class, 'page'])->name('page');
@@ -150,7 +132,6 @@ Route::middleware(['auth', RoleMiddleware::class.':admin'])
         Route::post('/public-bank/packages/{package}/publish', [AdminPublicBank::class, 'publish'])->name('public-bank.packages.publish');
         Route::delete('/public-bank/packages/{package}', [AdminPublicBank::class, 'destroyPackage'])->name('public-bank.packages.destroy');
 
-        Route::get('/public-v2', [AdminPublicSessionV2::class, 'page'])->name('public-v2.page');
         Route::get('/public-v2/sessions', [AdminPublicSessionV2::class, 'index'])->name('public-v2.sessions.index');
         Route::post('/public-v2/sessions', [AdminPublicSessionV2::class, 'store'])->name('public-v2.sessions.store');
         Route::get('/public-v2/sessions/{session}', [AdminPublicSessionV2::class, 'show'])->name('public-v2.sessions.show');
@@ -163,21 +144,7 @@ Route::middleware(['auth', RoleMiddleware::class.':admin'])
         Route::get('/public-sessions/{session}/participants', [AdminPublicParticipant::class, 'index'])->name('public-sessions.participants.index');
         Route::get('/public-sessions/{session}/results.csv', [AdminPublicParticipant::class, 'export'])->name('public-sessions.results.export');
         Route::post('/public-sessions/{session}/participants', [AdminPublicParticipant::class, 'store'])->name('public-sessions.participants.store');
-        Route::middleware(RetireLegacyPublicExam::class)->group(function () {
-            Route::get('/public-sessions', [AdminPublicExamSession::class, 'index'])->name('public-sessions.index');
-            Route::post('/public-sessions', [AdminPublicExamSession::class, 'store'])->name('public-sessions.store');
-            Route::put('/public-sessions/{session}', [AdminPublicExamSession::class, 'update'])->name('public-sessions.update');
-            Route::delete('/public-sessions/{session}', [AdminPublicExamSession::class, 'destroy'])->name('public-sessions.destroy');
-            Route::post('/public-sessions/{session}/toggle-results', [AdminPublicExamSession::class, 'toggleResultVisibility'])->name('public-sessions.toggle-results');
-            Route::post('/public-sessions/{session}/tokens', [AdminPublicExamSession::class, 'generateToken'])->name('public-sessions.tokens.store');
-            Route::delete('/public-tokens/{token}', [AdminPublicExamSession::class, 'destroyToken'])->name('public-sessions.destroy-token');
-            Route::post('/public-sessions/attempts/{attempt}/force-submit', [AdminPublicExamSession::class, 'forceSubmitAttempt'])->name('public-sessions.attempts.force-submit');
-            Route::post('/public-sessions/attempts/{attempt}/reset-violations', [AdminPublicExamSession::class, 'resetAttemptViolations'])->name('public-sessions.attempts.reset-violations');
-        });
-
         Route::post('/sessions/{session}/candidates', [AdminExamSession::class, 'assignCandidates'])->name('sessions.candidates.assign');
-        Route::post('/sessions/{session}/tokens', [AdminExamSession::class, 'generateToken'])->name('sessions.tokens.store')->middleware(RetireLegacyPublicExam::class);
-        Route::delete('/tokens/{token}', [AdminExamSession::class, 'destroyToken'])->name('tokens.destroy')->middleware(RetireLegacyPublicExam::class);
         Route::resource('sessions', AdminExamSession::class)->except(['index']);
         Route::get('/sessions', fn () => abort(404))->name('sessions.index');
 

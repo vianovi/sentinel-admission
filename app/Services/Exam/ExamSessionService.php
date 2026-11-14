@@ -4,9 +4,7 @@ namespace App\Services\Exam;
 
 use App\Models\Exam\ExamSession;
 use App\Models\Exam\ExamSessionCandidate;
-use App\Models\Exam\ExamSessionToken;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class ExamSessionService
 {
@@ -47,27 +45,5 @@ class ExamSessionService
         }
 
         return $created;
-    }
-
-    /**
-     * Generate public access tokens for an exam session.
-     */
-    public function generateTokens(ExamSession $session, array $data, ?Request $request = null): int
-    {
-        $count = $data['count'] ?? 1;
-
-        for ($i = 0; $i < $count; $i++) {
-            ExamSessionToken::create([
-                'exam_session_id' => $session->id,
-                'token' => Str::upper(Str::random(6)),
-                'label' => $count > 1 ? ($data['label'] ? "{$data['label']} #".($i + 1) : null) : ($data['label'] ?? null),
-                'type' => $data['type'],
-                'max_uses' => $data['type'] === 'single_use' ? 1 : $data['max_uses'],
-                'expires_at' => $session->closes_at,
-                'created_by' => $request?->user()?->id,
-            ]);
-        }
-
-        return $count;
     }
 }

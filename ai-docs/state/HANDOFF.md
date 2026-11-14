@@ -1,5 +1,13 @@
 # Audit Handoff
 
+## 2026-11-13 legacy public exam retirement — code verified, review pending
+
+- Owner authorized removal of the former guest public-exam flow that shared `exam_*` tables with internal candidate exams. The current separate public exam implementation remains intact: `public-exam.*` participant routes and `exam_public_*` tables. Candidate flow remains `dashboard/seleksi/*` and its authenticated assignment model.
+- Removed legacy `/exam/*` guest routes, retired middleware, guest controller/service path, shared-table token model/command, obsolete admin public-session controller/pages/components, and old public tests. Internal admin sessions no longer expose or generate public guest-token links.
+- The current `PublicSessionV2Controller` API remains because the active public admin pages use it against `exam_public_*`; only its obsolete page endpoint and deleted duplicate React page were removed.
+- Regression coverage now asserts legacy routes are unregistered while replacement public and candidate routes remain registered. Verification: focused legacy/public/candidate tests 42 passed / 441 assertions; candidate security, participant registration, and public admin-page tests 11 passed / 155 assertions; `npx tsc --noEmit`, Pint and `git diff --check` passed. `php artisan route:list --name=exam.public` has no matches.
+- No schema, migration, live data, build, browser, commit, or deployment action occurred in this retirement task. Owner requested no recurring asset builds because Vite dev mode is running.
+
 ## 2026-11-13 package configuration UI polish — code verified, visual review pending
 
 - Owner scoped the task to Admin → Ujian Publik → Paket Soal configuration and requested Hallmark + Google Stitch with both light/dark themes. Baseline remains `1bf2ff9` on `feature/public-exam-rebuild`; prior uncommitted backend/package controls are preserved.

@@ -10,11 +10,9 @@ use App\Models\Candidate;
 use App\Models\Exam\ExamPackage;
 use App\Models\Exam\ExamSession;
 use App\Models\Exam\ExamSessionCandidate;
-use App\Models\Exam\ExamSessionToken;
 use App\Services\Exam\ExamAuditLogger;
 use App\Services\Exam\ExamSessionService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -64,8 +62,6 @@ class SessionController extends Controller
             'exam_package_id' => $primaryPackageId,
             'created_by' => $request->user()?->id,
             'show_result_to_candidate' => $request->boolean('show_result_to_candidate'),
-            'is_public' => false,
-            'public_access_type' => $request->input('public_access_type', 'token_required'),
             'status' => $request->input('status', ExamSession::STATUS_DRAFT),
         ]);
 
@@ -85,7 +81,6 @@ class SessionController extends Controller
             'package.subject:id,name,code',
             'admissionWave:id,title,academic_year',
             'candidates.candidate:id,candidate_code,full_name,nisn,status,program_choice,admission_wave_id',
-            'publicTokens',
         ]);
 
         $assignedCandidateIds = $session->candidates->pluck('candidate_id')->all();
@@ -122,17 +117,6 @@ class SessionController extends Controller
                     'status' => $assignment->candidate?->status,
                     'program_choice' => $assignment->candidate?->program_choice,
                 ],
-            ])->values(),
-            'public_tokens' => $session->publicTokens->map(fn (ExamSessionToken $token) => [
-                'id' => $token->id,
-                'token' => $token->token,
-                'label' => $token->label,
-                'type' => $token->type,
-                'max_uses' => $token->max_uses,
-                'used_count' => $token->used_count,
-                'expires_at' => $token->expires_at?->format('d M Y H:i'),
-                'is_valid' => $token->isValid(),
-                'public_url' => route('exam.public.landing', ['token' => $token->token]),
             ])->values(),
             'available_candidates' => Candidate::with('admissionWave:id,title')
                 ->whereNotIn('id', $assignedCandidateIds)
@@ -174,8 +158,6 @@ class SessionController extends Controller
                 'opens_at_input' => $session->opens_at?->format('Y-m-d\TH:i'),
                 'closes_at_input' => $session->closes_at?->format('Y-m-d\TH:i'),
                 'show_result_to_candidate' => $session->show_result_to_candidate,
-                'is_public' => $session->is_public,
-                'public_access_type' => $session->public_access_type,
                 'package_order_type' => $session->package_order_type,
             ],
             'mode' => 'edit',
@@ -197,8 +179,6 @@ class SessionController extends Controller
             ...$request->safe()->except(['package_ids']),
             'exam_package_id' => $primaryPackageId,
             'show_result_to_candidate' => $request->boolean('show_result_to_candidate'),
-            'is_public' => false,
-            'public_access_type' => $request->input('public_access_type', 'token_required'),
         ]);
 
         $this->syncPackages($session, $packageIds ?: [$primaryPackageId]);
@@ -236,27 +216,6 @@ class SessionController extends Controller
         return back()->with('success', "{$created} kandidat berhasil ditugaskan ke sesi ujian.");
     }
 
-    public function generateToken(Request $request, ExamSession $session): RedirectResponse
-    {
-        $validated = $request->validate([
-            'label' => ['nullable', 'string', 'max:255'],
-            'type' => ['required', 'in:single_use,multi_use'],
-            'max_uses' => ['required', 'integer', 'min:1', 'max:10000'],
-            'count' => ['nullable', 'integer', 'min:1', 'max:50'],
-        ]);
-
-        $count = $this->sessionService->generateTokens($session, $validated, $request);
-
-        return back()->with('success', "{$count} token akses ujian publik berhasil dibuat.");
-    }
-
-    public function destroyToken(ExamSessionToken $token): RedirectResponse
-    {
-        $token->delete();
-
-        return back()->with('success', 'Token akses berhasil dihapus.');
-    }
-
     private function sessionRow(ExamSession $session): array
     {
         $packageTitles = $session->relationLoaded('packages') && $session->packages->isNotEmpty()
@@ -280,8 +239,6 @@ class SessionController extends Controller
             'passing_score' => (float) $session->passing_score,
             'max_attempts' => $session->max_attempts,
             'show_result_to_candidate' => $session->show_result_to_candidate,
-            'is_public' => (bool) $session->is_public,
-            'public_access_type' => $session->public_access_type,
             'package_order_type' => $session->package_order_type,
             'candidates_count' => $session->candidates_count ?? $session->candidates()->count(),
             'attempts_count' => $session->attempts_count ?? $session->attempts()->count(),

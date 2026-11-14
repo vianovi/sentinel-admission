@@ -1,7 +1,6 @@
 import { Head, Link, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import { BackLink, ExamWorkspace, FlashMessage, PageHeader, StatCard, StatusPill, secondaryButtonClass } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
-import SessionTokenManager, { PublicTokenRow } from "@/Components/Exam/Admin/SessionTokenManager";
 import SessionCandidateAssigner, { CandidateRow } from "@/Components/Exam/Admin/SessionCandidateAssigner";
 import SessionAssignedTable, { Assignment } from "@/Components/Exam/Admin/SessionAssignedTable";
 import type { PageProps } from "@/types";
@@ -21,8 +20,6 @@ type SessionDetail = {
     passing_score: number;
     max_attempts: number;
     show_result_to_candidate: boolean;
-    is_public: boolean;
-    public_access_type: string;
     candidates_count: number;
     attempts_count: number;
 };
@@ -31,10 +28,9 @@ type Props = {
     session: SessionDetail;
     assigned_candidates: Assignment[];
     available_candidates: CandidateRow[];
-    public_tokens?: PublicTokenRow[];
 };
 
-export default function ExamSessionShow({ session, assigned_candidates, available_candidates, public_tokens = [] }: Props) {
+export default function ExamSessionShow({ session, assigned_candidates, available_candidates }: Props) {
     const { flash, errors: pageErrors } = usePage<PageProps & { errors: Record<string, string> }>().props;
 
     return (
@@ -67,7 +63,7 @@ export default function ExamSessionShow({ session, assigned_candidates, availabl
                         <div>
                             <div className="mb-2 flex flex-wrap items-center gap-2">
                                 <StatusPill value={session.status} />
-                                <StatusPill value={session.is_public ? "akses umum aktif" : "akses khusus kandidat"} />
+                                <StatusPill value="akses kandidat terdaftar" />
                                 <StatusPill value={session.show_result_to_candidate ? "hasil kandidat aktif" : "hasil kandidat tersembunyi"} />
                             </div>
                             <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">{session.description || "Belum ada deskripsi sesi."}</p>
@@ -92,9 +88,6 @@ export default function ExamSessionShow({ session, assigned_candidates, availabl
                     <StatCard label="Kandidat" value={session.candidates_count} icon="fa-solid fa-users" tone="text-amber-500" />
                     <StatCard label="Pengerjaan" value={session.attempts_count} icon="fa-solid fa-clipboard-check" tone="text-gold" />
                 </div>
-
-                {/* Public Token Generator Section */}
-                <SessionTokenManager sessionId={session.id} tokens={public_tokens} />
 
                 <div className="grid gap-4 xl:grid-cols-[460px_1fr]">
                     <SessionCandidateAssigner sessionId={session.id} availableCandidates={available_candidates} />

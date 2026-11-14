@@ -23,8 +23,8 @@ test('admin creates a four-subject draft then publishes and issues a room token'
     addPublicSessionQuestions($ids);
     $this->getJson(route('admin.exams.public-v2.sessions.show', $session))->assertJsonCount(4, 'packages')
         ->assertJsonPath('packages.0.subject_name', 'IPAS');
-    $this->actingAs($admin)->get(route('admin.exams.public-v2.page'))
-        ->assertInertia(fn ($page) => $page->component('Dashboard/Admin/Exam/PublicExam'));
+    $this->actingAs($admin)->get(route('admin.public-exams.sessions.index'))
+        ->assertInertia(fn ($page) => $page->component('Dashboard/Admin/PublicExam/Sessions'));
     expect(DB::table('exam_public_sessions')->where('id', $session)->value('closes_at'))->toBeGreaterThan(now()->toDateTimeString());
     $this->postJson(route('admin.exams.public-v2.sessions.publish', $session))->assertSuccessful()->assertJsonPath('status', 'published');
     $token = $this->postJson(route('admin.exams.public-v2.sessions.tokens.store', $session))

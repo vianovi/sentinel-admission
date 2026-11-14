@@ -37,8 +37,6 @@ class StoreExamSessionRequest extends FormRequest
             'passing_score' => ['required', 'numeric', 'min:0', 'max:100'],
             'max_attempts' => ['required', 'integer', 'min:1', 'max:5'],
             'show_result_to_candidate' => ['sometimes', 'boolean'],
-            'is_public' => ['sometimes', 'boolean'],
-            'public_access_type' => ['sometimes', Rule::in(['token_required', 'open'])],
             'package_order_type' => ['sometimes', Rule::in(['flexible', 'sequential'])],
             'status' => ['sometimes', Rule::in(['draft', 'published', 'closed', 'archived'])],
         ];

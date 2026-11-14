@@ -284,7 +284,7 @@ it('locks exam access with custom message if candidate has session but payment i
     $candidate = gateSubmitCandidate($user);
     $subject = \App\Models\Exam\ExamSubject::create(['code' => 'UMUM01', 'name' => 'Math']);
     $package = \App\Models\Exam\ExamPackage::create(['exam_subject_id' => $subject->id, 'title' => 'Pkg', 'duration_minutes' => 60, 'passing_score' => 70, 'max_attempts' => 1, 'status' => 'published']);
-    $session = \App\Models\Exam\ExamSession::create(['exam_package_id' => $package->id, 'title' => 'S1', 'status' => 'published', 'opens_at' => now(), 'closes_at' => now()->addHour(), 'duration_minutes' => 60, 'passing_score' => 70, 'max_attempts' => 1, 'is_public' => false]);
+    $session = \App\Models\Exam\ExamSession::create(['exam_package_id' => $package->id, 'title' => 'S1', 'status' => 'published', 'opens_at' => now(), 'closes_at' => now()->addHour(), 'duration_minutes' => 60, 'passing_score' => 70, 'max_attempts' => 1]);
     \App\Models\Exam\ExamSessionCandidate::create([
         'exam_session_id' => $session->id,
         'candidate_id' => $candidate->id,
@@ -304,7 +304,7 @@ it('allows exam access when candidate is submitted, has session, and payment is 
 
     $subject = \App\Models\Exam\ExamSubject::create(['code' => 'UMUM01', 'name' => 'Math']);
     $package = \App\Models\Exam\ExamPackage::create(['exam_subject_id' => $subject->id, 'title' => 'Pkg', 'duration_minutes' => 60, 'passing_score' => 70, 'max_attempts' => 1, 'status' => 'published']);
-    $session = \App\Models\Exam\ExamSession::create(['exam_package_id' => $package->id, 'title' => 'S1', 'status' => 'published', 'opens_at' => now(), 'closes_at' => now()->addHour(), 'duration_minutes' => 60, 'passing_score' => 70, 'max_attempts' => 1, 'is_public' => false]);
+    $session = \App\Models\Exam\ExamSession::create(['exam_package_id' => $package->id, 'title' => 'S1', 'status' => 'published', 'opens_at' => now(), 'closes_at' => now()->addHour(), 'duration_minutes' => 60, 'passing_score' => 70, 'max_attempts' => 1]);
     \App\Models\Exam\ExamSessionCandidate::create([
         'exam_session_id' => $session->id,
         'candidate_id' => $candidate->id,

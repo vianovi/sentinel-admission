@@ -20,8 +20,6 @@ type SessionForm = {
     passing_score: number;
     max_attempts: number;
     show_result_to_candidate: boolean;
-    is_public: boolean;
-    public_access_type: string;
     package_order_type: string;
     status: string;
 };
@@ -47,8 +45,6 @@ const defaultForm = (pkg?: PackageOption): SessionForm => ({
     passing_score: pkg?.passing_score ?? 70,
     max_attempts: pkg?.max_attempts ?? 1,
     show_result_to_candidate: pkg?.show_result_to_candidate ?? false,
-    is_public: true,
-    public_access_type: "token_required",
     package_order_type: "flexible",
     status: "draft",
 });
@@ -92,8 +88,6 @@ export const SessionFormModal = memo(function SessionFormModal({
             passing_score: editingSession.passing_score,
             max_attempts: editingSession.max_attempts,
             show_result_to_candidate: editingSession.show_result_to_candidate,
-            is_public: editingSession.is_public ?? true,
-            public_access_type: editingSession.public_access_type ?? "token_required",
             package_order_type: editingSession.package_order_type ?? "flexible",
             status: editingSession.status,
         });

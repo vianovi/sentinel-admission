@@ -212,7 +212,7 @@ export const SessionListCard = memo(function SessionListCard({ sessions, waves =
                                             {session.title}
                                         </h3>
                                         <StatusPill value={session.status} />
-                                        <StatusPill value={session.is_public ? "akses umum aktif" : "akses khusus kandidat"} />
+                                        <StatusPill value="akses kandidat terdaftar" />
                                         {session.admission_wave && (
                                             <span className="inline-flex items-center gap-1 rounded-md bg-sky-500/10 px-2 py-0.5 text-[11px] font-semibold text-sky-600 dark:text-sky-400 border border-sky-500/20">
                                                 <i className="fa-solid fa-graduation-cap text-[10px]" />
