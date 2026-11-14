@@ -3,7 +3,7 @@ import { Head, Link, router } from "@inertiajs/react";
 import axios from "axios";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import RichExamText from "@/Components/Exam/Shared/RichExamText";
-import { BackLink, EmptyState, ExamWorkspace, FlashMessage, PageHeader, StatCard, StatusPill } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
+import { EmptyState, ExamWorkspace, FlashMessage, StatusPill } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
 import { confirmAction, showSuccessToast } from "@/utils/swal";
 
 type Props = {
@@ -113,9 +113,7 @@ export default function PublicPackageShow({ examPackage: pkg, questions, session
     return <>
         <Head title={`Paket Publik · ${pkg.title}`} />
         <ExamWorkspace active="packages">
-            <PageHeader title={pkg.title} description={`${pkg.subject_name} · ${pkg.code}`} icon="fa-solid fa-box-archive" actions={<><BackLink href={route("admin.public-exams.packages.index")} label="Kembali ke Paket Publik" /><Link href={route("admin.public-exams.media.index")} className={secondaryButtonClass}><i className="fa-solid fa-photo-film text-xs text-amber-500" /> Bank Media</Link></>} />
-            <div className="grid gap-3 md:grid-cols-4"><StatCard label="Durasi" value={`${pkg.duration_minutes} menit`} icon="fa-solid fa-clock" tone="text-blue-500" /><StatCard label="Ambang Lulus" value={pkg.passing_score === null ? "Belum diatur" : `${pkg.passing_score}%`} icon="fa-solid fa-bullseye" tone="text-emerald-500" /><StatCard label="Soal Aktif" value={activeCount} icon="fa-solid fa-list-ol" tone="text-violet-500" /><StatCard label="Sesi Terkait" value={sessions.length} icon="fa-solid fa-calendar-check" tone="text-amber-500" /></div>
-            <header className="hidden">
+            <header className="flex min-w-0 flex-col gap-4 border-b border-slate-200 pb-5 dark:border-slate-800">
                 <Link href={route("admin.public-exams.packages.index")} className="inline-flex min-h-11 w-fit items-center gap-2 rounded text-sm font-semibold text-slate-600 hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-500 dark:text-slate-400 dark:hover:text-slate-100"><i aria-hidden="true" className="fa-solid fa-arrow-left" /> Paket Soal</Link>
                 <div className="flex flex-wrap items-start justify-between gap-4">
                     <div className="min-w-0 flex-1">
