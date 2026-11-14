@@ -1,5 +1,20 @@
 # Audit Handoff
 
+## 2026-11-14 public panel presentation aligned with focus-layout branch
+
+- Compared `feature/exam-panel-focus-layout` legacy public `AttemptShow.tsx` against the separate current public flow. Its presentation was ported into `Public/Exam/PublicExam.tsx` without restoring legacy routes, models, guest cookies, or shared internal tables.
+- The active public panel now owns the full viewport: fullscreen-entry overlay, branded sticky header, explicit theme button, large timer, violation banner, wide question canvas, plus mobile and desktop question navigator. It retains `CandidateQuestionWorkspace`/`QuestionPaletteNavigator`, so the current `RichExamText` handling remains in place for fractions and similar plain text.
+- Verification: `php artisan test --compact tests/Feature/PublicExamFlowTest.php tests/Feature/PublicExamResultTest.php` -> 39 passed / 378 assertions; `npx tsc --noEmit`, `npm run build`, editor diagnostics, and `git diff --check` passed.
+- Browser attempt to open `https://spmb.playground-ku.my.id/public-exam` stopped at Cloudflare Tunnel Error 1033, so no live visual/browser interaction claim is made. The active-panel path also needs a valid participant session to exercise directly.
+- Worktree is intentionally uncommitted pending owner review.
+
+## 2026-11-14 public panel correction: literal focus-layout component basis and expired-attempt recovery
+
+- Owner rejected the first presentation port because it only copied panel chrome. The current public panel now owns public-specific copies of the focus-layout branch's question workspace and question palette, while retaining the current `RichExamText` renderer so fractions and other plain text are not treated as dates.
+- Confirmed local-dev failure cause: the old token `VT1DQ` returned 404 because automatic rotation had replaced it with `YTZ54`; the new token reached the identity form in a local browser. Separately, the public dashboard sent no `expires_at`, so an expired `in_progress` attempt incorrectly appeared as resumable. It now receives an ISO expiry, displays `Waktu habis`, and submits that existing attempt through the existing secured endpoint before a new package can start.
+- Regression coverage added for expiry in the owned dashboard response. Verification: full scoped public suite 78 passed / 761 assertions; Pint, TypeScript, production build, editor diagnostics, and diff check passed. Browser active-panel interaction is intentionally UNVERIFIED because it would require creating a new participant in the owner-managed demo database.
+- No routes, schema, public data, or security/ownership boundary were removed or weakened. Worktree remains uncommitted pending owner review.
+
 ## 2026-11-14 public flow audit and production-copy correction
 
 - Committed the preceding internal/public result and participant security work as `23231c8 feat: secure exam attempts and result controls` after Pint, TypeScript, focused security/admin tests (13 tests / 156 assertions), and diff check.

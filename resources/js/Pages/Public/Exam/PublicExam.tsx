@@ -1,87 +1,1013 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { Head } from "@inertiajs/react";
-import axios from "axios";
-import CandidateQuestionWorkspace from "@/Components/Exam/Candidate/CandidateQuestionWorkspace";
-import QuestionPaletteNavigator from "@/Components/Exam/Candidate/QuestionPaletteNavigator";
-import { useExamNavigation, useExamTimer, useFullscreenEnforcement } from "@/hooks/exam";
-import { confirmExamSubmission } from "@/utils/swal";
-import type { ExamAnswerState, ExamAttemptState, ExamMeta, ExamQuestion } from "@/types/exam";
+/* Hallmark · pre-emit critique: P5 H5 E4 S5 R5 V4 */
 
-type Package = { id: number; title: string; subject_name: string; subject_id: number };
-type AttemptSummary = { id: number; exam_public_subject_id: number; status: string; attempt_type: string };
-type Dashboard = { participant: { id: number; name: string; school_origin?: string }; session: { title: string; order_type: string }; packages: Package[]; attempts: AttemptSummary[]; result: { completed: boolean; subjects: { subject_id: number; primary_score: number | null; remedial_score: number | null; remedial_available: boolean }[] } };
-type SessionInfo = { id: number; title: string; instructions: string | null; order_type: string };
-type PublicAttempt = { attempt: { id: number; status: string; expires_at: string; total_questions: number; violations_count: number }; questions: Array<{ id: number; question_text: string; options: Record<string, string | null> }>; answers: Array<{ exam_public_question_id: number; selected_option: string | null }> };
+import PublicExamQuestionWorkspace from '@/Components/Exam/Public/PublicExamQuestionWorkspace';
+import PublicQuestionPalette from '@/Components/Exam/Public/PublicQuestionPalette';
+import {
+    useExamNavigation,
+    useExamTimer,
+    useFullscreenEnforcement,
+} from '@/hooks/exam';
+import type {
+    ExamAnswerState,
+    ExamAttemptState,
+    ExamMeta,
+    ExamQuestion,
+} from '@/types/exam';
+import { confirmExamSubmission } from '@/utils/swal';
+import { Head } from '@inertiajs/react';
+import axios from 'axios';
+import { useCallback, useEffect, useState, type FormEvent } from 'react';
 
-const inputClass = "w-full rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 dark:border-white/10 dark:bg-slate-950 dark:text-white";
-const actionClass = "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-amber-500 px-4 text-sm font-black text-slate-950 transition hover:bg-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-500/20 disabled:cursor-not-allowed disabled:opacity-50";
+type Package = {
+    id: number;
+    title: string;
+    subject_name: string;
+    subject_id: number;
+};
+type AttemptSummary = {
+    id: number;
+    exam_public_subject_id: number;
+    status: string;
+    attempt_type: string;
+    expires_at: string;
+};
+type Dashboard = {
+    participant: { id: number; name: string; school_origin?: string };
+    session: { title: string; order_type: string };
+    packages: Package[];
+    attempts: AttemptSummary[];
+    result: {
+        completed: boolean;
+        subjects: {
+            subject_id: number;
+            primary_score: number | null;
+            remedial_score: number | null;
+            remedial_available: boolean;
+        }[];
+    };
+};
+type SessionInfo = {
+    id: number;
+    title: string;
+    instructions: string | null;
+    order_type: string;
+};
+type PublicAttempt = {
+    attempt: {
+        id: number;
+        status: string;
+        expires_at: string;
+        total_questions: number;
+        violations_count: number;
+    };
+    questions: Array<{
+        id: number;
+        question_text: string;
+        options: Record<string, string | null>;
+    }>;
+    answers: Array<{
+        exam_public_question_id: number;
+        selected_option: string | null;
+    }>;
+};
+
+const inputClass =
+    'w-full rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 dark:border-white/10 dark:bg-slate-950 dark:text-white';
+const actionClass =
+    'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-amber-500 px-4 text-sm font-black text-slate-950 transition hover:bg-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-500/20 disabled:cursor-not-allowed disabled:opacity-50';
 
 export default function PublicExam() {
-    const [token, setToken] = useState(() => new URLSearchParams(window.location.search).get("token")?.toUpperCase() ?? "");
-    const [name, setName] = useState("");
-    const [school, setSchool] = useState("");
+    const [token, setToken] = useState(
+        () =>
+            new URLSearchParams(window.location.search)
+                .get('token')
+                ?.toUpperCase() ?? '',
+    );
+    const [name, setName] = useState('');
+    const [school, setSchool] = useState('');
     const [session, setSession] = useState<SessionInfo | null>(null);
     const [participant, setParticipant] = useState<number | null>(null);
     const [dashboard, setDashboard] = useState<Dashboard | null>(null);
     const [workspace, setWorkspace] = useState<PublicAttempt | null>(null);
     const [activePackage, setActivePackage] = useState<Package | null>(null);
-    const [error, setError] = useState("");
+    const [error, setError] = useState('');
     const [busy, setBusy] = useState(false);
 
     const run = async (operation: () => Promise<void>) => {
-        setError("");
+        setError('');
         setBusy(true);
-        try { await operation(); } catch (cause) { setError(axios.isAxiosError(cause) ? cause.response?.data?.message ?? "Permintaan gagal." : "Koneksi gagal. Coba lagi."); } finally { setBusy(false); }
+        try {
+            await operation();
+        } catch (cause) {
+            setError(
+                axios.isAxiosError(cause)
+                    ? (cause.response?.data?.message ?? 'Permintaan gagal.')
+                    : 'Koneksi gagal. Coba lagi.',
+            );
+        } finally {
+            setBusy(false);
+        }
     };
-    const verifyToken = useCallback(() => run(async () => { setSession((await axios.get<{ session: SessionInfo }>(route("public-exam.session", { token: token.trim().toUpperCase() }))).data.session); }), [token]);
-    const reloadDashboard = async (id: number) => { setDashboard((await axios.get<Dashboard>(route("public-exam.dashboard", { participant: id }))).data); };
-    const loadAttempt = async (id: number, pack?: Package) => { setWorkspace((await axios.get<PublicAttempt>(route("public-exam.attempt", { attempt: id }))).data); if (pack) setActivePackage(pack); };
+    const verifyToken = useCallback(
+        () =>
+            run(async () => {
+                setSession(
+                    (
+                        await axios.get<{ session: SessionInfo }>(
+                            route('public-exam.session', {
+                                token: token.trim().toUpperCase(),
+                            }),
+                        )
+                    ).data.session,
+                );
+            }),
+        [token],
+    );
+    const reloadDashboard = async (id: number) => {
+        setDashboard(
+            (
+                await axios.get<Dashboard>(
+                    route('public-exam.dashboard', { participant: id }),
+                )
+            ).data,
+        );
+    };
+    const loadAttempt = async (id: number, pack?: Package) => {
+        setWorkspace(
+            (
+                await axios.get<PublicAttempt>(
+                    route('public-exam.attempt', { attempt: id }),
+                )
+            ).data,
+        );
+        if (pack) setActivePackage(pack);
+    };
 
-    useEffect(() => { if (token.length === 5) void verifyToken(); }, []);
-    useEffect(() => { const remembered = sessionStorage.getItem("public-exam-participant"); if (remembered && /^\d+$/.test(remembered)) { const id = Number(remembered); reloadDashboard(id).then(() => setParticipant(id)).catch(() => sessionStorage.removeItem("public-exam-participant")); } }, []);
+    useEffect(() => {
+        if (token.length === 5) void verifyToken();
+    }, []);
+    useEffect(() => {
+        const remembered = sessionStorage.getItem('public-exam-participant');
+        if (remembered && /^\d+$/.test(remembered)) {
+            const id = Number(remembered);
+            reloadDashboard(id)
+                .then(() => setParticipant(id))
+                .catch(() =>
+                    sessionStorage.removeItem('public-exam-participant'),
+                );
+        }
+    }, []);
 
-    const join = async (event: FormEvent) => { event.preventDefault(); if (!session) return; await run(async () => { const storageKey = `public-exam-entry-${session.id}`; const entryKey = sessionStorage.getItem(storageKey) ?? crypto.randomUUID(); sessionStorage.setItem(storageKey, entryKey); const id = Number((await axios.post(route("public-exam.join", { token: token.trim().toUpperCase() }), { name: name.trim(), school_origin: school.trim(), entry_key: entryKey })).data.participant_id); sessionStorage.setItem("public-exam-participant", String(id)); await reloadDashboard(id); setParticipant(id); }); };
-    const start = async (pack: Package) => { if (!participant) return; await run(async () => { const attemptId = Number((await axios.post(route("public-exam.start", { participant, package: pack.id }))).data.attempt_id); await loadAttempt(attemptId, pack); }); };
-    const finish = async () => { if (!participant) return; setWorkspace(null); setActivePackage(null); await reloadDashboard(participant); };
+    const join = async (event: FormEvent) => {
+        event.preventDefault();
+        if (!session) return;
+        await run(async () => {
+            const storageKey = `public-exam-entry-${session.id}`;
+            const entryKey =
+                sessionStorage.getItem(storageKey) ?? crypto.randomUUID();
+            sessionStorage.setItem(storageKey, entryKey);
+            const id = Number(
+                (
+                    await axios.post(
+                        route('public-exam.join', {
+                            token: token.trim().toUpperCase(),
+                        }),
+                        {
+                            name: name.trim(),
+                            school_origin: school.trim(),
+                            entry_key: entryKey,
+                        },
+                    )
+                ).data.participant_id,
+            );
+            sessionStorage.setItem('public-exam-participant', String(id));
+            await reloadDashboard(id);
+            setParticipant(id);
+        });
+    };
+    const start = async (pack: Package) => {
+        if (!participant) return;
+        await run(async () => {
+            const attemptId = Number(
+                (
+                    await axios.post(
+                        route('public-exam.start', {
+                            participant,
+                            package: pack.id,
+                        }),
+                    )
+                ).data.attempt_id,
+            );
+            await loadAttempt(attemptId, pack);
+        });
+    };
+    const submitExpired = async (attemptId: number) => {
+        if (!participant) return;
+        await run(async () => {
+            await axios.post(
+                route('public-exam.submit', { attempt: attemptId }),
+            );
+            await reloadDashboard(participant);
+        });
+    };
+    const finish = async () => {
+        if (!participant) return;
+        setWorkspace(null);
+        setActivePackage(null);
+        await reloadDashboard(participant);
+    };
 
-    return <div className="min-h-screen bg-slate-100 px-4 py-6 text-slate-900 dark:bg-slate-950 dark:text-white sm:px-6"><Head title="Ujian Publik" /><main className="mx-auto max-w-7xl space-y-5">
-        {!workspace && <header className="rounded-2xl border border-amber-500/20 bg-slate-900 p-5 text-white shadow-sm"><div className="flex items-center gap-3"><img src="/assets/icons/brand/exam-logo.png" alt="Logo Pondok" className="h-12 w-12 shrink-0 rounded-xl border border-amber-500/30 bg-white/10 object-contain p-0.5 shadow-sm" /><div className="min-w-0"><p className="truncate text-xs font-extrabold tracking-wide text-amber-400 sm:text-sm">Pondok Modern Sabilurrosyad Muhammadiyah Banjarnegara</p><h1 className="mt-1 text-2xl font-black sm:text-3xl">Ruang Ujian Online</h1></div></div></header>}
-        {error && <div role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-700 dark:text-red-200"><p>{error}</p>{!participant && <p className="mt-1 text-xs">Pastikan kode terdiri dari 5 karakter dan masih aktif.</p>}</div>}
-        {!participant && <ol aria-label="Langkah masuk ujian" className="flex flex-wrap gap-3 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400"><li className={!session ? "text-amber-600 dark:text-amber-300" : ""}>1. Periksa token</li><li className={session ? "text-amber-600 dark:text-amber-300" : ""}>2. Isi identitas</li><li>3. Kerjakan ujian</li></ol>}
-        {!participant && !session && <form onSubmit={(event) => { event.preventDefault(); void verifyToken(); }} className="mx-auto w-full max-w-lg space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900"><div><h2 className="text-lg font-black">Masuk ke sesi ujian</h2><p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Masukkan kode akses 5 karakter dari pengawas.</p></div><div><label htmlFor="room-token" className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500">Token ruang</label><input id="room-token" required maxLength={5} minLength={5} autoComplete="off" value={token} onChange={(event) => setToken(event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))} className={`${inputClass} font-mono uppercase tracking-[0.35em]`} placeholder="A7K3Q" /></div><button className={`${actionClass} w-full`} disabled={busy || token.length !== 5}>{busy ? "Memeriksa…" : "Periksa token"}</button></form>}
-        {!participant && session && <form onSubmit={join} className="mx-auto w-full max-w-lg space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900"><div><p className="text-xs font-bold uppercase tracking-wide text-amber-600 dark:text-amber-300">Identitas peserta</p><h2 className="mt-1 text-xl font-black">{session.title}</h2><p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Nama dan asal sekolah ini akan muncul pada roster hasil ujian.</p></div>{session.instructions && <div className="whitespace-pre-wrap rounded-lg bg-slate-50 p-4 text-sm leading-6 text-slate-600 dark:bg-white/[0.03] dark:text-slate-300">{session.instructions}</div>}<div><label htmlFor="participant-name" className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500">Nama lengkap</label><input id="participant-name" required maxLength={255} autoComplete="name" value={name} onChange={(event) => setName(event.target.value)} className={inputClass} /></div><div><label htmlFor="participant-school" className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500">Asal sekolah</label><input id="participant-school" required maxLength={255} autoComplete="organization" value={school} onChange={(event) => setSchool(event.target.value)} className={inputClass} /></div><div className="flex flex-wrap gap-2"><button type="button" className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-200 px-4 text-sm font-bold dark:border-white/10" onClick={() => { setSession(null); setError(""); }}>Ganti token</button><button className={`${actionClass} flex-1`} disabled={busy}>{busy ? "Menyiapkan…" : "Masuk ujian"}</button></div></form>}
-        {dashboard && !workspace && <DashboardView dashboard={dashboard} busy={busy} start={start} loadAttempt={loadAttempt} />}
-        {workspace && activePackage && dashboard && <PublicAttemptPanel workspace={workspace} packageInfo={activePackage} sessionTitle={dashboard.session.title} participantName={dashboard.participant.name} onComplete={finish} onError={setError} />}
-    </main></div>;
+    return (
+        <div
+            className={
+                workspace
+                    ? 'min-h-screen'
+                    : 'min-h-screen bg-slate-100 px-4 py-6 text-slate-900 dark:bg-slate-950 dark:text-white sm:px-6'
+            }
+        >
+            <Head title="Ujian Publik" />
+            <main className={workspace ? '' : 'mx-auto max-w-7xl space-y-5'}>
+                {!workspace && (
+                    <header className="rounded-2xl border border-amber-500/20 bg-slate-900 p-5 text-white shadow-sm">
+                        <div className="flex items-center gap-3">
+                            <img
+                                src="/assets/icons/brand/exam-logo.png"
+                                alt="Logo Pondok"
+                                className="h-12 w-12 shrink-0 rounded-xl border border-amber-500/30 bg-white/10 object-contain p-0.5 shadow-sm"
+                            />
+                            <div className="min-w-0">
+                                <p className="truncate text-xs font-extrabold tracking-wide text-amber-400 sm:text-sm">
+                                    Pondok Modern Sabilurrosyad Muhammadiyah
+                                    Banjarnegara
+                                </p>
+                                <h1 className="mt-1 text-2xl font-black sm:text-3xl">
+                                    Ruang Ujian Online
+                                </h1>
+                            </div>
+                        </div>
+                    </header>
+                )}
+                {error && !workspace && (
+                    <div
+                        role="alert"
+                        className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-700 dark:text-red-200"
+                    >
+                        <p>{error}</p>
+                        {!participant && (
+                            <p className="mt-1 text-xs">
+                                Pastikan kode terdiri dari 5 karakter dan masih
+                                aktif.
+                            </p>
+                        )}
+                    </div>
+                )}
+                {!participant && (
+                    <ol
+                        aria-label="Langkah masuk ujian"
+                        className="flex flex-wrap gap-3 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                    >
+                        <li
+                            className={
+                                !session
+                                    ? 'text-amber-600 dark:text-amber-300'
+                                    : ''
+                            }
+                        >
+                            1. Periksa token
+                        </li>
+                        <li
+                            className={
+                                session
+                                    ? 'text-amber-600 dark:text-amber-300'
+                                    : ''
+                            }
+                        >
+                            2. Isi identitas
+                        </li>
+                        <li>3. Kerjakan ujian</li>
+                    </ol>
+                )}
+                {!participant && !session && (
+                    <form
+                        onSubmit={(event) => {
+                            event.preventDefault();
+                            void verifyToken();
+                        }}
+                        className="mx-auto w-full max-w-lg space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900"
+                    >
+                        <div>
+                            <h2 className="text-lg font-black">
+                                Masuk ke sesi ujian
+                            </h2>
+                            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                                Masukkan kode akses 5 karakter dari pengawas.
+                            </p>
+                        </div>
+                        <div>
+                            <label
+                                htmlFor="room-token"
+                                className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500"
+                            >
+                                Token ruang
+                            </label>
+                            <input
+                                id="room-token"
+                                required
+                                maxLength={5}
+                                minLength={5}
+                                autoComplete="off"
+                                value={token}
+                                onChange={(event) =>
+                                    setToken(
+                                        event.target.value
+                                            .toUpperCase()
+                                            .replace(/[^A-Z0-9]/g, ''),
+                                    )
+                                }
+                                className={`${inputClass} font-mono uppercase tracking-[0.35em]`}
+                                placeholder="A7K3Q"
+                            />
+                        </div>
+                        <button
+                            className={`${actionClass} w-full`}
+                            disabled={busy || token.length !== 5}
+                        >
+                            {busy ? 'Memeriksa…' : 'Periksa token'}
+                        </button>
+                    </form>
+                )}
+                {!participant && session && (
+                    <form
+                        onSubmit={join}
+                        className="mx-auto w-full max-w-lg space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900"
+                    >
+                        <div>
+                            <p className="text-xs font-bold uppercase tracking-wide text-amber-600 dark:text-amber-300">
+                                Identitas peserta
+                            </p>
+                            <h2 className="mt-1 text-xl font-black">
+                                {session.title}
+                            </h2>
+                            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                                Nama dan asal sekolah ini akan muncul pada
+                                roster hasil ujian.
+                            </p>
+                        </div>
+                        {session.instructions && (
+                            <div className="whitespace-pre-wrap rounded-lg bg-slate-50 p-4 text-sm leading-6 text-slate-600 dark:bg-white/[0.03] dark:text-slate-300">
+                                {session.instructions}
+                            </div>
+                        )}
+                        <div>
+                            <label
+                                htmlFor="participant-name"
+                                className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500"
+                            >
+                                Nama lengkap
+                            </label>
+                            <input
+                                id="participant-name"
+                                required
+                                maxLength={255}
+                                autoComplete="name"
+                                value={name}
+                                onChange={(event) =>
+                                    setName(event.target.value)
+                                }
+                                className={inputClass}
+                            />
+                        </div>
+                        <div>
+                            <label
+                                htmlFor="participant-school"
+                                className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500"
+                            >
+                                Asal sekolah
+                            </label>
+                            <input
+                                id="participant-school"
+                                required
+                                maxLength={255}
+                                autoComplete="organization"
+                                value={school}
+                                onChange={(event) =>
+                                    setSchool(event.target.value)
+                                }
+                                className={inputClass}
+                            />
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            <button
+                                type="button"
+                                className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-200 px-4 text-sm font-bold dark:border-white/10"
+                                onClick={() => {
+                                    setSession(null);
+                                    setError('');
+                                }}
+                            >
+                                Ganti token
+                            </button>
+                            <button
+                                className={`${actionClass} flex-1`}
+                                disabled={busy}
+                            >
+                                {busy ? 'Menyiapkan…' : 'Masuk ujian'}
+                            </button>
+                        </div>
+                    </form>
+                )}
+                {dashboard && !workspace && (
+                    <DashboardView
+                        dashboard={dashboard}
+                        busy={busy}
+                        start={start}
+                        submitExpired={submitExpired}
+                        loadAttempt={loadAttempt}
+                    />
+                )}
+                {workspace && activePackage && dashboard && (
+                    <PublicAttemptPanel
+                        workspace={workspace}
+                        packageInfo={activePackage}
+                        sessionTitle={dashboard.session.title}
+                        participantName={dashboard.participant.name}
+                        error={error}
+                        onComplete={finish}
+                        onError={setError}
+                    />
+                )}
+            </main>
+        </div>
+    );
 }
 
-function DashboardView({ dashboard, busy, start, loadAttempt }: { dashboard: Dashboard; busy: boolean; start: (pack: Package) => Promise<void>; loadAttempt: (id: number, pack?: Package) => Promise<void> }) {
-    return <section className="space-y-5"><div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-slate-900"><p className="text-xs font-bold uppercase tracking-wide text-amber-600 dark:text-amber-300">Peserta</p><h2 className="mt-1 text-xl font-black">{dashboard.participant.name}</h2><p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{dashboard.participant.school_origin} · {dashboard.session.title}</p></div><div className="grid gap-4 md:grid-cols-2">{dashboard.packages.map((pack, index) => { const attempts = dashboard.attempts.filter((item) => item.exam_public_subject_id === pack.subject_id); const active = attempts.find((item) => item.status === "in_progress"); const completed = attempts.some((item) => item.attempt_type === "primary" && item.status !== "in_progress"); const result = dashboard.result.subjects.find((item) => item.subject_id === pack.subject_id); const locked = dashboard.session.order_type === "sequential" && dashboard.packages.slice(0, index).some((previous) => !dashboard.attempts.some((item) => item.exam_public_subject_id === previous.subject_id && item.attempt_type === "primary" && item.status !== "in_progress")); return <article key={pack.id} className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-slate-900"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-wide text-amber-600 dark:text-amber-300">Mapel {index + 1}</p><h3 className="mt-1 text-lg font-black">{pack.subject_name}</h3><p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{pack.title}</p></div><span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-bold dark:bg-white/10">{completed ? "Selesai" : "Belum mulai"}</span></div>{result?.primary_score !== null && result?.primary_score !== undefined && <p className="mt-4 text-sm font-bold text-amber-600 dark:text-amber-300">Nilai: {result.primary_score}%</p>}<button type="button" disabled={busy || (!active && locked)} onClick={() => active ? void loadAttempt(active.id, pack) : void start(pack)} className={`${actionClass} mt-5 w-full`}>{active ? "Lanjutkan ujian" : locked ? "Selesaikan mapel sebelumnya" : result?.remedial_available ? "Kerjakan ulang" : "Mulai mapel"}</button></article>; })}</div></section>;
+function DashboardView({
+    dashboard,
+    busy,
+    start,
+    submitExpired,
+    loadAttempt,
+}: {
+    dashboard: Dashboard;
+    busy: boolean;
+    start: (pack: Package) => Promise<void>;
+    submitExpired: (attemptId: number) => Promise<void>;
+    loadAttempt: (id: number, pack?: Package) => Promise<void>;
+}) {
+    return (
+        <section className="space-y-5">
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-slate-900">
+                <p className="text-xs font-bold uppercase tracking-wide text-amber-600 dark:text-amber-300">
+                    Peserta
+                </p>
+                <h2 className="mt-1 text-xl font-black">
+                    {dashboard.participant.name}
+                </h2>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                    {dashboard.participant.school_origin} ·{' '}
+                    {dashboard.session.title}
+                </p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+                {dashboard.packages.map((pack, index) => {
+                    const attempts = dashboard.attempts.filter(
+                        (item) =>
+                            item.exam_public_subject_id === pack.subject_id,
+                    );
+                    const active = attempts.find(
+                        (item) =>
+                            item.status === 'in_progress' &&
+                            new Date(item.expires_at).getTime() > Date.now(),
+                    );
+                    const expired = attempts.find(
+                        (item) =>
+                            item.status === 'in_progress' &&
+                            new Date(item.expires_at).getTime() <= Date.now(),
+                    );
+                    const completed = attempts.some(
+                        (item) =>
+                            item.attempt_type === 'primary' &&
+                            item.status !== 'in_progress',
+                    );
+                    const result = dashboard.result.subjects.find(
+                        (item) => item.subject_id === pack.subject_id,
+                    );
+                    const locked =
+                        dashboard.session.order_type === 'sequential' &&
+                        dashboard.packages
+                            .slice(0, index)
+                            .some(
+                                (previous) =>
+                                    !dashboard.attempts.some(
+                                        (item) =>
+                                            item.exam_public_subject_id ===
+                                                previous.subject_id &&
+                                            item.attempt_type === 'primary' &&
+                                            item.status !== 'in_progress',
+                                    ),
+                            );
+                    return (
+                        <article
+                            key={pack.id}
+                            className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-slate-900"
+                        >
+                            <div className="flex items-start justify-between gap-3">
+                                <div>
+                                    <p className="text-xs font-bold uppercase tracking-wide text-amber-600 dark:text-amber-300">
+                                        Mapel {index + 1}
+                                    </p>
+                                    <h3 className="mt-1 text-lg font-black">
+                                        {pack.subject_name}
+                                    </h3>
+                                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                                        {pack.title}
+                                    </p>
+                                </div>
+                                <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-bold dark:bg-white/10">
+                                    {expired
+                                        ? 'Waktu habis'
+                                        : completed
+                                          ? 'Selesai'
+                                          : 'Belum mulai'}
+                                </span>
+                            </div>
+                            {result?.primary_score !== null &&
+                                result?.primary_score !== undefined && (
+                                    <p className="mt-4 text-sm font-bold text-amber-600 dark:text-amber-300">
+                                        Nilai: {result.primary_score}%
+                                    </p>
+                                )}
+                            <button
+                                type="button"
+                                disabled={
+                                    busy || (!active && !expired && locked)
+                                }
+                                onClick={() =>
+                                    active
+                                        ? void loadAttempt(active.id, pack)
+                                        : expired
+                                          ? void submitExpired(expired.id)
+                                          : void start(pack)
+                                }
+                                className={`${actionClass} mt-5 w-full`}
+                            >
+                                {active
+                                    ? 'Lanjutkan ujian'
+                                    : expired
+                                      ? 'Kumpulkan mapel yang berakhir'
+                                      : locked
+                                        ? 'Selesaikan mapel sebelumnya'
+                                        : result?.remedial_available
+                                          ? 'Kerjakan ulang'
+                                          : 'Mulai mapel'}
+                            </button>
+                        </article>
+                    );
+                })}
+            </div>
+        </section>
+    );
 }
 
-function PublicAttemptPanel({ workspace, packageInfo, sessionTitle, participantName, onComplete, onError }: { workspace: PublicAttempt; packageInfo: Package; sessionTitle: string; participantName: string; onComplete: () => Promise<void>; onError: (message: string) => void }) {
-    const [theme, setTheme] = useState<"light" | "dark">(() => document.documentElement.classList.contains("dark") ? "dark" : "light");
-    const toggleTheme = () => { const next = theme === "dark" ? "light" : "dark"; document.documentElement.classList.toggle("dark", next === "dark"); setTheme(next); };
-    const questions: ExamQuestion[] = workspace.questions.map((question) => ({ ...question, point: 1, difficulty: "-" }));
-    const initialAnswers: Record<string, ExamAnswerState> = Object.fromEntries(workspace.answers.map((answer) => [answer.exam_public_question_id, { question_id: answer.exam_public_question_id, selected_option: answer.selected_option, is_marked_for_review: false, saved_at: null }]));
-    const [attemptState, setAttemptState] = useState<ExamAttemptState>(() => mapAttempt(workspace.attempt));
-    const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "failed" | "locked">("idle");
+function PublicAttemptPanel({
+    workspace,
+    packageInfo,
+    sessionTitle,
+    participantName,
+    error,
+    onComplete,
+    onError,
+}: {
+    workspace: PublicAttempt;
+    packageInfo: Package;
+    sessionTitle: string;
+    participantName: string;
+    error: string;
+    onComplete: () => Promise<void>;
+    onError: (message: string) => void;
+}) {
+    const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+    useEffect(() => {
+        const saved = localStorage.getItem('sentinel-theme') as
+            | 'dark'
+            | 'light'
+            | null;
+        const initial =
+            saved ??
+            (document.documentElement.classList.contains('dark')
+                ? 'dark'
+                : 'light');
+
+        document.documentElement.classList.toggle('dark', initial === 'dark');
+        setTheme(initial);
+    }, []);
+    const toggleTheme = () => {
+        const next = theme === 'dark' ? 'light' : 'dark';
+        document.documentElement.classList.toggle('dark', next === 'dark');
+        localStorage.setItem('sentinel-theme', next);
+        setTheme(next);
+    };
+    const questions: ExamQuestion[] = workspace.questions.map((question) => ({
+        ...question,
+        point: 1,
+        difficulty: '-',
+    }));
+    const initialAnswers: Record<string, ExamAnswerState> = Object.fromEntries(
+        workspace.answers.map((answer) => [
+            answer.exam_public_question_id,
+            {
+                question_id: answer.exam_public_question_id,
+                selected_option: answer.selected_option,
+                is_marked_for_review: false,
+                saved_at: null,
+            },
+        ]),
+    );
+    const [attemptState, setAttemptState] = useState<ExamAttemptState>(() =>
+        mapAttempt(workspace.attempt),
+    );
+    const [saveState, setSaveState] = useState<
+        'idle' | 'saving' | 'saved' | 'failed' | 'locked'
+    >('idle');
     const [saveMessage, setSaveMessage] = useState<string | null>(null);
-    const { activeIndex, activeQuestion, answeredCount, answerMap, setActiveIndex, goNext, goPrev, updateAnswer, patchAnswer, saveTimers } = useExamNavigation({ questions, initialAnswers });
-    const exam: ExamMeta = { session_id: 0, session_title: "Ujian Publik", package_title: packageInfo.title, subject_name: packageInfo.subject_name, duration_minutes: null, passing_score: null, show_result_to_candidate: false };
-    const isRunning = attemptState.status === "in_progress" && !attemptState.is_locked && questions.length > 0;
-    const { isFullscreen, needsInitialFullscreen, violationsCount, enterFullscreen } = useFullscreenEnforcement({ isRunning, attemptId: workspace.attempt.id, violationRoute: route("public-exam.violation", { attempt: workspace.attempt.id }), initialViolations: workspace.attempt.violations_count });
-    const syncAttempt = useCallback(async () => { try { const response = await axios.get<PublicAttempt>(route("public-exam.attempt", { attempt: workspace.attempt.id })); const next = mapAttempt(response.data.attempt); setAttemptState(next); if (next.status !== "in_progress") { setSaveState("locked"); setSaveMessage("Ujian sudah dikunci oleh server."); } } catch { setSaveState("failed"); setSaveMessage("Gagal sinkronisasi waktu server."); } }, [workspace.attempt.id]);
-    const { remaining } = useExamTimer({ attempt: attemptState, isRunning, onExpired: () => void syncAttempt(), onSync: syncAttempt });
-    const persist = useCallback(async (answer: ExamAnswerState) => { setSaveState("saving"); setSaveMessage("Menyimpan jawaban…"); try { await axios.post(route("public-exam.answer", { attempt: workspace.attempt.id }), { question_id: answer.question_id, selected_option: answer.selected_option }); setSaveState("saved"); setSaveMessage("Jawaban tersimpan"); } catch (cause) { setSaveState("failed"); setSaveMessage(axios.isAxiosError(cause) ? cause.response?.data?.message ?? "Gagal menyimpan jawaban." : "Gagal menyimpan jawaban."); } }, [workspace.attempt.id]);
-    const changeAnswer = (questionId: number, patch: Partial<ExamAnswerState>) => { if (!isRunning) return; const next = patchAnswer(questionId, patch); if (saveTimers.current[questionId]) window.clearTimeout(saveTimers.current[questionId]); saveTimers.current[questionId] = window.setTimeout(() => void persist(next), 500); };
-    const submit = async () => { if (!await confirmExamSubmission({ answeredCount, totalQuestions: questions.length })) return; try { await axios.post(route("public-exam.submit", { attempt: workspace.attempt.id })); await onComplete(); } catch (cause) { onError(axios.isAxiosError(cause) ? cause.response?.data?.message ?? "Gagal mengumpulkan ujian." : "Gagal mengumpulkan ujian."); } };
+    const {
+        activeIndex,
+        activeQuestion,
+        answeredCount,
+        answerMap,
+        setActiveIndex,
+        goNext,
+        goPrev,
+        updateAnswer,
+        patchAnswer,
+        saveTimers,
+    } = useExamNavigation({ questions, initialAnswers });
+    const markedCount = questions.filter(
+        (question) => answerMap[question.id]?.is_marked_for_review,
+    ).length;
+    const exam: ExamMeta = {
+        session_id: 0,
+        session_title: 'Ujian Publik',
+        package_title: packageInfo.title,
+        subject_name: packageInfo.subject_name,
+        duration_minutes: null,
+        passing_score: null,
+        show_result_to_candidate: false,
+    };
+    const isRunning =
+        attemptState.status === 'in_progress' &&
+        !attemptState.is_locked &&
+        questions.length > 0;
+    const {
+        isFullscreen,
+        needsInitialFullscreen,
+        violationsCount,
+        enterFullscreen,
+    } = useFullscreenEnforcement({
+        isRunning,
+        attemptId: workspace.attempt.id,
+        violationRoute: route('public-exam.violation', {
+            attempt: workspace.attempt.id,
+        }),
+        initialViolations: workspace.attempt.violations_count,
+    });
+    const syncAttempt = useCallback(async () => {
+        try {
+            const response = await axios.get<PublicAttempt>(
+                route('public-exam.attempt', { attempt: workspace.attempt.id }),
+            );
+            const next = mapAttempt(response.data.attempt);
+            setAttemptState(next);
+            if (next.status !== 'in_progress') {
+                setSaveState('locked');
+                setSaveMessage('Ujian sudah dikunci oleh server.');
+            }
+        } catch {
+            setSaveState('failed');
+            setSaveMessage('Gagal sinkronisasi waktu server.');
+        }
+    }, [workspace.attempt.id]);
+    const { remaining } = useExamTimer({
+        attempt: attemptState,
+        isRunning,
+        onExpired: () => void syncAttempt(),
+        onSync: syncAttempt,
+    });
+    const persist = useCallback(
+        async (answer: ExamAnswerState) => {
+            setSaveState('saving');
+            setSaveMessage('Menyimpan jawaban…');
+            try {
+                await axios.post(
+                    route('public-exam.answer', {
+                        attempt: workspace.attempt.id,
+                    }),
+                    {
+                        question_id: answer.question_id,
+                        selected_option: answer.selected_option,
+                    },
+                );
+                setSaveState('saved');
+                setSaveMessage('Jawaban tersimpan');
+            } catch (cause) {
+                setSaveState('failed');
+                setSaveMessage(
+                    axios.isAxiosError(cause)
+                        ? (cause.response?.data?.message ??
+                              'Gagal menyimpan jawaban.')
+                        : 'Gagal menyimpan jawaban.',
+                );
+            }
+        },
+        [workspace.attempt.id],
+    );
+    const changeAnswer = (
+        questionId: number,
+        patch: Partial<ExamAnswerState>,
+    ) => {
+        if (!isRunning) return;
+        const next = patchAnswer(questionId, patch);
+        if (saveTimers.current[questionId])
+            window.clearTimeout(saveTimers.current[questionId]);
+        saveTimers.current[questionId] = window.setTimeout(
+            () => void persist(next),
+            500,
+        );
+    };
+    const submit = async () => {
+        if (
+            !(await confirmExamSubmission({
+                answeredCount,
+                totalQuestions: questions.length,
+            }))
+        )
+            return;
+        try {
+            await axios.post(
+                route('public-exam.submit', { attempt: workspace.attempt.id }),
+            );
+            await onComplete();
+        } catch (cause) {
+            onError(
+                axios.isAxiosError(cause)
+                    ? (cause.response?.data?.message ??
+                          'Gagal mengumpulkan ujian.')
+                    : 'Gagal mengumpulkan ujian.',
+            );
+        }
+    };
     const activeAnswer = activeQuestion ? answerMap[activeQuestion.id] : null;
-    if (!activeQuestion) return <section className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-white/10 dark:bg-slate-900">Tidak ada soal aktif.</section>;
-    return <div className="space-y-4">{needsInitialFullscreen && isRunning ? <section className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-bold">Aktifkan layar penuh sebelum mengerjakan</p><p className="mt-1 text-sm opacity-80">Keluar dari layar penuh atau berpindah tab akan dicatat sebagai pelanggaran.</p></div><button type="button" onClick={enterFullscreen} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-amber-500 px-4 text-sm font-bold text-slate-950"><i className="fa-solid fa-expand" /> Masuk layar penuh</button></div></section> : null}{!isFullscreen && !needsInitialFullscreen && isRunning ? <div className="flex items-center justify-between gap-3 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-200"><span><i className="fa-solid fa-triangle-exclamation mr-2" />Layar penuh telah ditinggalkan. Pelanggaran tercatat: {violationsCount}.</span><button type="button" onClick={enterFullscreen} className="font-bold underline">Kembali</button></div> : null}<section className="sticky top-0 z-20 -mx-4 border-b border-slate-200 bg-white/95 px-4 py-2.5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-950/95 sm:-mx-6 sm:px-6"><div className="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:justify-between"><div className="min-w-0 flex items-center gap-3"><img src="/assets/icons/brand/exam-logo.png" alt="Logo Pondok" className="h-10 w-10 shrink-0 rounded-xl border border-amber-500/30 bg-white/10 object-contain p-0.5 shadow-sm dark:bg-white/5" /><div className="min-w-0"><span className="block truncate text-xs font-extrabold tracking-wide text-amber-600 dark:text-amber-400 sm:text-sm">Pondok Modern Sabilurrosyad Muhammadiyah Banjarnegara</span><h1 className="mt-0.5 truncate text-sm font-black leading-tight text-slate-900 dark:text-white sm:text-base">{sessionTitle}</h1><p className="hidden text-xs text-slate-500 dark:text-slate-400 sm:block">Peserta: <strong>{participantName}</strong> · {packageInfo.subject_name} · {packageInfo.title}</p></div></div><div className="flex flex-wrap items-center justify-between gap-2 sm:justify-end"><button type="button" onClick={toggleTheme} className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 dark:border-white/10" aria-label="Ganti tema"><i className={`fa-solid ${theme === "dark" ? "fa-sun text-amber-400" : "fa-moon text-indigo-500"}`} /></button><div className={`rounded-lg px-2.5 py-1.5 text-center font-mono text-sm font-black ${remaining <= 300 ? "animate-pulse bg-red-500 text-white" : "bg-slate-900 text-white dark:bg-white dark:text-slate-950"}`}><span className="mr-1.5 hidden text-[8px] font-bold uppercase tracking-wide opacity-75 sm:inline">Sisa waktu</span>{formatTime(remaining)}</div><button type="button" onClick={submit} className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-emerald-500 px-3 text-xs font-bold text-white"><i className="fa-solid fa-paper-plane text-[10px]" /> Kumpulkan</button></div></div>{saveMessage && <p className={`mt-1.5 text-[11px] font-semibold ${saveState === "failed" ? "text-red-500" : "text-slate-500"}`}>{saveMessage}</p>}</section><div className="grid gap-4 xl:grid-cols-[1fr_320px]"><CandidateQuestionWorkspace activeQuestion={activeQuestion} activeAnswer={activeAnswer} activeIndex={activeIndex} totalQuestions={questions.length} changeAnswer={changeAnswer} goPrev={goPrev} goNext={goNext} /><aside><QuestionPaletteNavigator questions={questions} answerMap={answerMap} activeIndex={activeIndex} answeredCount={answeredCount} theme={theme} exam={exam} attemptState={attemptState} setActiveIndex={setActiveIndex} /></aside></div></div>;
+    return (
+        <div
+            className={
+                theme === 'dark'
+                    ? 'min-h-screen bg-slate-950 text-slate-100 selection:bg-amber-500 selection:text-white'
+                    : 'min-h-screen bg-slate-100 text-slate-900 selection:bg-amber-500 selection:text-slate-950'
+            }
+        >
+            <Head
+                title={`Ruang Ujian - ${sessionTitle} - Pondok Modern Sabilurrosyad`}
+            />
+
+            {needsInitialFullscreen && isRunning && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/95 p-4 backdrop-blur-md">
+                    <section className="w-full max-w-md rounded-2xl border border-amber-500/30 bg-slate-900 p-6 text-center shadow-2xl">
+                        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-500/20 bg-amber-500/10 text-amber-400">
+                            <i className="fa-solid fa-expand text-2xl" />
+                        </div>
+                        <h2 className="mt-4 text-lg font-black text-white">
+                            Mode layar penuh diperlukan
+                        </h2>
+                        <p className="mt-2 text-xs leading-relaxed text-slate-400">
+                            Untuk menjaga integritas ujian, kerjakan dalam mode
+                            layar penuh. Sistem mencatat saat Anda keluar dari
+                            mode ini atau berpindah tab.
+                        </p>
+                        <button
+                            type="button"
+                            onClick={enterFullscreen}
+                            className="mt-6 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-amber-500 px-5 text-xs font-bold text-slate-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-500/30"
+                        >
+                            <i className="fa-solid fa-maximize" /> Masuk layar
+                            penuh &amp; mulai ujian
+                        </button>
+                    </section>
+                </div>
+            )}
+
+            <header
+                className={
+                    theme === 'dark'
+                        ? 'sticky top-0 z-30 border-b border-white/10 bg-slate-900/90 px-4 py-3 text-white backdrop-blur-md sm:px-6'
+                        : 'sticky top-0 z-30 border-b border-slate-200 bg-white/90 px-4 py-3 text-slate-900 shadow-sm backdrop-blur-md sm:px-6'
+                }
+            >
+                <div className="mx-auto flex max-w-7xl flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex min-w-0 items-center gap-3">
+                        <img
+                            src="/assets/icons/brand/exam-logo.png"
+                            alt="Logo Pondok"
+                            className="h-11 w-11 shrink-0 rounded-xl border border-amber-500/30 bg-white/10 object-contain p-0.5 shadow-sm dark:bg-white/5"
+                        />
+                        <div className="min-w-0">
+                            <span className="block max-w-xs truncate bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 bg-clip-text text-xs font-extrabold tracking-wide text-transparent sm:max-w-md sm:text-sm md:max-w-xl">
+                                Pondok Modern Sabilurrosyad Muhammadiyah
+                                Banjarnegara
+                            </span>
+                            <div className="mt-0.5 flex flex-wrap items-center gap-2">
+                                <h1 className="truncate text-xs font-black sm:text-sm">
+                                    {sessionTitle}
+                                </h1>
+                                <span
+                                    className={
+                                        theme === 'dark'
+                                            ? 'truncate text-[11px] text-slate-400'
+                                            : 'truncate text-[11px] text-slate-600'
+                                    }
+                                >
+                                    · Peserta:{' '}
+                                    <strong className="text-amber-500">
+                                        {participantName}
+                                    </strong>{' '}
+                                    ({packageInfo.subject_name})
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="flex items-center justify-between gap-3 lg:justify-end">
+                        <button
+                            type="button"
+                            onClick={toggleTheme}
+                            title="Beralih tema tampilan"
+                            className={
+                                theme === 'dark'
+                                    ? 'inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-white/10 bg-slate-800 px-3 py-2 text-xs font-bold text-amber-300 transition hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/30'
+                                    : 'inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-slate-300 bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500/30'
+                            }
+                        >
+                            <i
+                                className={`fa-solid ${theme === 'dark' ? 'fa-sun text-amber-400' : 'fa-moon text-indigo-500'}`}
+                            />
+                            <span className="hidden sm:inline">
+                                {theme === 'dark'
+                                    ? 'Mode terang'
+                                    : 'Mode gelap'}
+                            </span>
+                        </button>
+                        <div
+                            className={
+                                remaining <= 300
+                                    ? 'animate-pulse rounded-xl border border-red-500/40 bg-red-500/20 px-4 py-2 text-center text-red-500'
+                                    : theme === 'dark'
+                                      ? 'rounded-xl border border-white/10 bg-slate-950 px-4 py-2 text-center text-white'
+                                      : 'rounded-xl border border-slate-300 bg-slate-100 px-4 py-2 text-center text-slate-900'
+                            }
+                        >
+                            <p
+                                className={
+                                    theme === 'dark'
+                                        ? 'text-[9px] font-bold uppercase tracking-wider text-slate-400'
+                                        : 'text-[9px] font-bold uppercase tracking-wider text-slate-500'
+                                }
+                            >
+                                Sisa waktu
+                            </p>
+                            <p className="font-mono text-base font-black text-amber-500">
+                                {formatTime(remaining)}
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={submit}
+                            className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-emerald-500 px-4 text-xs font-black text-slate-950 shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 sm:px-5"
+                        >
+                            <i className="fa-solid fa-paper-plane text-xs" />{' '}
+                            <span className="hidden sm:inline">
+                                Kumpulkan ujian
+                            </span>
+                            <span className="sm:hidden">Kumpulkan</span>
+                        </button>
+                    </div>
+                </div>
+                {saveMessage && (
+                    <p
+                        className={
+                            saveState === 'failed'
+                                ? 'mx-auto mt-1 max-w-7xl text-right text-[11px] font-medium text-red-500'
+                                : 'mx-auto mt-1 max-w-7xl text-right text-[11px] font-medium text-amber-500'
+                        }
+                    >
+                        {saveMessage}
+                    </p>
+                )}
+            </header>
+
+            <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
+                {!isFullscreen && !needsInitialFullscreen && isRunning && (
+                    <div
+                        role="alert"
+                        className="mb-4 flex items-center gap-3 rounded-xl border border-orange-500/40 bg-orange-500/10 px-4 py-3 text-xs text-orange-700 dark:text-orange-300"
+                    >
+                        <i className="fa-solid fa-triangle-exclamation shrink-0" />
+                        <span className="flex-1">
+                            <strong>Peringatan:</strong> Anda sedang tidak dalam
+                            mode layar penuh. Pelanggaran tercatat:{' '}
+                            {violationsCount}.
+                        </span>
+                        <button
+                            type="button"
+                            onClick={enterFullscreen}
+                            className="shrink-0 rounded-lg border border-orange-500/30 bg-orange-500/20 px-3 py-1.5 text-[10px] font-bold transition hover:bg-orange-500/30"
+                        >
+                            <i className="fa-solid fa-maximize mr-1" /> Kembali
+                            layar penuh
+                        </button>
+                    </div>
+                )}
+                {error && (
+                    <div
+                        role="alert"
+                        className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-xs text-red-700 dark:text-red-300"
+                    >
+                        <i className="fa-solid fa-triangle-exclamation mr-2" />
+                        {error}
+                    </div>
+                )}
+                {!activeQuestion ? (
+                    <section className="rounded-3xl border border-slate-200 bg-white p-6 dark:border-white/10 dark:bg-slate-900">
+                        Tidak ada soal aktif.
+                    </section>
+                ) : (
+                    <div className="grid gap-6 xl:grid-cols-[1fr_320px]">
+                        <PublicExamQuestionWorkspace
+                            activeQuestion={activeQuestion}
+                            activeAnswer={activeAnswer}
+                            activeIndex={activeIndex}
+                            totalQuestions={questions.length}
+                            themeMode={theme}
+                            changeAnswer={changeAnswer}
+                            goPrev={goPrev}
+                            goNext={goNext}
+                        />
+                        <div className="mt-6 xl:hidden">
+                            <PublicQuestionPalette
+                                questions={questions}
+                                answerMap={answerMap}
+                                activeIndex={activeIndex}
+                                answeredCount={answeredCount}
+                                markedCount={markedCount}
+                                themeMode={theme}
+                                setActiveIndex={setActiveIndex}
+                            />
+                        </div>
+                        <aside className="hidden xl:block">
+                            <PublicQuestionPalette
+                                questions={questions}
+                                answerMap={answerMap}
+                                activeIndex={activeIndex}
+                                answeredCount={answeredCount}
+                                markedCount={markedCount}
+                                themeMode={theme}
+                                setActiveIndex={setActiveIndex}
+                            />
+                        </aside>
+                    </div>
+                )}
+            </main>
+        </div>
+    );
 }
 
-function mapAttempt(attempt: PublicAttempt["attempt"]): ExamAttemptState { return { id: attempt.id, status: attempt.status, attempt_number: 1, started_at: null, started_at_iso: null, expires_at: attempt.expires_at, expires_at_iso: attempt.expires_at, submitted_at: null, remaining_seconds: Math.max(0, Math.floor((new Date(attempt.expires_at).getTime() - Date.now()) / 1000)), is_locked: attempt.status !== "in_progress", total_questions: attempt.total_questions, answered_questions: 0, blank_questions: attempt.total_questions, score_visible: false, percentage_score: null, passing_score: null, passed: null };
+function mapAttempt(attempt: PublicAttempt['attempt']): ExamAttemptState {
+    return {
+        id: attempt.id,
+        status: attempt.status,
+        attempt_number: 1,
+        started_at: null,
+        started_at_iso: null,
+        expires_at: attempt.expires_at,
+        expires_at_iso: attempt.expires_at,
+        submitted_at: null,
+        remaining_seconds: Math.max(
+            0,
+            Math.floor(
+                (new Date(attempt.expires_at).getTime() - Date.now()) / 1000,
+            ),
+        ),
+        is_locked: attempt.status !== 'in_progress',
+        total_questions: attempt.total_questions,
+        answered_questions: 0,
+        blank_questions: attempt.total_questions,
+        score_visible: false,
+        percentage_score: null,
+        passing_score: null,
+        passed: null,
+    };
 }
 
-function formatTime(seconds: number): string { const safe = Math.max(0, seconds); return [Math.floor(safe / 3600), Math.floor((safe % 3600) / 60), safe % 60].map((value) => value.toString().padStart(2, "0")).join(":"); }
+function formatTime(seconds: number): string {
+    const safe = Math.max(0, seconds);
+    return [Math.floor(safe / 3600), Math.floor((safe % 3600) / 60), safe % 60]
+        .map((value) => value.toString().padStart(2, '0'))
+        .join(':');
+}

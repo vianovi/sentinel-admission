@@ -102,7 +102,14 @@ class PublicExamFlowController extends Controller
             'session' => ['title' => $session->title, 'order_type' => $session->order_type],
             'packages' => $packages,
             'attempts' => DB::table('exam_public_subject_attempts')->where('exam_public_participant_id', $person->id)
-                ->get(['id', 'exam_public_subject_id', 'attempt_type', 'status']),
+                ->get(['id', 'exam_public_subject_id', 'attempt_type', 'status', 'expires_at'])
+                ->map(fn (object $attempt): array => [
+                    'id' => $attempt->id,
+                    'exam_public_subject_id' => $attempt->exam_public_subject_id,
+                    'attempt_type' => $attempt->attempt_type,
+                    'status' => $attempt->status,
+                    'expires_at' => \Carbon\Carbon::parse($attempt->expires_at, config('app.timezone'))->toISOString(),
+                ]),
             'result' => [
                 'completed' => $result['completed'],
                 'subjects' => collect($result['subjects'])->map(fn (array $subject): array => [

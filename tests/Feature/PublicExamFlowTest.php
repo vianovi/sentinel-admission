@@ -146,6 +146,21 @@ test('public participant cannot access another participant by changing the ID', 
     $this->getJson(route('public-exam.dashboard', $id))->assertForbidden();
 });
 
+test('public dashboard exposes attempt expiry for the participant workspace', function () {
+    [, $packages] = publicFlowFixture();
+    $join = $this->postJson(route('public-exam.join', 'ROOM01'), ['name' => 'Anak A', 'school_origin' => 'SD Asal', 'entry_key' => (string) \Illuminate\Support\Str::uuid()]);
+    $participant = $join->json('participant_id');
+    $secret = collect($join->headers->getCookies())->first(fn ($cookie) => $cookie->getName() === 'public_exam_session')->getValue();
+    $this->withHeader('X-Public-Exam-Session', $secret);
+    $attempt = $this->postJson(route('public-exam.start', [$participant, $packages['IPAS'][0]]))->json('attempt_id');
+    DB::table('exam_public_subject_attempts')->where('id', $attempt)->update(['expires_at' => now()->subMinute()]);
+
+    $response = $this->getJson(route('public-exam.dashboard', $participant))->assertSuccessful();
+
+    expect($response->json('attempts.0.id'))->toBe($attempt)
+        ->and($response->json('attempts.0.expires_at'))->toBeString()->not->toBeEmpty();
+});
+
 test('sequential session blocks skipping its first subject', function () {
     [, $packages] = publicFlowFixture('sequential');
     $join = $this->postJson(route('public-exam.join', 'ROOM01'), ['name' => 'Anak A', 'school_origin' => 'SD Asal', 'entry_key' => (string) \Illuminate\Support\Str::uuid()]);
