@@ -41,7 +41,8 @@ function renderRichText(text: string, imageSize: "sm" | "md" | "lg" = "md"): Rea
     while (index < text.length) {
         const char = text[index];
 
-        // Numeric fractions such as 1/2 are math, not dates.
+        // Numeric fractions such as 1/2 are math, not dates. Display style
+        // leaves enough room around the fraction bar in participant options.
         const fraction = text.slice(index).match(/^(\d+)\s*\/\s*(\d+)(?![\w/])/);
         const previousChar = text[index - 1];
         if (fraction && (!previousChar || !/[\w/]/.test(previousChar))) {
@@ -49,7 +50,7 @@ function renderRichText(text: string, imageSize: "sm" | "md" | "lg" = "md"): Rea
             nodes.push(
                 <InlineMath
                     key={`fraction-${index}`}
-                    math={`\\frac{${fraction[1]}}{${fraction[2]}}`}
+                    math={`\\dfrac{${fraction[1]}}{${fraction[2]}}`}
                 />,
             );
             index += fraction[0].length;

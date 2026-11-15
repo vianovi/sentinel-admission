@@ -400,6 +400,11 @@ Commit the verified public resume/token-rotation fix, then continue from public 
 - At the final question, the disabled Next control is replaced by a clear reminder to check the question summary then submit. An active question that has an answer now stays visibly green in the question palette while retaining its amber active outline.
 - Verification: `PublicExamFlowTest` 25 passed / 327 assertions, TypeScript, production build, and `git diff --check` passed. No public participant, attempt, answer, or demo data was changed. Browser visual review remains pending because no participant page was shared in this turn.
 
+## 2026-11-15 fraction readability follow-up
+
+- Changed numeric fraction rendering in the shared RichExamText component from compact inline `\\frac` to display-style `\\dfrac`, increasing clearance between the numerator/denominator and fraction bar without changing question data or option layout.
+- Verification: TypeScript, `npm run build`, and `git diff --check` passed. Build retained the existing stale Browserslist warning.
+
 ## Resume warning
 
 ## 2026-11-15 demo database backup before error-fix phase
