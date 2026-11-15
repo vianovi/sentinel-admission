@@ -174,10 +174,25 @@ class PublicExamPagesController extends Controller
         $participantAttempts = DB::table('exam_public_subject_attempts')
             ->whereIn('exam_public_participant_id', $participants->getCollection()->pluck('id'))
             ->orderByDesc('id')
-            ->get(['exam_public_participant_id', 'status'])
+            ->get(['exam_public_participant_id', 'exam_public_subject_id', 'attempt_type', 'status', 'percentage_score'])
             ->groupBy('exam_public_participant_id');
 
-        $participants->getCollection()->transform(function ($participant) use ($participantAttempts) {
+        $sessionSubjects = DB::table('exam_public_session_packages as assignment')
+            ->join('exam_public_packages as package', 'package.id', '=', 'assignment.exam_public_package_id')
+            ->join('exam_public_subjects as subject', 'subject.id', '=', 'assignment.exam_public_subject_id')
+            ->whereIn('assignment.exam_public_session_id', $participants->getCollection()->pluck('exam_public_session_id')->unique())
+            ->orderBy('assignment.sort_order')
+            ->get([
+                'assignment.exam_public_session_id',
+                'assignment.exam_public_subject_id',
+                'subject.name as subject_name',
+                'package.title as package_title',
+                'package.passing_score',
+                'package.allow_retry',
+            ])
+            ->groupBy('exam_public_session_id');
+
+        $participants->getCollection()->transform(function ($participant) use ($participantAttempts, $sessionSubjects) {
             $participant->is_passed = $participant->is_passed === null ? null : (bool) $participant->is_passed;
             $attempts = $participantAttempts->get($participant->id, collect());
             $hasActiveAttempt = $attempts->contains('status', 'in_progress');
@@ -190,6 +205,33 @@ class PublicExamPagesController extends Controller
                     'submitted' => 'Selesai',
                     default => $participant->status === 'in_progress' ? 'Belum Dimulai' : ucfirst(str_replace('_', ' ', (string) $participant->status)),
                 };
+            $participant->subjects = $sessionSubjects->get($participant->exam_public_session_id, collect())
+                ->map(function ($subject) use ($attempts): array {
+                    $subjectAttempts = $attempts->where('exam_public_subject_id', $subject->exam_public_subject_id);
+                    $scoredAttempts = $subjectAttempts->whereIn('status', ['submitted', 'auto_submitted']);
+                    $primary = $scoredAttempts->firstWhere('attempt_type', 'primary');
+                    $remedial = $scoredAttempts->where('attempt_type', 'remedial')->sortByDesc('percentage_score')->first();
+                    $primaryScore = $primary?->percentage_score === null ? null : (float) $primary->percentage_score;
+                    $remedialScore = $remedial?->percentage_score === null ? null : (float) $remedial->percentage_score;
+                    $effectiveScore = $primaryScore === null ? null : max($primaryScore, $remedialScore ?? $primaryScore);
+                    $passingScore = $subject->passing_score === null ? null : (float) $subject->passing_score;
+
+                    return [
+                        'subject_name' => $subject->subject_name,
+                        'package_title' => $subject->package_title,
+                        'primary_score' => $primaryScore,
+                        'remedial_score' => $remedialScore,
+                        'effective_score' => $effectiveScore,
+                        'passing_score' => $passingScore,
+                        'is_passed' => $effectiveScore === null || $passingScore === null ? null : $effectiveScore > $passingScore,
+                        'remedial_remaining' => (bool) $subject->allow_retry && $subjectAttempts->count() < 2,
+                    ];
+                })
+                ->values();
+            $participant->requires_evaluation = $participant->status === 'completed'
+                && $participant->is_passed === false
+                && $participant->subjects->isNotEmpty()
+                && $participant->subjects->every(fn (array $subject): bool => ! $subject['remedial_remaining']);
 
             return $participant;
         });

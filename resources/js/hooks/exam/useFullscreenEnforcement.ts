@@ -1,9 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import axios from "axios";
+import axios from 'axios';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 type UseFullscreenEnforcementOptions = {
     isRunning: boolean;
-    attemptId: number;
     violationRoute: string;
     initialViolations?: number;
 };
@@ -22,7 +21,8 @@ type UseFullscreenEnforcementReturn = {
  *
  * Violation rules:
  *  - Pressing Esc to exit fullscreen → 1 violation (via keydown listener)
- *  - Switching tab / hiding page → 1 violation (via visibilitychange)
+ *  - Switching tab / changing application → 1 violation (via visibilitychange
+ *    with a window blur fallback)
  *  - Browser-native permission dialogs and notification popups that steal focus
  *    do NOT count — they trigger visibilitychange to "visible", not "hidden"
  *
@@ -32,7 +32,6 @@ type UseFullscreenEnforcementReturn = {
  */
 export function useFullscreenEnforcement({
     isRunning,
-    attemptId,
     violationRoute,
     initialViolations = 0,
 }: UseFullscreenEnforcementOptions): UseFullscreenEnforcementReturn {
@@ -44,6 +43,7 @@ export function useFullscreenEnforcement({
     // Cooldown ref: prevents double-counting when Esc fires both keydown + fullscreenchange
     const violationCooldown = useRef(false);
     const wasFullscreen = useRef(false);
+    const fullscreenCheckTimeout = useRef<number | null>(null);
 
     const enterFullscreen = useCallback(() => {
         if (document.documentElement.requestFullscreen) {
@@ -80,7 +80,7 @@ export function useFullscreenEnforcement({
         const handleFullscreenChange = () => {
             const isFS = Boolean(document.fullscreenElement);
             if (wasFullscreen.current && !isFS) {
-                void reportViolation("exit_fullscreen");
+                void reportViolation('exit_fullscreen');
             }
             wasFullscreen.current = isFS;
             setIsFullscreen(isFS);
@@ -93,32 +93,76 @@ export function useFullscreenEnforcement({
         // Only record violation when user presses Esc (intentional exit)
         // The fullscreenchange that fires right after is suppressed by the cooldown
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape" && document.fullscreenElement) {
-                void reportViolation("exit_fullscreen");
+            if (e.key === 'F11') {
+                // Browser fullscreen is not exposed through document.fullscreenElement.
+                // Check after the browser handles F11 so the warning clears on re-entry.
+                fullscreenCheckTimeout.current = window.setTimeout(() => {
+                    const browserFullscreen =
+                        window.innerHeight >= window.screen.height - 1;
+
+                    if (browserFullscreen) {
+                        wasFullscreen.current = true;
+                        setIsFullscreen(true);
+                        setNeedsInitialFullscreen(false);
+                    }
+                }, 0);
+
+                return;
+            }
+
+            if (e.key === 'Escape' && document.fullscreenElement) {
+                void reportViolation('exit_fullscreen');
             }
         };
 
         // Tab switch / window blur is a clear violation
         const handleVisibilityChange = () => {
-            if (document.visibilityState === "hidden") {
-                void reportViolation("tab_switch");
+            if (document.visibilityState === 'hidden') {
+                void reportViolation('tab_switch');
             }
         };
 
-        document.addEventListener("fullscreenchange", handleFullscreenChange);
-        document.addEventListener("keydown", handleKeyDown);
-        document.addEventListener("visibilitychange", handleVisibilityChange);
+        const handleWindowBlur = () => {
+            window.setTimeout(() => {
+                if (
+                    document.visibilityState === 'visible' &&
+                    !document.hasFocus()
+                ) {
+                    void reportViolation('tab_switch');
+                }
+            }, 0);
+        };
+
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('keydown', handleKeyDown);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('blur', handleWindowBlur);
 
         const initialFullscreen = Boolean(document.fullscreenElement);
         wasFullscreen.current = initialFullscreen;
         setIsFullscreen(initialFullscreen);
 
         return () => {
-            document.removeEventListener("fullscreenchange", handleFullscreenChange);
-            document.removeEventListener("keydown", handleKeyDown);
-            document.removeEventListener("visibilitychange", handleVisibilityChange);
+            document.removeEventListener(
+                'fullscreenchange',
+                handleFullscreenChange,
+            );
+            document.removeEventListener('keydown', handleKeyDown);
+            document.removeEventListener(
+                'visibilitychange',
+                handleVisibilityChange,
+            );
+            window.removeEventListener('blur', handleWindowBlur);
+            if (fullscreenCheckTimeout.current !== null) {
+                window.clearTimeout(fullscreenCheckTimeout.current);
+            }
         };
     }, [isRunning, reportViolation]);
 
-    return { isFullscreen, needsInitialFullscreen, violationsCount, enterFullscreen };
+    return {
+        isFullscreen,
+        needsInitialFullscreen,
+        violationsCount,
+        enterFullscreen,
+    };
 }

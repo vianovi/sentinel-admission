@@ -31,7 +31,6 @@ export default function CandidateAttemptShow({ candidate, exam, attempt, questio
 
     const { isFullscreen, needsInitialFullscreen, violationsCount, enterFullscreen } = useFullscreenEnforcement({
         isRunning,
-        attemptId: attempt.id,
         violationRoute: `/dashboard/seleksi/attempts/${attempt.id}/violations`,
         initialViolations: attempt.violations_count ?? 0,
     });
@@ -40,6 +39,9 @@ export default function CandidateAttemptShow({ candidate, exam, attempt, questio
         questions,
         initialAnswers: answers,
     });
+    const markedCount = questions.filter(
+        (question) => answerMap[question.id]?.is_marked_for_review,
+    ).length;
 
     const syncAttempt = useCallback(async () => {
         try {
@@ -120,6 +122,7 @@ export default function CandidateAttemptShow({ candidate, exam, attempt, questio
         const confirmed = await confirmExamSubmission({
             answeredCount,
             totalQuestions: questions.length,
+            markedCount,
         });
         if (!confirmed) return;
 

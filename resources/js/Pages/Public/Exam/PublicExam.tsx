@@ -18,6 +18,7 @@ import type {
 import { confirmExamSubmission } from '@/utils/swal';
 import { Head } from '@inertiajs/react';
 import axios from 'axios';
+import Swal from 'sweetalert2';
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 
 type Package = {
@@ -40,6 +41,8 @@ type Dashboard = {
     attempts: AttemptSummary[];
     result: {
         completed: boolean;
+        average_score?: number | null;
+        is_passed?: boolean | null;
         subjects: {
             subject_id: number;
             primary_score: number | null;
@@ -152,13 +155,13 @@ export default function PublicExam() {
         [token],
     );
     const reloadDashboard = async (id: number) => {
-        setDashboard(
-            (
-                await axios.get<Dashboard>(
-                    route('public-exam.dashboard', { participant: id }),
-                )
-            ).data,
-        );
+        const data = (
+            await axios.get<Dashboard>(
+                route('public-exam.dashboard', { participant: id }),
+            )
+        ).data;
+        setDashboard(data);
+        return data;
     };
     const loadAttempt = async (id: number, pack?: Package) => {
         setWorkspace(
@@ -242,7 +245,16 @@ export default function PublicExam() {
         if (!participant) return;
         setWorkspace(null);
         setActivePackage(null);
-        await reloadDashboard(participant);
+        const refreshed = await reloadDashboard(participant);
+        if (refreshed.result.completed) {
+            await Swal.fire({
+                icon: 'success',
+                title: 'Semua mapel selesai',
+                text: 'Jawaban dan nilai kamu sudah dihitung oleh sistem.',
+                confirmButtonText: 'Tutup',
+                confirmButtonColor: '#f59e0b',
+            });
+        }
     };
     const pasteToken = async () => {
         try {
@@ -320,6 +332,10 @@ export default function PublicExam() {
                         start={start}
                         submitExpired={submitExpired}
                         loadAttempt={loadAttempt}
+                        onReturnHome={() => {
+                            sessionStorage.removeItem('public-exam-participant');
+                            window.location.assign(route('public-exam.page'));
+                        }}
                     />
                 )}
                 {workspace && activePackage && dashboard && (
@@ -387,15 +403,48 @@ function DashboardView({
     start,
     submitExpired,
     loadAttempt,
+    onReturnHome,
 }: {
     dashboard: Dashboard;
     busy: boolean;
     start: (pack: Package) => Promise<void>;
     submitExpired: (attemptId: number) => Promise<void>;
     loadAttempt: (id: number, pack?: Package) => Promise<void>;
+    onReturnHome: () => void;
 }) {
     return (
         <section className="space-y-5">
+            {dashboard.result.completed && (
+                <section className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-5 shadow-lg shadow-emerald-950/10 dark:bg-emerald-500/10" role="status">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <p className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-emerald-600 dark:text-emerald-300">
+                                <i className="fa-solid fa-circle-check" aria-hidden="true" />
+                                Ujian selesai
+                            </p>
+                            <h2 className="mt-1 text-xl font-black">Semua mapel sudah dikerjakan</h2>
+                            <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                                Nilai otomatis sudah masuk ke perhitungan hasil ujian.
+                            </p>
+                            {dashboard.result.average_score !== undefined &&
+                            dashboard.result.average_score !== null ? (
+                                <p className="mt-3 text-sm font-bold text-amber-600 dark:text-amber-300">
+                                    Rata-rata nilai: {dashboard.result.average_score}% ·{' '}
+                                    {dashboard.result.is_passed ? 'Lulus' : 'Belum lulus'}
+                                </p>
+                            ) : (
+                                <p className="mt-3 text-sm font-bold text-amber-600 dark:text-amber-300">
+                                    Hasil disembunyikan. Silakan tunggu informasi dari tim ujian.
+                                </p>
+                            )}
+                        </div>
+                        <button type="button" onClick={onReturnHome} className={`${actionClass} shrink-0`}>
+                            <i className="fa-solid fa-house" aria-hidden="true" />
+                            Kembali ke Beranda
+                        </button>
+                    </div>
+                </section>
+            )}
             <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-slate-900">
                 <p className="text-xs font-bold uppercase tracking-wide text-amber-600 dark:text-amber-300">
                     Peserta
@@ -608,7 +657,6 @@ function PublicAttemptPanel({
         enterFullscreen,
     } = useFullscreenEnforcement({
         isRunning,
-        attemptId: workspace.attempt.id,
         violationRoute: route('public-exam.violation', {
             attempt: workspace.attempt.id,
         }),
@@ -682,6 +730,7 @@ function PublicAttemptPanel({
             !(await confirmExamSubmission({
                 answeredCount,
                 totalQuestions: questions.length,
+                markedCount,
             }))
         )
             return;

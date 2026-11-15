@@ -109,7 +109,7 @@ export default function PublicExamMonitoring({ participants, summary, refreshedA
                                                             type="button"
                                                             onClick={() => setExpandedParticipantId(expanded ? null : participant.id)}
                                                             aria-expanded={expanded}
-                                                            className="rounded text-left focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+                                                            className="rounded text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/30"
                                                         >
                                                             <span className="block font-bold text-slate-900 dark:text-white">{participant.name}</span>
                                                             <span className="mt-0.5 block font-mono text-[11px] text-amber-600 dark:text-amber-400">{participant.participant_code} <i className={`fa-solid ${expanded ? "fa-chevron-up" : "fa-chevron-down"} ml-1`} aria-hidden="true" /></span>

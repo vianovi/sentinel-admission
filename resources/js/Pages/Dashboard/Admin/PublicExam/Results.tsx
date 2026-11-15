@@ -31,6 +31,18 @@ type Participant = {
     session_title: string;
     has_active_attempt: boolean;
     display_status: string;
+    requires_evaluation: boolean;
+    subjects: SubjectResult[];
+};
+
+type SubjectResult = {
+    subject_name: string;
+    package_title: string;
+    primary_score: number | null;
+    remedial_score: number | null;
+    effective_score: number | null;
+    passing_score: number | null;
+    is_passed: boolean | null;
 };
 
 type PaginationLink = {
@@ -85,6 +97,7 @@ export default function PublicResults({ participants, sessions, filters, stats }
     const [passed, setPassed] = useState(filters.passed ?? "");
     const [session, setSession] = useState(filters.session ? String(filters.session) : "");
     const [busyParticipantId, setBusyParticipantId] = useState<number | null>(null);
+    const [detailParticipant, setDetailParticipant] = useState<Participant | null>(null);
 
     const applyFilters = (event: FormEvent) => {
         event.preventDefault();
@@ -338,6 +351,11 @@ export default function PublicResults({ participants, sessions, filters, stats }
                                                         ) : (
                                                             <span className="text-slate-400 text-xs">Dalam Proses</span>
                                                         )}
+                                                        {p.requires_evaluation && (
+                                                            <span className="mt-1 inline-flex items-center rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300">
+                                                                Perlu Evaluasi
+                                                            </span>
+                                                        )}
                                                     </td>
                                                     <td className="p-3 text-center">
                                                         <StatusPill value={p.display_status} />
@@ -347,6 +365,9 @@ export default function PublicResults({ participants, sessions, filters, stats }
                                                     </td>
                                                     <td className="p-3">
                                                         <div className="flex min-w-48 flex-wrap justify-end gap-2">
+                                                            <button type="button" onClick={() => setDetailParticipant(p)} className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-sky-500/30 px-3 text-xs font-bold text-sky-700 transition hover:bg-sky-50 focus:outline-none focus:ring-2 focus:ring-sky-500/30 dark:text-sky-300 dark:hover:bg-sky-500/10" aria-label={"Lihat detail nilai " + p.name}>
+                                                                <i className="fa-solid fa-chart-column" aria-hidden="true" /> Detail nilai
+                                                            </button>
                                                             {p.has_active_attempt ? (
                                                                 <button type="button" disabled={isBusy} onClick={() => forceStop(p)} className="inline-flex min-h-9 items-center gap-2 rounded-lg bg-red-600 px-3 text-xs font-bold text-white transition hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-400/50 disabled:cursor-not-allowed disabled:opacity-60" aria-label={"Hentikan paksa ujian " + p.name}>
                                                                     <i className="fa-solid fa-stop" aria-hidden="true" /> Hentikan
@@ -395,8 +416,48 @@ export default function PublicResults({ participants, sessions, filters, stats }
                         )}
                     </div>
                 </section>
+                {detailParticipant && <SubjectScoreModal participant={detailParticipant} onClose={() => setDetailParticipant(null)} />}
             </ExamWorkspace>
         </>
+    );
+}
+
+function SubjectScoreModal({ participant, onClose }: { participant: Participant; onClose: () => void }) {
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4" role="presentation" onMouseDown={onClose}>
+            <section aria-modal="true" aria-labelledby="subject-score-title" role="dialog" className="max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-white/10 dark:bg-slate-900" onMouseDown={(event) => event.stopPropagation()}>
+                <header className="flex items-start justify-between gap-4 border-b border-slate-200 p-5 dark:border-white/10">
+                    <div>
+                        <p className="text-xs font-bold uppercase tracking-wide text-amber-600 dark:text-amber-300">Rincian nilai per mapel</p>
+                        <h2 id="subject-score-title" className="mt-1 text-lg font-black text-slate-900 dark:text-white">{participant.name}</h2>
+                        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{participant.participant_code} · {participant.session_title}</p>
+                    </div>
+                    <button type="button" onClick={onClose} className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/30 dark:hover:bg-white/10" aria-label="Tutup detail nilai">
+                        <i className="fa-solid fa-xmark" aria-hidden="true" />
+                    </button>
+                </header>
+                <div className="overflow-x-auto p-5">
+                    <table className="min-w-full text-left text-sm text-slate-700 dark:text-slate-200">
+                        <thead className="bg-slate-50 text-xs font-bold uppercase tracking-wide text-slate-500 dark:bg-white/5 dark:text-slate-300">
+                            <tr><th className="p-3">Mapel</th><th className="p-3 text-center">Utama</th><th className="p-3 text-center">Remedial</th><th className="p-3 text-center">Nilai akhir</th><th className="p-3 text-center">Ambang</th><th className="p-3 text-center">Status</th></tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-white/10">
+                            {participant.subjects.map((subject) => (
+                                <tr key={subject.subject_name}>
+                                    <td className="p-3"><p className="font-bold text-slate-900 dark:text-white">{subject.subject_name}</p><p className="text-xs text-slate-500 dark:text-slate-400">{subject.package_title}</p></td>
+                                    <td className="p-3 text-center font-medium">{subject.primary_score ?? "—"}</td>
+                                    <td className="p-3 text-center font-medium">{subject.remedial_score ?? "—"}</td>
+                                    <td className="p-3 text-center font-black text-slate-950 dark:text-white">{subject.effective_score ?? "—"}</td>
+                                    <td className="p-3 text-center font-medium">{subject.passing_score ?? "—"}</td>
+                                    <td className="p-3 text-center">{subject.is_passed === null ? <span className="text-slate-400">Belum dinilai</span> : subject.is_passed ? <span className="font-bold text-emerald-600 dark:text-emerald-300">Lulus</span> : <span className="font-bold text-red-600 dark:text-red-300">Belum lulus</span>}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+                <footer className="flex justify-end border-t border-slate-200 p-4 dark:border-white/10"><button type="button" onClick={onClose} className={secondaryButtonClass}>Tutup</button></footer>
+            </section>
+        </div>
     );
 }
 

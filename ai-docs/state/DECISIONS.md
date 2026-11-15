@@ -1,5 +1,13 @@
 # Durable Audit Decisions
 
+## D-013 — Public exam failure remains final, with an internal evaluation marker
+
+- Date: 2026-11-15
+- Status: owner-approved policy; implementation deferred until an explicit later instruction.
+- Decision: After any permitted per-subject remedial is exhausted, a participant whose aggregate score remains below the session threshold remains `Tidak lulus`. The result requires an internal `Perlu Evaluasi` marker/note for the exam team; it does not create an automatic passing outcome or an additional remedial attempt.
+- Scope: Public Exam → Hasil Ujian administration. Participant-facing score visibility remains governed by each package's existing `show_result_to_participant` setting.
+- Pending implementation choice: the exact persisted representation of `Perlu Evaluasi` (derived display versus stored review state) must be selected when implementation is authorized.
+
 ## D-012 — Public sessions contain one to five distinct subjects
 
 - Date: 2026-11-13

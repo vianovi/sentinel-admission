@@ -62,7 +62,7 @@ test('only administrators can read public exam admin pages', function () {
     }
 });
 
-test('admin results keep aggregate outcome data without monitoring violations', function () {
+test('admin results include per-subject scores without monitoring violations', function () {
     $admin = User::factory()->create(['role' => 'admin']);
     $session = DB::table('exam_public_sessions')->insertGetId([
         'title' => 'Ujian Empat Mapel', 'status' => 'published', 'opens_at' => now()->subHour(), 'closes_at' => now()->addHour(),
@@ -93,7 +93,41 @@ test('admin results keep aggregate outcome data without monitoring violations', 
         ->where('participants.data.0.is_passed', true)
         ->where('participants.data.0.average_score', 67.25)
         ->missing('participants.data.0.violations')
-        ->missing('participants.data.0.subjects'));
+        ->has('participants.data.0.subjects', 4)
+        ->where('participants.data.0.subjects.0.subject_name', 'MTK')
+        ->where('participants.data.0.subjects.0.primary_score', 50)
+        ->where('participants.data.0.subjects.0.effective_score', 50)
+        ->where('participants.data.0.requires_evaluation', false));
+});
+
+test('admin results mark a failed completed participant for evaluation after remedial is unavailable', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+    $session = DB::table('exam_public_sessions')->insertGetId([
+        'title' => 'Sesi Evaluasi', 'status' => 'published', 'opens_at' => now()->subHour(), 'closes_at' => now()->addHour(),
+    ]);
+    $subject = DB::table('exam_public_subjects')->insertGetId(['name' => 'Matematika', 'code' => 'MTK-EVAL']);
+    $package = DB::table('exam_public_packages')->insertGetId([
+        'exam_public_subject_id' => $subject, 'title' => 'Paket Matematika', 'code' => 'MTK-EVAL-1',
+        'passing_score' => 65, 'allow_retry' => false,
+    ]);
+    $participant = DB::table('exam_public_participants')->insertGetId([
+        'exam_public_session_id' => $session, 'participant_code' => 'EVALUATE00001', 'name' => 'Peserta Evaluasi',
+        'school_origin' => 'Sekolah Evaluasi', 'average_score' => 50, 'is_passed' => false, 'status' => 'completed',
+    ]);
+    DB::table('exam_public_session_packages')->insert([
+        'exam_public_session_id' => $session, 'exam_public_package_id' => $package,
+        'exam_public_subject_id' => $subject, 'sort_order' => 0,
+    ]);
+    DB::table('exam_public_subject_attempts')->insert([
+        'exam_public_participant_id' => $participant, 'exam_public_package_id' => $package,
+        'exam_public_subject_id' => $subject, 'started_at' => now(), 'expires_at' => now()->addHour(),
+        'status' => 'submitted', 'percentage_score' => 50,
+    ]);
+
+    $this->actingAs($admin)->get(route('admin.public-exams.results.index', ['session' => $session]))
+        ->assertInertia(fn ($page) => $page
+            ->where('participants.data.0.requires_evaluation', true)
+            ->where('participants.data.0.subjects.0.is_passed', false));
 });
 
 test('admin monitoring shows active participants and their violation details', function () {

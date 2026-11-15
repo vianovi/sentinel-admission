@@ -71,9 +71,11 @@ export const confirmAction = async (title: string, text: string, confirmText = "
 export const confirmExamSubmission = async ({
     answeredCount,
     totalQuestions,
+    markedCount = 0,
 }: {
     answeredCount?: number;
     totalQuestions?: number;
+    markedCount?: number;
 } = {}): Promise<boolean> => {
     const remaining = (totalQuestions !== undefined && answeredCount !== undefined)
         ? Math.max(0, totalQuestions - answeredCount)
@@ -103,19 +105,30 @@ export const confirmExamSubmission = async ({
         }
     }
 
+    if (markedCount > 0) {
+        htmlContent += `
+            <div style="margin-top: 1rem; border-radius: 1rem; border: 1px solid rgba(251, 191, 36, 0.45); background: rgba(251, 191, 36, 0.1); padding: 0.875rem 1rem; font-size: 0.85rem; color: #fde68a; text-align: left; line-height: 1.5;">
+                <p style="font-weight: 800; margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem; color: #fbbf24;">
+                    <i class="fa-solid fa-flag"></i> Masih perlu ditinjau:
+                </p>
+                <p>Ada <strong style="color: #fff;">${markedCount}</strong> soal yang kamu tandai ragu. Periksa kembali sebelum mengumpulkan jawaban.</p>
+            </div>
+        `;
+    }
+
     const result = await swalDark.fire({
         target: fullscreenTarget(),
         topLayer: true,
         title: "Kumpulkan Jawaban Ujian?",
         html: htmlContent,
-        icon: remaining > 0 ? "warning" : "question",
-        iconColor: remaining > 0 ? "#f59e0b" : "#10b981",
+        icon: remaining > 0 || markedCount > 0 ? "warning" : "question",
+        iconColor: remaining > 0 || markedCount > 0 ? "#f59e0b" : "#10b981",
         showCancelButton: true,
         confirmButtonText: '<i class="fa-solid fa-paper-plane" style="margin-right: 0.5rem;"></i>Ya, Kumpulkan Jawaban',
-        cancelButtonText: remaining > 0 ? "Periksa Kembali Dulu" : "Batal",
+        cancelButtonText: remaining > 0 || markedCount > 0 ? "Periksa Kembali Dulu" : "Batal",
         confirmButtonColor: "#10b981",
         cancelButtonColor: "#334155",
-        focusCancel: remaining > 0,
+        focusCancel: remaining > 0 || markedCount > 0,
         customClass: {
             popup: "!rounded-3xl !border !border-amber-500/30 !shadow-2xl !bg-slate-900 !text-white !p-6",
             confirmButton: "!rounded-2xl !px-6 !py-3 !text-xs sm:!text-sm !font-black !text-slate-950 !bg-emerald-400 hover:!bg-emerald-300 !transition-all",
