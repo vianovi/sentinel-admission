@@ -1,5 +1,18 @@
 import Swal from "sweetalert2";
 
+const fullscreenTarget = (): HTMLElement | undefined => {
+    if (typeof document === "undefined" || !document.fullscreenElement) {
+        return undefined;
+    }
+
+    // SweetAlert2 resolves its active container from document.body. The body
+    // remains inside document.documentElement fullscreen, so this keeps the
+    // modal in fullscreen without breaking SweetAlert2's DOM lookup.
+    return document.fullscreenElement === document.documentElement
+        ? document.body
+        : (document.fullscreenElement as HTMLElement);
+};
+
 export const swalDark = Swal.mixin({
     background: "#0f172a",
     color: "#f8fafc",
@@ -43,12 +56,8 @@ export const showErrorToast = (message: string) => {
 };
 
 export const confirmAction = async (title: string, text: string, confirmText = "Ya, Lanjutkan"): Promise<boolean> => {
-    const target = (typeof document !== "undefined" && document.fullscreenElement)
-        ? (document.fullscreenElement as HTMLElement)
-        : undefined;
-
     const result = await swalDark.fire({
-        target,
+        target: fullscreenTarget(),
         title,
         text,
         icon: "warning",
@@ -66,10 +75,6 @@ export const confirmExamSubmission = async ({
     answeredCount?: number;
     totalQuestions?: number;
 } = {}): Promise<boolean> => {
-    const target = (typeof document !== "undefined" && document.fullscreenElement)
-        ? (document.fullscreenElement as HTMLElement)
-        : undefined;
-
     const remaining = (totalQuestions !== undefined && answeredCount !== undefined)
         ? Math.max(0, totalQuestions - answeredCount)
         : 0;
@@ -99,7 +104,7 @@ export const confirmExamSubmission = async ({
     }
 
     const result = await swalDark.fire({
-        target,
+        target: fullscreenTarget(),
         topLayer: true,
         title: "Kumpulkan Jawaban Ujian?",
         html: htmlContent,

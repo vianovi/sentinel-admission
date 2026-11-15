@@ -171,52 +171,25 @@ class PublicExamPagesController extends Controller
             ->paginate(25, ['participant.id', 'participant.participant_code', 'participant.name', 'participant.school_origin', 'participant.status', 'participant.average_score', 'participant.is_passed', 'participant.completed_at', 'participant.exam_public_session_id', 'session.title as session_title'])
             ->withQueryString();
 
-        $sessionIds = $participants->getCollection()->pluck('exam_public_session_id')->unique();
-        $assigned = DB::table('exam_public_session_packages as assignment')
-            ->join('exam_public_packages as package', 'package.id', '=', 'assignment.exam_public_package_id')
-            ->join('exam_public_subjects as subject', 'subject.id', '=', 'assignment.exam_public_subject_id')
-            ->whereIn('assignment.exam_public_session_id', $sessionIds)
-            ->orderBy('assignment.sort_order')
-            ->get(['assignment.exam_public_session_id', 'assignment.exam_public_subject_id', 'package.title as package_title', 'package.passing_score', 'package.allow_retry', 'subject.name as subject_name'])
-            ->groupBy('exam_public_session_id');
-        $attempts = DB::table('exam_public_subject_attempts')
+        $participantAttempts = DB::table('exam_public_subject_attempts')
             ->whereIn('exam_public_participant_id', $participants->getCollection()->pluck('id'))
-            ->orderBy('attempt_number')
-            ->get(['exam_public_participant_id', 'exam_public_subject_id', 'attempt_number', 'attempt_type', 'status', 'percentage_score', 'violations_count', 'metadata'])
+            ->orderByDesc('id')
+            ->get(['exam_public_participant_id', 'status'])
             ->groupBy('exam_public_participant_id');
 
-        $participants->getCollection()->transform(function ($participant) use ($assigned, $attempts) {
+        $participants->getCollection()->transform(function ($participant) use ($participantAttempts) {
             $participant->is_passed = $participant->is_passed === null ? null : (bool) $participant->is_passed;
-            $bySubject = $attempts->get($participant->id, collect())->groupBy('exam_public_subject_id');
-            $participant->violations = $attempts->get($participant->id, collect())
-                ->flatMap(function ($attempt) {
-                    $metadata = json_decode($attempt->metadata ?: '{}', true) ?: [];
-
-                    return $metadata['violations_log'] ?? [];
-                })->values();
-            $participant->subjects = $assigned->get($participant->exam_public_session_id, collect())->map(function ($subject) use ($bySubject, $participant) {
-                $history = $bySubject->get($subject->exam_public_subject_id, collect())
-                    ->map(fn ($attempt) => [
-                        'number' => $attempt->attempt_number,
-                        'type' => $attempt->attempt_type,
-                        'status' => $attempt->status,
-                        'score' => $attempt->percentage_score === null ? null : (float) $attempt->percentage_score,
-                    ])->values();
-                $scores = $history->whereIn('status', ['submitted', 'auto_submitted'])->pluck('score')->filter(fn ($score) => $score !== null);
-                $best = $scores->isEmpty() ? null : $scores->max();
-                $below = $best !== null && $subject->passing_score !== null && $best <= (float) $subject->passing_score;
-
-                return [
-                    'name' => $subject->subject_name,
-                    'package' => $subject->package_title,
-                    'threshold' => $subject->passing_score === null ? null : (float) $subject->passing_score,
-                    'allow_retry' => (bool) $subject->allow_retry,
-                    'best' => $best,
-                    'passed' => $best === null || $subject->passing_score === null ? null : ! $below,
-                    'note' => $below ? ($participant->is_passed === null ? 'Nilai mapel rendah; hasil akhir belum tersedia.' : ($participant->is_passed ? 'Nilai mapel rendah; rata-rata akhir memenuhi ambang lulus.' : 'Nilai mapel rendah; rata-rata akhir belum memenuhi ambang lulus.')) : null,
-                    'attempts' => $history,
-                ];
-            })->values();
+            $attempts = $participantAttempts->get($participant->id, collect());
+            $hasActiveAttempt = $attempts->contains('status', 'in_progress');
+            $latestAttemptStatus = $attempts->first()?->status;
+            $participant->has_active_attempt = $hasActiveAttempt;
+            $participant->display_status = $hasActiveAttempt
+                ? 'Aktif'
+                : match ($latestAttemptStatus) {
+                    'auto_submitted' => 'Dihentikan Paksa',
+                    'submitted' => 'Selesai',
+                    default => $participant->status === 'in_progress' ? 'Belum Dimulai' : ucfirst(str_replace('_', ' ', (string) $participant->status)),
+                };
 
             return $participant;
         });
@@ -248,9 +221,93 @@ class PublicExamPagesController extends Controller
         ]);
     }
 
+    public function monitoring(): Response
+    {
+        $participants = DB::table('exam_public_participants as participant')
+            ->join('exam_public_sessions as session', 'session.id', '=', 'participant.exam_public_session_id')
+            ->orderByRaw("participant.status = 'in_progress' desc")
+            ->orderByDesc('participant.id')
+            ->get([
+                'participant.id',
+                'participant.participant_code',
+                'participant.name',
+                'participant.school_origin',
+                'participant.status',
+                'participant.started_at',
+                'participant.completed_at',
+                'session.title as session_title',
+            ]);
+
+        $attempts = DB::table('exam_public_subject_attempts as attempt')
+            ->join('exam_public_subjects as subject', 'subject.id', '=', 'attempt.exam_public_subject_id')
+            ->join('exam_public_packages as package', 'package.id', '=', 'attempt.exam_public_package_id')
+            ->whereIn('attempt.exam_public_participant_id', $participants->pluck('id'))
+            ->orderByDesc('attempt.started_at')
+            ->get([
+                'attempt.id',
+                'attempt.exam_public_participant_id',
+                'attempt.status',
+                'attempt.started_at',
+                'attempt.expires_at',
+                'attempt.violations_count',
+                'attempt.metadata',
+                'subject.name as subject_name',
+                'package.title as package_title',
+            ])
+            ->groupBy('exam_public_participant_id');
+
+        $rows = $participants->map(function ($participant) use ($attempts) {
+            $participantAttempts = $attempts->get($participant->id, collect());
+            $violations = $participantAttempts->flatMap(function ($attempt) {
+                $metadata = json_decode($attempt->metadata ?: '{}', true) ?: [];
+
+                return $metadata['violations_log'] ?? [];
+            })->values();
+            $activeAttempt = $participantAttempts->firstWhere('status', 'in_progress');
+            $latestAttemptStatus = $participantAttempts->first()?->status;
+
+            return [
+                'id' => $participant->id,
+                'participant_code' => $participant->participant_code,
+                'name' => $participant->name,
+                'school_origin' => $participant->school_origin,
+                'status' => $participant->status,
+                'display_status' => $activeAttempt
+                    ? 'Aktif'
+                    : match ($latestAttemptStatus) {
+                        'auto_submitted' => 'Dihentikan Paksa',
+                        'submitted' => 'Selesai',
+                        default => $participant->status === 'in_progress' ? 'Belum Dimulai' : ucfirst(str_replace('_', ' ', (string) $participant->status)),
+                    },
+                'started_at' => $participant->started_at,
+                'completed_at' => $participant->completed_at,
+                'session_title' => $participant->session_title,
+                'violations_count' => $violations->count(),
+                'violations' => $violations,
+                'active_attempt' => $activeAttempt ? [
+                    'subject_name' => $activeAttempt->subject_name,
+                    'package_title' => $activeAttempt->package_title,
+                    'started_at' => $activeAttempt->started_at,
+                    'expires_at' => $activeAttempt->expires_at,
+                ] : null,
+            ];
+        })->values();
+
+        return Inertia::render('Dashboard/Admin/PublicExam/Monitoring', [
+            'participants' => $rows,
+            'summary' => [
+                'total' => $rows->count(),
+                'active' => $rows->filter(fn (array $participant) => $participant['active_attempt'] !== null)->count(),
+                'completed' => $rows->where('display_status', 'Selesai')->count(),
+                'with_violations' => $rows->filter(fn (array $participant) => $participant['violations_count'] > 0)->count(),
+            ],
+            'refreshedAt' => now()->toIso8601String(),
+        ]);
+    }
+
     public function forceStopParticipant(Request $request, int $participant): RedirectResponse
     {
-        DB::transaction(function () use ($participant, $request): void {
+        $wasStopped = DB::transaction(function () use ($participant, $request): bool {
             $record = DB::table('exam_public_participants')->where('id', $participant)->lockForUpdate()->first();
             abort_unless($record, 404);
 
@@ -260,7 +317,16 @@ class PublicExamPagesController extends Controller
                 ->lockForUpdate()
                 ->pluck('id');
 
-            abort_if($activeAttemptIds->isEmpty(), 422, 'Peserta tidak memiliki ujian yang sedang berlangsung.');
+            if ($activeAttemptIds->isEmpty()) {
+                $alreadyStopped = DB::table('exam_public_subject_attempts')
+                    ->where('exam_public_participant_id', $record->id)
+                    ->where('status', 'auto_submitted')
+                    ->exists();
+
+                abort_unless($alreadyStopped, 422, 'Peserta tidak memiliki ujian yang sedang berlangsung.');
+
+                return false;
+            }
 
             foreach ($activeAttemptIds as $attemptId) {
                 $this->attempts->submit($attemptId, true);
@@ -276,9 +342,13 @@ class PublicExamPagesController extends Controller
                 (string) $record->id,
                 $request->user()
             );
+
+            return true;
         });
 
-        return back()->with('success', 'Ujian aktif peserta dihentikan paksa dan jawaban tersimpan telah dinilai.');
+        return back()->with('success', $wasStopped
+            ? 'Ujian aktif peserta dihentikan paksa dan jawaban tersimpan telah dinilai.'
+            : 'Ujian peserta sudah dihentikan sebelumnya.');
     }
 
     public function destroyParticipantHistory(Request $request, int $participant): RedirectResponse

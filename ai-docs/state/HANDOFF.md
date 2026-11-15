@@ -373,6 +373,42 @@ None.
 
 Commit the verified public resume/token-rotation fix, then continue from public attempt UI and package/question-management audit. Run Playwright/browser verification when the browser driver is available.
 
+## 2026-11-15 fullscreen submit confirmation fix
+
+- Fixed the shared SweetAlert2 target used by internal and public participant exam submission confirmations. When the document root is fullscreen, the modal now targets `document.body`, which remains inside fullscreen and matches SweetAlert2's internal container lookup.
+- This addresses the reported blank-white confirmation state after pressing Kumpulkan while fullscreen. No backend, schema, answer, or attempt data changes.
+- Verification: `npx tsc --noEmit` passed, `npm run build` passed, `git diff --check` passed, and editor diagnostics reported no errors for `resources/js/utils/swal.ts`.
+- Browser end-to-end fullscreen interaction remains `UNVERIFIED` because the shared browser currently has no authenticated participant attempt available. Manual verification still required in Chromium and Firefox before demo use.
+
+## 2026-11-15 public exam monitoring split
+
+- Added admin-only `Ujian Publik → Monitoring Ujian` at `/dashboard/admin/public-exams/monitoring`. It lists participants, current active subject/package, aggregate violation count, expandable violation log, and auto-polls the Inertia props every 60 seconds.
+- Simplified Public Hasil Ujian to its result/administration role: identity, session, aggregate score, pass status, attempt status, completion time, and only the existing force-stop/delete-history action types. Violation data and per-subject expanded detail are no longer sent to or displayed on that page.
+- Preserved the existing transactionally guarded force-stop and history-delete endpoints, including activity logging. No database schema, attempt, answer, or participant data was changed.
+- Verification: `PublicExamAdminPagesTest` 6 passed / 144 assertions; `npx tsc --noEmit`, `vendor/bin/pint --dirty --format agent`, `npm run build`, `git diff --check`, and editor diagnostics passed. The build retains the existing stale Browserslist warning.
+- Live visual/interaction verification remains `UNVERIFIED`: these local changes are not deployed to the public demo, and no Playwright run was performed per owner instruction.
+
+## 2026-11-15 public exam force-stop status reconciliation
+
+- Results and monitoring status now derive from actual subject-attempt state, not only the participant row. Display labels are `Aktif`, `Selesai`, `Dihentikan Paksa`, or `Belum Dimulai`.
+- Force-stop is idempotent for an already `auto_submitted` participant: the endpoint returns a successful informational redirect rather than a 422 error. A participant with no active and no auto-submitted attempt remains rejected with 422.
+- Regression: `PublicExamAdminPagesTest` 7 passed / 159 assertions, including stale participant status and duplicate force-stop behavior. Pint, TypeScript, production build, and `git diff --check` passed. No demo data was altered.
+
+## 2026-11-15 public participant dashboard completion guidance
+
+- Completed public subject cards now render `Sudah dikerjakan` as a disabled, blocked-cursor action when remedial is unavailable. This prevents accidental start requests for a completed primary attempt while keeping existing retry/remedial and sequential-order behavior unchanged.
+- At the final question, the disabled Next control is replaced by a clear reminder to check the question summary then submit. An active question that has an answer now stays visibly green in the question palette while retaining its amber active outline.
+- Verification: `PublicExamFlowTest` 25 passed / 327 assertions, TypeScript, production build, and `git diff --check` passed. No public participant, attempt, answer, or demo data was changed. Browser visual review remains pending because no participant page was shared in this turn.
+
+## Resume warning
+
+## 2026-11-15 demo database backup before error-fix phase
+
+- Created a full MariaDB dump from the configured `demo` environment database `sentinel_admission_db` at `database/backups/sentinel_admission_db_20261115_pre_error_fix.sql`.
+- Backup command included transactional consistency plus routines, events, triggers, and hex-blob handling. The initial sandbox connection was blocked; the approved network retry completed successfully.
+- Verification: dump size `119999717` bytes, `47` `CREATE TABLE` statements matching the live table count, `138` `INSERT INTO` statements, clean dump terminator, SHA-256 `0cd45c91352c0b6b0b6f713838a0ccd62c9afeb22efb88d001967b03870c3b71`.
+- No database rows or schema were modified. Existing backup files were preserved.
+
 ## Resume warning
 
 

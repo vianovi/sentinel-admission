@@ -57,9 +57,9 @@ export function PageHeader({
 
 export function StatusPill({ value }: { value: string | null | undefined }) {
     const normalized = (value ?? "-").toString();
-    const tone = ["published", "completed", "submitted", "auto_submitted", "eligible", "aktif", "lulus", "benar"].includes(normalized)
+    const tone = ["published", "completed", "submitted", "auto_submitted", "eligible", "aktif", "Aktif", "Selesai", "lulus", "benar"].includes(normalized)
         ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-        : ["failed", "closed", "expired", "invalidated", "blocked", "cancelled", "nonaktif", "belum lulus", "salah"].includes(normalized)
+        : ["failed", "closed", "expired", "invalidated", "blocked", "cancelled", "nonaktif", "Dihentikan Paksa", "belum lulus", "salah"].includes(normalized)
             ? "border-red-500/20 bg-red-500/10 text-red-700 dark:text-red-300"
             : ["draft", "pending", "in_progress", "kosong"].includes(normalized)
                 ? "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300"

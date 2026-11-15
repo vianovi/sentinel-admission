@@ -23,6 +23,7 @@ export default function PublicExamQuestionWorkspace({
     goNext,
 }: Props) {
     const isDark = themeMode === 'dark';
+    const isLastQuestion = activeIndex === totalQuestions - 1;
 
     return (
         <article
@@ -113,16 +114,22 @@ export default function PublicExamQuestionWorkspace({
                         <span className="sm:hidden">Sebelum</span>
                         <span className="hidden sm:inline">Soal Sebelumnya</span>
                     </button>
-                    <button
-                        type="button"
-                        onClick={goNext}
-                        disabled={activeIndex === totalQuestions - 1}
-                        className="inline-flex min-h-12 min-w-0 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-2xl bg-amber-500 px-3 text-xs font-black text-slate-950 shadow-lg shadow-amber-500/25 transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-30 sm:flex-none sm:px-6 sm:text-sm"
-                    >
-                        <span className="sm:hidden">Berikutnya</span>
-                        <span className="hidden sm:inline">Soal Berikutnya</span>
-                        <i className="fa-solid fa-arrow-right text-xs" />
-                    </button>
+                    {isLastQuestion ? (
+                        <div className={`flex min-h-12 min-w-0 flex-1 items-center justify-center gap-2 rounded-2xl border px-3 text-center text-xs font-bold sm:flex-none sm:px-5 sm:text-sm ${isDark ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300' : 'border-emerald-300 bg-emerald-50 text-emerald-800'}`}>
+                            <i className="fa-solid fa-list-check text-xs" />
+                            <span>Soal terakhir · periksa ringkasan lalu kumpulkan</span>
+                        </div>
+                    ) : (
+                        <button
+                            type="button"
+                            onClick={goNext}
+                            className="inline-flex min-h-12 min-w-0 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-2xl bg-amber-500 px-3 text-xs font-black text-slate-950 shadow-lg shadow-amber-500/25 transition hover:bg-amber-400 sm:flex-none sm:px-6 sm:text-sm"
+                        >
+                            <span className="sm:hidden">Berikutnya</span>
+                            <span className="hidden sm:inline">Soal Berikutnya</span>
+                            <i className="fa-solid fa-arrow-right text-xs" />
+                        </button>
+                    )}
                 </div>
             </div>
         </article>

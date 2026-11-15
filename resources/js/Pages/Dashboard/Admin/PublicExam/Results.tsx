@@ -1,5 +1,5 @@
 import PublicExamSummary from "@/Components/Exam/Admin/PublicExamSummary";
-import { Fragment, useState, type FormEvent, type ReactNode } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import {
@@ -29,17 +29,8 @@ type Participant = {
     completed_at: string | null;
     exam_public_session_id: number;
     session_title: string;
-    violations: { type: string; at: string }[];
-    subjects: {
-        name: string;
-        package: string;
-        threshold: number | null;
-        allow_retry: boolean;
-        best: number | null;
-        passed: boolean | null;
-        note: string | null;
-        attempts: { number: number; type: string; status: string; score: number | null }[];
-    }[];
+    has_active_attempt: boolean;
+    display_status: string;
 };
 
 type PaginationLink = {
@@ -93,7 +84,6 @@ export default function PublicResults({ participants, sessions, filters, stats }
     const [status, setStatus] = useState(filters.status ?? "");
     const [passed, setPassed] = useState(filters.passed ?? "");
     const [session, setSession] = useState(filters.session ? String(filters.session) : "");
-    const [expanded, setExpanded] = useState<number | null>(null);
     const [busyParticipantId, setBusyParticipantId] = useState<number | null>(null);
 
     const applyFilters = (event: FormEvent) => {
@@ -296,7 +286,7 @@ export default function PublicResults({ participants, sessions, filters, stats }
                         ) : (
                             <div role="region" aria-label="Daftar evaluasi peserta ujian publik" tabIndex={0} className="overflow-x-auto rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500/30 dark:border-white/10">
                                 <table className="min-w-full text-left text-xs dark:text-white">
-                                    <caption className="sr-only">Daftar hasil, status pengerjaan, dan tindakan administrasi peserta ujian publik.</caption>
+                                    <caption className="sr-only">Daftar hasil, status pengerjaan, dan tindakan administrasi peserta ujian publik. Rincian pelanggaran tersedia di Monitoring Ujian.</caption>
                                     <thead className="bg-slate-50 dark:bg-white/5 text-slate-500 uppercase font-bold tracking-wider">
                                         <tr>
                                             <th scope="col" className="p-3">Kode Peserta</th>
@@ -314,12 +304,9 @@ export default function PublicResults({ participants, sessions, filters, stats }
                                             const isPassed = p.is_passed;
                                             const isBusy = busyParticipantId === p.id;
                                             return (
-                                                <Fragment key={p.id}>
                                                 <tr key={p.id} className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-all">
                                                     <td className="p-3 font-mono font-bold text-amber-600 dark:text-amber-400">
-                                                        <button type="button" onClick={() => setExpanded(expanded === p.id ? null : p.id)} aria-expanded={expanded === p.id} aria-label={`Rincian nilai ${p.name}`} className="rounded-md text-left underline focus:outline-none focus:ring-2 focus:ring-amber-500/20">
-                                                            {p.participant_code} <i className={`fa-solid ${expanded === p.id ? "fa-chevron-up" : "fa-chevron-down"}`} aria-hidden="true" />
-                                                        </button>
+                                                        {p.participant_code}
                                                     </td>
                                                     <td className="p-3">
                                                         <div className="font-semibold text-slate-900 dark:text-white">{p.name}</div>
@@ -353,14 +340,14 @@ export default function PublicResults({ participants, sessions, filters, stats }
                                                         )}
                                                     </td>
                                                     <td className="p-3 text-center">
-                                                        <StatusPill value={p.status} />
+                                                        <StatusPill value={p.display_status} />
                                                     </td>
                                                     <td className="p-3 text-slate-400">
                                                         {formatDate(p.completed_at)}
                                                     </td>
                                                     <td className="p-3">
                                                         <div className="flex min-w-48 flex-wrap justify-end gap-2">
-                                                            {p.status === "in_progress" ? (
+                                                            {p.has_active_attempt ? (
                                                                 <button type="button" disabled={isBusy} onClick={() => forceStop(p)} className="inline-flex min-h-9 items-center gap-2 rounded-lg bg-red-600 px-3 text-xs font-bold text-white transition hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-400/50 disabled:cursor-not-allowed disabled:opacity-60" aria-label={"Hentikan paksa ujian " + p.name}>
                                                                     <i className="fa-solid fa-stop" aria-hidden="true" /> Hentikan
                                                                 </button>
@@ -372,19 +359,6 @@ export default function PublicResults({ participants, sessions, filters, stats }
                                                         </div>
                                                     </td>
                                                 </tr>
-                                                {expanded === p.id && <tr key={`${p.id}-details`}><td colSpan={8} className="bg-slate-50 p-4 dark:bg-slate-950">
-                                                    {p.violations.length > 0 && <div className="mb-3 rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-800 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-200"><p className="font-bold"><i className="fa-solid fa-triangle-exclamation mr-1.5" />Pelanggaran keamanan ({p.violations.length})</p><ul className="mt-1 space-y-1">{p.violations.map((violation, index) => <li key={`${violation.at}-${index}`}>{violation.type === "tab_switch" ? "Berpindah tab" : "Keluar dari layar penuh"} · {formatDate(violation.at)}</li>)}</ul></div>}
-                                                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                                                        {p.subjects.map((subject, index) => <section key={index} className="rounded-xl border border-slate-200 bg-white p-3 dark:border-white/10 dark:bg-slate-900">
-                                                            <h3 className="font-bold text-slate-900 dark:text-white">{subject.name} · {subject.package}</h3>
-                                                            <p className="text-slate-600 dark:text-slate-300">Nilai dipakai: {subject.best ?? "—"} · Ambang: {subject.threshold ?? "—"}</p>
-                                                            <p className={subject.passed === false ? "font-bold text-red-600 dark:text-red-400" : "font-bold text-emerald-600 dark:text-emerald-400"}>{subject.passed === null ? "Belum dikerjakan" : subject.passed ? "Lulus mapel" : "Tidak lulus mapel"}</p>
-                                                            <ul className="mt-2 space-y-1 text-slate-600 dark:text-slate-300">{subject.attempts.map(attempt => <li key={attempt.number}>Attempt {attempt.number}: {attempt.score ?? "—"} ({attempt.status})</li>)}</ul>
-                                                            {subject.note && <p className="mt-2 text-amber-700 dark:text-amber-300">{subject.note} {!subject.allow_retry && subject.attempts.length === 1 ? "Pertimbangkan ujian ulang melalui kebijakan sekolah." : ""}</p>}
-                                                        </section>)}
-                                                    </div>
-                                                </td></tr>}
-                                                </Fragment>
                                             );
                                         })}
                                     </tbody>

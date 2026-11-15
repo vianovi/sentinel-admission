@@ -183,6 +183,7 @@ Route::middleware(['auth', RoleMiddleware::class.':admin'])
         Route::get('/packages/{package}', [\App\Http\Controllers\Dashboard\Admin\PublicExam\PublicExamPagesController::class, 'package'])->whereNumber('package')->name('packages.show');
         Route::get('/sessions', [\App\Http\Controllers\Dashboard\Admin\PublicExam\PublicExamPagesController::class, 'sessions'])->name('sessions.index');
         Route::get('/sessions/{session}', [\App\Http\Controllers\Dashboard\Admin\PublicExam\PublicExamPagesController::class, 'sessions'])->whereNumber('session')->name('sessions.show');
+        Route::get('/monitoring', [\App\Http\Controllers\Dashboard\Admin\PublicExam\PublicExamPagesController::class, 'monitoring'])->name('monitoring.index');
         Route::get('/results', [\App\Http\Controllers\Dashboard\Admin\PublicExam\PublicExamPagesController::class, 'results'])->name('results.index');
         Route::post('/results/participants/{participant}/force-stop', [\App\Http\Controllers\Dashboard\Admin\PublicExam\PublicExamPagesController::class, 'forceStopParticipant'])->name('results.participants.force-stop');
         Route::delete('/results/participants/{participant}', [\App\Http\Controllers\Dashboard\Admin\PublicExam\PublicExamPagesController::class, 'destroyParticipantHistory'])->name('results.participants.destroy');

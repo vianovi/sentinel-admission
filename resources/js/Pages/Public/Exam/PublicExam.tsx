@@ -446,6 +446,8 @@ function DashboardView({
                                             item.status !== 'in_progress',
                                     ),
                             );
+                    const alreadyCompleted = completed && !result?.remedial_available;
+                    const buttonDisabled = busy || locked || alreadyCompleted;
                     return (
                         <article
                             key={pack.id}
@@ -467,7 +469,7 @@ function DashboardView({
                                     {expired
                                         ? 'Waktu habis'
                                         : completed
-                                          ? 'Selesai'
+                                          ? 'Sudah dikerjakan'
                                           : 'Belum mulai'}
                                 </span>
                             </div>
@@ -479,9 +481,7 @@ function DashboardView({
                                 )}
                             <button
                                 type="button"
-                                disabled={
-                                    busy || (!active && !expired && locked)
-                                }
+                                disabled={buttonDisabled}
                                 onClick={() =>
                                     active
                                         ? void loadAttempt(active.id, pack)
@@ -489,7 +489,8 @@ function DashboardView({
                                           ? void submitExpired(expired.id)
                                           : void start(pack)
                                 }
-                                className={`${actionClass} mt-5 w-full`}
+                                title={alreadyCompleted ? 'Mapel ini sudah dikerjakan dan tidak dapat dibuka kembali.' : undefined}
+                                className={`${actionClass} mt-5 w-full disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300 disabled:shadow-none`}
                             >
                                 {active
                                     ? 'Lanjutkan ujian'
@@ -497,6 +498,8 @@ function DashboardView({
                                       ? 'Kumpulkan mapel yang berakhir'
                                       : locked
                                         ? 'Selesaikan mapel sebelumnya'
+                                        : alreadyCompleted
+                                          ? 'Sudah dikerjakan'
                                         : result?.remedial_available
                                           ? 'Kerjakan ulang'
                                           : 'Mulai mapel'}

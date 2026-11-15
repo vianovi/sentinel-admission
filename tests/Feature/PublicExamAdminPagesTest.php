@@ -54,7 +54,7 @@ test('public package, session, and result pages use isolated public tables', fun
 
 test('only administrators can read public exam admin pages', function () {
     $staff = User::factory()->create(['role' => 'staff']);
-    foreach (['packages.index', 'sessions.index', 'results.index', 'packages.show', 'sessions.show'] as $name) {
+    foreach (['packages.index', 'sessions.index', 'monitoring.index', 'results.index', 'packages.show', 'sessions.show'] as $name) {
         $url = route('admin.public-exams.'.$name, str_ends_with($name, '.show') ? 1 : []);
         $this->get($url)->assertRedirect();
         $this->actingAs($staff)->get($url)->assertForbidden();
@@ -62,7 +62,7 @@ test('only administrators can read public exam admin pages', function () {
     }
 });
 
-test('admin result details distinguish a low subject from a passing overall average', function () {
+test('admin results keep aggregate outcome data without monitoring violations', function () {
     $admin = User::factory()->create(['role' => 'admin']);
     $session = DB::table('exam_public_sessions')->insertGetId([
         'title' => 'Ujian Empat Mapel', 'status' => 'published', 'opens_at' => now()->subHour(), 'closes_at' => now()->addHour(),
@@ -91,13 +91,42 @@ test('admin result details distinguish a low subject from a passing overall aver
     $this->actingAs($admin)->get(route('admin.public-exams.results.index', ['session' => $session]))
         ->assertSuccessful()->assertInertia(fn ($page) => $page
         ->where('participants.data.0.is_passed', true)
-        ->where('participants.data.0.subjects.0.name', 'MTK')
-        ->where('participants.data.0.subjects.0.best', 50)
-        ->where('participants.data.0.subjects.0.passed', false)
-        ->where('participants.data.0.subjects.0.threshold', 55)
-        ->where('participants.data.0.subjects.0.attempts.0.score', 50)
-        ->where('participants.data.0.subjects.0.allow_retry', false)
-        ->where('participants.data.0.subjects.1.passed', true));
+        ->where('participants.data.0.average_score', 67.25)
+        ->missing('participants.data.0.violations')
+        ->missing('participants.data.0.subjects'));
+});
+
+test('admin monitoring shows active participants and their violation details', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+    $subject = DB::table('exam_public_subjects')->insertGetId(['name' => 'Matematika', 'code' => 'MON-MTK']);
+    $package = DB::table('exam_public_packages')->insertGetId([
+        'exam_public_subject_id' => $subject, 'title' => 'Paket Monitoring', 'code' => 'MON-01', 'status' => 'published',
+        'passing_score' => 65, 'allow_retry' => false, 'show_result_to_participant' => false,
+    ]);
+    $session = DB::table('exam_public_sessions')->insertGetId([
+        'title' => 'Sesi Monitoring', 'status' => 'published', 'opens_at' => now()->subHour(), 'closes_at' => now()->addHour(),
+    ]);
+    $participant = DB::table('exam_public_participants')->insertGetId([
+        'exam_public_session_id' => $session, 'participant_code' => 'MONITOR00001', 'name' => 'Peserta Monitoring',
+        'school_origin' => 'Sekolah Monitoring', 'status' => 'in_progress', 'started_at' => now(),
+    ]);
+    DB::table('exam_public_subject_attempts')->insert([
+        'exam_public_participant_id' => $participant, 'exam_public_package_id' => $package, 'exam_public_subject_id' => $subject,
+        'status' => 'in_progress', 'started_at' => now(), 'expires_at' => now()->addHour(), 'violations_count' => 2,
+        'metadata' => json_encode(['violations_log' => [['type' => 'tab_switch', 'at' => now()->toIso8601String()], ['type' => 'exit_fullscreen', 'at' => now()->toIso8601String()]]]),
+    ]);
+
+    $this->actingAs($admin)->get(route('admin.public-exams.monitoring.index'))
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page
+            ->component('Dashboard/Admin/PublicExam/Monitoring')
+            ->where('summary.total', 1)
+            ->where('summary.active', 1)
+            ->where('summary.with_violations', 1)
+            ->where('participants.0.id', $participant)
+            ->where('participants.0.display_status', 'Aktif')
+            ->where('participants.0.violations_count', 2)
+            ->where('participants.0.active_attempt.subject_name', 'Matematika'));
 });
 
 test('admin can force stop an active public exam participant', function () {
@@ -155,4 +184,33 @@ test('admin can delete a completed public participant history', function () {
         'target_id' => (string) $participant,
         'actor_id' => $admin->id,
     ]);
+});
+
+test('force stop is idempotent when participant status is stale after auto submission', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+    $subject = DB::table('exam_public_subjects')->insertGetId(['name' => 'Bahasa', 'code' => 'MON-BHS']);
+    $package = DB::table('exam_public_packages')->insertGetId([
+        'exam_public_subject_id' => $subject, 'title' => 'Paket Bahasa', 'code' => 'MON-BHS-01', 'status' => 'published',
+        'passing_score' => 65, 'allow_retry' => false, 'show_result_to_participant' => false,
+    ]);
+    $session = DB::table('exam_public_sessions')->insertGetId([
+        'title' => 'Sesi Status Stale', 'status' => 'published', 'opens_at' => now()->subHour(), 'closes_at' => now()->addHour(),
+    ]);
+    $participant = DB::table('exam_public_participants')->insertGetId([
+        'exam_public_session_id' => $session, 'participant_code' => 'STALE00001', 'name' => 'Status Stale',
+        'school_origin' => 'Sekolah', 'status' => 'in_progress', 'started_at' => now(),
+    ]);
+    DB::table('exam_public_subject_attempts')->insert([
+        'exam_public_participant_id' => $participant, 'exam_public_package_id' => $package, 'exam_public_subject_id' => $subject,
+        'status' => 'auto_submitted', 'started_at' => now()->subMinutes(5), 'expires_at' => now(),
+    ]);
+
+    $this->actingAs($admin)->get(route('admin.public-exams.results.index', ['session' => $session]))
+        ->assertInertia(fn ($page) => $page
+            ->where('participants.data.0.has_active_attempt', false)
+            ->where('participants.data.0.display_status', 'Dihentikan Paksa'));
+
+    $this->actingAs($admin)
+        ->post(route('admin.public-exams.results.participants.force-stop', $participant))
+        ->assertRedirect();
 });
