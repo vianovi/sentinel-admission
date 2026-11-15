@@ -1,3 +1,4 @@
+import PublicExamSummary from "@/Components/Exam/Admin/PublicExamSummary";
 import { useState, useMemo, useEffect, FormEvent } from "react";
 import { Head, Link, useForm, router, usePage } from "@inertiajs/react";
 import axios from "axios";
@@ -5,7 +6,6 @@ import DashboardLayout from "@/Layouts/DashboardLayout";
 import {
     PageHeader,
     FlashMessage,
-    StatCard,
     WorkflowRail,
     EmptyState,
     primaryButtonClass,
@@ -231,6 +231,12 @@ export default function MediaManager({ media, total_used_count = 0 }: Props) {
                 <FlashMessage value={flash.error ?? pageErrors.files ?? pageErrors.name} />
 
                 {/* Workflow Rail */}
+                <PublicExamSummary title="Ringkasan bank media" value={media.length} label="gambar publik" description="Koleksi gambar untuk soal ujian publik" items={[
+                    { label: "Penyimpanan", value: formatBytes(totalBytes), description: "Ukuran seluruh gambar" },
+                    { label: "Media digunakan", value: total_used_count, description: "Terhubung dengan soal", tone: "success" },
+                    { label: "Hasil pencarian", value: filteredMedia.length, description: "Sesuai pencarian saat ini" },
+                ]} />
+
                 <WorkflowRail
                     items={[
                         {
@@ -256,34 +262,6 @@ export default function MediaManager({ media, total_used_count = 0 }: Props) {
                         },
                     ]}
                 />
-
-                {/* Stat Cards */}
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                    <StatCard
-                        label="Total Gambar Publik"
-                        value={media.length}
-                        icon="fa-solid fa-images"
-                        tone="text-amber-500"
-                    />
-                    <StatCard
-                        label="Total Penyimpanan"
-                        value={formatBytes(totalBytes)}
-                        icon="fa-solid fa-hard-drive"
-                        tone="text-blue-500"
-                    />
-                    <StatCard
-                        label="Media Dipakai di Soal"
-                        value={total_used_count}
-                        icon="fa-solid fa-link"
-                        tone="text-emerald-500"
-                    />
-                    <StatCard
-                        label="Sintaks Tag"
-                        value="[GAMBAR: file.ext]"
-                        icon="fa-solid fa-code"
-                        tone="text-violet-500"
-                    />
-                </div>
 
                 {/* Main Grid: Upload & Gallery */}
                 <div className="grid gap-5 xl:grid-cols-[380px_1fr] items-start">

@@ -1,3 +1,4 @@
+import PublicExamSummary from "@/Components/Exam/Admin/PublicExamSummary";
 import { Fragment, useState, type FormEvent, type ReactNode } from "react";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
@@ -189,25 +190,11 @@ export default function PublicResults({ participants, sessions, filters, stats }
 
                 <FlashMessage value={flash.success} type="success" />
 
-                {/* 4 Stat Cards */}
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                    <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 p-4 shadow-sm">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Peserta</span>
-                        <p className="mt-1 text-2xl font-black text-slate-900 dark:text-white">{stats.total}</p>
-                    </div>
-                    <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 p-4 shadow-sm">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Peserta Lulus (&gt; 65)</span>
-                        <p className="mt-1 text-2xl font-black text-emerald-600 dark:text-emerald-400">{stats.passed}</p>
-                    </div>
-                    <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 p-4 shadow-sm">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-red-600 dark:text-red-400">Belum Lulus (≤ 65)</span>
-                        <p className="mt-1 text-2xl font-black text-red-600 dark:text-red-400">{stats.failed}</p>
-                    </div>
-                    <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 p-4 shadow-sm">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-amber-500">Rata-rata Skor</span>
-                        <p className="mt-1 text-2xl font-black text-amber-500">{stats.average_score}</p>
-                    </div>
-                </div>
+                <PublicExamSummary title="Ringkasan hasil ujian" value={stats.total} label="peserta" description="Rekap hasil ujian publik" items={[
+                    { label: "Peserta lulus", value: stats.passed, description: "Sesuai ambang kelulusan", tone: "success" },
+                    { label: "Belum lulus", value: stats.failed, description: "Sesuai ambang kelulusan", tone: "warning" },
+                    { label: "Rata-rata nilai", value: stats.average_score, description: "Rekap nilai peserta" },
+                ]} progress={{ value: stats.passed, total: stats.total, label: `${stats.passed} dari ${stats.total} peserta lulus` }} />
 
                 {/* Filter Toolbar Section */}
                 <section className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 p-5 shadow-sm space-y-4">

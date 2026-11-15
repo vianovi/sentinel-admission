@@ -1,3 +1,4 @@
+import PublicExamSummary from "@/Components/Exam/Admin/PublicExamSummary";
 import { useState } from "react";
 import { Head, Link, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
@@ -76,24 +77,11 @@ export default function PublicExamCategories({ subjects }: Props) {
                 <FlashMessage value={flash.success} type="success" />
                 <FlashMessage value={flash.error ?? pageErrors.subject ?? pageErrors.name ?? pageErrors.code} />
 
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-slate-900">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Jenis Mapel</span>
-                        <p className="mt-1 text-2xl font-black text-slate-900 dark:text-white">{subjects.length}</p>
-                    </div>
-                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-slate-900">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Mapel Aktif</span>
-                        <p className="mt-1 text-2xl font-black text-emerald-600 dark:text-emerald-400">{activeCount}</p>
-                    </div>
-                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-slate-900">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Paket Publik</span>
-                        <p className="mt-1 text-2xl font-black text-slate-900 dark:text-white">{packageCount}</p>
-                    </div>
-                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-slate-900">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Butir Soal Publik</span>
-                        <p className="mt-1 text-2xl font-black text-slate-900 dark:text-white">{questionCount}</p>
-                    </div>
-                </div>
+                <PublicExamSummary title="Ringkasan mata pelajaran" value={subjects.length} label="jenis mapel" description="Seluruh mata pelajaran ujian publik" items={[
+                    { label: "Mapel aktif", value: activeCount, description: "Tersedia untuk paket", tone: "success" },
+                    { label: "Paket publik", value: packageCount, description: "Di seluruh mapel" },
+                    { label: "Butir soal", value: questionCount, description: "Bank soal publik" },
+                ]} progress={{ value: activeCount, total: subjects.length, label: `${activeCount} dari ${subjects.length} mapel aktif` }} />
 
                 <PublicExamCategoryTable
                     subjects={subjects}

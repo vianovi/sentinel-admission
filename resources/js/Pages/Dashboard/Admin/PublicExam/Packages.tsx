@@ -1,3 +1,4 @@
+import PublicExamSummary from "@/Components/Exam/Admin/PublicExamSummary";
 import { useState, useMemo, type FormEvent, type ReactNode } from "react";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import axios from "axios";
@@ -70,7 +71,7 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
     const hasPackages = stats.total > 0;
     const hasQuestions = stats.total_questions > 0;
     const hasPublishedPackages = stats.published > 0;
-
+    const draftCount = packages.filter(pkg => pkg.status === "draft").length;
     const filteredPackages = useMemo(() => {
         return packages
             .filter((pkg) => {
@@ -209,6 +210,12 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                 <FlashMessage value={flash.success} type="success" />
                 <FlashMessage value={flash.error ?? pageErrors.package} />
 
+                <PublicExamSummary title="Ringkasan paket" value={stats.total} label="total paket" description={`${stats.total_subjects} mata pelajaran tersedia · seluruh paket`} items={[
+                    { label: "Paket terbit", value: stats.published, description: "Lihat paket", tone: "success", selected: statusFilter === "published", onClick: () => { setStatusFilter(statusFilter === "published" ? "all" : "published"); setSearch(""); setSubjectFilter("all"); } },
+                    { label: "Masih draft", value: draftCount, description: "Lihat paket", tone: "warning", selected: statusFilter === "draft", onClick: () => { setStatusFilter(statusFilter === "draft" ? "all" : "draft"); setSearch(""); setSubjectFilter("all"); } },
+                    { label: "Soal aktif", value: stats.total_questions, description: "Di seluruh paket" },
+                ]} progress={{ value: stats.published, total: stats.total, label: stats.total ? `${stats.published} dari ${stats.total} paket sudah diterbitkan` : "Belum ada paket. Mulai dengan membuat paket soal." }} />
+
                 <WorkflowRail
                     items={[
                         {
@@ -257,14 +264,14 @@ export default function PublicPackages({ packages, subjects, stats }: Props) {
                 />
 
                 {/* Package List Card with Filters, Tabs, and Table/Cards */}
-                <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900">
+                <section id="public-package-list" className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900">
                     <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-white/10 space-y-4">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div>
                                 <h2 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                                     <span>Daftar Paket Soal Ujian Publik</span>
                                     <span className="rounded-full bg-slate-100 dark:bg-white/10 px-2 py-0.5 text-xs font-bold text-slate-600 dark:text-slate-300">
-                                        {packages.length}
+                                        <span role="status" aria-live="polite" aria-atomic="true">{filteredPackages.length} / {packages.length}</span>
                                     </span>
                                 </h2>
                                 <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">

@@ -1,5 +1,23 @@
 # Audit Handoff
 
+## 2026-11-15 shared public submenu summaries
+
+- Extracted the approved package-summary presentation into `PublicExamSummary.tsx` and applied it to all five public submenu index pages: Categories, Packages, Sessions, Results, MediaManager. Main statistics use existing server props; no backend, schema, data, or internal exam components changed.
+- Preserved package status shortcuts and added a published-session shortcut using the existing filter. Other metrics remain informational to avoid conflicting with independently owned/server-side filters. Session detail and package detail screens retain their existing operational controls.
+- Shared one-shot entrance, press/focus/hover feedback, selection marker, and zero-safe meter respect reduced motion. TypeScript and production build passed; SSR verified zero/nonzero percentages, selected buttons, and noninteractive metrics (8 assertions). Browser visual/interaction verification still pending on an accessible authenticated portal.
+- Owner requested no commit; all summary changes remain uncommitted.
+
+## 2026-11-15 public package summary
+
+- Replaced decorative whole-panel hover with actionable published/draft summary buttons. Buttons toggle the existing status filter, clear search/subject constraints, expose pressed state and selected checkmark, and support keyboard focus/press feedback. List count now announces filtered/total counts. Added one-shot staggered entrance using native Web Animations with cancellation on unmount or reduced-motion changes; no dependency or commit. Live browser interaction remains unverified pending an authenticated accessible page.
+
+- Follow-up: added subtle summary hover lift and status-marker response, plus transform-based meter transitions when its value changes. Spatial hover effects and transitions are disabled by reduced-motion preference. No count-up timers, dependencies, or commit.
+
+- Added a compact summary above the existing Packages workflow: total packages, published packages, draft packages, active questions, available subjects, and published percentage. Uses existing stats and the full package collection, independent of list filters; no backend or data changes.
+- Hallmark component-scoped treatment preserves Sora/DM Sans and Sentinel amber/slate. Zero packages displays an explicit empty message and 0%, without division by zero.
+- Verification: `npx tsc --noEmit` and `git diff --check` passed. Browser verification remains UNVERIFIED: integrated browser failed to open; Playwright navigation hit `ERR_SSL_PROTOCOL_ERROR` after the local application redirected to HTTPS login. No authentication or runtime configuration changed.
+- Owner explicitly requested no commit; changes remain uncommitted. Next: visually review the summary on the owner's authenticated portal, including mobile widths and light/dark themes.
+
 ## 2026-11-14 public import error detail
 
 - The importer now reports specific causes per invalid question row: empty question, too few options, oversized text, missing/unknown correct answer, invalid points, or invalid active flag.
