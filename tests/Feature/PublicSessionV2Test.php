@@ -193,13 +193,14 @@ test('draft configuration updates atomically and cannot change after participant
             'status' => 'published', 'passing_score' => 55, 'allow_retry' => false, 'show_result_to_participant' => false,
         ]);
     }
-    $data = ['title' => 'Draft', 'opens_at' => now()->toISOString(), 'closes_at' => now()->addHours(2)->toISOString(), 'order_type' => 'free', 'package_ids' => $ids];
+    $data = ['title' => 'Draft', 'opens_at' => now()->toISOString(), 'closes_at' => now()->addHours(2)->toISOString(), 'order_type' => 'free', 'time_source' => 'participant', 'package_ids' => $ids];
     $session = $this->actingAs($admin)->postJson(route('admin.exams.public-v2.sessions.store'), $data)->assertCreated()->json('id');
     $url = route('admin.exams.public-v2.sessions.update', $session);
     $this->putJson($url, [...$data, 'title' => 'Tidak tersimpan', 'package_ids' => [$ids[0], $ids[0], $ids[2], $ids[3]]])->assertUnprocessable();
     expect(DB::table('exam_public_sessions')->where('id', $session)->value('title'))->toBe('Draft');
     $this->putJson($url, [...$data, 'title' => 'Revisi', 'instructions' => 'Baca petunjuk', 'order_type' => 'sequential', 'package_ids' => array_reverse($ids)])->assertSuccessful();
     expect(DB::table('exam_public_sessions')->where('id', $session)->value('title'))->toBe('Revisi')
+        ->and(DB::table('exam_public_sessions')->where('id', $session)->value('time_source'))->toBe('participant')
         ->and(DB::table('exam_public_session_packages')->where('exam_public_session_id', $session)->orderBy('sort_order')->pluck('exam_public_package_id')->all())->toBe(array_reverse($ids));
     $this->get(route('admin.public-exams.sessions.show', $session))->assertInertia(fn ($page) => $page
         ->where('examTimezone', config('app.timezone'))

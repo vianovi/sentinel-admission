@@ -36,6 +36,7 @@ class PublicSessionV2Controller extends Controller
             'opens_at' => ['required', 'date'],
             'closes_at' => ['required', 'date', 'after:opens_at'],
             'order_type' => ['required', Rule::in(['free', 'sequential'])],
+            'time_source' => ['sometimes', Rule::in(['server', 'participant'])],
             'token_rotation_minutes' => ['sometimes', 'required', 'integer', 'min:1', 'max:1440'],
             'package_ids' => ['required', 'array', 'min:1', 'max:5'],
             'package_ids.*' => ['required', 'integer', 'distinct', Rule::exists('exam_public_packages', 'id')->where('status', 'published')],
@@ -57,6 +58,7 @@ class PublicSessionV2Controller extends Controller
                 'opens_at' => \Carbon\Carbon::parse($data['opens_at'])->setTimezone(config('app.timezone'))->toDateTimeString(),
                 'closes_at' => \Carbon\Carbon::parse($data['closes_at'])->setTimezone(config('app.timezone'))->toDateTimeString(),
                 'order_type' => $data['order_type'],
+                'time_source' => $data['time_source'] ?? 'server',
                 'status' => 'draft',
                 'token_rotation_minutes' => $data['token_rotation_minutes'] ?? 5,
                 'created_by' => $request->user()->id,
@@ -148,6 +150,7 @@ class PublicSessionV2Controller extends Controller
             'opens_at' => ['required', 'date'],
             'closes_at' => ['required', 'date', 'after:opens_at'],
             'order_type' => ['required', Rule::in(['free', 'sequential'])],
+            'time_source' => ['sometimes', Rule::in(['server', 'participant'])],
             'token_rotation_minutes' => ['sometimes', 'required', 'integer', 'min:1', 'max:1440'],
         ]);
 

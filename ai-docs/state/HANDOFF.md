@@ -1,5 +1,19 @@
 # Audit Handoff
 
+## 2026-11-15 session quick-time clarification
+
+- Owner clarified that quick time means relative schedule entry, not display preferences. Replaced the coupled presets with independent start offsets and end windows (minutes, hours, days), custom minute inputs, and explicit Apply/Cancel. End is calculated from start; no backend or data changes.
+- Renamed Accessibility to Other options; moved existing package order and token rotation controls there. Added persisted `time_source` (`server` default or `participant` display preference) to the public session schema, admin payload, and participant session metadata. Server remains authoritative for schedule enforcement. Secondary popups use native modal dialogs for Escape and cleanup.
+- TypeScript, editor diagnostics, Pint, focused public session/flow tests (32 passed / 407 assertions), build, and diff check passed. Browser interaction/visual review remains pending by owner request; no Playwright and no new commit.
+- Local fix follow-up: `time_source` migration was pending and caused the observed 500 (`Unknown column 'time_source'`). Applied only `2026_11_15_000001_add_time_source_to_exam_public_sessions_table`; migration status now reports `[7] Ran`. No participant/session data was changed.
+
+## 2026-11-15 public session configuration accessibility layout
+
+- Committed the preceding public submenu summary work as `80eaa91`.
+- Reworked the public session configuration modal in `Sessions.tsx` into grouped identity, schedule/access, and question-package sections with a compact review rail. Added an `Aksesibilitas` secondary dialog with quick time-display preference, larger text, and higher-contrast panel controls. These preferences are UI-only and do not change the session payload or schema.
+- Verification: editor diagnostics clean, `npx tsc --noEmit` passed, `npm run build` passed, and `git diff --check` passed. Build retained the existing stale Browserslist warning. Playwright intentionally not used; HUMAN VISUAL REVIEW REQUIRED.
+- Current state: session layout changes remain uncommitted by owner request. Next: owner visually reviews the session modal and accessibility popup on the authenticated portal.
+
 ## 2026-11-15 shared public submenu summaries
 
 - Extracted the approved package-summary presentation into `PublicExamSummary.tsx` and applied it to all five public submenu index pages: Categories, Packages, Sessions, Results, MediaManager. Main statistics use existing server props; no backend, schema, data, or internal exam components changed.

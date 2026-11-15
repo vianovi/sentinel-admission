@@ -68,7 +68,7 @@ class PublicExamPagesController extends Controller
         }
         $sessions = DB::table('exam_public_sessions')->orderByDesc('id')
             ->when($session !== null, fn ($query) => $query->where('id', $session))
-            ->get(['id', 'title', 'description', 'instructions', 'status', 'order_type', 'opens_at', 'closes_at', 'token_rotation_minutes']);
+            ->get(['id', 'title', 'description', 'instructions', 'status', 'order_type', 'time_source', 'opens_at', 'closes_at', 'token_rotation_minutes']);
 
         $sessionIds = $sessions->pluck('id')->all();
         foreach ($sessions as $record) {

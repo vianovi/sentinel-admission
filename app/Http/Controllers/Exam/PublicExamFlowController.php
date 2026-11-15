@@ -34,6 +34,7 @@ class PublicExamFlowController extends Controller
             'title' => $session->title,
             'instructions' => $session->instructions,
             'order_type' => $session->order_type,
+            'time_source' => $session->time_source ?? 'server',
         ]]);
     }
 
@@ -99,7 +100,7 @@ class PublicExamFlowController extends Controller
 
         return response()->json([
             'participant' => ['id' => $person->id, 'name' => $person->name, 'school_origin' => $person->school_origin],
-            'session' => ['title' => $session->title, 'order_type' => $session->order_type],
+            'session' => ['title' => $session->title, 'order_type' => $session->order_type, 'time_source' => $session->time_source ?? 'server'],
             'packages' => $packages,
             'attempts' => DB::table('exam_public_subject_attempts')->where('exam_public_participant_id', $person->id)
                 ->get(['id', 'exam_public_subject_id', 'attempt_type', 'status', 'expires_at'])
