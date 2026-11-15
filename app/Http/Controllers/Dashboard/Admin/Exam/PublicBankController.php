@@ -101,6 +101,7 @@ class PublicBankController extends Controller
     public function updatePackage(Request $request, int $package): JsonResponse
     {
         $data = $request->validate([
+            'duration_minutes' => ['required', 'integer', 'between:5,300'],
             'passing_score' => ['required', 'numeric', 'between:0,100'],
             'allow_retry' => ['required', 'boolean'],
             'show_result_to_participant' => ['required', 'boolean'],

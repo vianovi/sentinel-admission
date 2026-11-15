@@ -35,10 +35,10 @@ export default function PublicPackageShow({ examPackage: pkg, questions, session
     const [report, setReport] = useState<{ imported: number; active: number } | null>(null);
     const activeCount = questions.filter(q => Boolean(q.is_active)).length;
     const complete = pkg.passing_score !== null && pkg.allow_retry !== null && pkg.show_result_to_participant !== null;
-    const savedSettings = { passing_score: pkg.passing_score === null ? "" : String(pkg.passing_score), allow_retry: Boolean(pkg.allow_retry), show_result_to_participant: Boolean(pkg.show_result_to_participant) };
+    const savedSettings = { duration_minutes: String(pkg.duration_minutes), passing_score: pkg.passing_score === null ? "" : String(pkg.passing_score), allow_retry: Boolean(pkg.allow_retry), show_result_to_participant: Boolean(pkg.show_result_to_participant) };
     const [settingsDraft, setSettings] = useState<typeof savedSettings | null>(null);
     const settings = settingsDraft ?? savedSettings;
-    const settingsChanged = settings.passing_score !== savedSettings.passing_score || settings.allow_retry !== savedSettings.allow_retry || settings.show_result_to_participant !== savedSettings.show_result_to_participant;
+    const settingsChanged = settings.duration_minutes !== savedSettings.duration_minutes || settings.passing_score !== savedSettings.passing_score || settings.allow_retry !== savedSettings.allow_retry || settings.show_result_to_participant !== savedSettings.show_result_to_participant;
     const needsSave = settingsChanged || !complete;
     const [settingsError, setSettingsError] = useState<string | null>(null);
 
@@ -87,7 +87,7 @@ export default function PublicPackageShow({ examPackage: pkg, questions, session
         setPendingAction("settings");
         setSettingsError(null);
         try {
-            await axios.put(route("admin.exams.public-bank.packages.settings.update", { package: pkg.id }), { ...settings, passing_score: Number(settings.passing_score) });
+            await axios.put(route("admin.exams.public-bank.packages.settings.update", { package: pkg.id }), { ...settings, duration_minutes: Number(settings.duration_minutes), passing_score: Number(settings.passing_score) });
             showSuccessToast("Konfigurasi paket diperbarui.");
             router.reload({ onSuccess: () => setSettings(null), onFinish: () => setPendingAction(null) });
         } catch (err) {
@@ -140,14 +140,14 @@ export default function PublicPackageShow({ examPackage: pkg, questions, session
                             <legend className="sr-only">Pengaturan paket soal</legend>
                             <div className="grid gap-5 sm:grid-cols-2">
                                 <div>
+                                    <label htmlFor="package-duration" className={labelClass}>Durasi pengerjaan (menit)</label>
+                                    <input id="package-duration" type="number" required min="5" max="300" step="1" value={settings.duration_minutes} onChange={e => { setSettings({ ...settings, duration_minutes: e.target.value }); setSettingsError(null); }} aria-describedby="duration-help" className={inputClass + " mt-2"} />
+                                    <p id="duration-help" className="mt-2 text-xs leading-5 text-slate-600 dark:text-slate-400">Masukkan durasi antara 5–300 menit. Durasi ini berlaku untuk peserta paket ini.</p>
+                                </div>
+                                <div>
                                     <label htmlFor="package-passing-score" className={labelClass}>Ambang lulus (%)</label>
                                     <input id="package-passing-score" type="number" required min="0" max="100" step="any" value={settings.passing_score} onChange={e => { setSettings({ ...settings, passing_score: e.target.value }); setSettingsError(null); }} aria-describedby="passing-score-help" className={inputClass + " mt-2"} />
                                     <p id="passing-score-help" className="mt-2 text-xs leading-5 text-slate-600 dark:text-slate-400">Nilai mapel harus lebih besar dari ambang ini. Nilai yang sama belum lulus.</p>
-                                </div>
-                                <div>
-                                    <p className={labelClass}>Durasi pengerjaan</p>
-                                    <p className="mt-2 flex min-h-11 items-center gap-2 rounded-lg bg-slate-50 px-3 text-sm font-semibold text-slate-700 dark:bg-slate-950 dark:text-slate-300"><i aria-hidden="true" className="fa-solid fa-clock text-slate-500 dark:text-slate-400" />{pkg.duration_minutes} menit</p>
-                                    <p className="mt-2 text-xs leading-5 text-slate-600 dark:text-slate-400">Durasi mengikuti konfigurasi berkas XLSX saat import.</p>
                                 </div>
                             </div>
                             <div className="divide-y divide-slate-200 border-y border-slate-200 dark:divide-slate-800 dark:border-slate-800">

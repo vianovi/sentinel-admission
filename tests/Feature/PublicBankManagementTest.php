@@ -37,7 +37,7 @@ test('admin creates a separate four-subject bank and publishes packages with act
 
         $this->postJson(route('admin.exams.public-bank.packages.publish', $package))->assertUnprocessable();
         $this->putJson(route('admin.exams.public-bank.packages.settings.update', $package), [
-            'passing_score' => 55, 'allow_retry' => true, 'show_result_to_participant' => false,
+            'duration_minutes' => 60, 'passing_score' => 55, 'allow_retry' => true, 'show_result_to_participant' => false,
         ])->assertSuccessful();
         for ($number = 1; $number <= 10; $number++) {
             $this->postJson(route('admin.exams.public-bank.questions.store', $package), [
@@ -291,9 +291,10 @@ test('admin can edit package settings, toggle or delete questions, and return pa
     DB::table('exam_public_session_packages')->insert(['exam_public_session_id' => $session, 'exam_public_package_id' => $package, 'exam_public_subject_id' => $subject, 'sort_order' => 0]);
     DB::table('exam_public_session_tokens')->insert(['exam_public_session_id' => $session, 'token' => 'EDITROOM']);
 
-    $this->actingAs($admin)->putJson(route('admin.exams.public-bank.packages.settings.update', $package), ['passing_score' => 70, 'allow_retry' => true, 'show_result_to_participant' => true])->assertSuccessful();
+    $this->actingAs($admin)->putJson(route('admin.exams.public-bank.packages.settings.update', $package), ['duration_minutes' => 45, 'passing_score' => 70, 'allow_retry' => true, 'show_result_to_participant' => true])->assertSuccessful();
     $this->patchJson(route('admin.exams.public-bank.questions.toggle', $question), ['is_active' => false])->assertSuccessful();
-    expect((bool) DB::table('exam_public_questions')->where('id', $question)->value('is_active'))->toBeFalse();
+    expect((int) DB::table('exam_public_packages')->where('id', $package)->value('duration_minutes'))->toBe(45)
+        ->and((bool) DB::table('exam_public_questions')->where('id', $question)->value('is_active'))->toBeFalse();
     $this->patchJson(route('admin.exams.public-bank.questions.toggle', $question), ['is_active' => true])->assertSuccessful();
     $this->postJson(route('admin.exams.public-bank.packages.draft', $package))->assertSuccessful()->assertJsonPath('status', 'draft');
     expect(DB::table('exam_public_packages')->where('id', $package)->value('status'))->toBe('draft')
@@ -349,7 +350,7 @@ test('unconfigured public packages cannot publish until admin supplies all scori
 
     $this->actingAs($admin)->postJson(route('admin.exams.public-bank.packages.publish', $package))->assertUnprocessable();
     $this->putJson(route('admin.exams.public-bank.packages.settings.update', $package), [
-        'passing_score' => 55, 'allow_retry' => false, 'show_result_to_participant' => true,
+        'duration_minutes' => 60, 'passing_score' => 55, 'allow_retry' => false, 'show_result_to_participant' => true,
     ])->assertSuccessful();
     $this->postJson(route('admin.exams.public-bank.packages.publish', $package))->assertSuccessful();
     expect((float) DB::table('exam_public_packages')->where('id', $package)->value('passing_score'))->toBe(55.0);
@@ -370,13 +371,14 @@ test('public package settings cannot change after a participant has started its 
         'exam_public_subject_id' => $subject, 'sort_order' => 0,
     ]);
     $url = route('admin.exams.public-bank.packages.settings.update', $package);
-    $settings = ['passing_score' => 60, 'allow_retry' => false, 'show_result_to_participant' => true];
+    $settings = ['duration_minutes' => 45, 'passing_score' => 60, 'allow_retry' => false, 'show_result_to_participant' => true];
 
     $this->actingAs($admin)->putJson($url, $settings)->assertSuccessful();
     DB::table('exam_public_participants')->insert([
         'exam_public_session_id' => $session, 'participant_code' => 'STARTEDCODE00001',
         'name' => 'Anak A', 'school_origin' => 'Sekolah A', 'started_at' => now(),
     ]);
-    $this->putJson($url, ['passing_score' => 70, 'allow_retry' => true, 'show_result_to_participant' => false])->assertStatus(409);
-    expect((float) DB::table('exam_public_packages')->where('id', $package)->value('passing_score'))->toBe(60.0);
+    $this->putJson($url, ['duration_minutes' => 90, 'passing_score' => 70, 'allow_retry' => true, 'show_result_to_participant' => false])->assertStatus(409);
+    expect((int) DB::table('exam_public_packages')->where('id', $package)->value('duration_minutes'))->toBe(45)
+        ->and((float) DB::table('exam_public_packages')->where('id', $package)->value('passing_score'))->toBe(60.0);
 });
