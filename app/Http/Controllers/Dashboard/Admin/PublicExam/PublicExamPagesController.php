@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Dashboard\Admin\PublicExam;
 use App\Http\Controllers\Controller;
 use App\Models\SystemActivityLog;
 use App\Services\Exam\PublicExamAttemptSubmissionService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -218,6 +219,7 @@ class PublicExamPagesController extends Controller
 
                     return [
                         'subject_name' => $subject->subject_name,
+                        'subject_id' => $subject->exam_public_subject_id,
                         'package_title' => $subject->package_title,
                         'primary_score' => $primaryScore,
                         'remedial_score' => $remedialScore,
@@ -260,6 +262,91 @@ class PublicExamPagesController extends Controller
                 'failed' => $failedCount,
                 'average_score' => $averageScore ? round((float) $averageScore, 1) : 0,
             ],
+        ]);
+    }
+
+    public function subjectAnswers(int $participant, int $subject): JsonResponse
+    {
+        $record = DB::table('exam_public_participants')
+            ->where('id', $participant)
+            ->first(['id', 'participant_code', 'name']);
+        abort_unless($record, 404);
+
+        $attempts = DB::table('exam_public_subject_attempts as attempt')
+            ->join('exam_public_packages as package', 'package.id', '=', 'attempt.exam_public_package_id')
+            ->join('exam_public_subjects as subject', 'subject.id', '=', 'attempt.exam_public_subject_id')
+            ->where('attempt.exam_public_participant_id', $record->id)
+            ->where('attempt.exam_public_subject_id', $subject)
+            ->whereIn('attempt.status', ['submitted', 'auto_submitted'])
+            ->orderBy('attempt.attempt_number')
+            ->get([
+                'attempt.id',
+                'attempt.attempt_type',
+                'attempt.attempt_number',
+                'attempt.percentage_score',
+                'attempt.question_order',
+                'attempt.correct_answers',
+                'attempt.total_questions',
+                'package.title as package_title',
+                'subject.name as subject_name',
+            ]);
+        abort_if($attempts->isEmpty(), 404);
+
+        $questionIdsByAttempt = $attempts->mapWithKeys(function (object $attempt): array {
+            $questionIds = collect(json_decode($attempt->question_order ?: '[]', true) ?: [])
+                ->map(fn ($id): int => (int) $id)
+                ->filter()
+                ->values();
+
+            return [$attempt->id => $questionIds];
+        });
+        $questions = DB::table('exam_public_questions')
+            ->whereIn('id', $questionIdsByAttempt->flatten()->unique())
+            ->get(['id', 'question_text', 'options', 'correct_answer', 'point'])
+            ->keyBy('id');
+        $answersByAttempt = DB::table('exam_public_attempt_answers')
+            ->whereIn('exam_public_subject_attempt_id', $attempts->pluck('id'))
+            ->get(['exam_public_subject_attempt_id', 'exam_public_question_id', 'selected_option', 'is_correct', 'point_awarded'])
+            ->groupBy('exam_public_subject_attempt_id')
+            ->map(fn ($answers) => $answers->keyBy('exam_public_question_id'));
+
+        return response()->json([
+            'participant' => $record,
+            'subject_name' => $attempts->first()->subject_name,
+            'attempts' => $attempts->map(function (object $attempt) use ($questionIdsByAttempt, $questions, $answersByAttempt): array {
+                $answers = $answersByAttempt->get($attempt->id, collect());
+
+                return [
+                    'id' => $attempt->id,
+                    'attempt_type' => $attempt->attempt_type,
+                    'attempt_number' => $attempt->attempt_number,
+                    'package_title' => $attempt->package_title,
+                    'percentage_score' => $attempt->percentage_score === null ? null : (float) $attempt->percentage_score,
+                    'correct_answers' => $attempt->correct_answers,
+                    'total_questions' => $attempt->total_questions,
+                    'questions' => $questionIdsByAttempt->get($attempt->id, collect())
+                        ->map(function (int $questionId) use ($questions, $answers): ?array {
+                            $question = $questions->get($questionId);
+                            if (! $question) {
+                                return null;
+                            }
+                            $answer = $answers->get($questionId);
+
+                            return [
+                                'id' => $question->id,
+                                'question_text' => $question->question_text,
+                                'options' => json_decode($question->options, true) ?: [],
+                                'correct_answer' => $question->correct_answer,
+                                'selected_option' => $answer?->selected_option,
+                                'is_correct' => $answer?->is_correct === null ? null : (bool) $answer->is_correct,
+                                'point_awarded' => (float) ($answer?->point_awarded ?? 0),
+                                'point' => (float) $question->point,
+                            ];
+                        })
+                        ->filter()
+                        ->values(),
+                ];
+            })->values(),
         ]);
     }
 

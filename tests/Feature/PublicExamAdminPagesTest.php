@@ -130,6 +130,48 @@ test('admin results mark a failed completed participant for evaluation after rem
             ->where('participants.data.0.subjects.0.is_passed', false));
 });
 
+test('admin can review correct, wrong, and unanswered public exam questions per subject', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+    $session = DB::table('exam_public_sessions')->insertGetId([
+        'title' => 'Sesi Review Jawaban', 'status' => 'published', 'opens_at' => now()->subHour(), 'closes_at' => now()->addHour(),
+    ]);
+    $subject = DB::table('exam_public_subjects')->insertGetId(['name' => 'Matematika', 'code' => 'REVIEW-MTK']);
+    $package = DB::table('exam_public_packages')->insertGetId([
+        'exam_public_subject_id' => $subject, 'title' => 'Paket Review', 'code' => 'REVIEW-MTK-1', 'passing_score' => 65,
+    ]);
+    $participant = DB::table('exam_public_participants')->insertGetId([
+        'exam_public_session_id' => $session, 'participant_code' => 'REVIEW00001', 'name' => 'Peserta Review',
+        'school_origin' => 'Sekolah Review', 'status' => 'completed', 'started_at' => now(),
+    ]);
+    $questions = collect([
+        ['question_text' => 'Soal benar', 'correct_answer' => 'A'],
+        ['question_text' => 'Soal salah', 'correct_answer' => 'B'],
+        ['question_text' => 'Soal kosong', 'correct_answer' => 'A'],
+    ])->map(fn (array $question) => DB::table('exam_public_questions')->insertGetId([
+        'exam_public_package_id' => $package, 'question_text' => $question['question_text'],
+        'options' => json_encode(['A' => 'Pilihan A', 'B' => 'Pilihan B']), 'correct_answer' => $question['correct_answer'], 'point' => 1,
+    ]));
+    $attempt = DB::table('exam_public_subject_attempts')->insertGetId([
+        'exam_public_participant_id' => $participant, 'exam_public_package_id' => $package, 'exam_public_subject_id' => $subject,
+        'attempt_type' => 'primary', 'attempt_number' => 1, 'status' => 'submitted', 'started_at' => now(), 'expires_at' => now()->addHour(),
+        'question_order' => json_encode($questions->all()), 'total_questions' => 3, 'correct_answers' => 1, 'percentage_score' => 33.33,
+    ]);
+    DB::table('exam_public_attempt_answers')->insert([
+        ['exam_public_subject_attempt_id' => $attempt, 'exam_public_question_id' => $questions[0], 'selected_option' => 'A', 'is_correct' => true, 'point_awarded' => 1],
+        ['exam_public_subject_attempt_id' => $attempt, 'exam_public_question_id' => $questions[1], 'selected_option' => 'A', 'is_correct' => false, 'point_awarded' => 0],
+    ]);
+
+    $this->actingAs($admin)->getJson(route('admin.public-exams.results.participants.subjects.answers', [
+        'participant' => $participant, 'subject' => $subject,
+    ]))->assertSuccessful()
+        ->assertJsonPath('participant.id', $participant)
+        ->assertJsonPath('subject_name', 'Matematika')
+        ->assertJsonPath('attempts.0.questions.0.is_correct', true)
+        ->assertJsonPath('attempts.0.questions.1.is_correct', false)
+        ->assertJsonPath('attempts.0.questions.2.selected_option', null)
+        ->assertJsonPath('attempts.0.questions.2.is_correct', null);
+});
+
 test('admin monitoring shows active participants and their violation details', function () {
     $admin = User::factory()->create(['role' => 'admin']);
     $subject = DB::table('exam_public_subjects')->insertGetId(['name' => 'Matematika', 'code' => 'MON-MTK']);

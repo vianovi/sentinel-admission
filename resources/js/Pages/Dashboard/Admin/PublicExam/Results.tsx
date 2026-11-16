@@ -1,4 +1,5 @@
 import PublicExamSummary from "@/Components/Exam/Admin/PublicExamSummary";
+import RichExamText from "@/Components/Dashboard/Exam/RichExamText";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
@@ -17,6 +18,7 @@ import {
 } from "@/Components/Dashboard/Admin/Exam/ExamAdminUi";
 import type { PageProps } from "@/types";
 import { confirmAction, showErrorToast } from "@/utils/swal";
+import axios from "axios";
 
 type Participant = {
     id: number;
@@ -36,6 +38,7 @@ type Participant = {
 };
 
 type SubjectResult = {
+    subject_id: number;
     subject_name: string;
     package_title: string;
     primary_score: number | null;
@@ -43,6 +46,30 @@ type SubjectResult = {
     effective_score: number | null;
     passing_score: number | null;
     is_passed: boolean | null;
+};
+
+type AnswerReview = {
+    participant: { id: number; participant_code: string; name: string };
+    subject_name: string;
+    attempts: Array<{
+        id: number;
+        attempt_type: "primary" | "remedial";
+        attempt_number: number;
+        package_title: string;
+        percentage_score: number | null;
+        correct_answers: number;
+        total_questions: number;
+        questions: Array<{
+            id: number;
+            question_text: string;
+            options: Record<string, string | null>;
+            correct_answer: string;
+            selected_option: string | null;
+            is_correct: boolean | null;
+            point_awarded: number;
+            point: number;
+        }>;
+    }>;
 };
 
 type PaginationLink = {
@@ -98,6 +125,8 @@ export default function PublicResults({ participants, sessions, filters, stats }
     const [session, setSession] = useState(filters.session ? String(filters.session) : "");
     const [busyParticipantId, setBusyParticipantId] = useState<number | null>(null);
     const [detailParticipant, setDetailParticipant] = useState<Participant | null>(null);
+    const [answerReview, setAnswerReview] = useState<AnswerReview | null>(null);
+    const [reviewLoading, setReviewLoading] = useState<number | null>(null);
 
     const applyFilters = (event: FormEvent) => {
         event.preventDefault();
@@ -149,6 +178,22 @@ export default function PublicResults({ participants, sessions, filters, stats }
             onError: () => showErrorToast("Riwayat tidak dapat dihapus. Hentikan dahulu ujian yang masih berlangsung."),
             onFinish: () => setBusyParticipantId(null),
         });
+    };
+
+    const openAnswerReview = async (participant: Participant, subject: SubjectResult) => {
+        setReviewLoading(subject.subject_id);
+        try {
+            const response = await axios.get<AnswerReview>(route("admin.public-exams.results.participants.subjects.answers", {
+                participant: participant.id,
+                subject: subject.subject_id,
+            }));
+            setDetailParticipant(null);
+            setAnswerReview(response.data);
+        } catch {
+            showErrorToast("Rincian jawaban belum tersedia untuk mapel ini.");
+        } finally {
+            setReviewLoading(null);
+        }
     };
 
     const formatDate = (isoString: string | null) => {
@@ -416,13 +461,14 @@ export default function PublicResults({ participants, sessions, filters, stats }
                         )}
                     </div>
                 </section>
-                {detailParticipant && <SubjectScoreModal participant={detailParticipant} onClose={() => setDetailParticipant(null)} />}
+                {detailParticipant && <SubjectScoreModal participant={detailParticipant} onClose={() => setDetailParticipant(null)} onReview={openAnswerReview} reviewLoading={reviewLoading} />}
+                {answerReview && <AnswerReviewModal review={answerReview} onClose={() => setAnswerReview(null)} />}
             </ExamWorkspace>
         </>
     );
 }
 
-function SubjectScoreModal({ participant, onClose }: { participant: Participant; onClose: () => void }) {
+function SubjectScoreModal({ participant, onClose, onReview, reviewLoading }: { participant: Participant; onClose: () => void; onReview: (participant: Participant, subject: SubjectResult) => Promise<void>; reviewLoading: number | null }) {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4" role="presentation" onMouseDown={onClose}>
             <section aria-modal="true" aria-labelledby="subject-score-title" role="dialog" className="max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-white/10 dark:bg-slate-900" onMouseDown={(event) => event.stopPropagation()}>
@@ -449,11 +495,31 @@ function SubjectScoreModal({ participant, onClose }: { participant: Participant;
                                     <td className="p-3 text-center font-medium">{subject.remedial_score ?? "—"}</td>
                                     <td className="p-3 text-center font-black text-slate-950 dark:text-white">{subject.effective_score ?? "—"}</td>
                                     <td className="p-3 text-center font-medium">{subject.passing_score ?? "—"}</td>
-                                    <td className="p-3 text-center">{subject.is_passed === null ? <span className="text-slate-400">Belum dinilai</span> : subject.is_passed ? <span className="font-bold text-emerald-600 dark:text-emerald-300">Lulus</span> : <span className="font-bold text-red-600 dark:text-red-300">Belum lulus</span>}</td>
+                                    <td className="p-3 text-center">{subject.is_passed === null ? <span className="text-slate-400">Belum dinilai</span> : subject.is_passed ? <span className="font-bold text-emerald-600 dark:text-emerald-300">Lulus</span> : <span className="font-bold text-red-600 dark:text-red-300">Belum lulus</span>}<div className="mt-2">{subject.primary_score === null && subject.remedial_score === null ? <span className="text-xs text-slate-400">Belum ada jawaban dinilai</span> : <button type="button" onClick={() => void onReview(participant, subject)} disabled={reviewLoading !== null} className="inline-flex min-h-8 items-center gap-1 rounded-lg border border-sky-500/30 px-2 text-xs font-bold text-sky-700 transition hover:bg-sky-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/30 disabled:cursor-wait disabled:opacity-60 dark:text-sky-300 dark:hover:bg-sky-500/10"><i className="fa-solid fa-list-check" aria-hidden="true" />{reviewLoading === subject.subject_id ? "Memuat..." : "Review jawaban"}</button>}</div></td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
+                </div>
+                <footer className="flex justify-end border-t border-slate-200 p-4 dark:border-white/10"><button type="button" onClick={onClose} className={secondaryButtonClass}>Tutup</button></footer>
+            </section>
+        </div>
+    );
+}
+
+function AnswerReviewModal({ review, onClose }: { review: AnswerReview; onClose: () => void }) {
+    return (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/70 p-4" role="presentation" onMouseDown={onClose}>
+            <section aria-modal="true" aria-labelledby="answer-review-title" role="dialog" className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-white/10 dark:bg-slate-900" onMouseDown={(event) => event.stopPropagation()}>
+                <header className="flex items-start justify-between gap-4 border-b border-slate-200 p-5 dark:border-white/10">
+                    <div><p className="text-xs font-bold uppercase tracking-wide text-amber-600 dark:text-amber-300">Review jawaban per mapel</p><h2 id="answer-review-title" className="mt-1 text-lg font-black text-slate-900 dark:text-white">{review.subject_name} · {review.participant.name}</h2><p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{review.participant.participant_code}</p></div>
+                    <button type="button" onClick={onClose} className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/30 dark:hover:bg-white/10" aria-label="Tutup review jawaban"><i className="fa-solid fa-xmark" aria-hidden="true" /></button>
+                </header>
+                <div className="space-y-6 p-5">
+                    {review.attempts.map((attempt) => <section key={attempt.id}>
+                        <div className="mb-3"><h3 className="font-black text-slate-900 dark:text-white">{attempt.attempt_type === "remedial" ? "Remedial" : "Ujian utama"} #{attempt.attempt_number}</h3><p className="text-xs text-slate-500 dark:text-slate-400">{attempt.package_title} · {attempt.percentage_score ?? "—"}% · {attempt.correct_answers}/{attempt.total_questions} benar</p></div>
+                        <div className="space-y-3">{attempt.questions.map((question, index) => <article key={question.id} className="rounded-xl border border-slate-200 p-4 dark:border-white/10"><div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><p className="text-sm font-bold leading-6 text-slate-900 dark:text-white">{index + 1}. <RichExamText text={question.question_text} /></p><span className={question.is_correct === true ? "inline-flex rounded-full bg-emerald-500/10 px-2 py-1 text-xs font-bold text-emerald-700 dark:text-emerald-300" : question.is_correct === false ? "inline-flex rounded-full bg-red-500/10 px-2 py-1 text-xs font-bold text-red-700 dark:text-red-300" : "inline-flex rounded-full bg-slate-100 px-2 py-1 text-xs font-bold text-slate-500 dark:bg-white/10 dark:text-slate-300"}>{question.is_correct === true ? "Benar" : question.is_correct === false ? "Salah" : "Belum dijawab"}</span></div><div className="mt-3 grid gap-2">{Object.entries(question.options).map(([key, value]) => value ? <div key={key} className={question.correct_answer === key ? "rounded-lg bg-emerald-500/10 px-3 py-2 text-sm text-emerald-800 dark:text-emerald-200" : question.selected_option === key ? "rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-800 dark:text-red-200" : "rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700 dark:bg-white/[0.03] dark:text-slate-200"}><span className="font-black">{key}.</span> <RichExamText text={value} />{question.correct_answer === key ? <span className="ml-2 text-xs font-bold">(kunci)</span> : null}{question.selected_option === key ? <span className="ml-2 text-xs font-bold">(dipilih)</span> : null}</div> : null)}</div><p className="mt-3 text-xs font-semibold text-slate-500 dark:text-slate-400">Jawaban peserta: {question.selected_option ?? "—"} · Kunci: {question.correct_answer} · Poin: {question.point_awarded}/{question.point}</p></article>)}</div>
+                    </section>)}
                 </div>
                 <footer className="flex justify-end border-t border-slate-200 p-4 dark:border-white/10"><button type="button" onClick={onClose} className={secondaryButtonClass}>Tutup</button></footer>
             </section>
