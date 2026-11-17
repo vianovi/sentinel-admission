@@ -1,5 +1,58 @@
 # Audit Handoff
 
+## 2026-11-17 deferred public-exam realtime monitoring and recovery revisions — record only
+
+- Owner explicitly requested recording only; do not implement until a later instruction.
+- Revision 1 — realtime participant position: Monitoring should show an accurate heartbeat/last-seen state, current screen/state (portal identity, subject dashboard, active subject attempt, completion screen, disconnected), current subject, and subjects already completed. Completed subjects must be derived from finalized server attempts, not trusted client claims.
+- Revision 2 — stronger mobile/desktop integrity telemetry: cover fullscreen exit where supported, visibility hidden, focus loss, page hide/unload, resume, connectivity changes, unexpected navigation and prolonged heartbeat loss. Mobile browsers—especially iOS—cannot reliably expose fullscreen or identify which external app/screen was opened; report only observable events and distinguish violation, warning and disconnect to avoid false accusations.
+- Revision 3 — two-way recovery and route locking: browser heartbeat reports observable UI state and integrity events; server remains the source of truth for active attempt, saved answers and allowed destination. On reload/reopen/device interruption, resolve the latest active attempt server-side and return the participant there. Guard public-exam application routes against navigating away from an active attempt. Local/session storage may cache a recovery hint and pending telemetry only; it is untrusted, clearable and must never determine scores or authoritative state.
+- Proposed implementation slices for later approval: (A) state/event contract and retention policy; (B) heartbeat endpoint plus database fields/indexes and stale thresholds; (C) monitoring feed/UI with completed/current subjects; (D) active-attempt route guard and recovery; (E) desktop/mobile event collectors with offline queue; (F) adversarial browser scenarios and Playwright/device tests. Schema, privacy/retention policy, heartbeat interval, stale threshold and violation severity require explicit design before implementation.
+- Required scenario matrix: desktop tab/app switch, minimize, fullscreen exit/re-entry, refresh/back/forward/direct URL, duplicate tabs, browser crash; Android home/app switch/screen lock/rotation/PWA-browser resume/network loss; iOS Safari background/lock/fullscreen limitations; server restart/token rotation/session close, expired timer, concurrent device/tab and delayed/offline answer/event delivery.
+- Browser limitations: a web app cannot inspect another app, prove cheating from device shutdown/network loss, prevent OS Home/App Switcher, or globally block unrelated subdomains. Server route authorization and recovery can lock only the owned exam application routes. Any stronger device lockdown requires managed kiosk/MDM or a native application.
+
+## 2026-11-17 shared-network public exam join throttling
+
+- Fixed mobile/classroom join failures caused by `throttle:5,1` sharing one IP budget across every phone on the same Wi-Fi. Added named Laravel limiter: 10 joins/minute per token+device entry key and 300/minute per token+network, with an Indonesian 429 response. Frontend ignores repeated submit while busy.
+- Regression proves six distinct phones sharing one IP can join. Verification: PublicExamFlowTest + PublicSessionTokenRotationTest 35 passed / 381 assertions; focused limiter test 1 passed / 7 assertions; Pint, TypeScript/editor diagnostics, build (8.56s), and diff check pass. Existing Browserslist warning remains. No live participant/session data changed, commit, or push.
+
+## 2026-11-17 direct closed-session reactivation
+
+- Added `Aktifkan Sesi` beside `Kembalikan ke Draft` for closed sessions in both list and detail views. Direct activation reuses publication readiness checks, creates a fresh token, and is blocked when participants started or attempts exist. Confirmation and success feedback distinguish reactivation from first publication.
+- Verification: PublicSessionV2Test + PublicSessionTokenRotationTest 19 passed / 159 assertions; Pint, TypeScript/editor diagnostics, build (8.37s), and diff check pass. Existing Browserslist warning remains. No live session changed, commit, or push.
+
+## 2026-11-17 closed session draft recovery
+
+- Owner screenshot showed the missing control on a `closed` session with zero participants. Expanded the guarded unpublish transition to allow unused closed sessions back to draft, and added `Kembalikan ke Draft` to list/detail controls. Sessions with started participants or attempts remain blocked.
+- Verification: PublicSessionV2Test + PublicSessionTokenRotationTest 18 passed / 154 assertions; Pint, TypeScript/editor diagnostics, build (10.47s), and diff check pass. Existing Browserslist warning remains. No live session data changed, commit, or push.
+
+## 2026-11-17 public session activation and unpublication
+
+- Asset verification: npm run build passed (TypeScript + Vite, 9.34s); existing Browserslist warning only. Unpublish route registered; Playwright has only about:blank, so HUMAN VISUAL REVIEW REQUIRED.
+
+- Owner requested Draft/inactive versus Published/active management. Added transactional admin-only unpublish endpoint: lock session, reject closed sessions or any started participant/attempt, revoke room tokens, return to draft. Repeated unpublish is safe. Existing draft edit/delete/publication remain; token rotation configuration now requires draft too.
+- Added shared session action controls to list and detail: edit configuration, publish, delete in draft; cancel publication when published. Inactive sessions show no access/token panel. Deleting from detail returns to the session list. Confirmation explains that schedule is preserved rather than paused; close remains a distinct operation which auto-submits active attempts.
+- Verification: PublicSessionV2Test + PublicSessionTokenRotationTest 18 passed / 152 assertions; Pint, editor diagnostics and diff check pass. Tests include token revocation, no draft rotation, re-edit/republish/new token/delete, idempotence, authorization, started/closed refusal and missing session. No existing sessions changed, migrations, commit or push. Live UI and MariaDB concurrency remain unverified.
+
+## 2026-11-17 XLSX physical row numbering correction
+
+- Read the owner's workbook without modifying it. Physical row 25 (question 5) contains valid text lists including `2, 5, 10`. The actual date-valued options are A–D of question 3 at physical row 23. The former reader reported row 20 because OpenSpout skips empty rows and its iterator key counts nonempty rows by default.
+- Enabled SHOULD_PRESERVE_EMPTY_ROWS in the shared workbook reader; existing explicit empty-row skipping remains. Reported locations now match physical worksheet rows. Regression with three empty leading rows failed before the fix and passes after it.
+- Verified PublicBankManagementTest plus OnlineSelectionExamImportTest: 27 passed / 292 assertions; Pint, editor diagnostics and diff check pass. Re-read owner workbook confirms row 23 for all four date options. No workbook edits, live DB changes, build (PHP-only fix), commit or push.
+
+## 2026-11-17 monitoring refresh after participant deletion
+
+- Monitoring and Results use the same participant table; monitoring previously refreshed only every 60 seconds. Results now signals successful participant deletion through a browser BroadcastChannel; mounted monitoring tabs reload participants, counters and refresh time. Visibility/focus refresh provides a fallback when returning to monitoring. Cross-device updates retain the existing polling interval.
+- Added before/after monitoring assertions to the participant-history deletion test: the participant and completed/total counters disappear after deletion. PublicExamAdminPagesTest passes (9 tests / 215 assertions), Pint and editor diagnostics pass, git diff check passes. Authenticated browser interaction remains unverified (Playwright only has about:blank).
+- No active data deletion, schema change, commit or push. Previous clear-bank/import changes remain in the working tree.
+- Build verification: npm run build passed (TypeScript and Vite, 19.11s); existing stale Browserslist warning only.
+
+## 2026-11-17 public bank clearing and lossless option import
+
+- Owner authorized the clear-bank feature and importer correction. Added a per-package `Kosongkan Bank Soal` confirmation with question count. The endpoint reuses the transactional draft-reset guard, soft-deletes questions, retains package/settings/assignments/roster, resets associated sessions to draft and revokes room tokens. Existing attempts or started participants block the operation. Clearing is logged; reimport now ignores soft-deleted questions.
+- Removed the lossy date-to-month/day option conversion. Date-typed options reject the whole import with sheet, row, heading and instructions to format as Text and re-enter the original answer. Comma-separated lists and literal fractions remain unchanged. This does not reconstruct already-lost source data.
+- Verified: PublicBankManagementTest 17 passed / 214 assertions (SQLite), Pint, TypeScript, editor diagnostics, route registration, git diff check, and npm run build (9.50s). Existing stale Browserslist warning remains. Playwright listed only about:blank; authenticated UI interaction and MariaDB row-lock concurrency remain UNVERIFIED. HUMAN VISUAL REVIEW REQUIRED.
+- No live database records were changed, no schema changes, no commit/push. Branch feature/public-exam-rebuild, baseline 7bd65f6. Next: owner reviews the package clear-bank confirmation and revised import feedback; verify concurrency on an isolated MariaDB test database before production-readiness claims.
+
 ## 2026-11-15 owner-requested revisions — recorded, do not implement while portal is in use
 
 - Per-mapel answer review implementation (2026-11-16): Admin → Ujian Publik → Hasil Ujian → Detail nilai now offers `Review jawaban` for each scored subject. It lazily loads only that participant/subject's finalized primary and remedial attempts, preserving question order and showing correct, wrong, and unanswered questions, selected option, answer key, and points. The admin-only endpoint uses grouped question/answer retrieval (no per-question query). Verification: `PublicExamAdminPagesTest` passed (9 tests / 187 assertions), `npx tsc --noEmit`, Pint, route inspection, `git diff --check`, and `npm run build` passed. The existing stale Browserslist warning remains. Browser interaction verification is pending because no page was shared.
@@ -498,4 +551,12 @@ Do not trust this file if its Git state differs from the repository. Reconcile a
 ## Resume warning
 
 Do not trust this file if its Git state differs from the repository. Reconcile and update first.
+
+## 2026-11-17 — Public exam monitoring heartbeat
+
+- Implemented participant/attempt heartbeat endpoints with server timestamps, current state, last event, current question index, and a capped monitoring event log in attempt metadata.
+- Added monitoring columns through `2026_11_17_000002_add_monitoring_state_to_public_exam_tables.php`.
+- Public exam client now sends heartbeat and visibility/focus/fullscreen/connectivity events; reload automatically resumes an active attempt from the remembered participant session.
+- Admin monitoring polls every 10 seconds and displays current position, completed subjects, and last-seen time.
+- Verification: `php artisan test --compact tests/Feature/PublicExamFlowTest.php` passed (27 tests, 342 assertions); Pint passed; `npx tsc --noEmit` passed; `git diff --check` passed. Browser and MariaDB verification remain unverified.
 

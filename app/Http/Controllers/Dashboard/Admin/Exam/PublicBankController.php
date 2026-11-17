@@ -167,6 +167,20 @@ class PublicBankController extends Controller
             ->orderBy('sort_order')->orderBy('id')->get(['id', 'question_text', 'options', 'correct_answer', 'point', 'is_active'])]);
     }
 
+    public function clearQuestions(int $package): JsonResponse
+    {
+        return DB::transaction(function () use ($package): JsonResponse {
+            $this->revertToDraft($package);
+            $count = DB::table('exam_public_questions')->where('exam_public_package_id', $package)
+                ->whereNull('deleted_at')->update(['deleted_at' => now(), 'updated_at' => now()]);
+
+            SystemActivityLog::log('public_exam.questions.cleared', 'public_exam', 'Bank soal publik dikosongkan.', null,
+                ['deleted' => $count], 'PublicExamPackage', (string) $package);
+
+            return response()->json(['deleted' => $count]);
+        });
+    }
+
     public function importQuestions(Request $request, int $package, ExamQuestionWorkbookReader $reader): JsonResponse
     {
         abort_unless(DB::table('exam_public_packages')->where('id', $package)->exists(), 404);
@@ -224,10 +238,14 @@ class PublicBankController extends Controller
 
         $questions = [];
         foreach ($book['rows'] as $row) {
+            foreach ($headings as $index => $heading) {
+                if (preg_match('/^opsi_[a-e]$/', $heading) === 1 && ($row['values'][$index] ?? null) instanceof \DateTimeInterface) {
+                    throw ValidationException::withMessages(['file' => 'Sheet '.($book['sheet_name'] ?? 'Data Soal').' · Baris Excel '.$row['row_number'].' · '.$heading.': opsi terbaca sebagai tanggal Excel. Ubah format sel menjadi Text lalu ketik ulang jawaban asli (contoh: 2, 5, 10 atau 1/4). Import dibatalkan; tidak ada soal yang disimpan.']);
+                }
+            }
             $values = array_combine($headings, array_map(
-                fn ($value, $index): string => $this->workbookValue($value, $headings[$index] ?? ''),
+                fn ($value): string => $this->workbookValue($value),
                 array_slice(array_pad($row['values'], count($headings), ''), 0, count($headings)),
-                array_keys($headings),
             ));
             $text = trim((string) ($values['teks_soal'] ?? ''));
             if ($text === '' && trim((string) ($values['jawaban_benar'] ?? '')) === '') {
@@ -299,7 +317,7 @@ class PublicBankController extends Controller
                     throw ValidationException::withMessages(['file' => "{$key} tidak cocok dengan paket/jenis mapel tujuan. Perbaiki file XLSX sebelum import."]);
                 }
             }
-            abort_if(DB::table('exam_public_questions')->where('exam_public_package_id', $package)->exists(), 409, 'Bank soal paket tidak kosong; import ditolak agar soal tidak tertimpa atau terduplikasi.');
+            abort_if(DB::table('exam_public_questions')->where('exam_public_package_id', $package)->whereNull('deleted_at')->exists(), 409, 'Bank soal paket tidak kosong; import ditolak agar soal tidak tertimpa atau terduplikasi.');
             abort_if(DB::table('exam_public_subject_attempts')->where('exam_public_package_id', $package)->exists(), 409);
 
             DB::table('exam_public_questions')->insert($questions);
@@ -315,13 +333,9 @@ class PublicBankController extends Controller
         });
     }
 
-    private function workbookValue(mixed $value, string $heading): string
+    private function workbookValue(mixed $value): string
     {
         if ($value instanceof \DateTimeInterface) {
-            if (preg_match('/^opsi_[a-e]$/', $heading) === 1) {
-                return $value->format('n/j');
-            }
-
             return $value->format('Y-m-d H:i:s');
         }
 

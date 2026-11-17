@@ -364,6 +364,9 @@ class PublicExamPagesController extends Controller
                 'participant.status',
                 'participant.started_at',
                 'participant.completed_at',
+                'participant.last_seen_at',
+                'participant.current_state',
+                'participant.last_event',
                 'session.title as session_title',
             ]);
 
@@ -380,6 +383,10 @@ class PublicExamPagesController extends Controller
                 'attempt.expires_at',
                 'attempt.violations_count',
                 'attempt.metadata',
+                'attempt.last_seen_at',
+                'attempt.current_question_index',
+                'attempt.last_state',
+                'attempt.last_event',
                 'subject.name as subject_name',
                 'package.title as package_title',
             ])
@@ -393,6 +400,8 @@ class PublicExamPagesController extends Controller
                 return $metadata['violations_log'] ?? [];
             })->values();
             $activeAttempt = $participantAttempts->firstWhere('status', 'in_progress');
+            $completedSubjects = $participantAttempts->filter(fn ($attempt) => in_array($attempt->status, ['submitted', 'auto_submitted'], true))
+                ->pluck('subject_name')->unique()->values()->all();
             $latestAttemptStatus = $participantAttempts->first()?->status;
 
             return [
@@ -410,6 +419,10 @@ class PublicExamPagesController extends Controller
                     },
                 'started_at' => $participant->started_at,
                 'completed_at' => $participant->completed_at,
+                'last_seen_at' => $activeAttempt?->last_seen_at ?? $participant->last_seen_at,
+                'current_state' => $activeAttempt?->last_state ?? $participant->current_state,
+                'last_event' => $activeAttempt?->last_event ?? $participant->last_event,
+                'completed_subjects' => $completedSubjects,
                 'session_title' => $participant->session_title,
                 'violations_count' => $violations->count(),
                 'violations' => $violations,
@@ -418,6 +431,9 @@ class PublicExamPagesController extends Controller
                     'package_title' => $activeAttempt->package_title,
                     'started_at' => $activeAttempt->started_at,
                     'expires_at' => $activeAttempt->expires_at,
+                    'current_question_index' => $activeAttempt->current_question_index,
+                    'last_state' => $activeAttempt->last_state,
+                    'last_seen_at' => $activeAttempt->last_seen_at,
                 ] : null,
             ];
         })->values();

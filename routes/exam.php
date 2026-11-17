@@ -42,11 +42,13 @@ Route::get('/exam-media/{filename}', function (string $filename) {
 Route::prefix('public-exam')->name('public-exam.')->group(function () {
     Route::get('/', [PublicExamFlowController::class, 'page'])->name('page');
     Route::get('/sessions/{token}', [PublicExamFlowController::class, 'session'])->name('session')->middleware('throttle:30,1');
-    Route::post('/sessions/{token}/join', [PublicExamFlowController::class, 'join'])->name('join')->middleware('throttle:5,1');
+    Route::post('/sessions/{token}/join', [PublicExamFlowController::class, 'join'])->name('join')->middleware('throttle:public-exam-join');
     Route::get('/participants/{participant}', [PublicExamFlowController::class, 'dashboard'])->name('dashboard');
+    Route::post('/participants/{participant}/heartbeat', [PublicExamFlowController::class, 'participantHeartbeat'])->name('participant-heartbeat')->middleware('throttle:60,1');
     Route::post('/participants/{participant}/packages/{package}/start', [PublicExamFlowController::class, 'start'])->name('start')->middleware('throttle:10,1');
     Route::get('/attempts/{attempt}', [PublicExamFlowController::class, 'attempt'])->name('attempt');
     Route::post('/attempts/{attempt}/answers', [PublicExamFlowController::class, 'answer'])->name('answer')->middleware('throttle:60,1');
+    Route::post('/attempts/{attempt}/heartbeat', [PublicExamFlowController::class, 'heartbeat'])->name('heartbeat')->middleware('throttle:60,1');
     Route::post('/attempts/{attempt}/violations', [PublicExamFlowController::class, 'violation'])->name('violation')->middleware('throttle:60,1');
     Route::post('/attempts/{attempt}/submit', [PublicExamFlowController::class, 'submit'])->name('submit')->middleware('throttle:60,1');
 });
@@ -126,6 +128,7 @@ Route::middleware(['auth', RoleMiddleware::class.':admin'])
         Route::put('/public-bank/packages/{package}/settings', [AdminPublicBank::class, 'updatePackage'])->name('public-bank.packages.settings.update');
         Route::post('/public-bank/packages/{package}/draft', [AdminPublicBank::class, 'revertToDraft'])->name('public-bank.packages.draft');
         Route::get('/public-bank/packages/{package}/questions', [AdminPublicBank::class, 'questions'])->name('public-bank.questions.index');
+        Route::delete('/public-bank/packages/{package}/questions', [AdminPublicBank::class, 'clearQuestions'])->name('public-bank.questions.clear');
         Route::get('/public-bank/packages/{package}/template', [AdminPublicBank::class, 'downloadTemplate'])->name('public-bank.packages.template.download');
         Route::post('/public-bank/packages/{package}/questions', [AdminPublicBank::class, 'storeQuestion'])->name('public-bank.questions.store');
         Route::patch('/public-bank/questions/{question}', [AdminPublicBank::class, 'toggleQuestion'])->name('public-bank.questions.toggle');
@@ -139,6 +142,7 @@ Route::middleware(['auth', RoleMiddleware::class.':admin'])
         Route::get('/public-v2/sessions/{session}', [AdminPublicSessionV2::class, 'show'])->name('public-v2.sessions.show');
         Route::delete('/public-v2/sessions/{session}', [AdminPublicSessionV2::class, 'destroy'])->name('public-v2.sessions.destroy');
         Route::post('/public-v2/sessions/{session}/publish', [AdminPublicSessionV2::class, 'publish'])->name('public-v2.sessions.publish');
+        Route::post('/public-v2/sessions/{session}/unpublish', [AdminPublicSessionV2::class, 'unpublish'])->name('public-v2.sessions.unpublish');
         Route::put('/public-v2/sessions/{session}/packages', [AdminPublicSessionV2::class, 'updatePackages'])->name('public-v2.sessions.packages.update');
         Route::put('/public-v2/sessions/{session}', [AdminPublicSessionV2::class, 'update'])->name('public-v2.sessions.update');
         Route::post('/public-v2/sessions/{session}/close', [AdminPublicSessionV2::class, 'close'])->name('public-v2.sessions.close');

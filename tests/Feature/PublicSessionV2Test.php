@@ -3,6 +3,79 @@
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
+test('unpublishing revokes access and allows editing republishing or deleting a draft', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+    $subject = DB::table('exam_public_subjects')->insertGetId(['name' => 'Mapel', 'code' => 'UNPUB']);
+    $package = DB::table('exam_public_packages')->insertGetId([
+        'exam_public_subject_id' => $subject, 'title' => 'Paket', 'code' => 'UNPUB-1', 'status' => 'published',
+        'passing_score' => 50, 'allow_retry' => false, 'show_result_to_participant' => false,
+    ]);
+    addPublicSessionQuestions([$package]);
+    $input = ['title' => 'Sesi', 'opens_at' => now()->subHour()->toISOString(), 'closes_at' => now()->addHours(2)->toISOString(), 'order_type' => 'free', 'package_ids' => [$package]];
+    $session = $this->actingAs($admin)->postJson(route('admin.exams.public-v2.sessions.store'), $input)->assertCreated()->json('id');
+    $this->postJson(route('admin.exams.public-v2.sessions.publish', $session))->assertSuccessful();
+    $oldToken = DB::table('exam_public_session_tokens')->where('exam_public_session_id', $session)->value('token');
+    $this->putJson(route('admin.exams.public-v2.sessions.update', $session), $input)->assertConflict();
+    $url = route('admin.exams.public-v2.sessions.unpublish', $session);
+    $this->postJson($url)->assertSuccessful()->assertJsonPath('status', 'draft')->assertJsonPath('tokens_revoked', true);
+    $this->postJson($url)->assertSuccessful();
+    $this->artisan('exam:rotate-public-tokens')->assertSuccessful();
+    expect(app(\App\Services\Exam\PublicSessionTokenService::class)->current($session))->toBeNull()
+        ->and(DB::table('exam_public_session_tokens')->where('exam_public_session_id', $session)->count())->toBe(0)
+        ->and(DB::table('exam_public_session_packages')->where('exam_public_session_id', $session)->count())->toBe(1);
+    $this->putJson(route('admin.exams.public-v2.sessions.update', $session), [...$input, 'title' => 'Sesi Diedit'])->assertSuccessful();
+    $this->assertDatabaseHas('exam_public_sessions', ['id' => $session, 'title' => 'Sesi Diedit', 'status' => 'draft']);
+    $this->postJson(route('admin.exams.public-v2.sessions.publish', $session))->assertSuccessful();
+    expect(DB::table('exam_public_session_tokens')->where('exam_public_session_id', $session)->value('token'))->not->toBe($oldToken);
+    $this->postJson($url)->assertSuccessful();
+    $this->deleteJson(route('admin.exams.public-v2.sessions.destroy', $session))->assertSuccessful();
+    $this->assertDatabaseMissing('exam_public_sessions', ['id' => $session]);
+});
+
+test('unpublishing is admin only and reopens unused closed sessions but refuses started sessions', function () {
+    $session = DB::table('exam_public_sessions')->insertGetId(['title' => 'Sesi', 'status' => 'published', 'opens_at' => now(), 'closes_at' => now()->addHour()]);
+    DB::table('exam_public_session_tokens')->insert(['exam_public_session_id' => $session, 'token' => 'KEEP1']);
+    $url = route('admin.exams.public-v2.sessions.unpublish', $session);
+    $this->postJson($url)->assertUnauthorized();
+    $this->actingAs(User::factory()->create(['role' => 'staff']))->postJson($url)->assertForbidden();
+    $this->actingAs(User::factory()->create(['role' => 'admin']));
+    DB::table('exam_public_sessions')->where('id', $session)->update(['status' => 'closed']);
+    $this->postJson($url)->assertSuccessful()->assertJsonPath('status', 'draft');
+    $this->assertDatabaseMissing('exam_public_session_tokens', ['token' => 'KEEP1']);
+    DB::table('exam_public_sessions')->where('id', $session)->update(['status' => 'published']);
+    DB::table('exam_public_session_tokens')->insert(['exam_public_session_id' => $session, 'token' => 'KEEP2']);
+    DB::table('exam_public_participants')->insert(['exam_public_session_id' => $session, 'name' => 'Peserta', 'school_origin' => 'Sekolah', 'participant_code' => 'UNPUBSTARTED', 'started_at' => now()]);
+    $this->postJson($url)->assertConflict();
+    DB::table('exam_public_sessions')->where('id', $session)->update(['status' => 'closed']);
+    $this->postJson(route('admin.exams.public-v2.sessions.publish', $session))->assertConflict();
+    $this->assertDatabaseHas('exam_public_sessions', ['id' => $session, 'status' => 'closed']);
+    $this->assertDatabaseHas('exam_public_session_tokens', ['token' => 'KEEP2']);
+    $this->postJson(route('admin.exams.public-v2.sessions.unpublish', 999999))->assertNotFound();
+});
+
+test('admin can reactivate an unused closed session directly with a fresh token', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+    $subject = DB::table('exam_public_subjects')->insertGetId(['name' => 'Mapel Aktif', 'code' => 'REACTIVE']);
+    $package = DB::table('exam_public_packages')->insertGetId([
+        'exam_public_subject_id' => $subject, 'title' => 'Paket Aktif', 'code' => 'REACTIVE-1', 'status' => 'published',
+        'passing_score' => 50, 'allow_retry' => false, 'show_result_to_participant' => false,
+    ]);
+    addPublicSessionQuestions([$package]);
+    $session = DB::table('exam_public_sessions')->insertGetId([
+        'title' => 'Aktifkan Lagi', 'status' => 'closed', 'opens_at' => now()->subHour(), 'closes_at' => now()->addHour(),
+    ]);
+    DB::table('exam_public_session_packages')->insert([
+        'exam_public_session_id' => $session, 'exam_public_package_id' => $package,
+        'exam_public_subject_id' => $subject, 'sort_order' => 0,
+    ]);
+
+    $this->actingAs($admin)->postJson(route('admin.exams.public-v2.sessions.publish', $session))
+        ->assertSuccessful()->assertJsonPath('status', 'published');
+
+    $this->assertDatabaseHas('exam_public_sessions', ['id' => $session, 'status' => 'published']);
+    expect(DB::table('exam_public_session_tokens')->where('exam_public_session_id', $session)->value('token'))->toHaveLength(5);
+});
+
 test('admin creates a four-subject draft then publishes and issues a room token', function () {
     $admin = User::factory()->create(['role' => 'admin']);
     $ids = [];

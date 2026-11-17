@@ -250,11 +250,18 @@ test('admin can delete a completed public participant history', function () {
         'status' => 'completed', 'started_at' => now(), 'completed_at' => now(),
     ]);
 
+    $this->actingAs($admin)->get(route('admin.public-exams.monitoring.index'))
+        ->assertInertia(fn ($page) => $page->has('participants', 1)
+            ->where('participants.0.id', $participant)->where('summary.total', 1));
+
     $this->actingAs($admin)
         ->delete(route('admin.public-exams.results.participants.destroy', $participant))
         ->assertRedirect();
 
     $this->assertDatabaseMissing('exam_public_participants', ['id' => $participant]);
+    $this->get(route('admin.public-exams.monitoring.index'))
+        ->assertInertia(fn ($page) => $page->has('participants', 0)
+            ->where('summary.total', 0)->where('summary.completed', 0));
     $this->assertDatabaseHas('system_activity_logs', [
         'action' => 'public_exam.participant.history_deleted',
         'target_id' => (string) $participant,

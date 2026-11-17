@@ -120,7 +120,14 @@ class PublicSessionV2Controller extends Controller
     {
         return DB::transaction(function () use ($session): JsonResponse {
             $record = DB::table('exam_public_sessions')->where('id', $session)->lockForUpdate()->first();
-            abort_unless($record && $record->status === 'draft', 403);
+            abort_unless($record && in_array($record->status, ['draft', 'closed'], true), 403);
+            if ($record->status === 'closed') {
+                abort_if(DB::table('exam_public_participants')->where('exam_public_session_id', $session)
+                    ->whereNotNull('started_at')->exists(), 409, 'Sesi sudah pernah dimulai peserta dan tidak dapat diaktifkan kembali. Buat sesi ujian baru.');
+                abort_if(DB::table('exam_public_subject_attempts as attempt')
+                    ->join('exam_public_participants as participant', 'participant.id', '=', 'attempt.exam_public_participant_id')
+                    ->where('participant.exam_public_session_id', $session)->exists(), 409, 'Sesi sudah memiliki pengerjaan peserta dan tidak dapat diaktifkan kembali. Buat sesi ujian baru.');
+            }
             $packageCount = DB::table('exam_public_session_packages')->where('exam_public_session_id', $session)->count();
             abort_unless($packageCount >= 1 && $packageCount <= 5 && $record->closes_at > now() && DB::table('exam_public_session_packages as pivot')
                 ->join('exam_public_packages as package', 'package.id', '=', 'pivot.exam_public_package_id')
@@ -164,6 +171,25 @@ class PublicSessionV2Controller extends Controller
             ]);
 
             return $response;
+        });
+    }
+
+    public function unpublish(int $session): JsonResponse
+    {
+        return DB::transaction(function () use ($session): JsonResponse {
+            $record = DB::table('exam_public_sessions')->where('id', $session)->lockForUpdate()->first();
+            abort_unless($record, 404);
+            abort_unless(in_array($record->status, ['draft', 'published', 'closed'], true), 409, 'Status sesi tidak dapat dikembalikan ke draft.');
+            abort_if(DB::table('exam_public_participants')->where('exam_public_session_id', $session)
+                ->whereNotNull('started_at')->exists(), 409, 'Peserta sudah memulai sesi. Gunakan Tutup Sesi untuk menghentikan ujian dan mempertahankan hasilnya.');
+            abort_if(DB::table('exam_public_subject_attempts as attempt')
+                ->join('exam_public_participants as participant', 'participant.id', '=', 'attempt.exam_public_participant_id')
+                ->where('participant.exam_public_session_id', $session)->exists(), 409, 'Sesi sudah memiliki pengerjaan peserta; penerbitan tidak dapat dibatalkan.');
+
+            DB::table('exam_public_session_tokens')->where('exam_public_session_id', $session)->delete();
+            DB::table('exam_public_sessions')->where('id', $session)->update(['status' => 'draft', 'updated_at' => now()]);
+
+            return response()->json(['status' => 'draft', 'tokens_revoked' => true]);
         });
     }
 
@@ -245,7 +271,7 @@ class PublicSessionV2Controller extends Controller
         return DB::transaction(function () use ($session, $data): JsonResponse {
             $record = DB::table('exam_public_sessions')->where('id', $session)->lockForUpdate()->first();
             abort_unless($record, 404);
-            abort_unless(in_array($record->status, ['draft', 'published'], true) && $record->closes_at > now(), 409);
+            abort_unless($record->status === 'draft', 409, 'Batalkan penerbitan sesi sebelum mengubah konfigurasi rotasi token.');
             DB::table('exam_public_sessions')->where('id', $session)->update([...$data, 'updated_at' => now()]);
 
             return response()->json(['updated' => true]);

@@ -57,6 +57,23 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
 
+        RateLimiter::for('public-exam-join', function (Request $request) {
+            $token = strtoupper((string) $request->route('token'));
+            $entryKey = (string) $request->input('entry_key', 'unknown-device');
+            $response = fn (Request $request, array $headers) => response()->json([
+                'message' => 'Terlalu banyak permintaan masuk dari perangkat ini. Tunggu sebentar lalu tekan Mulai Ujian satu kali.',
+            ], 429, $headers);
+
+            return [
+                Limit::perMinute(10)
+                    ->by('public-exam-join:device:'.hash('sha256', $token.'|'.$entryKey))
+                    ->response($response),
+                Limit::perMinute(300)
+                    ->by('public-exam-join:network:'.$token.'|'.$request->ip())
+                    ->response($response),
+            ];
+        });
+
         Vite::prefetch(concurrency: 3);
 
         if (env('FORCE_HTTPS', false)) {

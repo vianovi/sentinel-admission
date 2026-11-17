@@ -118,7 +118,7 @@ test('public XLSX import reads package settings and active flags without touchin
     }
 });
 
-test('public XLSX import restores answer options that spreadsheet software converted to dates', function () {
+test('public XLSX import rejects ambiguous date options without partial writes', function (int $emptyRows) {
     $admin = User::factory()->create(['role' => 'admin']);
     $subject = DB::table('exam_public_subjects')->insertGetId(['name' => 'MTK', 'code' => 'MTK']);
     $package = $this->actingAs($admin)->postJson(route('admin.exams.public-bank.packages.store'), [
@@ -127,19 +127,19 @@ test('public XLSX import restores answer options that spreadsheet software conve
 
     $file = publicPackageWorkbook([
         new DateTimeImmutable('2026-01-04 00:00:00'), 'Salah', 'Mungkin', 'Tidak', '',
-    ]);
+    ], $emptyRows);
 
     try {
         $this->postJson(route('admin.exams.public-bank.packages.import', $package), ['file' => $file])
-            ->assertSuccessful()
-            ->assertJsonPath('imported', 2);
+            ->assertUnprocessable()->assertJsonValidationErrors('file')
+            ->assertJsonPath('errors.file.0', fn ($message) => str_contains($message, 'Baris Excel '.(12 + $emptyRows).' · opsi_a') && str_contains($message, 'ketik ulang'));
 
-        $question = DB::table('exam_public_questions')->where('exam_public_package_id', $package)->where('sort_order', 1)->first();
-        expect(json_decode($question->options, true))->toMatchArray(['A' => '1/4', 'B' => 'Salah']);
+        expect(DB::table('exam_public_questions')->count())->toBe(0)
+            ->and(DB::table('exam_public_packages')->where('id', $package)->value('passing_score'))->toBeNull();
     } finally {
         @unlink($file->getRealPath());
     }
-});
+})->with([0, 3]);
 
 test('public import rejects mismatched category and invalid rows without partial writes', function () {
     $admin = User::factory()->create(['role' => 'admin']);
@@ -159,6 +159,50 @@ test('public import rejects mismatched category and invalid rows without partial
                 ->has('imports.0.metadata.errors.file', 1));
         expect(DB::table('exam_public_questions')->count())->toBe(0)
             ->and(DB::table('exam_public_packages')->where('id', $package)->value('passing_score'))->toBeNull();
+    } finally {
+        @unlink($file->getRealPath());
+    }
+});
+
+test('clearing a public bank preserves its configuration and allows faithful reimport', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+    $subject = DB::table('exam_public_subjects')->insertGetId(['name' => 'MTK', 'code' => 'MTK']);
+    $package = DB::table('exam_public_packages')->insertGetId([
+        'exam_public_subject_id' => $subject, 'title' => 'MTK-PAKET 1', 'code' => 'TA01-MTK',
+        'status' => 'published', 'duration_minutes' => 45,
+    ]);
+    $question = DB::table('exam_public_questions')->insertGetId([
+        'exam_public_package_id' => $package, 'question_text' => 'Soal lama',
+        'options' => json_encode(['A' => '2/5', 'B' => '1/5']), 'correct_answer' => 'A',
+    ]);
+    $session = DB::table('exam_public_sessions')->insertGetId(['title' => 'Sesi', 'status' => 'published', 'opens_at' => now(), 'closes_at' => now()->addHour()]);
+    DB::table('exam_public_session_packages')->insert(['exam_public_session_id' => $session, 'exam_public_package_id' => $package, 'exam_public_subject_id' => $subject, 'sort_order' => 0]);
+    DB::table('exam_public_session_tokens')->insert(['exam_public_session_id' => $session, 'token' => 'CLEARROOM']);
+    $participant = DB::table('exam_public_participants')->insertGetId(['exam_public_session_id' => $session, 'name' => 'Peserta', 'school_origin' => 'Sekolah', 'participant_code' => 'CLEARBANK000001']);
+    $url = route('admin.exams.public-bank.questions.clear', $package);
+
+    $this->deleteJson($url)->assertUnauthorized();
+    $this->actingAs(User::factory()->create(['role' => 'staff']))->deleteJson($url)->assertForbidden();
+    expect(DB::table('exam_public_questions')->where('id', $question)->value('deleted_at'))->toBeNull();
+    $this->actingAs($admin)->deleteJson($url)->assertSuccessful()->assertJsonPath('deleted', 1);
+    expect(DB::table('exam_public_questions')->where('id', $question)->value('deleted_at'))->not->toBeNull()
+        ->and(DB::table('exam_public_packages')->where('id', $package)->value('status'))->toBe('draft')
+        ->and((int) DB::table('exam_public_packages')->where('id', $package)->value('duration_minutes'))->toBe(45)
+        ->and(DB::table('exam_public_sessions')->where('id', $session)->value('status'))->toBe('draft')
+        ->and(DB::table('exam_public_session_packages')->where('exam_public_package_id', $package)->count())->toBe(1)
+        ->and(DB::table('exam_public_participants')->where('id', $participant)->exists())->toBeTrue()
+        ->and(DB::table('exam_public_session_tokens')->where('token', 'CLEARROOM')->exists())->toBeFalse();
+    $this->deleteJson($url)->assertSuccessful()->assertJsonPath('deleted', 0);
+    $this->deleteJson(route('admin.exams.public-bank.questions.clear', 999999))->assertNotFound();
+
+    $options = ['2, 5, 10', '1, 5, 10', '1, 5, 25', '5, 10, 25', '1/4'];
+    $file = publicPackageWorkbook($options);
+    try {
+        $this->postJson(route('admin.exams.public-bank.packages.import', $package), ['file' => $file])->assertSuccessful()->assertJsonPath('imported', 2);
+        $stored = DB::table('exam_public_questions')->where('exam_public_package_id', $package)->whereNull('deleted_at')->orderBy('sort_order')->first();
+        expect(array_values(json_decode($stored->options, true)))->toBe($options)
+            ->and(DB::table('exam_public_questions')->whereNull('deleted_at')->count())->toBe(2);
+        $this->postJson(route('admin.exams.public-bank.packages.import', $package), ['file' => $file])->assertConflict();
     } finally {
         @unlink($file->getRealPath());
     }
@@ -203,13 +247,16 @@ test('original MTK workbook is rejected for mismatched public subject without mo
         ->and(DB::table('exam_public_packages')->where('id', $package)->value('passing_score'))->toBeNull();
 });
 
-function publicPackageWorkbook(array $firstRowOptions = ['Benar', 'Salah', 'Mungkin', 'Tidak', '']): UploadedFile
+function publicPackageWorkbook(array $firstRowOptions = ['Benar', 'Salah', 'Mungkin', 'Tidak', ''], int $emptyRows = 0): UploadedFile
 {
     $path = tempnam(sys_get_temp_dir(), 'public-exam-').'.xlsx';
     $writer = new Writer;
     $writer->openToFile($path);
     $sheet = $writer->getCurrentSheet();
     $sheet->setName('Data Soal');
+    for ($index = 0; $index < $emptyRows; $index++) {
+        $writer->addRow(Row::fromValues(['']));
+    }
     foreach ([
         ['KONFIGURASI PAKET'], ['kategori', 'MTK'], ['judul_paket', 'MTK-PAKET 1'], ['kode_paket', 'TA01-MTK'],
         ['KONFIGURASI UJIAN'], ['durasi_menit', '30'], ['ambang_lulus_persen', '55'], ['tampilkan_hasil', 'tidak'], ['izinkan_ujian_ulang', 'tidak'],
@@ -263,6 +310,7 @@ test('public package deletion preserves all data once an attempt exists', functi
         'started_at' => now(), 'expires_at' => now()->addHour(),
     ]);
     $this->actingAs($admin)->deleteJson(route('admin.exams.public-bank.packages.destroy', $package))->assertStatus(409);
+    $this->deleteJson(route('admin.exams.public-bank.questions.clear', $package))->assertConflict();
     expect(DB::table('exam_public_packages')->where('id', $package)->exists())->toBeTrue()
         ->and(DB::table('exam_public_subject_attempts')->count())->toBe(1);
 });
@@ -277,6 +325,7 @@ test('package deletion refuses a participant already inside a related room befor
     DB::table('exam_public_participants')->insert(['exam_public_session_id' => $session, 'name' => 'Anak', 'school_origin' => 'Sekolah', 'participant_code' => 'JOINEDSTUDENT0001', 'started_at' => now()]);
 
     $this->actingAs($admin)->deleteJson(route('admin.exams.public-bank.packages.destroy', $package))->assertStatus(409);
+    $this->deleteJson(route('admin.exams.public-bank.questions.clear', $package))->assertConflict();
     expect(DB::table('exam_public_packages')->where('id', $package)->exists())->toBeTrue()
         ->and(DB::table('exam_public_session_tokens')->where('token', 'ACTIVE_ROOM')->exists())->toBeTrue()
         ->and(DB::table('exam_public_sessions')->where('id', $session)->value('status'))->toBe('published');

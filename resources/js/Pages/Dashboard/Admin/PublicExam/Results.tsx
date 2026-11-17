@@ -175,6 +175,13 @@ export default function PublicResults({ participants, sessions, filters, stats }
         setBusyParticipantId(participant.id);
         router.delete(route("admin.public-exams.results.participants.destroy", { participant: participant.id }), {
             preserveScroll: true,
+            onSuccess: () => {
+                if (typeof BroadcastChannel !== "undefined") {
+                    const channel = new BroadcastChannel("public-exam-participants");
+                    channel.postMessage({ type: "deleted", participantId: participant.id });
+                    channel.close();
+                }
+            },
             onError: () => showErrorToast("Riwayat tidak dapat dihapus. Hentikan dahulu ujian yang masih berlangsung."),
             onFinish: () => setBusyParticipantId(null),
         });

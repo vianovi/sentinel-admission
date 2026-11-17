@@ -110,6 +110,22 @@ export default function PublicPackageShow({ examPackage: pkg, questions, session
         setPendingAction(`delete-${question.id}`); setError(null); try { await axios.delete(route("admin.exams.public-bank.questions.destroy", { question: question.id })); showSuccessToast("Soal dihapus dari paket."); router.reload(); } catch (err) { setError(axios.isAxiosError(err) ? err.response?.data?.message ?? "Soal tidak dapat dihapus." : "Soal tidak dapat dihapus."); } finally { setPendingAction(null); }
     };
 
+    const clearQuestions = async () => {
+        if (busy || questions.length === 0) return;
+        if (!await confirmAction("Kosongkan Bank Soal?", `${questions.length} soal dalam paket “${pkg.title}” akan dihapus dari bank soal. Paket dan sesi terkait kembali draft, token lama dicabut. Konfigurasi dan daftar peserta tetap tersimpan. Hanya tersedia sebelum peserta mulai ujian.`, "Ya, Kosongkan")) return;
+        setPendingAction("clear");
+        setError(null);
+        try {
+            const response = await axios.delete<{ deleted: number }>(route("admin.exams.public-bank.questions.clear", { package: pkg.id }));
+            setReport(null);
+            showSuccessToast(`${response.data.deleted} soal dihapus. Impor ulang file yang sudah diperbaiki, lalu terbitkan kembali paket dan sesi serta buat token baru.`);
+            router.reload({ onFinish: () => setPendingAction(null) });
+        } catch (err) {
+            setError(axios.isAxiosError(err) ? err.response?.data?.message ?? "Bank soal tidak dapat dikosongkan." : "Bank soal tidak dapat dikosongkan.");
+            setPendingAction(null);
+        }
+    };
+
     return <>
         <Head title={`Paket Publik · ${pkg.title}`} />
         <ExamWorkspace active="packages">
@@ -195,13 +211,14 @@ export default function PublicPackageShow({ examPackage: pkg, questions, session
                 <details className="my-4 text-sm text-slate-600 dark:text-slate-400"><summary className="min-h-11 cursor-pointer rounded py-3 font-semibold text-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-500 dark:text-slate-200">Panduan import</summary><ol className="mt-2 list-decimal space-y-2 pl-5"><li>Gunakan template paket ini; jenis mapel, judul, dan kode sudah terisi.</li><li>Isi durasi, ambang lulus, pilihan remedial, dan tampilan nilai. Jika remedial diizinkan, peserta memiliki maksimal 2 kali kesempatan mengerjakan.</li><li>Isi pertanyaan, pilihan jawaban, kunci, poin, dan status aktif.</li><li>Unggah XLSX maksimal 5 MB dan 2.000 baris. Jika ada baris tidak valid, seluruh import ditolak tanpa menyimpan soal.</li><li>Periksa hasil import dan konfigurasi, lalu terbitkan paket.</li></ol></details>
                 {pkg.status === "draft" && questions.length === 0 ? <form onSubmit={importQuestions} className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4 dark:border-slate-600 dark:bg-slate-950">
                     <label htmlFor="public-package-file" className={labelClass}>Berkas soal terisi</label>
-                    <p id="file-help" className="mb-3 mt-1 text-xs text-slate-600 dark:text-slate-400">Format .xlsx · Maksimal 5 MB · 2.000 baris</p>
+                    <p id="file-help" className="mb-3 mt-1 text-xs text-slate-600 dark:text-slate-400">Format .xlsx · Maksimal 5 MB · 2.000 baris. Gunakan format sel Text untuk opsi seperti 2, 5, 10 atau 1/4. Jika Excel sudah mengubahnya menjadi tanggal, ketik ulang jawaban setelah mengganti format sel.</p>
                     <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center"><input ref={fileInput} id="public-package-file" type="file" accept=".xlsx" required disabled={busy} aria-describedby="file-help" onChange={event => setFile(event.target.files?.[0] ?? null)} className={inputClass + " min-w-0 file:mr-3 file:rounded file:border-0 file:bg-slate-100 file:px-2 file:py-1 file:text-xs file:font-semibold file:text-slate-700 dark:file:bg-slate-800 dark:file:text-slate-200"} /><button disabled={busy || !file} className={primaryButtonClass + " shrink-0"}>{pendingAction === "import" ? "Mengimpor…" : "Validasi & import"}</button></div>
                 </form> : <p className="rounded-lg bg-slate-50 p-4 text-sm leading-6 text-slate-600 dark:bg-slate-950 dark:text-slate-400">{pkg.status !== "draft" ? "Paket telah diterbitkan; import tidak tersedia." : "Soal sudah tersedia. Import ulang tidak tersedia agar soal tidak tertimpa atau terduplikasi."}</p>}
                 {report && <div role="status" className="mt-4 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">Import selesai: {report.imported} soal tersimpan, {report.active} aktif. Periksa soal dan konfigurasi sebelum menerbitkan.</div>}
             </section>
             <section className={panel}>
                 <div className="mb-5"><h2 className="font-display text-base font-semibold">Bank Soal <span className="text-sm font-normal text-slate-600 dark:text-slate-400">· {questions.length} butir</span></h2><p className={muted}>Periksa pertanyaan, opsi jawaban, dan kunci. Hanya soal aktif yang digunakan dalam ujian.</p></div>
+                {questions.length > 0 && <button type="button" disabled={busy} onClick={() => void clearQuestions()} className={dangerButtonClass + " mb-4"}>{pendingAction === "clear" ? "Mengosongkan…" : "Kosongkan Bank Soal"}</button>}
                 {questions.length === 0 ? <EmptyState icon="fa-solid fa-list-ol" title="Belum ada butir soal" description="Upload paket soal terisi untuk mulai review." /> : <div className="space-y-4">{questions.map((question, index) => <article key={question.id} className="min-w-0 rounded-lg border border-slate-200 p-4 text-sm dark:border-white/10">
                     <div className="mb-3 flex flex-wrap items-center gap-2"><span className="font-bold text-slate-900 dark:text-white">Soal {index + 1}</span><StatusPill value={question.is_active ? "active" : "inactive"} /><span className="text-slate-600 dark:text-slate-400">{question.point} poin · Kunci: {question.correct_answer}</span><button type="button" disabled={busy} onClick={() => void toggleQuestion(question)} className={secondaryButtonClass}>{pendingAction === `toggle-${question.id}` ? "Memproses…" : question.is_active ? "Nonaktifkan" : "Aktifkan"}</button><button type="button" disabled={busy} onClick={() => void deleteQuestion(question)} className={dangerButtonClass}>{pendingAction === `delete-${question.id}` ? "Menghapus…" : "Hapus"}</button></div>
                     <div className="break-words text-slate-900 dark:text-white"><RichExamText text={question.question_text} /></div>

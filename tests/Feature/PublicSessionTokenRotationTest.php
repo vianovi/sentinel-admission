@@ -66,6 +66,8 @@ test('interval settings enforce validation and authorization', function () {
     foreach ([null, 0, -1, 1.5, 1441] as $minutes) {
         $this->putJson($url, ['token_rotation_minutes' => $minutes])->assertUnprocessable();
     }
+    $this->putJson($url, ['token_rotation_minutes' => 10])->assertConflict();
+    DB::table('exam_public_sessions')->where('id', $session)->update(['status' => 'draft']);
     $this->putJson($url, ['token_rotation_minutes' => 10])->assertSuccessful();
     $this->assertDatabaseHas('exam_public_sessions', ['id' => $session, 'token_rotation_minutes' => 10]);
     DB::table('exam_public_sessions')->where('id', $session)->update(['status' => 'closed']);

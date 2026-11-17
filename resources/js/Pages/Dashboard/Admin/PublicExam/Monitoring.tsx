@@ -1,5 +1,5 @@
-import { Fragment, useState, type ReactNode } from "react";
-import { Head, usePoll } from "@inertiajs/react";
+import { Fragment, useEffect, useState, type ReactNode } from "react";
+import { Head, router, usePoll } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import {
     EmptyState,
@@ -26,11 +26,18 @@ type Participant = {
     session_title: string;
     violations_count: number;
     violations: Violation[];
+    last_seen_at: string | null;
+    current_state: string | null;
+    last_event: string | null;
+    completed_subjects: string[];
     active_attempt: {
         subject_name: string;
         package_title: string;
         started_at: string;
         expires_at: string;
+        current_question_index: number | null;
+        last_state: string | null;
+        last_seen_at: string | null;
     } | null;
 };
 
@@ -48,7 +55,26 @@ type Props = {
 export default function PublicExamMonitoring({ participants, summary, refreshedAt }: Props) {
     const [expandedParticipantId, setExpandedParticipantId] = useState<number | null>(null);
 
-    usePoll(60_000, { only: ["participants", "summary", "refreshedAt"] });
+    usePoll(10_000, { only: ["participants", "summary", "refreshedAt"] });
+
+    useEffect(() => {
+        const refresh = () => {
+            setExpandedParticipantId(null);
+            router.reload({ only: ["participants", "summary", "refreshedAt"] });
+        };
+        const onVisible = () => {
+            if (document.visibilityState === "visible") refresh();
+        };
+        const channel = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel("public-exam-participants") : null;
+        if (channel) channel.onmessage = refresh;
+        document.addEventListener("visibilitychange", onVisible);
+        window.addEventListener("focus", onVisible);
+        return () => {
+            channel?.close();
+            document.removeEventListener("visibilitychange", onVisible);
+            window.removeEventListener("focus", onVisible);
+        };
+    }, []);
 
     return (
         <>
@@ -125,7 +151,7 @@ export default function PublicExamMonitoring({ participants, summary, refreshedA
                                                             <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 font-bold text-emerald-700 dark:text-emerald-300"><i className="fa-solid fa-shield-halved" /> Aman</span>
                                                         )}
                                                     </td>
-                                                    <td className="p-3 text-slate-500 dark:text-slate-400">{participant.active_attempt ? `${participant.active_attempt.subject_name} · aktif` : participant.completed_at ? `Selesai ${formatDate(participant.completed_at)}` : "Belum memulai"}</td>
+                                                    <td className="p-3 text-slate-500 dark:text-slate-400">{participant.active_attempt ? `${participant.active_attempt.subject_name} · soal ${(participant.active_attempt.current_question_index ?? 0) + 1}` : participant.completed_subjects.length > 0 ? `${participant.completed_subjects.length} mapel selesai` : "Belum memulai"}<span className="mt-1 block text-[11px]">{participant.last_seen_at ? `Terakhir terlihat ${formatDate(participant.last_seen_at)}` : "Belum ada heartbeat"}</span></td>
                                                 </tr>
                                                 {expanded ? (
                                                     <tr key={`${participant.id}-detail`}>
@@ -138,6 +164,8 @@ export default function PublicExamMonitoring({ participants, summary, refreshedA
                                                                             <div><dt className="text-slate-500">Mata pelajaran</dt><dd className="font-semibold text-slate-900 dark:text-white">{participant.active_attempt.subject_name} · {participant.active_attempt.package_title}</dd></div>
                                                                             <div><dt className="text-slate-500">Mulai</dt><dd className="font-semibold text-slate-900 dark:text-white">{formatDate(participant.active_attempt.started_at)}</dd></div>
                                                                             <div><dt className="text-slate-500">Berakhir</dt><dd className="font-semibold text-slate-900 dark:text-white">{formatDate(participant.active_attempt.expires_at)}</dd></div>
+                                                                            <div><dt className="text-slate-500">Posisi / status</dt><dd className="font-semibold text-slate-900 dark:text-white">Soal {(participant.active_attempt.current_question_index ?? 0) + 1} · {participant.active_attempt.last_state ?? "belum dilaporkan"}</dd></div>
+                                                                            <div><dt className="text-slate-500">Mapel selesai</dt><dd className="font-semibold text-slate-900 dark:text-white">{participant.completed_subjects.length > 0 ? participant.completed_subjects.join(", ") : "Belum ada"}</dd></div>
                                                                         </dl>
                                                                     ) : <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">Tidak ada mata pelajaran yang sedang dikerjakan.</p>}
                                                                 </section>

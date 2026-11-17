@@ -123,6 +123,25 @@ class PublicExamFlowController extends Controller
         ]);
     }
 
+    public function participantHeartbeat(Request $request, int $participant): JsonResponse
+    {
+        $this->participant($request, $participant);
+        $data = $request->validate([
+            'state' => ['required', 'string', 'max:40'],
+            'event' => ['nullable', 'string', 'max:60'],
+        ]);
+
+        DB::table('exam_public_participants')->where('id', $participant)->update([
+            'last_seen_at' => now(),
+            'current_state' => $data['state'],
+            'last_event' => $data['event'] ?? null,
+            'last_event_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return response()->json(['ok' => true, 'server_time' => now()->toISOString()]);
+    }
+
     public function start(Request $request, int $participant, int $package): JsonResponse
     {
         $this->participant($request, $participant);
@@ -242,6 +261,43 @@ class PublicExamFlowController extends Controller
         });
 
         return response()->json(['saved' => true]);
+    }
+
+    public function heartbeat(Request $request, int $attempt): JsonResponse
+    {
+        $record = $this->attemptFor($request, $attempt);
+        $data = $request->validate([
+            'state' => ['required', 'string', 'max:40'],
+            'event' => ['nullable', 'string', 'max:60'],
+            'question_index' => ['nullable', 'integer', 'min:0'],
+        ]);
+
+        DB::transaction(function () use ($record, $data): void {
+            $attempt = DB::table('exam_public_subject_attempts')->where('id', $record->id)->lockForUpdate()->firstOrFail();
+            $metadata = json_decode($attempt->metadata ?: '{}', true) ?: [];
+            $events = $metadata['monitoring_log'] ?? [];
+            $events[] = ['event' => $data['event'] ?? 'heartbeat', 'state' => $data['state'], 'at' => now()->toISOString()];
+            $metadata['monitoring_log'] = array_slice($events, -100);
+
+            DB::table('exam_public_subject_attempts')->where('id', $attempt->id)->update([
+                'last_seen_at' => now(),
+                'current_question_index' => $data['question_index'] ?? null,
+                'last_state' => $data['state'],
+                'last_event' => $data['event'] ?? null,
+                'last_event_at' => now(),
+                'metadata' => json_encode($metadata, JSON_THROW_ON_ERROR),
+                'updated_at' => now(),
+            ]);
+            DB::table('exam_public_participants')->where('id', $attempt->exam_public_participant_id)->update([
+                'last_seen_at' => now(),
+                'current_state' => $data['state'],
+                'last_event' => $data['event'] ?? null,
+                'last_event_at' => now(),
+                'updated_at' => now(),
+            ]);
+        });
+
+        return response()->json(['ok' => true, 'server_time' => now()->toISOString()]);
     }
 
     public function submit(Request $request, int $attempt): JsonResponse

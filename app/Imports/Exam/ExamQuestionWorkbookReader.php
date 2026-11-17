@@ -3,6 +3,7 @@
 namespace App\Imports\Exam;
 
 use OpenSpout\Common\Entity\Row;
+use OpenSpout\Reader\XLSX\Options;
 use OpenSpout\Reader\XLSX\Reader;
 
 class ExamQuestionWorkbookReader
@@ -12,7 +13,7 @@ class ExamQuestionWorkbookReader
      */
     public function readDataSheet(string $path, int $maxRows): array
     {
-        $reader = new Reader;
+        $reader = new Reader(new Options(SHOULD_PRESERVE_EMPTY_ROWS: true));
         $reader->open($path);
 
         try {

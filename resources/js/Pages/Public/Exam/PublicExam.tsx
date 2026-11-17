@@ -9,6 +9,7 @@ import {
     useExamTimer,
     useFullscreenEnforcement,
 } from '@/hooks/exam';
+import { usePublicExamMonitoring } from '@/hooks/exam/usePublicExamMonitoring';
 import type {
     ExamAnswerState,
     ExamAttemptState,
@@ -98,6 +99,13 @@ export default function PublicExam() {
     const [theme, setTheme] = useState<'light' | 'dark'>('dark');
     const [serverTime, setServerTime] = useState('');
 
+    usePublicExamMonitoring({
+        enabled: participant !== null && workspace === null,
+        routeUrl: participant ? route('public-exam.participant-heartbeat', { participant }) : '',
+        state: dashboard ? 'dashboard' : 'portal',
+        event: dashboard ? 'dashboard_visible' : 'portal_visible',
+    });
+
     useEffect(() => {
         const saved = localStorage.getItem('sentinel-theme') as
             | 'dark'
@@ -182,7 +190,12 @@ export default function PublicExam() {
         if (remembered && /^\d+$/.test(remembered)) {
             const id = Number(remembered);
             reloadDashboard(id)
-                .then(() => setParticipant(id))
+                .then((data) => {
+                    setParticipant(id);
+                    const active = data.attempts.find((attempt) => attempt.status === 'in_progress');
+                    const pack = active ? data.packages.find((item) => item.subject_id === active.exam_public_subject_id) : undefined;
+                    if (active && pack) return loadAttempt(active.id, pack);
+                })
                 .catch(() =>
                     sessionStorage.removeItem('public-exam-participant'),
                 );
@@ -191,7 +204,7 @@ export default function PublicExam() {
 
     const join = async (event: FormEvent) => {
         event.preventDefault();
-        if (!session) return;
+        if (!session || busy) return;
         await run(async () => {
             const storageKey = `public-exam-entry-${session.id}`;
             const entryKey =
@@ -650,6 +663,13 @@ function PublicAttemptPanel({
         attemptState.status === 'in_progress' &&
         !attemptState.is_locked &&
         questions.length > 0;
+    usePublicExamMonitoring({
+        enabled: isRunning,
+        routeUrl: route('public-exam.heartbeat', { attempt: workspace.attempt.id }),
+        state: 'attempt',
+        event: 'question_view',
+        questionIndex: activeIndex,
+    });
     const {
         isFullscreen,
         needsInitialFullscreen,

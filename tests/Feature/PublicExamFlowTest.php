@@ -3,9 +3,27 @@
 use App\Models\User;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
 
 beforeEach(function () {
     $this->withoutMiddleware(ThrottleRequests::class);
+});
+
+test('public join rate limit separates phones sharing one network', function () {
+    publicFlowFixture();
+    $this->withMiddleware(ThrottleRequests::class);
+
+    foreach (range(1, 6) as $number) {
+        $this->withServerVariables(['REMOTE_ADDR' => '192.0.2.10'])
+            ->postJson(route('public-exam.join', 'ROOM01'), [
+                'name' => 'Peserta '.$number,
+                'school_origin' => 'Sekolah',
+                'entry_key' => (string) Illuminate\Support\Str::uuid(),
+            ])->assertSuccessful();
+    }
+
+    expect(DB::table('exam_public_participants')->whereNotNull('started_at')->count())->toBe(6);
+    RateLimiter::clear('public-exam-join:network:ROOM01|192.0.2.10');
 });
 
 test('public sessions support the configured package count from creation to final score', function (int $count, string $order) {
@@ -159,6 +177,29 @@ test('public dashboard exposes attempt expiry for the participant workspace', fu
 
     expect($response->json('attempts.0.id'))->toBe($attempt)
         ->and($response->json('attempts.0.expires_at'))->toBeString()->not->toBeEmpty();
+});
+
+test('public exam heartbeat records participant state and current question position', function () {
+    [, $packages] = publicFlowFixture();
+    $join = $this->postJson(route('public-exam.join', 'ROOM01'), ['name' => 'Anak A', 'school_origin' => 'SD Asal', 'entry_key' => (string) \Illuminate\Support\Str::uuid()]);
+    $participant = $join->json('participant_id');
+    $secret = collect($join->headers->getCookies())->first(fn ($cookie) => $cookie->getName() === 'public_exam_session')->getValue();
+    $this->withHeader('X-Public-Exam-Session', $secret);
+    $attempt = $this->postJson(route('public-exam.start', [$participant, $packages['IPAS'][0]]))->json('attempt_id');
+
+    $this->postJson(route('public-exam.heartbeat', $attempt), [
+        'state' => 'attempt', 'event' => 'question_view', 'question_index' => 2,
+    ])->assertSuccessful();
+
+    expect(DB::table('exam_public_subject_attempts')->where('id', $attempt)->first())
+        ->last_state->toBe('attempt')
+        ->last_event->toBe('question_view')
+        ->current_question_index->toBe(2)
+        ->last_seen_at->not->toBeNull();
+    expect(DB::table('exam_public_participants')->where('id', $participant)->first())
+        ->current_state->toBe('attempt')
+        ->last_event->toBe('question_view')
+        ->last_seen_at->not->toBeNull();
 });
 
 test('sequential session blocks skipping its first subject', function () {
